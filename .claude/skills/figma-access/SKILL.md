@@ -27,12 +27,12 @@ Two auth methods are available:
 | Method | Purpose | Source |
 |---|---|---|
 | **Figma MCP** (OAuth) | Read metadata, screenshots inline, design context | Configured in `.claude/.mcp.json` → `figma` server |
-| **Personal Access Token** | Download/export images to files via REST API | Stored in `.claude/context/figma-token.txt` |
+| **Personal Access Token** | Download/export images to files via REST API | Stored in `.claude/context/secrets/figma-token.txt` |
 
 Read the token file at the start of any export/download operation:
 
 ```bash
-FIGMA_TOKEN=$(cat .claude/context/figma-token.txt)
+FIGMA_TOKEN=$(cat .claude/context/secrets/figma-token.txt)
 ```
 
 ## URL Parsing
@@ -104,7 +104,7 @@ REST API with the Personal Access Token to export and download images.
 ### Step 1: Get the image export URL
 
 ```bash
-FIGMA_TOKEN=$(cat .claude/context/figma-token.txt)
+FIGMA_TOKEN=$(cat .claude/context/secrets/figma-token.txt)
 
 curl -s \
   -H "X-Figma-Token: $FIGMA_TOKEN" \

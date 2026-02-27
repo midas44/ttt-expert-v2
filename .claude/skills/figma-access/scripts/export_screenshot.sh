@@ -10,7 +10,7 @@
 #   file-key        Optional Figma file key (defaults to Noveo-TTT)
 #
 # Prerequisites:
-#   - Figma PAT in .claude/context/figma-token.txt
+#   - Figma PAT in .claude/context/secrets/figma-token.txt
 #   - Node.js with sharp installed in /tmp (run: cd /tmp && npm install sharp)
 
 set -euo pipefail
@@ -22,7 +22,7 @@ FILE_KEY="${3:-H2aXBseq7Ui60zlh5vhyjy}"
 SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
-TOKEN_FILE="$PROJECT_DIR/.claude/context/figma-token.txt"
+TOKEN_FILE="$PROJECT_DIR/.claude/context/secrets/figma-token.txt"
 if [[ ! -f "$TOKEN_FILE" ]]; then
   echo "Error: Figma token not found at $TOKEN_FILE" >&2
   exit 1
