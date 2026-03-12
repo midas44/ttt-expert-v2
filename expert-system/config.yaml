@@ -35,7 +35,7 @@ autonomy:
   consecutive_failure_limit: 3       # Abort after N consecutive failures
   auto_phase_transition: false       # Auto-switch to Phase B when coverage target met
   log_dir: "expert-system/logs"      # Session log directory
-  stop_file: "expert-system/.stop"   # Touch to gracefully stop the loop
+  stop: false                        # Set to true to gracefully stop after current session
   model: "opus"                      # Model for claude -p
   effort: "max"                      # Effort level
-  allow_api_mutations: false         # If false, only GET/SELECT in autonomous mode
+  allow_api_mutations: true          # If false, only GET/SELECT in autonomous mode

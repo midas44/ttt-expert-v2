@@ -79,7 +79,7 @@ autonomy:
   consecutive_failure_limit: 3       # Abort after N consecutive failures
   auto_phase_transition: false       # Auto-switch to Phase B when coverage target met
   log_dir: "expert-system/logs"      # Session log directory
-  stop_file: "expert-system/.stop"   # Touch to gracefully stop the loop
+  stop: false                        # Set to true to gracefully stop after current session
   model: "opus"                      # Model for claude -p
   effort: "max"                      # Effort level
   allow_api_mutations: false         # If false, only GET/SELECT in autonomous mode
@@ -421,17 +421,15 @@ Open Obsidian with the vault at `expert-system/vault/`. The graph view shows how
 
 ### 5.1 Graceful Stop
 
-Create the stop file — the runner finishes the current session, then exits:
+Set `autonomy.stop: true` in `config.yaml` — the runner finishes the current session, then exits:
 
-```bash
-touch expert-system/.stop
+```yaml
+# expert-system/config.yaml
+autonomy:
+  stop: true   # was false
 ```
 
-The runner checks for this file before each new session. Remove it to allow future runs:
-
-```bash
-rm expert-system/.stop
-```
+The runner re-reads config before each new session. Set it back to `false` to allow future runs.
 
 ### 5.2 Immediate Stop
 
@@ -448,12 +446,10 @@ kill $(cat expert-system/logs/runner.pid)
 The runner automatically resumes from where it left off — `runner-state.json` tracks the session counter. Just stop the runner (gracefully or immediately) and start it again later:
 
 ```bash
-# Stop
-touch expert-system/.stop
+# Stop: set autonomy.stop: true in config.yaml
 # ... wait for current session to finish ...
 
-# Resume (remove stop file first)
-rm expert-system/.stop
+# Resume: set autonomy.stop: false in config.yaml
 ./expert-system/scripts/run-sessions.sh
 ```
 
@@ -491,7 +487,7 @@ The runner stops automatically when any of these conditions is met:
 
 | Condition | Default | How to change |
 |-----------|---------|---------------|
-| Stop file exists | `expert-system/.stop` | `touch` / `rm` the file |
+| `autonomy.stop` is true | `false` | Set to `true` in config.yaml |
 | Max sessions reached | 30 | `autonomy.max_sessions` in config.yaml or `--sessions N` flag |
 | N consecutive failures | 3 | `autonomy.consecutive_failure_limit` in config.yaml |
 | Session timeout | max_duration + 30 min | `session.max_duration_minutes` in config.yaml |
@@ -720,7 +716,6 @@ git -C expert-system/vault log --oneline --stat
 | `expert-system/logs/runner.log` | Runner's own timestamped log (auto-persisted) |
 | `expert-system/logs/session-NNN-*.json` | Per-session Claude stdout (clean JSON) |
 | `expert-system/logs/session-NNN-*.stderr` | Per-session stderr (MCP warnings, diagnostics) |
-| `expert-system/.stop` | Touch to gracefully stop the runner |
 | `expert-system/vault/_SESSION_BRIEFING.md` | What happened last, what's next |
 | `expert-system/vault/_INVESTIGATION_AGENDA.md` | Prioritized investigation items |
 | `expert-system/vault/_KNOWLEDGE_COVERAGE.md` | Coverage metrics |

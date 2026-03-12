@@ -18,7 +18,6 @@ PROJECT_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 CONFIG_FILE="$PROJECT_ROOT/expert-system/config.yaml"
 STATE_FILE=""   # set after config is parsed
 LOG_DIR=""      # set after config is parsed
-STOP_FILE=""    # set after config is parsed
 
 # ── CLI args ──────────────────────────────────────────────────────────────────
 MAX_SESSIONS_OVERRIDE=""
@@ -124,7 +123,7 @@ parse_config() {
     MAX_SESSIONS=$(read_yaml "autonomy.max_sessions")
     CONSECUTIVE_FAILURE_LIMIT=$(read_yaml "autonomy.consecutive_failure_limit")
     LOG_DIR="$PROJECT_ROOT/$(read_yaml 'autonomy.log_dir')"
-    STOP_FILE="$PROJECT_ROOT/$(read_yaml 'autonomy.stop_file')"
+    STOP=$(read_yaml "autonomy.stop")
     MODEL=$(read_yaml "autonomy.model")
     EFFORT=$(read_yaml "autonomy.effort")
     DELAY_MINUTES=$(read_yaml "session.delay_minutes")
@@ -289,9 +288,9 @@ PROMPT
 check_stop_conditions() {
     local session_num="$1"
 
-    # 1. Manual stop file
-    if [[ -f "$STOP_FILE" ]]; then
-        log "Stop file detected: $STOP_FILE"
+    # 1. Stop flag in config
+    if [[ "$STOP" == "True" ]]; then
+        log "autonomy.stop is true in config.yaml"
         return 1
     fi
 
@@ -366,7 +365,7 @@ main() {
     log "Model: $MODEL, effort: $EFFORT"
     log "Phase: $PHASE"
     log "Log dir: $LOG_DIR"
-    log "Stop file: $STOP_FILE"
+    log "Stop flag: $STOP"
     log "Session timeout: $((MAX_DURATION_MINUTES + 30)) minutes"
     log "Session delay: ${DELAY_MINUTES}min (working) / ${DELAY_MINUTES_OFFHOURS}min (off-hours: ${OFFHOURS_UTC} UTC)"
 
@@ -444,8 +443,8 @@ main() {
     done
 
     # Determine stop reason
-    if [[ -f "$STOP_FILE" ]]; then
-        stop_reason="stop file detected"
+    if [[ "$STOP" == "True" ]]; then
+        stop_reason="autonomy.stop set to true"
     elif [[ "$MAX_SESSIONS" -gt 0 && "$session_num" -gt "$MAX_SESSIONS" ]]; then
         stop_reason="max sessions reached ($MAX_SESSIONS)"
     elif [[ "$(get_state_field 'consecutive_failures')" -ge "$CONSECUTIVE_FAILURE_LIMIT" ]]; then
