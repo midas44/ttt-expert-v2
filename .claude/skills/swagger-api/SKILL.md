@@ -150,10 +150,19 @@ Each server gets its own file: `swagger-spec-{SERVER_NAME}.json`
 
 Example: `swagger-spec-swagger-stage-ttt-api.json`
 
+### DNS Warmup on First Call
+
+Swagger MCP servers may fail with `getaddrinfo ENOTFOUND` on the **first API call** of a session. This is a transient Node.js DNS resolution issue — the startup script fetches specs via curl (which resolves DNS fine), but the Node.js runtime inside `@ivotoby/openapi-mcp-server` can take a moment to warm up its DNS resolver for VPN hostnames.
+
+**Handling:** If a Swagger MCP tool returns `ENOTFOUND`, simply retry the same call (or any call to that server). The second attempt almost always succeeds. This applies to any environment, not just specific ones.
+
+**In automated/autonomous flows:** Always wrap the first Swagger MCP call per environment in a retry-once pattern. Do not treat a single `ENOTFOUND` as a permanent failure.
+
 ### Troubleshooting Connection Failures
 
 | Symptom | Fix |
 |---------|-----|
+| `ENOTFOUND` on first call | Retry once — transient DNS warmup issue (see above) |
 | Server shows "failed" in `/mcp` | Check cache exists: `ls .claude/mcp-tools/cache/swagger-spec-swagger-{env}-{service}-{group}.json` |
 | No cache file for a server | Seed manually: `curl -sk --resolve "host:443:ip" -o cache/swagger-spec-{name}.json "spec-url"` |
 | All servers for one env fail | Check DNS: `getent hosts ttt-{env}.noveogroup.com` — must resolve to internal IP |

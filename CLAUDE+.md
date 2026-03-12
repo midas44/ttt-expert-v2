@@ -345,6 +345,8 @@ Use the **`playwright-vpn`** MCP server (tools prefixed `mcp__playwright-vpn__`)
 ### Swagger/API — API Exploration
 Map endpoints to behavior, test responses and error handling. GET freely; ask permission for mutations. Write to `vault/exploration/api-findings/`.
 
+**DNS Warmup:** Swagger MCP servers may return `getaddrinfo ENOTFOUND` on the first API call of a session due to transient Node.js DNS resolution delays for VPN hostnames. This is not a configuration error. Always retry once on `ENOTFOUND` before treating it as a real failure. In autonomous mode, implement retry-once logic for the first Swagger call to each environment.
+
 ### PostgreSQL — Data Investigation
 **SELECT only.** Explore schema, verify integrity, discover business rules at data level. Write to `vault/exploration/data-findings/`.
 
