@@ -410,7 +410,7 @@ main() {
                 --effort "$EFFORT" \
                 --dangerously-skip-permissions \
                 "$prompt" \
-                > "$log_file" 2>"$stderr_file" || exit_code=$?
+                < /dev/null > "$log_file" 2>"$stderr_file" || exit_code=$?
 
         local end_time
         end_time=$(date +%s)
