@@ -150,23 +150,45 @@ Each server gets its own file: `swagger-spec-{SERVER_NAME}.json`
 
 Example: `swagger-spec-swagger-stage-ttt-api.json`
 
+### /etc/hosts Requirement (HUMAN STEP for new environments)
+
+All TTT environment hostnames **must** be in `/etc/hosts` for Node.js MCP servers to resolve them reliably. VPN DNS alone is flaky for long-running Node.js processes — they cache failed lookups from startup.
+
+**Current required entries** (`/etc/hosts`):
+
+```
+10.0.4.220 ttt-qa-1.noveogroup.com
+10.0.6.53  ttt-timemachine.noveogroup.com
+10.0.4.241 ttt-stage.noveogroup.com
+```
+
+**When a new test environment is added:** A human must run `sudo` to add the entry — the AI cannot do this. The IP comes from `config/ttt/envs/<name>.yml` → `dbHost` field:
+
+```bash
+echo '<IP> ttt-<name>.noveogroup.com' | sudo tee -a /etc/hosts
+```
+
+If Swagger calls to a specific environment fail persistently with `ENOTFOUND` (not just the first call), check `/etc/hosts` first.
+
+See `docs/swagger-api-connection-fix.md` for the full explanation.
+
 ### DNS Warmup on First Call
 
-Swagger MCP servers may fail with `getaddrinfo ENOTFOUND` on the **first API call** of a session. This is a transient Node.js DNS resolution issue — the startup script fetches specs via curl (which resolves DNS fine), but the Node.js runtime inside `@ivotoby/openapi-mcp-server` can take a moment to warm up its DNS resolver for VPN hostnames.
+Even with `/etc/hosts` entries, Swagger MCP servers may occasionally fail with `getaddrinfo ENOTFOUND` on the **first API call** of a session due to transient Node.js DNS caching.
 
-**Handling:** If a Swagger MCP tool returns `ENOTFOUND`, simply retry the same call (or any call to that server). The second attempt almost always succeeds. This applies to any environment, not just specific ones.
+**Handling:** If a Swagger MCP tool returns `ENOTFOUND`, retry the same call once. If it fails again, check that `/etc/hosts` has the correct entry for that environment.
 
-**In automated/autonomous flows:** Always wrap the first Swagger MCP call per environment in a retry-once pattern. Do not treat a single `ENOTFOUND` as a permanent failure.
+**In automated/autonomous flows:** Always wrap the first Swagger MCP call per environment in a retry-once pattern. If the retry also fails, log "ENOTFOUND persistent — /etc/hosts entry likely missing for ttt-<env>.noveogroup.com, human intervention required" and skip that environment.
 
 ### Troubleshooting Connection Failures
 
 | Symptom | Fix |
 |---------|-----|
-| `ENOTFOUND` on first call | Retry once — transient DNS warmup issue (see above) |
+| `ENOTFOUND` on first call | Retry once — transient DNS warmup. If retry also fails, check `/etc/hosts` (see above) |
 | Server shows "failed" in `/mcp` | Check cache exists: `ls .claude/mcp-tools/cache/swagger-spec-swagger-{env}-{service}-{group}.json` |
 | No cache file for a server | Seed manually: `curl -sk --resolve "host:443:ip" -o cache/swagger-spec-{name}.json "spec-url"` |
-| All servers for one env fail | Check DNS: `getent hosts ttt-{env}.noveogroup.com` — must resolve to internal IP |
-| qa-1 servers fail with 502 | Verify `/etc/hosts` has `10.0.4.220 ttt-qa-1.noveogroup.com` |
+| All servers for one env fail | Check `/etc/hosts` has entry for `ttt-{env}.noveogroup.com` — if missing, human must add with `sudo` (see docs/swagger-api-connection-fix.md) |
+| Any env fails with persistent ENOTFOUND | Missing `/etc/hosts` entry. Human must run: `echo '<IP> ttt-<env>.noveogroup.com' \| sudo tee -a /etc/hosts` |
 | MCP tool returns stale data | Delete the cache file and restart Claude Code |
 | Server exposes wrong endpoints (e.g. ttt-api shows test-api tools) | **Cache contamination** — see below |
 

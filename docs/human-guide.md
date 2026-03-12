@@ -11,13 +11,32 @@
 **Already installed and configured:**
 - Node.js >= 18.x and npm
 - Claude Code with Opus model access (MAX plan subscription)
-- Pre-installed MCPs: GitLab, Confluence, Figma, Qase, Playwright, Swagger/API, PostgreSQL
+- Pre-installed MCPs: Confluence, Figma, Qase, Playwright, Swagger/API, PostgreSQL
+- GitLab access via curl REST API with PAT (the GitLab MCP server is registered but exposes no tools on this CE 16.11 instance)
 
 ---
 
 ## 2. Component Installation
 
-### 2.1 System Dependencies
+### 2.1 DNS Setup for Test Environments (REQUIRED)
+
+All TTT test environment hostnames must be in `/etc/hosts` for reliable DNS resolution by Node.js MCP servers (Swagger, Playwright). Without this, Swagger API calls fail with `getaddrinfo ENOTFOUND`.
+
+```bash
+# Add all TTT test environments (IPs from config/ttt/envs/*.yml dbHost field)
+cat <<'EOF' | sudo tee -a /etc/hosts
+10.0.4.220 ttt-qa-1.noveogroup.com
+10.0.6.53  ttt-timemachine.noveogroup.com
+10.0.4.241 ttt-stage.noveogroup.com
+EOF
+
+# Verify
+grep noveogroup /etc/hosts
+```
+
+**When adding a new test environment**, you must add its `/etc/hosts` entry manually — the AI cannot run `sudo`. See `docs/swagger-api-connection-fix.md` for details.
+
+### 2.2 System Dependencies
 
 ```bash
 # Java SDK — needed for Maven dependency analysis
@@ -284,7 +303,7 @@ qmd-search            http    http://localhost:8181          (semantic search)
 sqlite-analytics      stdio   @bytebase/dbhub               (structured data)
 playwright            ...     (pre-installed)
 postgresql            ...     (pre-installed)
-gitlab                ...     (pre-installed)
+gitlab                ...     (registered but NO tools — use curl with PAT instead; see .claude/skills/gitlab-access/SKILL.md)
 confluence            ...     (pre-installed)
 figma                 ...     (pre-installed)
 qase                  ...     (pre-installed, user scope)
@@ -492,6 +511,12 @@ fi
 - `python3 -c "import openpyxl"`
 - Check `expert-system/output/` exists
 
+### Swagger MCP Returns ENOTFOUND
+- `grep noveogroup /etc/hosts` — verify all environment hostnames are present
+- If an entry is missing: `echo '<IP> ttt-<env>.noveogroup.com' | sudo tee -a /etc/hosts`
+- IPs are in `config/ttt/envs/<name>.yml` → `dbHost` field
+- See `docs/swagger-api-connection-fix.md` for details
+
 ### High Token Usage
 - Is Claude reading full files instead of QMD search?
 - Are shell wrappers compressing output?
@@ -518,6 +543,7 @@ fi
 ## 12. Quick Start Checklist
 
 ```
+[ ] Add TTT hostnames to /etc/hosts (Section 2.1) — required for Swagger/Playwright MCPs
 [ ] Install Java SDK: sudo apt install openjdk-17-jdk
 [ ] Install Maven: sudo apt install maven
 [ ] Install Python + openpyxl: pip3 install openpyxl pandas

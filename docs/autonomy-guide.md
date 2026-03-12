@@ -54,7 +54,17 @@ claude mcp list | head -5
 # Verify playwright-vpn MCP (critical for UI exploration)
 claude mcp get playwright-vpn
 # If missing, see docs/playwright-mcp-fix.md
+
+# Verify /etc/hosts has all TTT environments (critical for Swagger MCPs)
+grep noveogroup /etc/hosts
+# Must show entries for ALL environments in config.yaml:
+#   10.0.4.220 ttt-qa-1.noveogroup.com
+#   10.0.6.53  ttt-timemachine.noveogroup.com
+#   10.0.4.241 ttt-stage.noveogroup.com
+# If missing, add them — see docs/swagger-api-connection-fix.md
 ```
+
+> **Adding a new environment?** After adding it to `config.yaml` and `config/ttt/envs/<name>.yml`, you **must manually** add its `/etc/hosts` entry (`sudo` required — the AI cannot do this). Without it, all Swagger and Playwright MCP calls to that environment will fail with `ENOTFOUND`. See `docs/swagger-api-connection-fix.md`.
 
 ### 2.2 Review config.yaml
 
@@ -417,7 +427,7 @@ Set `max_sessions: 0` for unlimited sessions (will run until another condition t
 ### What the system CAN do autonomously
 
 - Read and analyze the local code clone
-- Read documentation from Confluence, GitLab, Figma, Qase
+- Read documentation from Confluence, Figma, Qase (via MCP), and GitLab (via curl REST API with PAT — the GitLab MCP server exposes no tools on this CE 16.11 instance)
 - Send GET requests to Swagger/API endpoints on testing environments
 - Run SELECT queries on the PostgreSQL testing database
 - Navigate and screenshot the UI via `playwright-vpn` MCP (the built-in Playwright plugin cannot reach VPN hosts — see `docs/playwright-mcp-fix.md`)

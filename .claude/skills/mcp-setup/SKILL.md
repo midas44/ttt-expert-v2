@@ -175,15 +175,35 @@ curl -sk --noproxy '*' --resolve "${host}:443:${ip}" "https://${host}/api/..."
 
 This pattern is used in the swagger MCP wrapper script (`.claude/mcp-tools/start-swagger-mcp.sh`) and should be applied whenever writing scripts that fetch from VPN hosts.
 
-### /etc/hosts Entries
+### /etc/hosts Entries (HUMAN STEP REQUIRED for new environments)
 
-Some VPN hosts don't resolve via DNS at all and require `/etc/hosts` entries:
+**All** TTT test environment hostnames must be in `/etc/hosts`. VPN DNS alone is unreliable for long-running Node.js MCP server processes — they cache failed DNS lookups from startup, causing persistent `ENOTFOUND` errors.
+
+**Current required entries:**
 
 ```
 10.0.4.220 ttt-qa-1.noveogroup.com
+10.0.6.53  ttt-timemachine.noveogroup.com
+10.0.4.241 ttt-stage.noveogroup.com
+```
+
+**Adding a new test environment requires a human step** — the AI cannot run `sudo`:
+
+```bash
+# 1. Find the IP from the env config
+grep dbHost config/ttt/envs/<name>.yml
+
+# 2. Add to /etc/hosts (requires sudo — human must execute this)
+echo '<IP> ttt-<name>.noveogroup.com' | sudo tee -a /etc/hosts
+
+# 3. Verify
+getent hosts ttt-<name>.noveogroup.com
+node -e "require('dns').lookup('ttt-<name>.noveogroup.com', (e,a) => console.log(e||a))"
 ```
 
 Verify resolution: `getent hosts <hostname>` — should return an internal IP (10.x.x.x), NOT a public IP (80.x.x.x).
+
+See `docs/swagger-api-connection-fix.md` for the full explanation of why this is needed.
 
 ## Swagger MCP Wrapper Pattern
 

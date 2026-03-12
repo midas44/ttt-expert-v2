@@ -456,7 +456,8 @@ When knowledge is insufficient for thorough test cases:
 
 ## 12. Information Source Protocols
 
-### GitLab — Code via local clone, tickets/MRs via MCP
+### GitLab — Code via local clone, tickets/MRs/pipelines via curl REST API
+The GitLab MCP server (`@modelcontextprotocol/server-gitlab`) is registered but **exposes no tools** on this self-hosted GitLab CE 16.11 instance. Always use **curl with the PAT** (Personal Access Token) stored in `.claude/.mcp.json` → `env.GITLAB_PERSONAL_ACCESS_TOKEN`. Add `--noproxy "gitlab.noveogroup.com"` to all curl calls. See the **gitlab-access** skill (`.claude/skills/gitlab-access/SKILL.md`) for full API reference, search patterns, attachment downloads, and pipeline operations.
 ### Confluence — Requirements via MCP. Assess accuracy against code and live behavior.
 ### Figma — Designs via MCP. Compare with implementation and live behavior.
 ### Qase — Always check existing tests before generating. Avoid duplication.
@@ -476,12 +477,12 @@ When knowledge is insufficient for thorough test cases:
 | **Playwright** (`playwright-vpn`) | UI exploration — read-only intent by default. **Must use `playwright-vpn` MCP server** (not the built-in plugin) for TTT environments — the built-in plugin cannot bypass `HTTP_PROXY` to reach VPN hosts. Tools: `browser_navigate`, `browser_snapshot`, `browser_click`, `browser_fill_form`, `browser_take_screenshot`, etc. Load via `ToolSearch` before first use. See `docs/playwright-mcp-fix.md`. |
 | **Swagger/API** (21 servers) | API exploration — GET freely, ask for mutations. Naming: `swagger-{env}-{service}-{group}` where env=`qa1`/`tm`/`stage`, service=`ttt`/`vacation`/`calendar`/`email`, group=`api`/`test`/`default`. See MISSION_DIRECTIVE §Testing Environments for full URL list. |
 | **PostgreSQL** (3 servers) | Data investigation — SELECT only. Naming: `postgres-{env}` where env=`qa1`/`tm`/`stage`. Auto-configured by `node .claude/scripts/sync-postgres-mcp.js --apply` from config.yaml + env files. |
-| **GitLab** | Tickets, MRs, CI/CD data (code via local clone) |
+| **GitLab** (curl, NOT MCP) | Tickets, MRs, CI/CD data via curl REST API with PAT. The GitLab MCP server is connected but exposes no tools — always use curl. See `gitlab-access` skill. Code access via local clone. |
 | **Confluence** | Requirements, documentation |
 | **Figma** | Design specifications |
 | **Qase** | Existing test suites/cases |
 
-> **Scope split:** MCP servers above are registered across two scopes. Project-scope servers (`.claude/.mcp.json`): gitlab, confluence, postgres-qa1/postgres-tm/postgres-stage, figma, and all 21 swagger servers. User-scope servers (`~/.claude.json`): obsidian, qmd-search, sqlite-analytics, qase. Local-scope server (`~/.claude.json` per-project): `playwright-vpn` (standalone `@playwright/mcp` with proxy bypass). Both scopes load automatically.
+> **Scope split:** MCP servers above are registered across two scopes. Project-scope servers (`.claude/.mcp.json`): gitlab (connected but non-functional — use curl instead), confluence, postgres-qa1/postgres-tm/postgres-stage, figma, and all 21 swagger servers. User-scope servers (`~/.claude.json`): obsidian, qmd-search, sqlite-analytics, qase. Local-scope server (`~/.claude.json` per-project): `playwright-vpn` (standalone `@playwright/mcp` with proxy bypass). Both scopes load automatically.
 
 ### mcp-obsidian Usage Notes
 - Use `write_note` with `mode: "append"` to add to existing notes without overwriting

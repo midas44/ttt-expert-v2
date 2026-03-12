@@ -17,6 +17,10 @@ description: >
 
 # GitLab Access — Time Tracking Tool (TTT)
 
+> **IMPORTANT:** The GitLab MCP server (`@modelcontextprotocol/server-gitlab`) is registered
+> but **exposes no tools** on this GitLab CE 16.11 instance. All GitLab operations must use
+> **curl with the PAT** as described below. Do NOT attempt to use MCP tools for GitLab.
+
 This skill provides instructions for interacting with the **Time Tracking Tool**
 (also known as Time Reporting Tool, project path: `ttt-spring`) on the self-hosted
 GitLab CE 16.11 instance at `gitlab.noveogroup.com`.
