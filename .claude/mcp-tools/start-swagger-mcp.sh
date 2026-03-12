@@ -52,7 +52,7 @@ validate_json() {
 }
 
 try_fetch_and_cache() {
-    local temp="$CACHE_DIR/.swagger-spec-temp.json"
+    local temp="$CACHE_DIR/.swagger-spec-temp-${SERVER_NAME:-default}.json"
     if fetch_spec "$SPEC_URL" "$temp" && validate_json "$temp"; then
         mv "$temp" "$CACHE_FILE"
         return 0

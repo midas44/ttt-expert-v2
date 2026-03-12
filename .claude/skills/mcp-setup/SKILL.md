@@ -195,6 +195,28 @@ For Swagger/OpenAPI MCP servers that connect to unreliable or VPN-only endpoints
 4. **Retry on cold start** — handles transient 502s
 5. **Per-server cache files** — named by `SERVER_NAME` env var
 
+**Critical:** The temp file used during spec download MUST be per-server (keyed by `SERVER_NAME`), not shared. When Claude Code starts, all MCP servers launch concurrently. A shared temp file causes a race condition where one server's spec can overwrite another's before the `mv` to the final cache:
+
+```bash
+# WRONG — shared temp file causes cross-contamination
+local temp="$CACHE_DIR/.swagger-spec-temp.json"
+
+# CORRECT — per-server temp file prevents race conditions
+local temp="$CACHE_DIR/.swagger-spec-temp-${SERVER_NAME:-default}.json"
+```
+
+**Diagnosing contamination:** If a server exposes wrong endpoints (e.g. `ttt-api` shows only test-group tools), compare cached spec path counts:
+
+```bash
+for f in .claude/mcp-tools/cache/swagger-spec-swagger-*.json; do
+  n=$(basename $f .json | sed 's/swagger-spec-//')
+  c=$(python3 -c "import json; print(len(json.load(open('$f'))['paths']))" 2>/dev/null)
+  echo "$n: $c paths"
+done
+```
+
+If two servers for the same env+service show identical path counts (e.g. both `ttt-api` and `ttt-test` have 14 paths), the `-api` cache is contaminated. Fix: delete the bad cache file, re-fetch the correct spec with curl, restart Claude Code.
+
 Reference implementation: `.claude/mcp-tools/start-swagger-mcp.sh`
 Full documentation: `docs/swagger-mcp-connection-fix.md`
 

@@ -168,6 +168,53 @@ Swagger MCP servers may fail with `getaddrinfo ENOTFOUND` on the **first API cal
 | All servers for one env fail | Check DNS: `getent hosts ttt-{env}.noveogroup.com` — must resolve to internal IP |
 | qa-1 servers fail with 502 | Verify `/etc/hosts` has `10.0.4.220 ttt-qa-1.noveogroup.com` |
 | MCP tool returns stale data | Delete the cache file and restart Claude Code |
+| Server exposes wrong endpoints (e.g. ttt-api shows test-api tools) | **Cache contamination** — see below |
+
+### Cache Contamination (Wrong Spec Loaded)
+
+If a Swagger MCP server exposes the wrong set of endpoints (e.g. `swagger-tm-ttt-api` shows only test-group tools like `clean-up`, `get-clock` instead of 100+ API endpoints), the cached spec file contains the wrong spec.
+
+**Root cause:** Before the fix in `start-swagger-mcp.sh`, all servers shared one temp file (`.swagger-spec-temp.json`). When multiple servers started concurrently, a race condition could overwrite one server's downloaded spec with another's before the `mv` to the final cache file. The fix uses per-server temp files: `.swagger-spec-temp-${SERVER_NAME}.json`.
+
+**Diagnose:**
+
+```bash
+# Compare path counts — api group should have ~100+ paths, test group ~14
+for f in .claude/mcp-tools/cache/swagger-spec-swagger-tm-*.json; do
+  n=$(basename $f .json | sed 's/swagger-spec-swagger-tm-//')
+  c=$(python3 -c "import json; print(len(json.load(open('$f'))['paths']))")
+  echo "  $n: $c paths"
+done
+```
+
+If `ttt-api` shows ~14 paths (same as `ttt-test`), it's contaminated.
+
+**Fix:**
+
+```bash
+# 1. Delete the bad cache
+rm .claude/mcp-tools/cache/swagger-spec-swagger-<env>-<service>-<group>.json
+
+# 2. Re-fetch correct spec (use getent to resolve VPN hostname)
+IP=$(getent hosts ttt-<env>.noveogroup.com | awk '{print $1; exit}')
+curl -s --noproxy '*' --resolve "ttt-<env>.noveogroup.com:443:$IP" \
+  "https://ttt-<env>.noveogroup.com/api/<service>/v2/api-docs?group=<group>" \
+  -o .claude/mcp-tools/cache/swagger-spec-swagger-<env>-<service>-<group>.json
+
+# 3. Restart Claude Code
+```
+
+**Expected path counts (reference):**
+
+| Server | qa-1 | tm | stage |
+|--------|------|-----|-------|
+| ttt-api | 106 | 106 | 103 |
+| ttt-test | 14 | 14 | 12 |
+| email-api | 3 | 3 | 3 |
+| email-test | 2 | 2 | 2 |
+| calendar-default | 13 | 13 | 13 |
+| vacation-default | 57 | 57 | 57 |
+| vacation-test | 11 | 11 | 10 |
 
 For full details see `docs/swagger-mcp-connection-fix.md`.
 
