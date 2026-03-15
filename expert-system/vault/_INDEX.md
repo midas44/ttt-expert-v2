@@ -197,3 +197,6 @@
 ## External — Other
 - [[external/EXT-cron-jobs]] — 21 active cron jobs, code-verified
 - [[external/EXT-tracker-integration]] — Tracker integration spec
+
+## Phase B — Generated Test Documentation
+- **Statistics Module** (Session 48): `test-plan-statistics.xlsx` (3 sheets) + `test-cases-statistics.xlsx` (7 sheets, 111 cases)

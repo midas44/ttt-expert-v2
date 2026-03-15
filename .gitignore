@@ -19,4 +19,4 @@ config/ttt/envs/qa-1.yml
 .playwright-mcp/
 
 # Exploration artefacts (screenshots, etc.)
-artefacts/
+expert-system/artefacts/

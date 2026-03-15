@@ -15,7 +15,7 @@ status: active
 - P2: Medium — within next 5 sessions
 - P3: Low — backlog
 
-## Completed (Sessions 1-47)
+## Completed (Sessions 1-48)
 <details>
 <summary>Sessions 1-9 completed items (click to expand)</summary>
 
@@ -118,7 +118,7 @@ status: active
 </details>
 
 <details>
-<summary>Sessions 30-47 completed items (click to expand)</summary>
+<summary>Sessions 30-48 completed items (click to expand)</summary>
 
 ### Session 30
 - [x] Maintenance §9.4: Vault audit (154 notes, all indexed), SQLite cleanup (severity normalization, finding_type 37→13)
@@ -147,23 +147,45 @@ status: active
 - [x] Session 42: Corrected GitLab project ID from 622 to 1288
 - [x] Session 45: Maintenance §9.4 — compressed sessions 41-44 monitoring (4→1), vault audit (159 notes, 0 issues)
 
+### Session 48 (Phase B begins)
+- [x] Phase B transition: config updated, generation mode active
+- [x] Statistics module: test-plan-statistics.xlsx (3 sheets) + test-cases-statistics.xlsx (7 sheets, 111 cases)
+- [x] All 111 test cases tracked in test_case_tracking SQLite table
+
 </details>
 
-## Active Items
+## Active Items — Phase B Generation
 
-### Phase B Transition (STRONGLY RECOMMENDED — Coverage 100%, 27th consecutive session)
-- [ ] Human decision: update config.yaml to `phase.current: "generation"` and `phase.generation_allowed: true`
-- [ ] Begin test plan generation starting with Statistics (0 Qase cases)
+### P1: Sick Leave Lifecycle (Next Session)
+- [ ] Read sick leave business rules reference, backend/frontend notes, exploration findings
+- [ ] Generate test-plan-sick-leave.xlsx (3 sheets)
+- [ ] Generate test-cases-sick-leave.xlsx (lifecycle CRUD, dual status, accounting, files, notifications, validation, permissions)
+- [ ] Track cases in SQLite, update vault
 
-### Known Gaps (not blocking Phase B)
+### P1: Day-Off Lifecycle (Sessions 50-51)
+- [ ] Generate test-plan-day-off.xlsx
+- [ ] Generate test-cases-day-off.xlsx (request lifecycle, 4 calendar conflict paths, ledger mechanics, approval)
+
+### P2: Security/Permissions (Sessions 52-53)
+- [ ] Generate cross-cutting security test plan + cases (permission matrix, auth, API token gaps)
+
+### P2: Accounting Supplements (Sessions 53-54)
+- [ ] Generate supplement test cases for gaps not in Qase (period edge cases, payment errors, notification triggers)
+
+### P3: Vacations Supplements
+- [ ] API/edge/business rule cases complementing 200+ existing Qase cases
+
+### P3: Reports Supplements
+- [ ] Confirmation edge cases, period advance/revert, auto-reject
+
+### P3: Admin Supplements
+- [ ] PM Tool sync, close-by-tag permissions, tracker integration
+
+### Known Gaps (not blocking)
 - [ ] #3400 individual norm export — "Production Ready" ticket but no code in codebase
-- [ ] Planner spec (Google Doc — 401, need access) — assessed as low priority
+- [ ] Planner spec (Google Doc — 401, need access)
 
 ### Sprint 16 Awareness (for Phase B context)
-- [ ] #2842 Contractor termination — new feature area, include contractor lifecycle in test cases
-- [ ] #2954 Sick leave working days column — UI addition, include in sick leave test cases
-- [ ] #2876 Vacation event feed + calendar change bugs — edge cases for vacation tests
-
-### Ongoing Monitoring (automated per session)
-- [ ] Check for new commits on release/2.1
-- [ ] Check for Sprint 15/16 GitLab ticket updates
+- [ ] #2842 Contractor termination — include in sick leave/vacation lifecycle edge cases
+- [ ] #2954 Sick leave working days column — include in sick leave UI test cases
+- [ ] #2876 Vacation event feed + calendar change bugs — include in vacation supplement tests
