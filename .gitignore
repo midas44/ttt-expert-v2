@@ -7,8 +7,8 @@ CLAUDE.md
 # Runner logs (session output, state, runner log)
 expert-system/logs/
 
-# Vault (has its own inner git repo, managed by run-sessions.sh)
-expert-system/vault/
+# Vault inner git repo (auto-managed by run-sessions.sh)
+expert-system/vault/.git
 
 # Secret files
 .claude/context/secrets/

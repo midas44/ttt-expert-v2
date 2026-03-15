@@ -191,7 +191,7 @@ branch: <default_branch>
 
 **Wikilinks** — use `[[note-name]]` for ALL cross-references. Link any module, pattern, or concept that has (or should have) its own note. Create links to nonexistent notes as gap markers.
 
-**One concept per note.** Max ~500 words. Split if larger.
+**One concept per note.** Max ~2000 words. Split if larger.
 
 **Compression** — synthesized insights only. Never paste source code. Describe findings, meaning, and connections.
 
@@ -501,7 +501,7 @@ The GitLab MCP server (`@modelcontextprotocol/server-gitlab`) is registered but 
 
 **Test documentation**: Traceable to knowledge base and requirements. No Qase duplication. Adequate detail for tester execution.
 
-**Token efficiency**: QMD before full reads, shell compression, specific file reads, notes under 500 words, targeted MCP queries.
+**Token efficiency**: QMD before full reads, shell compression, specific file reads, notes under 2000 words, targeted MCP queries.
 
 ---
 
