@@ -130,12 +130,17 @@ All paths are relative to the project root `/home/v/Dev/ttt-expert-v1/`.
 │   │
 │   ├── scripts/                        # Shell wrappers for analysis tools
 │   │
-│   ├── artefacts/                      # UI screenshots from Playwright exploration (gitignored)
+│   ├── artefacts/                      # Screenshots, PDFs, downloads (gitignored)
 │   │
-│   └── output/                         # Generated XLSX test documentation
-│       ├── vacation/                   #   One subdirectory per functional area
-│       ├── sick-leave/                 #   Each contains a unified workbook
-│       └── .../                        #   (plan + test suites in one file)
+│   └── generators/                     # Python scripts that produce XLSX workbooks
+│       ├── vacation/                   #   Subdirectory per area (mirrors output/)
+│       ├── sick-leave/
+│       └── .../
+│
+├── output/                             # Generated XLSX test documentation (root level)
+│   ├── vacation/vacation.xlsx          #   One subdirectory per functional area
+│   ├── sick-leave/sick-leave.xlsx      #   Each contains a unified workbook
+│   └── .../
 ```
 
 ---
@@ -187,7 +192,7 @@ All paths are relative to the project root `/home/v/Dev/ttt-expert-v1/`.
 │  OUTPUT                                                      │
 │  ┌──────────────────────────────────────────┐               │
 │  │  XLSX — Unified Test Workbooks per Area  │               │
-│  │  expert-system/output/                   │               │
+│  │  output/<area>/<area>.xlsx               │               │
 │  └──────────────────────────────────────────┘               │
 └──────────────────────────────────────────────────────────────┘
 ```
@@ -365,7 +370,9 @@ Access to live application on testing environments via Playwright (UI), Swagger/
   - If `true`: mutations are permitted on testing environments; log each mutation action and its rationale to `exploration_findings` before executing
 
 ### Playwright — UI Exploration
-Use the **`playwright-vpn`** MCP server (tools prefixed `mcp__playwright-vpn__`) for all TTT environments. The built-in Playwright plugin cannot reach VPN hosts due to proxy inheritance. Load tools via `ToolSearch: select:mcp__playwright-vpn__browser_navigate,mcp__playwright-vpn__browser_snapshot` before first use. Navigate flows, verify behavior against Figma/Confluence, screenshot evidence, note undocumented behaviors. Write to `vault/exploration/ui-flows/`. Save all screenshots to the `expert-system/artefacts/` directory (e.g. `expert-system/artefacts/page-name.png`).
+Use the **`playwright-vpn`** MCP server (tools prefixed `mcp__playwright-vpn__`) for all TTT environments. The built-in Playwright plugin cannot reach VPN hosts due to proxy inheritance. Load tools via `ToolSearch: select:mcp__playwright-vpn__browser_navigate,mcp__playwright-vpn__browser_snapshot` before first use. Navigate flows, verify behavior against Figma/Confluence, screenshot evidence, note undocumented behaviors. Write to `vault/exploration/ui-flows/`.
+
+**All generated files** (screenshots, PDFs, downloaded attachments, exported data, or any other non-markdown artefacts) must be saved to `expert-system/artefacts/` — never to the project root or other directories.
 
 ### Swagger/API — API Exploration
 Map endpoints to behavior, test responses and error handling. GET freely; ask permission for mutations. Write to `vault/exploration/api-findings/`.
@@ -453,13 +460,13 @@ Only when config.yaml has `phase.current: "generation"` and `phase.generation_al
 
 ### XLSX Format
 
-Generate with Python openpyxl. Output to `expert-system/output/<area>/`.
+Generate with Python openpyxl. Output to `output/<area>/`.
 
 Each functional area produces **one unified XLSX workbook** containing both the test plan and all test suites. This enables single-file import into Google Sheets with multi-tab navigation.
 
 **Directory structure:**
 ```
-expert-system/output/
+output/
 ├── vacation/
 │   └── vacation.xlsx
 ├── sick-leave/
@@ -522,8 +529,8 @@ Per functional area (in priority order above):
 2. Identify gaps — if insufficient, investigate deeper first (see Knowledge Updates below)
 3. Check Qase for existing coverage — never duplicate
 4. Define test suites (logical groupings of 10-30 cases)
-5. Generate the unified XLSX workbook with plan tabs + all TS- tabs + hyperlinks
-6. Create output subdirectory (`expert-system/output/<area>/`)
+5. Write the Python generator script to `expert-system/generators/<area>/generate.py`
+6. Run the generator to produce the unified XLSX workbook in `output/<area>/`
 7. Track each case in `test_case_tracking` table
 8. Update vault notes linking outputs to knowledge base
 
