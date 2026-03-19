@@ -17,6 +17,7 @@ expert-system/repos/
 __pycache__/
 
 # Secret files
+.claude/settings.local.json
 .claude/context/secrets/
 .claude/context/gitlab-credentials.md
 

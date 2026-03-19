@@ -3,16 +3,21 @@ name: gitlab-access
 description: >
   Access the GitLab instance at gitlab.noveogroup.com — read issues/tickets,
   fetch comments, search issues by label/keyword, download file attachments
-  (screenshots, images, documents), list pipelines, compare branches, and view
-  code changes from the Time Tracking Tool (TTT / ttt-spring) project.
+  (screenshots, images, documents), list pipelines, compare branches, view
+  code changes, and execute CI operations (deploy, migrate, restart, rollback)
+  on testing environments from the Time Tracking Tool (TTT / ttt-spring) project.
   Use this skill whenever the user mentions a GitLab ticket, issue URL, merge request,
   pipeline, branch, or asks to fetch/download/summarize anything from gitlab.noveogroup.com.
   Also use it when the user pastes a GitLab URL, references an issue number, asks to search
   for tickets, wants to list pipelines, see branch changes, compare commits, or mentions
-  TTT/Time Tracking Tool/Time Reporting Tool issues. This includes tasks like
-  "read ticket #3036", "get the screenshots from that issue", "summarize the GitLab issue",
-  "find all vacation bugs in Sprint 14", "download the attachments",
-  "list latest pipelines", "show changes in release/2.1", or "what files changed in the last pipeline".
+  TTT/Time Tracking Tool/Time Reporting Tool issues. Also use when the user asks to deploy,
+  migrate, restart, rollback, trigger a CI job, play a pipeline job, or mentions
+  CI/CD operations on any environment (dev, qa-1, qa-2, timemachine, preprod, stage).
+  This includes tasks like "read ticket #3036", "get the screenshots from that issue",
+  "summarize the GitLab issue", "find all vacation bugs in Sprint 14",
+  "download the attachments", "list latest pipelines", "show changes in release/2.1",
+  "what files changed in the last pipeline", "deploy to qa-1", "restart timemachine",
+  "migrate qa-2", "rollback qa-1", or "run the deploy job on release/2.1".
 ---
 
 # GitLab Access — Time Tracking Tool (TTT)
@@ -239,6 +244,129 @@ curl -s --noproxy "gitlab.noveogroup.com" --header "PRIVATE-TOKEN: $TOKEN" \
 2. Extract the `sha` from each pipeline (newer = `to`, older = `from`)
 3. Call the compare endpoint with those SHAs
 4. Parse the `commits` and `diffs` arrays from the response
+
+---
+
+## 4. CI Operations — Deploy, Migrate, Restart, Rollback
+
+All CI operations are **manual jobs** within existing pipelines. They are triggered by
+"playing" the job via the GitLab API. You do NOT create new pipelines — you find the
+target pipeline and play the specific manual job within it.
+
+### CI Architecture
+
+**Pipeline stages (in order):**
+1. `build` — compile project artifacts
+2. `post-build` — generate deployment manifest
+3. `merge` — merge release branch to develop
+4. `deploy` — deploy to target server (manual)
+5. `deploy-doc` — deploy documentation
+6. `autotest` — run autotests (manual)
+7. `migrate` — DB migration from old MySQL to PostgreSQL (manual)
+8. `restart` — restart docker-compose services (manual)
+
+**Branch → Environment mapping:**
+
+| Branch | Available environments |
+|---|---|
+| `development-ttt` | dev, qa-1, qa-2, timemachine |
+| `release/*` (e.g. `release/2.1`) | qa-1, qa-2, timemachine, preprod |
+| `stage` | stage |
+| `hotfix/*` | qa-1, qa-2, preprod |
+
+**Job naming convention:**
+- Deploy: `deploy-<env>`, `deploy-<env>-develop`, `deploy-<env>-release`, `deploy-<env>-hotfix`
+- Rollback: `rollback-<env>`, `rollback-<env>-develop`, `rollback-<env>-release`
+- Migrate: `migrate-<env>` (e.g. `migrate-qa-1`, `migrate-timemachine`)
+- Restart: `restart-<env>` (e.g. `restart-qa-1`, `restart-timemachine`)
+
+### Workflow: Trigger a CI Operation
+
+**Step 1 — Find the target pipeline:**
+
+Identify the correct branch for the target environment, then get the latest
+successful pipeline on that branch:
+
+```bash
+curl -s --noproxy "gitlab.noveogroup.com" --header "PRIVATE-TOKEN: $TOKEN" \
+  "https://gitlab.noveogroup.com/api/v4/projects/1288/pipelines?ref=BRANCH&per_page=1&order_by=id&sort=desc&status=success"
+```
+
+Common branch lookups:
+- qa-1/qa-2/timemachine from release: `ref=release/2.1`
+- qa-1/qa-2/timemachine from develop: `ref=development-ttt`
+- stage: `ref=stage`
+- preprod from release: `ref=release/2.1`
+
+**Step 2 — List jobs in the pipeline:**
+
+```bash
+curl -s --noproxy "gitlab.noveogroup.com" --header "PRIVATE-TOKEN: $TOKEN" \
+  "https://gitlab.noveogroup.com/api/v4/projects/1288/pipelines/PIPELINE_ID/jobs?per_page=100"
+```
+
+Find the job with the matching `name` (e.g. `deploy-qa-1-release`, `migrate-qa-1`,
+`restart-qa-1`). The job must have `status: "manual"` to be playable.
+
+**Step 3 — Play (trigger) the job:**
+
+```bash
+curl -s --noproxy "gitlab.noveogroup.com" --header "PRIVATE-TOKEN: $TOKEN" \
+  -X POST "https://gitlab.noveogroup.com/api/v4/projects/1288/jobs/JOB_ID/play"
+```
+
+The response returns the job object with `status: "pending"` or `status: "running"`.
+
+**Step 4 — Monitor job status:**
+
+```bash
+curl -s --noproxy "gitlab.noveogroup.com" --header "PRIVATE-TOKEN: $TOKEN" \
+  "https://gitlab.noveogroup.com/api/v4/projects/1288/jobs/JOB_ID"
+```
+
+Poll until `status` is `success` or `failed`. Key fields: `status`, `started_at`,
+`finished_at`, `duration`, `web_url`.
+
+To read the job log:
+```bash
+curl -s --noproxy "gitlab.noveogroup.com" --header "PRIVATE-TOKEN: $TOKEN" \
+  "https://gitlab.noveogroup.com/api/v4/projects/1288/jobs/JOB_ID/trace"
+```
+
+### What Each Operation Does
+
+| Operation | What it does |
+|---|---|
+| **deploy** | Pulls latest Docker images for the branch and runs `docker-compose up -d` with all services |
+| **rollback** | Deploys using the manifest from the pipeline (specific artifact versions) |
+| **migrate** | Stops calendar/vacation/email/ttt services, runs `pgloader` migration from prod-RO DB, restarts services |
+| **restart** | Runs `docker-compose restart` on all services |
+
+### Quick Reference: Environment Job Names
+
+**From `development-ttt` pipeline:**
+- `deploy-dev`, `deploy-qa-1-develop`, `deploy-qa-2-develop`, `deploy-timemachine-develop`
+- `rollback-dev`, `rollback-qa-1-develop`, `rollback-qa-2-develop`, `rollback-timemachine-develop`
+- `migrate-dev`, `migrate-qa-1`, `migrate-qa-2`, `migrate-timemachine`
+- `restart-dev`, `restart-qa-1`, `restart-qa-2`, `restart-timemachine`
+
+**From `release/2.1` pipeline:**
+- `deploy-qa-1-release`, `deploy-qa-2-release`, `deploy-timemachine-release`, `deploy-preprod-release`
+- `rollback-qa-1-release`, `rollback-qa-2-release`, `rollback-timemachine-release`, `rollback-preprod-release`
+- `migrate-qa-1`, `migrate-qa-2`, `migrate-timemachine`, `migrate-preprod`
+- `restart-qa-1`, `restart-qa-2`, `restart-timemachine`, `restart-preprod`
+
+**From `stage` pipeline:**
+- `deploy-stage`, `rollback-stage`, `migrate-stage`, `restart-stage`
+
+### Safety Notes
+
+- **Always confirm** with the user before triggering deploy/migrate/rollback operations.
+  Restart is lower risk but still confirm.
+- **Migrate** is the most impactful — it stops services and runs DB migration from production.
+- **Deploy** replaces running containers with new images — the environment will be briefly unavailable.
+- After deploy or migrate, consider running **restart** if services don't come up cleanly.
+- Check the job log if a job fails to diagnose the issue.
 
 ---
 
