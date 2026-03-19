@@ -30,6 +30,17 @@ This project contains an expert knowledge base for the TTT (Time Tracking Tool) 
 3. If vault lacks detail, investigate live: code (`expert-system/repos/project/`), API, DB, or UI
 4. Reference vault note names when citing findings
 
+## Updating the knowledge base
+
+When you discover new information during a task — a bug, an undocumented behavior, a corrected understanding, or deeper detail about a feature — update the knowledge base:
+
+- **Existing note has relevant topic**: expand or correct it via `mcp__obsidian__patch_note` or `mcp__obsidian__write_note`
+- **New topic not covered**: create a new note in the appropriate vault directory (modules/, exploration/, investigations/, etc.) with YAML frontmatter and wikilinks to related notes
+- **Structured findings**: also log to SQLite (`exploration_findings`, `design_issues`, or `module_health` tables)
+- **After significant updates**: run `qmd embed` via bash to update semantic search index
+
+The knowledge base is a living resource — every interactive session that discovers something new should leave it richer.
+
 ## Key references
 
 - `CLAUDE+.md` — full autonomous system prompt (for reference, not loaded in interactive mode)
