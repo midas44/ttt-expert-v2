@@ -92,6 +92,24 @@ Multiple labels can be comma-separated: `labels=Sprint%2014,Backend`.
 
 The `search` parameter matches against title and description text.
 
+### Add a Comment / Note
+
+```bash
+curl -s --noproxy "gitlab.noveogroup.com" --header "PRIVATE-TOKEN: $TOKEN" \
+  --header "Content-Type: application/json" \
+  -X POST "https://gitlab.noveogroup.com/api/v4/projects/1288/issues/$IID/notes" \
+  --data "$(python3 -c "import json,sys; print(json.dumps({'body': sys.stdin.read()}))" <<< "$BODY")"
+```
+
+The `$BODY` variable should contain the markdown-formatted comment text. Use a heredoc
+to build it for multi-line content. The response contains `id`, `author`, `created_at`.
+
+**Tips for formatting:**
+- GitLab supports `<details><summary>Title</summary>content</details>` for collapsible sections
+- Markdown tables, code blocks, and emoji (`:white_check_mark:`) all work
+- To safely pass the body through JSON, always use the `python3 -c "import json..."` pipe
+  pattern shown above — this handles special characters, newlines, and quotes correctly
+
 ### Summarize
 
 When asked to summarize, extract: title, status, labels, assignee, creation date,
@@ -359,6 +377,59 @@ curl -s --noproxy "gitlab.noveogroup.com" --header "PRIVATE-TOKEN: $TOKEN" \
 **From `stage` pipeline:**
 - `deploy-stage`, `rollback-stage`, `migrate-stage`, `restart-stage`
 
+### Retrying Already-Completed Jobs
+
+To re-run a job that already completed (e.g., re-deploy after rollback testing):
+
+```bash
+curl -s --noproxy "gitlab.noveogroup.com" --header "PRIVATE-TOKEN: $TOKEN" \
+  -X POST "https://gitlab.noveogroup.com/api/v4/projects/1288/jobs/JOB_ID/retry"
+```
+
+**Important:** The retry response returns a **new job object with a new ID**. Use the
+new ID for polling — the old job ID will remain in its completed state.
+
+### Service Startup Times After CI Operations
+
+After deploy, rollback, or restart, services need time to start:
+
+| Operation | Job duration | Service startup | Total wait |
+|---|---|---|---|
+| **deploy** | ~20-30s | ~90s | ~2 min |
+| **rollback** | ~20-30s | ~90s | ~2 min |
+| **migrate** | ~5 min | ~90s | ~6 min |
+| **restart** | ~20s | ~90s | ~2 min |
+
+During startup, API endpoints return **502 Bad Gateway** (nginx) then **503 Service
+Unavailable** (Spring Boot loading). Wait ~90 seconds after job success before calling
+API endpoints. If still 503, wait another 30s and retry.
+
+### Reading the Deployment Manifest
+
+The `generate-manifest` job creates a `deploy-{PIPELINE_ID}.yml` artifact. To read
+the manifest without downloading the artifact, check the job log:
+
+```bash
+curl -s --noproxy "gitlab.noveogroup.com" --header "PRIVATE-TOKEN: $TOKEN" \
+  "https://gitlab.noveogroup.com/api/v4/projects/1288/jobs/JOB_ID/trace" | grep -A10 "GENERATED MANIFEST"
+```
+
+The manifest lists 7 deployable services with their exact image tags (pipeline IDs):
+`discovery`, `gateway`, `frontend-app`, `email-app`, `calendar-app`, `ttt-app`, `vacation-app`.
+
+### Rollback Behavior Notes
+
+- **deploy** uses branch tags (e.g., `release_2.1-2.1.26-SNAPSHOT`) — the rollback test
+  endpoint returns `Deployed version: LOCAL`
+- **rollback** uses pipeline ID tags from the manifest — the endpoint returns
+  `Deployed version: <pipeline_id>` (e.g., `290682`)
+- **Same-pipeline rollback is a no-op** — if you rollback to the same pipeline that was
+  just deployed via regular deploy, docker-compose detects no image change and does not
+  recreate containers. The version endpoint continues showing the previous state.
+- To verify rollback, use the test endpoint: `GET /api/ttt/v1/test/rollback` (available
+  via Swagger MCP tools: `mcp__swagger-qa1-ttt-test__trigger-rollback-test-using-get`,
+  `mcp__swagger-tm-ttt-test__trigger-rollback-test-using-get`)
+
 ### Safety Notes
 
 - **Always confirm** with the user before triggering deploy/migrate/rollback operations.
@@ -367,6 +438,32 @@ curl -s --noproxy "gitlab.noveogroup.com" --header "PRIVATE-TOKEN: $TOKEN" \
 - **Deploy** replaces running containers with new images — the environment will be briefly unavailable.
 - After deploy or migrate, consider running **restart** if services don't come up cleanly.
 - Check the job log if a job fails to diagnose the issue.
+
+### Polling Pattern for Job Completion
+
+Use this pattern to trigger a job and wait for completion:
+
+```bash
+TOKEN="<PAT>"
+
+# Trigger the job
+curl -s --noproxy "gitlab.noveogroup.com" --header "PRIVATE-TOKEN: $TOKEN" \
+  -X POST "https://gitlab.noveogroup.com/api/v4/projects/1288/jobs/JOB_ID/play"
+
+# Poll until done
+for i in $(seq 1 30); do
+  STATUS=$(curl -s --noproxy "gitlab.noveogroup.com" --header "PRIVATE-TOKEN: $TOKEN" \
+    "https://gitlab.noveogroup.com/api/v4/projects/1288/jobs/JOB_ID" | \
+    python3 -c "import json,sys; d=json.load(sys.stdin); print(d['status'])")
+  echo "$(date +%H:%M:%S) status: $STATUS"
+  if [ "$STATUS" = "success" ] || [ "$STATUS" = "failed" ] || [ "$STATUS" = "canceled" ]; then
+    break
+  fi
+  sleep 10
+done
+```
+
+Use `sleep 10` for deploy/restart, `sleep 15` for migrate (longer running).
 
 ---
 
@@ -381,6 +478,10 @@ curl -s --noproxy "gitlab.noveogroup.com" --header "PRIVATE-TOKEN: $TOKEN" \
 | 302 redirect to sign_in | PAT used on web route | Use Puppeteer method instead |
 | `scope does not have a valid value` | Used `scope=all` on pipelines endpoint | Omit `scope` param — only valid for issues |
 | Password with `!` or special chars mangled | Shell expansion | Use `--credentials-file` instead of `--password` |
+| 502/503 after deploy/rollback | Services still starting | Wait ~90s after job success, then retry |
+| Rollback shows "LOCAL" instead of pipeline ID | Same-pipeline rollback (no-op) | Expected when rolling back to the currently deployed pipeline |
+| Job retry returns old status | Polling the old job ID | Retry creates a NEW job — use the new ID from the retry response |
+| `play` returns 400 "Unplayable Job" | Job already ran or is not manual | Use `retry` endpoint instead of `play` for completed jobs |
 
 ---
 

@@ -23,6 +23,7 @@ Auth header: `PRIVATE-TOKEN: <token>` (read from `.claude/.mcp.json`)
 |---|---|---|---|
 | Get issue | GET | `/projects/:id/issues/:iid` | `:iid` is the issue number shown in the URL |
 | List issue notes | GET | `/projects/:id/issues/:iid/notes?per_page=100` | Comments and system events |
+| Create issue note | POST | `/projects/:id/issues/:iid/notes` | Body: `{"body": "markdown text"}` — adds a comment |
 | List issue labels | — | Included in issue response | `labels` array field |
 | Search issues | GET | `/projects/:id/issues?search=KEYWORD&labels=LABEL&per_page=100&scope=all` | See search params below |
 
