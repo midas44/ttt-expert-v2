@@ -1,13 +1,13 @@
 ---
-session: 99
+session: 100
 phase: autotest_generation
 updated: '2026-03-20'
 ---
-# Session 99 Briefing (Phase C — Autotest Generation)
+# Session 100 Briefing (Phase C — Autotest Generation)
 
 **Date:** 2026-03-20
 **Phase:** Autotest Generation (vacation scope)
-**Tests generated:** 5 verified (TC-125, TC-127, TC-128, TC-065, TC-167)
+**Tests generated:** 5 verified (TC-056, TC-164, TC-069, TC-165, TC-136)
 
 ## What was done
 
@@ -15,48 +15,47 @@ Generated and verified 5 vacation API tests on qa-1:
 
 | Test ID | Title | Type | Suite | Result |
 |---------|-------|------|-------|--------|
-| TC-VAC-125 | ServiceException vs ValidationException format difference | API | TS-Vac-APIErrors | PASS |
-| TC-VAC-127 | Empty request body — 400 response | API | TS-Vac-APIErrors | PASS |
-| TC-VAC-128 | Very large vacation — 365 day boundary | API | TS-Vac-APIErrors | PASS |
-| TC-VAC-065 | Notify-also with required flag behavior | API | TS-Vac-Approval | PASS |
-| TC-VAC-167 | availablePaidDays API returns correct values for AV=true | API | TS-VAC-AVMultiYear | PASS |
+| TC-VAC-056 | Approve with crossing vacation — blocked | API | TS-Vac-StatusFlow | PASS |
+| TC-VAC-164 | FIFO redistribution across year boundary (Dec→Jan) | API | TS-Vac-Balance-Redistribution | PASS |
+| TC-VAC-069 | AV=false basic accrual formula — mid-year calculation | API | TS-Vac-DayCalc | PASS |
+| TC-VAC-165 | Edit multi-year vacation — redistribution recalculates | API | TS-Vac-Balance-Redistribution | PASS |
+| TC-VAC-136 | AV=true negative balance carry-over | API | TS-Vac-DayCalc | PASS |
 
-TC-096 (payment date adjustment on approval) was deferred — requires approve period > report period gap which doesn't exist on qa-1 (both are 2026-03-01 for all offices).
+JWT endpoint investigated — it's a token exchange (requires existing CAS JWT), not a generator. Cannot create tokens for arbitrary users via API.
 
 ## Key Discoveries
 
-1. **Past date validation is ConstraintViolation, not ServiceException** — `@VacationCreateRequest` validator fires as `MethodArgumentNotValidException` with `errorCode: "exception.validation"` + errors[]. Same format as missing @NotNull fields.
+1. **Crossing check fires at CREATION time, not just approval** — `findCrossingVacations` includes ALL statuses (NEW, APPROVED, PAID, DELETED). Cannot create two overlapping vacations even as NEW. TC-056 confirms crossing is enforced at creation, contradicting the test case assumption that it only fires at approval.
 
-2. **Approve/{nonExistentId} returns ConstraintViolationException** — `@VacationIdExistsValidator` on the path variable triggers `javax.validation.ConstraintViolationException` (not ServiceException). The response has `errorCode: "exception.validation"` with `errors[{field: "vacationId", code: "VacationIdExistsValidator"}]`.
+2. **PUT /v1/vacations requires /{id} in URL path** — `PUT /v1/vacations` without the ID returns 405 Method Not Allowed. Must use `PUT /v1/vacations/{id}`.
 
-3. **Real ServiceException requires service-layer failure** — only triggers when validation passes but business logic rejects (e.g., double-approve returns `VacationSecurityException` 403). The key structural difference: application exceptions have NO errors[] array; validation exceptions HAVE errors[] array with field-level details.
+3. **String(Date_object).slice(0,4) gives day-of-week, not year** — PostgreSQL pg driver returns JavaScript Date objects. `String(date).slice(0,4)` gives "Mon " or "Fri ", not "2036". Must use `new Date(val).getFullYear()` or `.toISOString().slice(0,4)`. Existing TC-084 has same latent bug but passes coincidentally (checks `!=` on two different weekdays).
 
-4. **vacation_notify_also columns**: `vacation` (not vacation_id), `approver` (not approver_id), `required` (boolean, default false). All user-submitted notifyAlso entries get `required=false` because `listRequired()` is a no-op.
+4. **JWT endpoint is token exchange only** — `POST /v1/security/jwt` takes `{token: "<existing-CAS-JWT>"}` and returns a TTT-signed JWT. Cannot generate tokens from scratch. Permission-based tests (TS-Vac-Permissions, 15 cases) remain blocked at API layer.
 
-5. **availablePaidDays endpoint requires paymentDate** — `GET /v1/vacationdays/available` needs `employeeLogin`, `newDays`, `paymentDate`, `usePaymentDateFilter`. The `newDays` parameter doesn't subtract — it simulates planned consumption for daysNotEnough calculation.
+5. **AV=false accrual verified linear** — availablePaidDays for AV=false increases linearly with paymentDate month. Delta(month3→month6) ≈ 3×(norm/12), delta(month6→month12) ≈ 6×(norm/12). Non-negative clamping confirmed.
 
-6. **No approve > report period gap on qa-1** — all offices have APPROVE and REPORT periods set to the same date (2026-03-01). This blocks TC-096 (payment date auto-adjustment on approval).
-
-7. **365-day REGULAR vacation rejected** — insufficient days (pvaynmaster has ~125 days total). Error response provides error information. ADMINISTRATIVE type behavior for large vacations was also documented.
+6. **Edit vacation updates distribution** — shortening a cross-year vacation from Dec→Jan to Dec-only correctly recalculates vacation_days_distribution (fewer rows, lower total matching new regularDays).
 
 ## Coverage
 
-- **Vacation automated:** 79/173 (45.7%)
-- **Total automated:** 79/1071 (7.4%)
+- **Vacation automated:** 84/173 (48.6%)
+- **Total automated:** 84/1071 (7.8%)
 - **Skipped:** 5 (TC-VAC-031, TC-VAC-058, TC-VAC-046, TC-VAC-099, TC-VAC-126)
 
 ## Week Offsets Used
 
-- TC-125: offset 221 (create → approve → double-approve for ServiceException)
-- TC-065: offset 224 (create with notifyAlso)
-- TC-167: offset 227 (create 5-day vacation to verify balance decrease)
-- TC-127, TC-128: no offsets (error tests, no vacation creation)
+- TC-056: offset 230 (two overlapping vacations — crossing at creation confirmed)
+- TC-164: years 2032-2034 (Dec 15 → Jan 9 cross-year range)
+- TC-165: years 2035-2037 (Dec 18 → Jan 5, shortened to Dec 24)
+- TC-136: offset 239 (5-day vacation for balance decrease verification)
+- TC-069: no offsets (read-only accrual formula test)
 
 ## Next Session Candidates
 
-- **TC-096**: Deferred — needs approve period advancement or different environment
-- **TS-Vac-APIErrors complete**: All 8 test cases in suite now automated (TC-119, 120, 122, 123, 124, 125, 127, 128)
-- **JWT investigation**: Still needed for permission-based tests (15 pending in TS-Vac-Permissions)
-- **TS-Vac-Approval remaining**: TC-065 done this session, TC-067/068 blocked by pass NPE
-- **TS-VAC-AVMultiYear**: TC-167 done, TC-164 (FIFO cross-year) and TC-165 (edit redistribution) remain
-- **Begin UI test generation**: At 45.7%, well past threshold
+- **Begin UI test generation** — at 48.6%, well past API-first threshold
+- **TS-Vac-DayCalc remaining**: TC-070 (AV=false negative shows 0), TC-072 (AV=true negative allowed), TC-075-077 (FIFO consumption/cancel/auto-convert)
+- **TS-Vac-Balance-Redistribution**: TC-164/165 done, remaining cases need multi-vacation setups
+- **TS-Vac-Permissions**: 15 cases, all blocked by JWT (need UI tests via Playwright login)
+- **Fix TC-084 latent bug**: String(Date).slice(0,4) gives weekday, not year — passes coincidentally
+- **TC-096 still deferred**: approve/report period gap doesn't exist on qa-1

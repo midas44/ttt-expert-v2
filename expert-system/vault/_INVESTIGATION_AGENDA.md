@@ -6,185 +6,66 @@
 - P2: Medium — within next 5 sessions
 - P3: Low — backlog
 
-## Completed (Sessions 1-95)
+## Completed (Sessions 1-100)
 <details>
-<summary>Sessions 1-95 completed items (click to expand)</summary>
+<summary>Sessions 1-100 completed items (click to expand)</summary>
 
 ### Sessions 1-83
 - 83 sessions of knowledge acquisition, Phase B generation, and monitoring
 - 191 vault notes, 170 analysis runs, 146 design issues, 207 exploration findings
 - Phase B: 1090 test cases generated across 10 modules (all unified format)
 
-### Session 84 (Phase C — Autotest Generation Start)
-- [x] QMD collection migrated from v1 to v2 path
-- [x] Read existing autotest framework (pages, fixtures, data, utils, reference tests)
-- [x] Generated 5 vacation API test specs (TC-001, 005, 039, 040, 118)
-- [x] All 5 tests verified passing on qa-1
+### Sessions 84-99 (Phase C — Autotest Generation)
+- 79 vacation API tests generated and verified across 16 sessions
+- Key suites: TS-Vac-CRUD, TS-Vac-StatusFlow, TS-Vac-Approval, TS-Vac-Payment, TS-Vac-DayCalc, TS-Vac-APIErrors (complete)
+- Major discoveries: crossing check includes DELETED, batch deadlocks, PAID terminal, UPDATE un-deletes DELETED, no API for vacation optional approvals, API_SECRET_TOKEN lacks AUTHENTICATED_USER for sick leave
 
-### Session 85 (Phase C — 5 More Vacation API Tests)
-- [x] Generated TC-VAC-041 (NEW→CANCELED), TC-VAC-042 (NEW→DELETED), TC-VAC-044 (APPROVED→NEW)
-- [x] Generated TC-VAC-004 (past date validation), TC-VAC-006 (min duration validation)
-- [x] Discovered: minimalVacationDuration = 1 (not 5), check uses working days
-- [x] Discovered: PUT update body requires `id` field in JSON
-- [x] All 5 tests verified (TC-006 and TC-044 required 1 fix each)
-
-### Session 86 (Phase C — 5 More Vacation API + Day Calc Tests)
-- [x] Generated TC-VAC-002 (AV=true create), TC-VAC-003 (ADMINISTRATIVE create)
-- [x] Generated TC-VAC-045 (APPROVED→CANCELED), TC-VAC-071 (AV=true day calc)
-- [x] Generated TC-VAC-171 (past date boundary — today/yesterday)
-- [x] Discovered: pvaynmaster is in AV=true office (Персей, office_id=20)
-- [x] Discovered: crossing check includes DELETED records (DELETED ghosts block future creates)
-- [x] Discovered: batch runs cause PostgreSQL deadlocks on employee_vacation table
-- [x] Moved data classes to 2027 offsets to avoid DELETED ghost collisions
-- [x] All 5 tests verified passing individually (15 total, 8.7% vacation coverage)
-
-### Session 87 (Phase C — 5 More Vacation API Tests)
-- [x] Generated TC-VAC-010 (insufficient days AV=true), TC-VAC-013 (overlapping/crossing)
-- [x] Generated TC-VAC-027 (update APPROVED dates → status reset to NEW)
-- [x] Generated TC-VAC-047 (APPROVED→REJECTED), TC-VAC-130 (schedule filters/pagination)
-- [x] Discovered: ValidationException puts specific code in `message`, not `errorCode`
-- [x] Discovered: v2 availability-schedule requires `from`/`to` params (NPE without)
-- [x] All 5 tests verified passing (20 total, 11.6% vacation coverage)
-
-### Session 88 (Phase C — 5 More + Maintenance)
-- [x] Generated TC-VAC-007 (REGULAR 5-day boundary), TC-VAC-008 (ADMINISTRATIVE 1-day)
-- [x] Generated TC-VAC-014 (null paymentMonth NPE bug)
-- [x] Generated TC-VAC-026 (update NEW dates), TC-VAC-030 (update PAID immutable)
-- [x] Discovered: API response uses regularDays/administrativeDays (not days field)
-- [x] Discovered: PAID vacation update returns 400 (permission service returns empty set)
-- [x] Added queryOneOrNull() to DbClient for nullable queries
-- [x] Session maintenance: backfilled generation_session, verified tracking integrity, QMD index OK
-- [x] All 5 tests verified passing (25 total, 14.5% vacation coverage)
-
-### Session 89 (Phase C — 5 Vacation API Tests)
-- [x] Generated TC-VAC-009, TC-VAC-012, TC-VAC-015, TC-VAC-016, TC-VAC-036
-- [x] All 5 tests verified passing (30 total, 17.3% vacation coverage)
-
-### Session 90 (Phase C — 5 Vacation API Tests)
-- [x] Generated TC-VAC-024, TC-VAC-025, TC-VAC-028, TC-VAC-029, TC-VAC-049
-- [x] All 5 tests verified passing (35 total, 20.2% vacation coverage)
-
-### Session 91 (Phase C — 5 Vacation API Tests)
-- [x] Generated TC-VAC-022, TC-VAC-023, TC-VAC-032, TC-VAC-043, TC-VAC-052
-- [x] All 5 tests verified passing (40 total, 23.1% vacation coverage)
-
-### Session 92 (Phase C — 5 Vacation Payment Tests)
-- [x] Generated TC-VAC-048 (APPROVED→PAID terminal state), TC-VAC-088 (pay REGULAR with DB verification)
-- [x] Generated TC-VAC-089 (pay ADMINISTRATIVE), TC-VAC-090 (wrong day split), TC-VAC-092 (pay NEW)
-- [x] Discovered: vacation_payment FK is vacation.vacation_payment_id (NOT shared PK, auto-sequence IDs)
-- [x] Discovered: PAID terminal confirmed (cancel returns 400), PAID+EXACT cannot be deleted
-- [x] TC-088 required 1 fix (DB column names and FK pattern)
-- [x] All 5 tests verified passing (45 total, 26.0% vacation coverage)
-
-### Session 93 (Phase C — 4 Vacation API Tests + 1 Skipped)
-- [x] Generated TC-VAC-050 (PAID → any transition terminal blocked)
-- [x] Generated TC-VAC-051 (DELETED → any transition terminal blocked)
-- [x] Generated TC-VAC-035 (update paymentType REGULAR → ADMINISTRATIVE)
-- [x] Generated TC-VAC-057 (add optional approvers on creation)
-- [x] Skipped TC-VAC-058 (optional approver approves — no API endpoint exists for vacation approvals)
-- [x] Discovered BUG: UPDATE on DELETED vacation returns 200, un-deletes to NEW
-- [x] Discovered BUG: Double deletion returns 200 (idempotent soft-delete)
-- [x] Discovered: No API endpoint for vacation optional approvals (only day-off has PATCH)
-- [x] Discovered: vacation_approval table includes primary approver (3 records for 2 optional)
-- [x] All 4 tests verified passing (49 total, 28.3% vacation coverage)
-
-### Session 94 (Phase C — 5 Vacation API Tests + 1 Skipped)
-- [x] Generated TC-VAC-121, TC-VAC-082, TC-VAC-091, TC-VAC-033, TC-VAC-087
-- [x] Skipped TC-VAC-046 (canBeCancelled guard — paymentMonth validation blocks setup)
-- [x] Discovered: API filters zero-balance years from vacationdays/{login}/years
-- [x] Discovered: Optional approvals survive date updates (ASKED status preserved)
-- [x] All 5 tests verified passing (54 total, 31.2% vacation coverage)
-
-### Session 95 (Phase C — 5 Vacation API Tests)
-- [x] Generated TC-VAC-097 (payment dates endpoint), TC-VAC-100 (balance unchanged after payment)
-- [x] Generated TC-VAC-062 (change approver invalid login), TC-VAC-084 (cross-year days split)
-- [x] Generated TC-VAC-021 (available days decrease atomically on create)
-- [x] Discovered: vacation_days_distribution column is `vacation` (not vacation_id), uses FIFO not calendar year split
-- [x] Discovered: payment dates endpoint returns consecutive 1st-of-month strings
-- [x] TC-084 required 1 fix (column name + FIFO assertion correction)
-- [x] All 5 tests verified passing (59 total, 34.1% vacation coverage)
-
-### Session 96 (Phase C — 5 Vacation API Tests + 1 Skipped)
-- [x] Generated TC-VAC-098 (payment dates inverted range bug), TC-VAC-093 (negative days validation)
-- [x] Generated TC-VAC-094 (payment type alignment bug), TC-VAC-064 (orphan approvals on delete)
-- [x] Generated TC-VAC-063 (edit dates resets optional approvals to ASKED)
-- [x] Skipped TC-VAC-099 (cancel after accounting period — paymentMonth validation blocks past-period creation)
-- [x] Discovered: office_period table is in ttt_backend schema (NOT ttt_vacation), columns: id/office/type/start_date
-- [x] Discovered: paymentMonth in past rejected at creation with `validation.vacation.dates.payment`
-- [x] TC-099 required 1 fix attempt (table name), then skipped due to fundamental setup limitation
-- [x] All 5 tests verified passing (64 total, 37.0% vacation coverage)
-
-### Session 97 (Phase C — 5 Vacation API Tests)
-- [x] Generated TC-VAC-083 (negative newDays accepted bug), TC-VAC-103 (DB/API data inconsistency)
-- [x] Generated TC-VAC-055 (status transition timeline events), TC-VAC-038 (update paymentMonth to closed period)
-- [x] Generated TC-VAC-020 (DEPARTMENT_MANAGER self-approval)
-- [x] Discovered: PUT /pass/{id} NPEs on qa-1 (Caffeine cache bug — blocks TC-067, TC-068)
-- [x] Discovered: EmployeeWatcherServiceImpl.listRequired() is a no-op stub
-- [x] All 5 tests verified passing (69 total, 39.9% vacation coverage)
-
-### Session 98 (Phase C — 5 Vacation API Error Tests + 1 Skipped + Maintenance)
-- [x] Generated TC-VAC-119 (malformed JSON → empty 400), TC-VAC-120 (invalid date → info disclosure)
-- [x] Generated TC-VAC-122 (missing fields → errors array), TC-VAC-123 (type mismatch → exception.type.mismatch)
-- [x] Generated TC-VAC-124 (exception class leakage in all error responses)
-- [x] Skipped TC-VAC-126 (sick leave crossing — API_SECRET_TOKEN 403 on POST /sick-leaves)
-- [x] Discovered: API_SECRET_TOKEN lacks AUTHENTICATED_USER authority for sick leave endpoints
-- [x] Discovered: HttpMessageNotReadableException returns completely empty 400 body
-- [x] Discovered: exception field leaks full Java class name in every error response
-- [x] Session 15 maintenance: tracking integrity verified, no orphans
-- [x] All 5 tests verified passing (74 total, 42.8% vacation coverage)
-
-### Session 99 (Phase C — 5 Vacation API Tests)
-- [x] Generated TC-VAC-125 (ServiceException vs ValidationException format difference)
-- [x] Generated TC-VAC-127 (empty request body — 400 response)
-- [x] Generated TC-VAC-128 (very large vacation — 365 day boundary)
-- [x] Generated TC-VAC-065 (notify-also required flag behavior — dead code confirmed)
-- [x] Generated TC-VAC-167 (availablePaidDays API endpoint verification)
-- [x] Discovered: past date validation is ConstraintViolation (not ServiceException)
-- [x] Discovered: approve/{nonExistentId} uses @VacationIdExistsValidator → ConstraintViolationException
-- [x] Discovered: vacation_notify_also columns are `vacation`, `approver` (not _id suffixed)
-- [x] Discovered: availablePaidDays endpoint requires paymentDate parameter
-- [x] Discovered: all offices on qa-1 have approve=report period (no gap for TC-096)
-- [x] TS-Vac-APIErrors suite now COMPLETE (8/8 test cases automated)
-- [x] All 5 tests verified passing (79 total, 45.7% vacation coverage)
+### Session 100 (Phase C — 5 Vacation API Tests)
+- [x] Investigated JWT token endpoint — token exchange only (needs existing CAS JWT)
+- [x] Generated TC-VAC-056 (approve with crossing — blocked at creation)
+- [x] Generated TC-VAC-164 (FIFO redistribution across year boundary)
+- [x] Generated TC-VAC-069 (AV=false accrual formula mid-year calculation)
+- [x] Generated TC-VAC-165 (edit multi-year vacation — redistribution recalculates)
+- [x] Generated TC-VAC-136 (AV=true negative balance carry-over)
+- [x] Discovered: crossing check fires at CREATION, not just approval (all statuses checked)
+- [x] Discovered: PUT /v1/vacations requires /{id} in URL (405 without it)
+- [x] Discovered: String(Date).slice(0,4) gives weekday not year (latent bug in TC-084)
+- [x] All 5 tests verified passing (84 total, 48.6% vacation coverage)
 
 </details>
 
 ## Phase C — Autotest Generation (Active)
 
-**Current scope**: vacation (173 test cases, 79 automated = 45.7%)
+**Current scope**: vacation (173 test cases, 84 automated = 48.6%)
 **Target env**: qa-1
-**Constraint**: API_SECRET_TOKEN authenticates as pvaynmaster only; cannot access sick leave endpoints (403)
+**Constraint**: API_SECRET_TOKEN authenticates as pvaynmaster only; JWT endpoint requires existing CAS token (no arbitrary user generation)
 **pvaynmaster office**: Персей (office_id=20, AV=true)
 **pvaynmaster manager**: ilnitsky (but self-approves as DEPARTMENT_MANAGER)
 **Week offsets used (2026)**: 0, 3, 6, 9, 12, 15, 18, 21 (polluted with DELETED ghosts)
-**Week offsets used (2027-2030)**: 45, 48, 51, 54, 57, 60, 63, 66, 69, 72, 75, 120, 128, 132, 136, 140, 144, 148, 152, 156, 160, 164, 167, 170, 173, 176, 179, 182, 185, 188, 191, 194, 197, 200, 203, 206, 209, 212, 215, 218, 221, 224, 227
-**Cross-year dates used**: 2030-12-29 to 2031-01-02
-**Known issues**: crossing check counts DELETED; batch deadlocks on employee_vacation; PAID+EXACT vacations are permanent records; UPDATE on DELETED un-deletes; no API for vacation optional approvals; paymentMonth in past rejected at creation; PUT /pass/{id} NPEs on qa-1 (Caffeine cache bug); EmployeeWatcherServiceImpl.listRequired() is a no-op stub; API_SECRET_TOKEN lacks AUTHENTICATED_USER for sick leave endpoints; all offices have approve=report period (no gap for TC-096)
-**API response notes**: regularDays/administrativeDays (not days); ServiceException → specific errorCode; ValidationException → generic errorCode + specific message; approver field is full DTO object (not string login); HttpMessageNotReadableException → empty 400 body; exception field leaks full Java class name in ALL error responses; ConstraintViolationException also uses "exception.validation" + errors[]; availablePaidDays endpoint requires paymentDate param
-**DB notes**: vacation_payment FK is on vacation.vacation_payment_id (NOT shared PK); vacation_payment.id is auto-sequence (1.4M range); vacation_approval includes primary approver row; vacation_days_distribution column is `vacation` (not vacation_id), uses FIFO from earliest balance year; office_period is in ttt_backend schema (NOT ttt_vacation); vacation.approver column (not approver_id); timeline table tracks all status events; vacation_notify_also columns: vacation, approver (not _id suffixed), required (default false)
+**Week offsets used (2027-2030)**: 45, 48, 51, 54, 57, 60, 63, 66, 69, 72, 75, 120, 128, 132, 136, 140, 144, 148, 152, 156, 160, 164, 167, 170, 173, 176, 179, 182, 185, 188, 191, 194, 197, 200, 203, 206, 209, 212, 215, 218, 221, 224, 227, 230, 239
+**Cross-year dates used**: 2030-12-29→2031-01-02 (TC-084), 2032-12-15→2033-01-09 (TC-164), 2035-12-18→2036-01-05 (TC-165)
+**Known issues**: crossing check fires at CREATION (all statuses including NEW, DELETED); batch deadlocks on employee_vacation; PAID+EXACT vacations are permanent records; UPDATE on DELETED un-deletes; no API for vacation optional approvals; paymentMonth in past rejected at creation; PUT /pass/{id} NPEs on qa-1 (Caffeine cache bug); EmployeeWatcherServiceImpl.listRequired() is a no-op stub; API_SECRET_TOKEN lacks AUTHENTICATED_USER for sick leave endpoints; all offices have approve=report period (no gap for TC-096); JWT endpoint is token exchange only (not a generator)
+**API response notes**: regularDays/administrativeDays (not days); ServiceException → specific errorCode; ValidationException → generic errorCode + specific message; approver field is full DTO object (not string login); HttpMessageNotReadableException → empty 400 body; exception field leaks full Java class name in ALL error responses; ConstraintViolationException also uses "exception.validation" + errors[]; availablePaidDays endpoint requires paymentDate param; PUT /v1/vacations requires /{id} in URL path (405 without)
+**DB notes**: vacation_payment FK is on vacation.vacation_payment_id (NOT shared PK); vacation_payment.id is auto-sequence (1.4M range); vacation_approval includes primary approver row; vacation_days_distribution column is `vacation` (not vacation_id), uses FIFO from earliest balance year; office_period is in ttt_backend schema (NOT ttt_vacation); vacation.approver column (not approver_id); timeline table tracks all status events; vacation_notify_also columns: vacation, approver (not _id suffixed), required (default false); pg driver returns Date objects — use getFullYear() not String().slice(0,4)
 
 ## Active Items
 
 ### P0 — Next Session
-- [ ] Investigate JWT token acquisition: `get-full-jwt-token-using-pst` swagger endpoint
-  - Unlocks: accountant role, different-user tests, AV=false office employees, sick leave endpoints
-  - Priority over individual tests — would unlock 20+ permission-based test cases AND sick-leave cross-module tests
 - [ ] Generate next batch of vacation API tests (up to 5 from manifest)
-  - TC-164 (FIFO redistribution across year boundary — Dec→Jan vacation)
-  - TC-165 (edit multi-year vacation — redistribution recalculates)
-  - TC-018 (CPO auto-approver self-assignment — needs different user)
-  - TC-019 (regular employee auto-approver assignment — needs different user)
-  - TC-037 (approver edits via EDIT_APPROVER permission)
-- [ ] Begin UI test generation — at 45.7%, well past 30% threshold
-  - Start with 1-2 simple UI verification tests
-- [ ] TS-Vac-APIErrors suite now COMPLETE (8/8): TC-119, 120, 122, 123, 124, 125, 127, 128
+  - TC-070 (AV=false negative balance shows 0 — UI test, may need Playwright)
+  - TC-072 (AV=true negative balance allowed — UI test)
+  - TC-075 (FIFO day consumption — earliest year first)
+  - TC-076 (FIFO cancel returns days, redistributes)
+  - TC-077 (FIFO insufficient → auto-convert to ADMINISTRATIVE)
+- [ ] Begin UI test generation — at 48.6%, consider 1-2 simple UI verification tests
+- [ ] Fix TC-084 latent bug: String(Date).slice(0,4) gives weekday not year
 
 ### P1 — High Priority
-- [ ] Start TS-Vac-Permissions suite (0/15 automated, blocked by JWT investigation)
+- [ ] Start TS-Vac-Permissions suite (0/15 automated, blocked by JWT — need Playwright UI login)
   - TC-104 (employee views own), TC-105 (employee creates), TC-106 (readOnly blocked)
-- [ ] Address TS-Vac-Approval suite (7/15 automated, TC-058 skipped, TC-063/064/065 done)
+- [ ] Address TS-Vac-Approval suite (8/15 automated, TC-058 skipped, TC-063/064/065 done)
   - TC-067/068 blocked by pass endpoint NPE — try on timemachine
-- [ ] Address TS-Vac-DayCalc suite (5/15 automated)
+- [ ] Address TS-Vac-DayCalc suite (7/15 automated after TC-069/TC-136)
 - [ ] TC-096 deferred — all offices have approve=report period, needs gap for auto-adjustment
 - [ ] TC-099 needs report period advancement — try on timemachine env with clock manipulation
 - [ ] TC-126 needs JWT auth — API_SECRET_TOKEN returns 403 on sick leave endpoints
