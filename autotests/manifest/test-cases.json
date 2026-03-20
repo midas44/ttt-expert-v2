@@ -13236,7 +13236,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Comment field has no @Size annotation \u2014 test with very long string too",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-025",
@@ -13250,7 +13250,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "No @Size annotation on comment field. DB column type determines actual limit",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             }
           ]
         },
@@ -13296,7 +13296,7 @@
               "module_component": "VacationUpdateValidator",
               "notes": "CANCELED/REJECTED skip day limit validation in update path",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-029",
@@ -13310,7 +13310,7 @@
               "module_component": "VacationUpdateValidator",
               "notes": "Key difference from create: REJECTED vacations skip limit adjustments",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-030",
@@ -13594,7 +13594,7 @@
               "module_component": "VacationStatusManager",
               "notes": "Edge case: CANCELED in FINAL_STATUSES but explicit transition exists",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-050",
