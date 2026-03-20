@@ -504,3 +504,33 @@ PUT update on a PAID vacation returns HTTP 400. PAID is terminal — `NON_EDITAB
 
 ### Null paymentMonth → HTTP 500 Confirmed
 POST with paymentMonth omitted reliably returns HTTP 500 (NPE). The error response body varies — sometimes includes `exception: "java.lang.NullPointerException"`, sometimes a generic 500 with minimal detail. Bug still present on qa-1.
+
+
+## Autotest Notes (Session 91)
+
+### API_SECRET_TOKEN bypasses hasAccess() ownership checks
+- Sending `login=otherUser` in PUT update body does NOT cause a 400.
+- The API_SECRET_TOKEN authenticates as a privileged system user. `employeeService.getCurrent()` returns this system user, not the user from the `login` field.
+- The system user passes `hasAccess()` for all vacations — likely has admin/system roles.
+- **Impact:** Permission tests (TC-031 update by non-owner, TC-053 non-approver approve) cannot be automated via API_SECRET_TOKEN. Need CAS per-user authentication.
+- The `login` field in create/update DTOs is purely data — it tells the server whose vacation to create/update, not who is performing the action.
+
+### Crossing validation error format (update endpoint)
+- `errorCode`: `exception.validation.fail` (generic, NOT the specific crossing code)
+- `message`: `exception.validation.vacation.dates.crossing` (specific code is here)
+- `errors[0].code`: `exception.validation.fail`
+- `errors[0].message`: `exception.validation.vacation.dates.crossing`
+- Pattern for assertions: always check both `errorCode` and `message`/`errors[].message`.
+
+### Approve endpoint confirmed: PUT /approve/{id}
+- All status transition endpoints follow `PUT /{action}/{vacationId}` pattern.
+- Approve: `PUT /approve/{id}` (not POST, not `/{id}/approve`)
+- Reject: `PUT /reject/{id}`
+- Cancel: `PUT /cancel/{id}`
+- Pay: `PUT /pay/{id}`
+
+### notifyAlso field behavior
+- Valid logins accepted (200), records stored in `vacation_notify_also` table.
+- Invalid login rejected (400) by `@EmployeeLoginCollectionExists` DTO validator.
+- GET /vacations/{id} response does NOT include notifyAlso — data is only in the DB table.
+- Colleague logins can be found via: `SELECT login FROM ttt_backend.employee WHERE enabled=true AND login != ownerLogin`.
