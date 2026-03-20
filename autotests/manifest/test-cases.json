@@ -13194,7 +13194,7 @@
               "module_component": "VacationRecalculationService",
               "notes": "Days deducted at creation (for NEW status tracking), final deduction at approval",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-022",
@@ -13366,7 +13366,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "State reset behavior confirmed in code and live testing",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-034",
@@ -13552,7 +13552,7 @@
               "module_component": "VacationPermissionService",
               "notes": "Critical accounting guard. Same logic blocks reject and delete too",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "skipped"
             },
             {
               "test_id": "TC-VAC-047",
@@ -13780,7 +13780,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-063",
@@ -14064,7 +14064,7 @@
               "module_component": "VacationAvailablePaidDaysCalculatorImpl",
               "notes": "newDays=0 triggers binary search algorithm",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-083",
@@ -14092,7 +14092,7 @@
               "module_component": "VacationDaysDistributor",
               "notes": "Cross-year boundary case. DB: vacation_days_distribution has year column",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-085",
@@ -14134,7 +14134,7 @@
               "module_component": "VacationDaysController",
               "notes": "Useful for verifying FIFO consumption and corrections",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             }
           ]
         },
@@ -14194,7 +14194,7 @@
               "module_component": "VacationStatusManager",
               "notes": "Idempotency: second payment attempt blocked",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-092",
@@ -14278,7 +14278,7 @@
               "module_component": "VacationPaymentDatesController",
               "notes": "Provides valid payment month options for vacation form",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-098",
@@ -14320,7 +14320,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Confirmed in live testing: days deducted at approval, not payment",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-101",
@@ -14622,7 +14622,7 @@
               "module_component": "VacationRepository",
               "notes": "Standard 404 handling",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-122",
