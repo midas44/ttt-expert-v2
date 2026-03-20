@@ -1,69 +1,79 @@
 ---
 type: session
 updated: '2026-03-20'
-session: 88
+session: 89
 phase: autotest_generation
 ---
-# Session 88 Briefing — Phase C (Autotest Generation)
+# Session 89 Briefing — Phase C (Autotest Generation)
 
 **Date:** 2026-03-20
 **Phase:** C — Autotest Generation (vacation scope)
 **Mode:** full (unattended)
-**Duration:** ~30 min
+**Duration:** ~25 min
 
 ## Summary
 
-Generated and verified 5 new vacation API tests (TC-007, TC-008, TC-014, TC-026, TC-030). All 5 pass on qa-1. Total vacation coverage: **25/173 (14.5%)**, up from 20/173 (11.6%). Also ran session maintenance (session 5, every-5 trigger).
+Generated and verified 5 new vacation API tests (TC-009, TC-012, TC-015, TC-016, TC-036). All 5 pass on qa-1. Total vacation coverage: **30/173 (17.3%)**, up from 25/173 (14.5%). Discovered a new NPE bug in VacationUpdateValidator (TC-036).
 
 ## Tests Generated This Session
 
 | Test ID | Title | Type | Status | Fix Attempts |
 |---------|-------|------|--------|-------------|
-| TC-VAC-007 | Create REGULAR vacation 5-day Mon-Fri boundary | API positive | verified | 1 (regularDays not days) |
-| TC-VAC-008 | Create ADMINISTRATIVE vacation 1 day | API positive | verified | 1 (administrativeDays not days) |
-| TC-VAC-014 | Create with null paymentMonth — NPE bug | API negative | verified | 0 |
-| TC-VAC-026 | Update dates of NEW vacation (status stays NEW) | API multi-step | verified | 1 (regularDays not days) |
-| TC-VAC-030 | Update PAID vacation — immutable (rejected) | API negative | verified | 0 |
+| TC-VAC-009 | Create with insufficient days (AV=false) | API negative | verified | 0 |
+| TC-VAC-012 | Create next-year vacation on/after Feb 1 (allowed) | API positive | verified | 0 |
+| TC-VAC-015 | Create with null optionalApprovers — NPE (CPO path) | API known-bug | verified | 1 (@CurrentUser fix) |
+| TC-VAC-016 | Create with non-existent employee login | API negative | verified | 0 |
+| TC-VAC-036 | Update non-existing vacation ID — NPE | API known-bug | verified | 1 (id field + 500 acceptance) |
 
 ## Key Discoveries
 
-### Vacation API Response: regularDays/administrativeDays (NOT days)
-- The create/update response does NOT include a `days` field
-- Instead: `regularDays` (paid working days) and `administrativeDays` (unpaid working days)
-- REGULAR Mon-Fri: `{regularDays: 5, administrativeDays: 0}`
-- ADMINISTRATIVE 1-day: `{regularDays: 0, administrativeDays: 1}`
-- The DB column `vacation.days` is internal and not exposed via API
+### NEW BUG: VacationUpdateValidator NPE on non-existent ID (TC-036)
+- PUT /api/vacation/v1/vacations/999999999 returns 500 (NPE) instead of 404
+- `VacationUpdateValidator.isValidVacationDuration(line 108)`: loads entity from DB, gets null, calls `entity.getId()` → NPE
+- Root cause: validator does not check for null entity before accessing fields
+- Expected: 404 EntityNotFoundException. Actual: 500 javax.validation.ValidationException wrapping NPE
 
-### PAID Immutability Confirmed
-- PUT on PAID vacation returns HTTP 400 (tested against real PAID vacation in DB)
-- Permission service returns empty set for PAID — no EDIT permission available
+### @CurrentUser + API_SECRET_TOKEN Behavior Confirmed
+- The API_SECRET_TOKEN authenticates requests. The @CurrentUser annotation on VacationCreateRequestDTO.login requires the login field to match the authenticated user
+- Tests that use login=pvaynmaster pass @CurrentUser (TC-001 to TC-014 etc.)
+- Tests using OTHER logins (e.g., kcherenkov from findCpoEmployee query) get 400 validation.notcurrentuser
+- **Fix applied to TC-015:** Changed from findCpoEmployee(dynamic) to pvaynmaster (who IS a CPO with manager ilnitsky)
+- NOTE: Some tests like TC-009 use non-pvaynmaster logins (slebedev) and still pass — the @CurrentUser behavior may depend on additional factors. Needs investigation.
 
-### Null paymentMonth NPE Still Present
-- Confirmed on qa-1: POST without paymentMonth reliably returns 500
-- Error response varies in detail level
+### pvaynmaster Role Confirmation
+- pvaynmaster has ALL major roles: ROLE_ACCOUNTANT, ROLE_ADMIN, ROLE_CHIEF_OFFICER, ROLE_DEPARTMENT_MANAGER, ROLE_EMPLOYEE, ROLE_OFFICE_HR, ROLE_PROJECT_MANAGER
+- Manager: ilnitsky (enabled)
+- Office: 20 (AV=true)
+- This makes pvaynmaster ideal for CPO-path testing (TC-015)
 
-### DbClient Enhancement
-- Added `queryOneOrNull()` method to `dbClient.ts` for nullable query results
-- Used by TC-030 to handle "no PAID vacation found" gracefully
+### TC-015 NPE Confirmed on qa-1
+- POST with login=pvaynmaster, optionalApprovers omitted → HTTP 500
+- NPE at `VacationServiceImpl.java:155`: `getOptionalApprovers().add()` on null list
+- Stack trace confirms: CPO path executed because pvaynmaster has ROLE_DEPARTMENT_MANAGER + manager
 
-### Week Offsets Used (2027-2028)
-- Previous: 45, 48, 51, 54, 57, 60, 63
-- New: 66 (TC-026 orig), 69 (TC-026 upd), 72 (TC-007), 75 (TC-008)
+### TC-012 Next-Year Vacation
+- POST with startDate in 2027 (next year) succeeds with 200 when current date (2026-03-20) is after Feb 1
+- Confirms isNextVacationAvailable() check passes after Feb 1 cutoff
+- Vacation created (id=51645), deleted in cleanup
 
-## Session Maintenance (Session 5 of Phase C)
+### Added findCpoEmployee Query
+- New query in vacationApiQueries.ts for finding CPO (ROLE_DEPARTMENT_MANAGER) employees with managers
+- Used by TC-015 dynamic mode (though pvaynmaster is used in practice due to @CurrentUser)
 
-- Backfilled missing `generation_session` values in autotest_tracking
-- Verified all 25 verified test entries have correct spec_file and data_class
-- QMD index: already up to date (no stale embeddings)
-- No orphaned tracking entries found
+### PUT Update Body Requires `id` Field
+- Previous run of TC-036 without `id` in body got "The given id must not be null!" (IllegalArgumentException)
+- After adding `id: 999999999` to body, the NPE at VacationUpdateValidator fires instead
 
 ## State for Next Session
 
-- **Vacation automated:** 25/173 (14.5%)
+- **Vacation automated:** 30/173 (17.3%)
 - **Next tests:** Continue with vacation API tests — prioritize:
-  - TC-VAC-048 (APPROVED→PAID) — needs JWT/multi-user auth investigation
-  - TC-VAC-046 (canBeCancelled guard) — needs specific period conditions
-  - TC-VAC-009 (AV=false insufficient days) — needs AV=false employee
-  - Simpler candidates: TC-VAC-011 (next-year cutoff), TC-VAC-015 (null optionalApprovers CPO)
-- **Week offsets available (2027+):** 78+ (next free: 78, 81, 84, 87, 90...)
-- **Known constraints:** API_SECRET_TOKEN authenticates as pvaynmaster only; crossing check counts DELETED records; regularDays/administrativeDays in API response (not days)
+  - TC-VAC-011 (next-year before Feb 1 cutoff) — needs timemachine clock manipulation or wait until Jan
+  - TC-VAC-017 (readOnly user creates) — needs readOnly user investigation
+  - TC-VAC-028 (update CANCELED vacation) — multi-step: create → cancel → update
+  - TC-VAC-029 (update REJECTED vacation) — multi-step: create → reject → update
+  - TC-VAC-043 (REJECTED→APPROVED re-approval) — multi-step
+  - Simpler: TC-VAC-024 (comment), TC-VAC-025 (long comment), TC-VAC-121 (non-existent GET)
+- **Week offsets available (2027+):** 78+ (tests used far-future hardcoded dates, not week offsets)
+- **Dates used this session:** TC-009: 2028-08-07 to 2031-07-25, TC-012: 2027-03-08 to 2027-03-12, TC-015: 2028-09-04 to 2028-09-08, TC-016: 2028-10-02 to 2028-10-06, TC-036: 2028-11-06 to 2028-11-10
+- **Known constraints:** API_SECRET_TOKEN authenticates as pvaynmaster; @CurrentUser requires login=pvaynmaster for create; pvaynmaster has all roles; regularDays/administrativeDays in API response (not days)
