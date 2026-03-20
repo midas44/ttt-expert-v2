@@ -13394,7 +13394,7 @@
               "module_component": "VacationServiceImpl, VacationRecalculationService",
               "notes": "Type change triggers recalculation of day pool",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-036",
@@ -13608,7 +13608,7 @@
               "module_component": "VacationStatusManager, VacationPermissionService",
               "notes": "Verify truly terminal — no way to modify PAID vacation",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-051",
@@ -13622,7 +13622,7 @@
               "module_component": "VacationStatusManager",
               "notes": "DELETED is a soft-delete terminal state",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-052",
@@ -13710,7 +13710,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Optional approvers stored in vacation_approval table",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-058",
@@ -13724,7 +13724,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Optional approvals are informational — don't affect main status",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "skipped"
             },
             {
               "test_id": "TC-VAC-059",
