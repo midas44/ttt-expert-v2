@@ -2,8 +2,7 @@
 
 ## Global Goal
 
-Build comprehensive knowledge base of Time Tracking Tool project (aka TTT aka Time Reporting Tool) and generate
-test plans and test cases for all major features. Note that existing documentation can be incomplete / unclear and low-quality, therefore use codebase analysis (static) in combination with application exploration (dynamic) as final truth. 
+Build comprehensive knowledge base of Time Tracking Tool project (aka TTT aka Time Reporting Tool), generate test plans and test cases for all major features, and produce executable Playwright + TypeScript E2E autotests from the generated test documentation. Note that existing documentation can be incomplete / unclear and low-quality, therefore use codebase analysis (static) in combination with application exploration (dynamic) as final truth.
 
 Note: (Mainly) use English version of application for exploratory analysis / testing; use English language in knowledge base; in cases of ambiguous/unclear terminology give Russian version of terms as well.
 
@@ -128,10 +127,24 @@ Use config/ttt/envs/* to get environment parameters, see skills: playwright-brow
 where envURL = https://ttt-[env].noveogroup.com (e.g. https://ttt-qa-1.noveogroup.com, https://ttt-timemachine.noveogroup.com, https://ttt-stage.noveogroup.com)
 
 ## Output Requirements
+
+### Phase B — XLSX Test Documentation
 - Test plans as XLSX (one per major module/feature area)
 - Test cases as XLSX (detailed, executable)
 - Must include description how to generate input test data (by database mining with criteria, random generation in given range, timestamp addition, static values etc.)
 - Can include UI, API and DB actions
 - Compatible with Google Sheets import
 - English only
-- Note: Will be used as input for autotests generation by AI
+
+### Phase C — Autotest Generation
+- Executable Playwright + TypeScript E2E tests generated from XLSX test documentation
+- Test code lives in `autotests/` directory, follows 5-layer architecture: test specs → fixtures → page objects → config+data → Playwright API
+- XLSX test cases are parsed into a JSON manifest (`autotests/manifest/test-cases.json`) via `autotests/scripts/parse_xlsx.py`
+- Each generated test must support three data modes: `static` (hardcoded defaults), `dynamic` (PostgreSQL queries for real data), `saved` (cached JSON for reproducibility)
+- Tests are verified against live test environments (configured via `autotest.target_env` in config.yaml)
+- Generation scope can be limited to a single module via `autotest.scope` in config.yaml
+- Priority order follows the same order as Phase B (Absences → Reports → Accounting → Administration)
+- Knowledge base (vault) must be consulted before generating each test — for selectors, validation rules, known UI quirks, and edge cases
+- Use existing page objects and fixtures when possible; create new ones only when needed
+- Track progress in SQLite `autotest_tracking` table
+- Skills: autotest-generator, autotest-runner, autotest-fixer, xlsx-parser, autotest-progress, page-discoverer

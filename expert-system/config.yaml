@@ -34,3 +34,25 @@ autonomy:
   model: opus
   effort: max
   allow_api_mutations: true
+autotest:
+  enabled: false
+  target_env: qa-1
+  max_tests_per_session: 5
+  auto_fix_attempts: 3
+  scope: all                        # "all" or a module name from test-docs/ (vacation, sick-leave, etc.)
+  priority_order:
+  - vacation
+  - sick-leave
+  - day-off
+  - reports
+  - statistics
+  - accounting
+  - admin
+  - planner
+  - security
+  - cross-service
+  type_priority:
+  - UI
+  - API
+  - hybrid
+  skip_patterns: []

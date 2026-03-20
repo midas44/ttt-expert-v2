@@ -370,7 +370,7 @@ qmd collection list                     # expert-vault listed
 which eslint madge jscpd ts-prune cr
 
 # Workspace structure
-ls $PROJECT/expert-system/              # vault/ scripts/ repos/ output/
+ls $PROJECT/                            # test-docs/ autotests/ expert-system/
 ls $PROJECT/expert-system/vault/        # architecture/ modules/ etc.
 
 # Config files
@@ -432,7 +432,53 @@ When knowledge acquisition is sufficient:
      generation_allowed: true
    ```
 
-### 8.5 Session Delay Management
+### 8.5 Transitioning Phase B → Phase C (Autotest Generation)
+
+When all XLSX workbooks have been generated in `test-docs/`:
+
+1. Parse XLSX into manifest:
+   ```bash
+   cd /home/v/Dev/ttt-expert-v2 && python3 autotests/scripts/parse_xlsx.py
+   ```
+2. Install autotest framework dependencies (first time only):
+   ```bash
+   cd autotests && npm install
+   ```
+3. Edit config.yaml:
+   ```yaml
+   phase:
+     current: "autotest_generation"
+   autotest:
+     enabled: true
+     target_env: "qa-1"           # environment to run tests against
+     scope: "all"                 # "all" or a specific module (vacation, sick-leave, etc.)
+     max_tests_per_session: 5     # limit per autonomous session
+   ```
+4. Start the runner or use interactive mode:
+   ```bash
+   # Autonomous
+   ./start.sh
+
+   # Interactive — use the autotest-generator skill
+   claude
+   # Then: "generate autotest for TC-VAC-001"
+   ```
+
+### 8.6 Monitoring Autotest Progress
+
+```bash
+# Quick progress check
+sqlite3 expert-system/analytics.db "
+  SELECT module, COUNT(*) as total,
+    SUM(CASE WHEN automation_status='verified' THEN 1 ELSE 0 END) as done,
+    ROUND(SUM(CASE WHEN automation_status IN ('verified','generated') THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1) as pct
+  FROM autotest_tracking GROUP BY module ORDER BY pct DESC;"
+
+# Or use the skill in interactive mode
+# "show autotest progress"
+```
+
+### 8.7 Session Delay Management
 
 `session.delay_minutes` in config.yaml controls minimum gap between sessions. Adjust based on MAX plan usage:
 - Default 30 — conservative steady usage
@@ -509,7 +555,7 @@ fi
 
 ### XLSX Generation
 - `python3 -c "import openpyxl"`
-- Check `expert-system/output/` exists
+- Check `test-docs/` directory exists
 
 ### Swagger MCP Returns ENOTFOUND
 - `grep noveogroup /etc/hosts` — verify all environment hostnames are present
