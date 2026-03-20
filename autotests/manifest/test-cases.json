@@ -12928,7 +12928,7 @@
               "module_component": "VacationServiceImpl, AdvanceCalculationStrategy",
               "notes": "AV=true offices use different calculation strategy",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "automated"
             },
             {
               "test_id": "TC-VAC-003",
@@ -12942,7 +12942,7 @@
               "module_component": "VacationServiceImpl, VacationCreateValidator",
               "notes": "ADMINISTRATIVE skips duration and availability checks",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "automated"
             },
             {
               "test_id": "TC-VAC-004",
@@ -13040,7 +13040,7 @@
               "module_component": "VacationCreateValidator, AdvanceCalculationStrategy",
               "notes": "AV=true: can go negative via norm deviation but create validator still checks total",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-011",
@@ -13082,7 +13082,7 @@
               "module_component": "VacationCRUDService.findCrossingVacations",
               "notes": "3 overlap patterns: start-inside, end-inside, enclosing",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-014",
@@ -13282,7 +13282,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Key business rule: editing dates resets approval. Code: add(APPROVED, NEW, ROLE_EMPLOYEE)",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-028",
@@ -13538,7 +13538,7 @@
               "module_component": "VacationServiceImpl, VacationPermissionService",
               "notes": "canBeCancelled guard determines if cancel is available",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "automated"
             },
             {
               "test_id": "TC-VAC-046",
@@ -13566,7 +13566,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Approver can reject an already-approved vacation",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-048",
@@ -13910,7 +13910,7 @@
               "module_component": "VacationAvailablePaidDaysCalculatorImpl",
               "notes": "AV=true: no accrual calculation, full year immediately",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "automated"
             },
             {
               "test_id": "TC-VAC-072",
@@ -14748,7 +14748,7 @@
               "module_component": "VacationController",
               "notes": "Comprehensive filter testing. v2 sort format: [+-]fieldname",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             }
           ]
         },
@@ -15346,7 +15346,7 @@
               "module_component": "Vacation / API / VacationCreateValidator",
               "notes": "The validation uses startDate.isBefore(today) — strict less-than. Today is NOT 'before' today, so it passes. BDD Scenario 1 uses a 5-day gap (Jan 10 vs Jan 15). This test targets the exact boundary.",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "automated"
             },
             {
               "test_id": "TC-VAC-172",

@@ -1,76 +1,52 @@
-# Session Briefing
+---
+type: session
+updated: 2026-03-20
+session: 87
+phase: autotest_generation
+---
 
-## Current Session: 83 (COMPLETED)
-**Timestamp**: 2026-03-16T18:00:00Z
-**Phase**: generation (Phase B) — 10 workbooks, 1090 total cases
-**Mode**: full (unattended)
-**Type**: Monitoring — no new activity
+# Session 87 Briefing — Phase C (Autotest Generation)
 
-## Session 83 Summary
+**Date:** 2026-03-20
+**Phase:** C — Autotest Generation (vacation scope)
+**Mode:** full (unattended)
+**Duration:** ~25 min
 
-### 1. GitLab Activity — No New Changes
+## Summary
 
-- **!5306** auto-merge (release/2.1 → development-ttt) was **merged successfully** on 2026-03-16 05:28 UTC — conflicts resolved. Pipeline #290633 green.
-- **!5305** (#3396 CI/CD rollback) merged 2026-03-16 — already tracked in S81/S82
-- **No new feature MRs** since March 16
-- **Pipeline #290633** (development-ttt, Mar 16) — latest, success, 42.31% coverage
+Generated and verified 5 new vacation API tests (TC-010, TC-013, TC-027, TC-047, TC-130). All 5 pass on qa-1. Total vacation coverage: **20/173 (11.6%)**, up from 15/173 (8.7%).
 
-### 2. Build Versions — Unchanged
+## Tests Generated This Session
 
-| Env | TTT Build | Date | Vacation Build | Date |
-|-----|-----------|------|----------------|------|
-| Timemachine | 290209 | Mar 11 | 287654 | Feb 10 |
-| QA-1 | 290485 | Mar 13 | 287654 | Feb 10 |
-| Stage | 289618 | Mar 02 | 287239 | Feb 05 |
+| Test ID | Title | Type | Status | Fix Attempts |
+|---------|-------|------|--------|-------------|
+| TC-VAC-010 | Create with insufficient available days (AV=true) | API negative | verified | 1 (date span too small → 3yr span) |
+| TC-VAC-013 | Create overlapping vacation (start inside existing) | API negative | verified | 2 (errorCode vs message field) |
+| TC-VAC-027 | Update APPROVED vacation dates resets to NEW | API multi-step | verified | 0 |
+| TC-VAC-047 | APPROVED → REJECTED (approver rejects) | API multi-step | verified | 0 |
+| TC-VAC-130 | Vacation list with filters (type, sort, date, pagination) | API read-only | verified | 2 (NPE from missing from/to + totalCount vs totalElements) |
 
-- No new deployments across any environment
-- #2724 PATCH 500 bug still present on timemachine (same build 290209)
+## Key Discoveries
 
-### 3. Sprint 16 — Still Stalled
+### ValidationException Serialization Pattern
+- `ValidationException` (e.g., crossing check) serializes the specific error code into the `message` field, NOT `errorCode`
+- `errorCode` is always generic: `"exception.validation.fail"`
+- `errors[].code` is also generic; `errors[].message` has the specific code
+- Pattern: `{errorCode: "exception.validation.fail", message: "exception.validation.vacation.dates.crossing", errors: [{field: "startDate", code: "exception.validation.fail", message: "exception.validation.vacation.dates.crossing"}]}`
+- This differs from `ServiceException` (e.g., duration check) where `errorCode` directly contains the specific code
 
-5 tickets, all open, 0 new MRs:
-| # | Title | Assignee | Status |
-|---|-------|----------|--------|
-| #2842 | Contractor termination | Irina M. | Open (stalled 2+ months) |
-| #3378 | Tracker script relocation | Aleksandr M. | Open |
-| #3026 | CS office settings impl | Irina M. | Open |
-| #2954 | Sick leave working days | Irina M. | Open |
-| #2876 | Vacation event feed | Irina M. | Open |
+### v2 Availability-Schedule Endpoint
+- `GET /api/vacation/v2/availability-schedule` requires `from` and `to` date parameters — NPE without them
+- Response uses `totalCount` (not `totalElements` like Spring Page)
+- Response structure: `{page, pageSize, totalCount, content: [{employee: {...}, vacations: [...]}]}`
+- `type=MY` with API_SECRET_TOKEN returns ALL employees (385), not just pvaynmaster — the MY/ALL/APPROVER filter affects which vacations are shown per employee
 
-### 4. Open MR Cleanup Candidates
+### Week Offsets Used (2027)
+- 45 (TC-002), 48 (TC-003), 51 (TC-045), 54 (TC-013), 57 (TC-027 original), 60 (TC-027 updated), 63 (TC-047)
 
-- **!5284** — hotfix 3392 merge to release: still open, unchecked. Should be closed (already merged via !5273+!5277).
-- **!5114** — vacation bug #3360: still open, has merge conflicts. Superseded by !5116 which was merged.
-- Multiple CI/CD test MRs from Quyen Nguyen (!5167, !5168, !5185-!5188, !5231) — draft/test branches, not production code.
+## State for Next Session
 
-### 5. No New Test Cases Needed
-
-No application code changes since S78. All Sprint 15 tickets with code changes covered (1090 cases).
-
-## Full Workbook Inventory — 10 WORKBOOKS (unchanged S83)
-| Area | Tabs | Suites | Cases | Format |
-|------|------|--------|-------|--------|
-| vacation | 18 | 14 | 173 | unified |
-| sick-leave | 10 | 6 | 120 | unified |
-| day-off | 10 | 6 | 108 | unified |
-| reports | 12 | 8 | 115 | unified |
-| accounting | 10 | 6 | 92 | unified |
-| admin | 12 | 8 | 92 | unified |
-| statistics | 13 | 9 | 138 | unified |
-| security | 12 | 8 | 92 | unified |
-| cross-service | 10 | 6 | 52 | unified |
-| planner | 15 | 11 | 108 | unified |
-| **TOTAL** | **132** | **82** | **1090** | **all unified** |
-
-## Cumulative Stats
-- 170 analysis runs, 146 design issues, 207 exploration findings
-- 1090 test cases tracked in SQLite (all exported)
-- 191 vault notes, ~904KB total
-- 10 XLSX workbooks (132 tabs), all verified
-- 26 modules in module_health
-
-## Next Session (84) — Recommendations
-- P2: Monitor for new MRs / Sprint 16 activity
-- P2: Monitor timemachine for redeployment — #2724 PATCH bug still present
-- P2: Recommend closing !5114 (stale duplicate) and !5284 (0 diff)
-- P3: Sprint 16 tickets — test cases when implemented
+- **Vacation automated:** 20/173 (11.6%)
+- **Next tests:** Continue with vacation API tests — TC-VAC-008 through TC-VAC-009, TC-VAC-011, TC-VAC-014-026, etc.
+- **Week offsets available (2027):** 66+ (next free: 66, 69, 72, 75, 78...)
+- **Known constraints:** API_SECRET_TOKEN authenticates as pvaynmaster only; crossing check counts DELETED records
