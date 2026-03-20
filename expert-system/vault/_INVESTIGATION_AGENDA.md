@@ -114,35 +114,54 @@
 - [x] TC-099 required 1 fix attempt (table name), then skipped due to fundamental setup limitation
 - [x] All 5 tests verified passing (64 total, 37.0% vacation coverage)
 
+### Session 97 (Phase C — 5 Vacation API Tests)
+- [x] Generated TC-VAC-083 (negative newDays accepted bug), TC-VAC-103 (DB/API data inconsistency)
+- [x] Generated TC-VAC-055 (status transition timeline events), TC-VAC-038 (update paymentMonth to closed period)
+- [x] Generated TC-VAC-020 (DEPARTMENT_MANAGER self-approval)
+- [x] Discovered: PUT /pass/{id} NPEs on qa-1 (Caffeine cache bug — blocks TC-067, TC-068)
+- [x] Discovered: EmployeeWatcherServiceImpl.listRequired() is a no-op stub
+- [x] All 5 tests verified passing (69 total, 39.9% vacation coverage)
+
+### Session 98 (Phase C — 5 Vacation API Error Tests + 1 Skipped + Maintenance)
+- [x] Generated TC-VAC-119 (malformed JSON → empty 400), TC-VAC-120 (invalid date → info disclosure)
+- [x] Generated TC-VAC-122 (missing fields → errors array), TC-VAC-123 (type mismatch → exception.type.mismatch)
+- [x] Generated TC-VAC-124 (exception class leakage in all error responses)
+- [x] Skipped TC-VAC-126 (sick leave crossing — API_SECRET_TOKEN 403 on POST /sick-leaves)
+- [x] Discovered: API_SECRET_TOKEN lacks AUTHENTICATED_USER authority for sick leave endpoints
+- [x] Discovered: HttpMessageNotReadableException returns completely empty 400 body
+- [x] Discovered: exception field leaks full Java class name in every error response
+- [x] Session 15 maintenance: tracking integrity verified, no orphans
+- [x] All 5 tests verified passing (74 total, 42.8% vacation coverage)
+
 </details>
 
 ## Phase C — Autotest Generation (Active)
 
-**Current scope**: vacation (173 test cases, 69 automated = 39.9%)
+**Current scope**: vacation (173 test cases, 74 automated = 42.8%)
 **Target env**: qa-1
-**Constraint**: API_SECRET_TOKEN authenticates as pvaynmaster only
+**Constraint**: API_SECRET_TOKEN authenticates as pvaynmaster only; cannot access sick leave endpoints (403)
 **pvaynmaster office**: Персей (office_id=20, AV=true)
 **pvaynmaster manager**: ilnitsky (but self-approves as DEPARTMENT_MANAGER)
 **Week offsets used (2026)**: 0, 3, 6, 9, 12, 15, 18, 21 (polluted with DELETED ghosts)
 **Week offsets used (2027-2030)**: 45, 48, 51, 54, 57, 60, 63, 66, 69, 72, 75, 120, 128, 132, 136, 140, 144, 148, 152, 156, 160, 164, 167, 170, 173, 176, 179, 182, 185, 188, 191, 194, 197, 200, 203, 206, 209, 212, 215, 218
 **Cross-year dates used**: 2030-12-29 to 2031-01-02
-**Known issues**: crossing check counts DELETED; batch deadlocks on employee_vacation; PAID+EXACT vacations are permanent records; UPDATE on DELETED un-deletes; no API for vacation optional approvals; paymentMonth in past rejected at creation; PUT /pass/{id} NPEs on qa-1 (Caffeine cache bug); EmployeeWatcherServiceImpl.listRequired() is a no-op stub
-**API response notes**: regularDays/administrativeDays (not days); ServiceException → specific errorCode; ValidationException → generic errorCode + specific message; approver field is full DTO object (not string login)
+**Known issues**: crossing check counts DELETED; batch deadlocks on employee_vacation; PAID+EXACT vacations are permanent records; UPDATE on DELETED un-deletes; no API for vacation optional approvals; paymentMonth in past rejected at creation; PUT /pass/{id} NPEs on qa-1 (Caffeine cache bug); EmployeeWatcherServiceImpl.listRequired() is a no-op stub; API_SECRET_TOKEN lacks AUTHENTICATED_USER for sick leave endpoints
+**API response notes**: regularDays/administrativeDays (not days); ServiceException → specific errorCode; ValidationException → generic errorCode + specific message; approver field is full DTO object (not string login); HttpMessageNotReadableException → empty 400 body; exception field leaks full Java class name in ALL error responses
 **DB notes**: vacation_payment FK is on vacation.vacation_payment_id (NOT shared PK); vacation_payment.id is auto-sequence (1.4M range); vacation_approval includes primary approver row; vacation_days_distribution column is `vacation` (not vacation_id), uses FIFO from earliest balance year; office_period is in ttt_backend schema (NOT ttt_vacation); vacation.approver column (not approver_id); timeline table tracks all status events
 
 ## Active Items
 
 ### P0 — Next Session
 - [ ] Investigate JWT token acquisition: `get-full-jwt-token-using-pst` swagger endpoint
-  - Unlocks: accountant role, different-user tests, AV=false office employees
-  - Priority over individual tests — would unlock 20+ permission-based test cases (TC-017, TC-053, etc.)
+  - Unlocks: accountant role, different-user tests, AV=false office employees, sick leave endpoints
+  - Priority over individual tests — would unlock 20+ permission-based test cases AND sick-leave cross-module tests
 - [ ] Generate next batch of vacation API tests (up to 5 from manifest)
+  - TC-125 (ServiceException vs ValidationException format difference)
   - TC-018 (CPO auto-approver self-assignment)
   - TC-019 (regular employee auto-approver assignment)
   - TC-037 (approver edits via EDIT_APPROVER permission)
-  - TC-069 (AV=false basic accrual formula — needs AV=false employee)
   - TC-096 (payment date adjustment on approval)
-- [ ] Begin UI test generation — at 39.9%, well past 30% threshold
+- [ ] Begin UI test generation — at 42.8%, well past 30% threshold
   - Start with 1-2 simple UI verification tests
 
 ### P1 — High Priority
@@ -152,6 +171,7 @@
   - TC-067/068 blocked by pass endpoint NPE — try on timemachine
 - [ ] Address TS-Vac-DayCalc suite (5/15 automated)
 - [ ] TC-099 needs report period advancement — try on timemachine env with clock manipulation
+- [ ] TC-126 needs JWT auth — API_SECRET_TOKEN returns 403 on sick leave endpoints
 - [ ] Investigate pass endpoint NPE on qa-1 — may need service restart or bug report
 - [ ] Add retry-on-500 utility for deadlock handling in batch runs
 

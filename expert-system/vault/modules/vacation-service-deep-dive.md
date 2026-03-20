@@ -559,3 +559,34 @@ POST with paymentMonth omitted reliably returns HTTP 500 (NPE). The error respon
 - Delete PAID+EXACT → blocked by ServiceException("exception.vacation.delete.notAllowed")
 - PAID vacations with EXACT periodType are permanent records in test environments
 - Week offsets 144-160 used for payment tests (permanent PAID records at those dates)
+
+
+## Autotest Notes (Session 98)
+
+### API_SECRET_TOKEN Cannot Access Sick Leave Endpoint
+**Discovered**: Session 98, TC-VAC-126 failure (403).
+POST `/api/vacation/v1/sick-leaves` returns **403 Forbidden** with `AccessDeniedException` when authenticated via `API_SECRET_TOKEN`. The sick leave controller uses `@PreAuthorize("hasAuthority('AUTHENTICATED_USER')")` — the API_SECRET_TOKEN user lacks this authority. The vacation controller uses `hasAuthority('AUTHENTICATED_USER') || hasAuthority('VACATIONS_CREATE')` — the `||` allows the token through via `VACATIONS_CREATE`.
+
+**Impact**: All tests requiring sick leave creation/modification via API are blocked with `API_SECRET_TOKEN`. This includes:
+- TC-VAC-126 (sick leave crossing vacation — 409 CONFLICT)
+- Any future cross-module tests involving sick leave + vacation interaction
+- Needs per-user CAS JWT authentication to test sick leave endpoints.
+
+### TS-Vac-APIErrors Suite Patterns Confirmed
+Session 98 verified 5 error handling patterns:
+- **HttpMessageNotReadableException** → HTTP 400 with completely **empty body** (no JSON, no error details)
+- **MethodArgumentTypeMismatchException** → HTTP 400, errorCode: `exception.type.mismatch`, message includes expected type ("Long")
+- **MethodArgumentNotValidException** → HTTP 400, errors[] array with per-field `{field, code, message}` objects, code contains "NotNull"
+- **ServiceException** (past dates) → HTTP 400, `exception` field leaks full Java class name (`com.noveogroup.ttt.common.exception.ServiceException`)
+- **Exception class leakage** is universal — every error response includes `exception` field with dotted package path
+
+### Error Response Fields Confirmed
+All error responses (except HttpMessageNotReadableException) include these standard fields:
+- `error` (HTTP reason phrase, e.g., "Bad Request")
+- `status` (HTTP code as integer)
+- `exception` (full Java class name — security issue)
+- `path` (request path)
+- `timestamp` (ISO datetime)
+- `errorCode` (application-specific error code)
+- `message` (human-readable or error code string)
+- `errors[]` (only for validation exceptions — per-field violations)
