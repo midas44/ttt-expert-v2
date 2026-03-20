@@ -1622,7 +1622,7 @@ def main():
         total += count
         print(f"  {tab_name}: {count} cases")
 
-    output_path = "/home/v/Dev/ttt-expert-v1/expert-system/output/accounting/accounting.xlsx"
+    output_path = "/home/v/Dev/ttt-expert-v2/test-docs/accounting/accounting.xlsx"
     wb.save(output_path)
     print(f"\nSaved: {output_path}")
     print(f"Total: {total} test cases across {len(SUITES)} suites")

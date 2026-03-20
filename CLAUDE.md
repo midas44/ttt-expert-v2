@@ -6,7 +6,8 @@ This project contains an expert knowledge base for the TTT (Time Tracking Tool) 
 
 - **Obsidian vault** (`expert-system/vault/`, 191 notes, ~222K tokens) — search via `mcp__qmd-search__` tools or read directly via `mcp__obsidian__` tools
 - **SQLite analytics** (`expert-system/analytics.db`) — query via `mcp__sqlite-analytics__execute_sql`
-- **Generated test docs** (`output/` — 10 XLSX workbooks, 1,233 test cases)
+- **Generated test docs** (`test-docs/` — 10 XLSX workbooks, 1,233 test cases)
+- **Autotests** (`autotests/` — Playwright + TypeScript E2E framework, generated from XLSX test cases)
 
 ## Available MCPs
 
@@ -40,6 +41,27 @@ When you discover new information during a task — a bug, an undocumented behav
 - **After significant updates**: run `qmd embed` via bash to update semantic search index
 
 The knowledge base is a living resource — every interactive session that discovers something new should leave it richer.
+
+## Autotest generation
+
+Use the autotest skills to generate, run, and fix Playwright E2E tests from the XLSX test documentation:
+
+- **autotest-generator** — generate test code from XLSX test cases (enriched with vault knowledge)
+- **autotest-runner** — run generated tests and analyze results
+- **autotest-fixer** — diagnose and fix failing tests (uses playwright-vpn for live selector discovery)
+- **xlsx-parser** — parse XLSX workbooks into the JSON manifest
+- **autotest-progress** — view automation coverage and prioritize next tests
+- **page-discoverer** — explore TTT pages to discover selectors for page objects
+
+The autotest framework lives in `autotests/` and shares config with the expert system (`config/ttt/`).
+
+**Vault-first rule for autotest generation:** Before generating any test, search the vault for the relevant module's knowledge — selectors, validation rules, API behaviors, known bugs, and timing quirks. The vault contains hard-won knowledge from Phase A/B that makes generated tests more accurate and robust. Key locations:
+- `modules/<module>-*deep-dive*.md` — validation rules, API endpoints, business logic details
+- `exploration/ui-flows/` — page selectors, navigation patterns, dialog behaviors
+- `exploration/api-findings/` — tested API behaviors, error codes, response formats
+- SQLite `exploration_findings` and `design_issues` tables — structured findings with severity and impact
+
+When you discover new information during autotest generation (selectors, UI quirks, data patterns), write it back to the vault via `mcp__obsidian__write_note` with `mode: "append"`.
 
 ## Key references
 

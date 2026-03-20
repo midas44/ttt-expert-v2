@@ -6,11 +6,13 @@ An autonomous expert system built on top of Claude Code (Opus) that systematical
 
 ## Architecture
 
-The system operates as a prompt-engineered autonomous agent with a two-phase workflow:
+The system operates as a prompt-engineered autonomous agent with a three-phase workflow:
 
 - **Phase A — Knowledge Acquisition.** The agent conducts multi-session investigation of the target application: static analysis of the codebase (Java/Spring Boot backend, React/Redux frontend), exploratory testing of live environments via browser automation and REST API calls, database inspection, and ingestion of external documentation (Confluence, Figma, GitLab, Qase). Findings are persisted into an Obsidian vault (Markdown notes with YAML frontmatter and wikilink cross-references) and a SQLite analytics database. Phase A targets 80% knowledge coverage before transitioning.
 
 - **Phase B — Test Documentation Generation.** Using the accumulated knowledge base, the agent generates per-module XLSX files containing structured test plans and test cases, traceable to requirements and non-duplicative of existing Qase entries.
+
+- **Phase C — Autotest Generation.** Using the knowledge base and XLSX test documentation, the agent generates executable Playwright + TypeScript E2E tests. Test cases are parsed from XLSX into a JSON manifest, enriched with vault knowledge (selectors, validation rules, edge cases), and generated as test specs following a 5-layer framework architecture. Tests are verified against live environments and failures are automatically diagnosed and fixed. Supports three test data modes: static (hardcoded), dynamic (PostgreSQL queries), and saved (cached for reproducibility).
 
 Sessions are orchestrated by a shell-based runner that enforces inter-session delays, manages vault git history, and limits consecutive runs. Each session follows a protocol: read briefing → select investigation targets → execute investigation cycles → persist findings → update coverage metrics → write next-session briefing.
 
@@ -41,7 +43,7 @@ Sessions are orchestrated by a shell-based runner that enforces inter-session de
 | **Qase** | `@anthropic/qase-mcp` | Existing test suites and test cases |
 | **GitLab** | curl + PAT (MCP server connected but non-functional on self-hosted CE) | Issues, MRs, pipelines, code via REST API |
 
-**Reusable skills (10):** Encapsulated domain-specific interaction patterns for GitLab, Confluence, Figma, Qase, Swagger API, PostgreSQL, Playwright, and infrastructure management (MCP setup, package install, skill creator).
+**Reusable skills (17):** Encapsulated domain-specific interaction patterns for GitLab, Confluence, Figma, Qase, Swagger API, PostgreSQL, Playwright, infrastructure management (MCP setup, package install, skill creator), and autotest generation (autotest-generator, autotest-runner, autotest-fixer, xlsx-parser, autotest-progress, page-discoverer).
 
 ## Target Application (TTT)
 
@@ -55,12 +57,12 @@ A microservices-based corporate system for time tracking and absence management:
 
 ## XLSX Output and Downstream Usage
 
-Generated test documentation (test plans and test cases as XLSX workbooks) serves as structured input for an existing AI-driven test automation framework that generates executable autotests from these artifacts. The XLSX format is also compatible with Google Sheets import, enabling export to collaborative environments for review, manual editing, or integration with other systems.
+Generated test documentation (test plans and test cases as XLSX workbooks) serves as structured input for Phase C autotest generation. A Python parser (`autotests/scripts/parse_xlsx.py`) extracts test cases from all workbooks into a JSON manifest (`autotests/manifest/test-cases.json`), which drives the Playwright test code generation pipeline. The XLSX format is also compatible with Google Sheets import, enabling export to collaborative environments for review, manual editing, or integration with other systems.
 
 ### Output directory structure
 
 ```
-output/
+test-docs/
 ├── vacation/vacation.xlsx           # 201 cases, 18 tabs
 ├── statistics/statistics.xlsx       # 156 cases, 12 tabs
 ├── sick-leave/sick-leave.xlsx       # 132 cases, 10 tabs
@@ -128,15 +130,17 @@ Each workbook is designed for single-file import: File > Import > Upload > selec
 
 ## Operating Modes
 
-The expert system is designed to operate in four modes, selectable via `config.yaml` and session context:
+The expert system is designed to operate in five modes, selectable via `config.yaml` and session context:
 
 1. **Data Acquisition** (implemented, completed). Autonomous multi-session investigation from scratch. The agent systematically builds a knowledge base by exploring the codebase (static analysis of local clone), live testing environments (Playwright UI, Swagger API, PostgreSQL), and external documentation (Confluence, Figma, GitLab, Qase). Sessions are orchestrated by `run-sessions.sh` with configurable delays and limits. Completed across two runs: initial run (47 sessions, breadth-first) followed by a deep re-investigation run (51 sessions with relaxed note size limits and code snippet inclusion) that enriched the knowledge base from ~150K to ~222K tokens before auto-transitioning to Phase B.
 
 2. **Data Update** (planned). Triggered after application changes (new sprints, releases, hotfixes). The agent compares branches (e.g. `release/2.1` vs `stage`), identifies changed areas via GitLab diffs and tickets, and selectively updates affected vault notes, SQLite records, and coverage metrics. Avoids full re-investigation by scoping updates to deltas — changed endpoints, modified business logic, new UI flows, altered database schema. Marks stale notes for review and re-runs targeted exploratory testing on affected areas.
 
-3. **Documentation Generation** (implemented, completed). Activated after Phase A reached coverage target with sufficient depth. Produces per-functional-area unified XLSX workbooks (test plan + test suites in one file with cross-linked tabs) using Python openpyxl. Each area goes through: focused deep investigation → knowledge sufficiency check → Qase deduplication check → XLSX generation → tracking in SQLite. Output directory: `output/<area>/`. Generator scripts in `expert-system/generators/<area>/`. Designed for single-file import into Google Sheets with multi-tab navigation. Completed: 1,233 test cases across 81 suites in 10 workbooks.
+3. **Documentation Generation** (implemented, completed). Activated after Phase A reached coverage target with sufficient depth. Produces per-functional-area unified XLSX workbooks (test plan + test suites in one file with cross-linked tabs) using Python openpyxl. Each area goes through: focused deep investigation → knowledge sufficiency check → Qase deduplication check → XLSX generation → tracking in SQLite. Output directory: `test-docs/<area>/`. Generator scripts in `expert-system/generators/<area>/`. Designed for single-file import into Google Sheets with multi-tab navigation. Completed: 1,233 test cases across 81 suites in 10 workbooks.
 
-4. **Interactive** (always available). A human launches `claude` in the project directory and gives specific tasks in a conversational session. The agent leverages the full knowledge base (vault, SQLite, QMD search) and all MCP integrations to accomplish narrow tasks: answer questions about the application, investigate specific bugs, trace a particular business workflow, generate test cases for a single feature, update documentation after a known change, or run targeted exploratory tests.
+4. **Autotest Generation** (implemented, ready). Activated after Phase B — generates executable Playwright + TypeScript E2E tests from the XLSX test documentation. The pipeline: parse XLSX into JSON manifest → enrich each test case with vault knowledge → generate test specs following a 5-layer architecture (specs → fixtures → page objects → config+data → Playwright API) → verify against live environments → track progress in SQLite. Supports scoping to a single module (`autotest.scope` in config.yaml) or all modules. Framework code in `autotests/`. Configurable via `autotest.*` block in config.yaml. 6 dedicated skills: autotest-generator, autotest-runner, autotest-fixer, xlsx-parser, autotest-progress, page-discoverer.
+
+5. **Interactive** (always available). A human launches `claude` in the project directory and gives specific tasks in a conversational session. The agent leverages the full knowledge base (vault, SQLite, QMD search) and all MCP integrations to accomplish narrow tasks: answer questions about the application, investigate specific bugs, trace a particular business workflow, generate test cases for a single feature, update documentation after a known change, or run targeted exploratory tests.
 
    No configuration needed — `CLAUDE.md` (interactive mode prompt) is loaded automatically and points the agent to the knowledge base, available MCPs, and the search-first workflow. The autonomous prompt (`CLAUDE+.md`) is only used during `./start.sh` runs.
 
@@ -177,7 +181,7 @@ Each workbook contains: Plan Overview, Feature Matrix, Risk Assessment, and TS-*
 
 ## Repository Structure
 
-**Remote:** `https://github.com/midas44/ttt-expert-v1.git` (branch: `main`; public, requires foreign VPN to access from RF)
+**Remote:** `https://github.com/midas44/ttt-expert-v2.git` (branch: `main`; public, requires foreign VPN to access from RF)
 
 **What is in the repo:**
 
@@ -200,16 +204,28 @@ expert-system/
     generate-dashboard.py               # HTML dashboard generator (runs after each session)
   artefacts/                            # Screenshots, PDFs, downloads (gitignored)
   generators/                           # Python scripts that produce XLSX workbooks
-output/                                 # Generated XLSX workbooks (10 areas, 1233 cases) — root level
+test-docs/                              # Generated XLSX workbooks (10 areas, 1233 cases) — root level
+autotests/                              # Phase C — Playwright + TypeScript E2E test framework
+  package.json                          # @playwright/test, js-yaml, pg
+  playwright.config.ts                  # Headed + headless projects
+  scripts/parse_xlsx.py                 # XLSX → JSON manifest parser
+  manifest/test-cases.json              # Parsed test cases with automation status
+  e2e/config/                           # Config (reads shared config/ttt/)
+  e2e/data/                             # Test data classes + queries/ + saved/
+  e2e/fixtures/                         # Reusable workflow fixtures
+  e2e/pages/                            # Page object classes
+  e2e/tests/                            # Generated test specs
+  e2e/utils/                            # Utilities (locatorResolver, colorAnalysis)
+  reference/                            # 4 prototype tests from ttt-autom-v2
 config/ttt/
-  ttt.yml                              # App URL/name configuration template
+  ttt.yml                              # App URL/name configuration template (shared with autotests/)
   envs/timemachine.yml                 # Timemachine environment credentials
   envs/stage.yml                       # Stage environment credentials
 docs/                                   # Setup guides (human-guide, autonomy-guide), troubleshooting
 .claude/
   settings.local.json                   # MCP server enablement
   scripts/sync-postgres-mcp.js          # Dynamic PostgreSQL MCP config generator
-  skills/                               # 10 reusable skills (GitLab, Confluence, Figma, etc.)
+  skills/                               # 17 reusable skills (GitLab, Confluence, autotest-generator, etc.)
   mcp-tools/                            # MCP server dependencies and cached Swagger specs
 ```
 
@@ -228,7 +244,7 @@ docs/                                   # Setup guides (human-guide, autonomy-gu
 | `.playwright-mcp/` | Auto-generated Playwright MCP screenshots and logs | Transient browser automation artifacts |
 | `expert-system/artefacts/` | Screenshots, PDFs, downloaded attachments, exported data | Binary artifacts, not part of knowledge base |
 
-Note: `output/` (generated XLSX files, root level) is not gitignored — Phase B output is tracked in the repo.
+Note: `test-docs/` (generated XLSX files, root level) is not gitignored — Phase B output is tracked in the repo.
 
 ## Host Environment
 

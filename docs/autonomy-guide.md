@@ -465,6 +465,8 @@ You can edit `config.yaml` between sessions (the runner re-reads it before each 
 - **Change delay**: edit `session.delay_minutes` and/or `session.delay_minutes_offhours`
 - **Switch to hybrid**: set `autonomy.mode: "hybrid"` — runner will abort at preflight
 - **Enable Phase B**: set `phase.current: "generation"` and `phase.generation_allowed: true`
+- **Enable Phase C**: set `phase.current: "autotest_generation"` and `autotest.enabled: true`
+- **Scope Phase C**: set `autotest.scope` to a module name (e.g., `vacation`) to limit generation
 - **Allow mutations**: set `autonomy.allow_api_mutations: true`
 
 You can also edit vault files between sessions:
@@ -584,7 +586,7 @@ Claude Code requires `HTTP_PROXY=http://127.0.0.1:2080` (AdGuard VPN in SOCKS mo
 
 ```bash
 # Add to crontab (crontab -e):
-*/3 * * * * /home/v/Dev/ttt-expert-v1/expert-system/scripts/proxy-watchdog.sh >> /home/v/Dev/ttt-expert-v1/expert-system/logs/proxy-watchdog.log 2>&1
+*/3 * * * * /home/v/Dev/ttt-expert-v2/expert-system/scripts/proxy-watchdog.sh >> /home/v/Dev/ttt-expert-v2/expert-system/logs/proxy-watchdog.log 2>&1
 ```
 
 The watchdog script (`expert-system/scripts/proxy-watchdog.sh`) tests connectivity through the proxy and runs `adguardvpn-cli disconnect && adguardvpn-cli connect -l FI` on failure. Logs only appear when a restart was needed.
@@ -736,6 +738,36 @@ git -C expert-system/vault log --oneline --stat
 ./expert-system/scripts/run-sessions.sh --sessions 10
 ```
 
+### After Phase B: Autotest Generation (Phase C)
+
+Once all XLSX workbooks are generated:
+
+```bash
+# 1. Parse XLSX into manifest
+cd /home/v/Dev/ttt-expert-v2 && python3 autotests/scripts/parse_xlsx.py
+
+# 2. Install framework dependencies (first time)
+cd autotests && npm install && cd ..
+
+# 3. Enable Phase C in config.yaml:
+#   phase.current: "autotest_generation"
+#   autotest.enabled: true
+#   autotest.scope: "vacation"           # start with one module, or "all"
+#   autotest.target_env: "qa-1"
+#   autotest.max_tests_per_session: 5
+
+# 4. Run autotest generation sessions
+./expert-system/scripts/run-sessions.sh --sessions 10
+
+# 5. Monitor progress
+sqlite3 expert-system/analytics.db "
+  SELECT module, COUNT(*) as total,
+    SUM(CASE WHEN automation_status='verified' THEN 1 ELSE 0 END) as verified
+  FROM autotest_tracking GROUP BY module;"
+```
+
+Phase C generates ~5 tests per session. For 1,071 test cases, expect ~200-400 sessions depending on fix iterations. Start with `scope: vacation` to build page objects and fixtures, then expand to `all`.
+
 ---
 
 ## 10. File Reference
@@ -758,3 +790,8 @@ git -C expert-system/vault log --oneline --stat
 | `expert-system/artefacts/` | UI screenshots and other exploration artefacts (gitignored) |
 | `CLAUDE.md` | Interactive mode prompt (knowledge base pointers, MCP guide) |
 | `CLAUDE+.md` | Autonomous mode prompt (full protocol, symlinked as `CLAUDE.md` during runs) |
+| `autotests/` | Phase C — Playwright + TypeScript E2E test framework |
+| `autotests/manifest/test-cases.json` | Parsed XLSX test cases with automation status |
+| `autotests/scripts/parse_xlsx.py` | XLSX → JSON manifest parser |
+| `autotests/e2e/tests/` | Generated test specs |
+| `autotests/e2e/data/saved/` | Cached test data for "saved" mode |

@@ -195,7 +195,7 @@ ADMIN_RATELIMIT_CASES = [
 
 def supplement_planner():
     """Add close-by-tag deep test cases to planner workbook."""
-    wb_path = '/home/v/Dev/ttt-expert-v1/expert-system/output/planner/planner.xlsx'
+    wb_path = '/home/v/Dev/ttt-expert-v2/test-docs/planner/planner.xlsx'
     wb = openpyxl.load_workbook(wb_path)
 
     # Add cases to TS-Planner-CloseTag sheet
@@ -227,7 +227,7 @@ def supplement_planner():
 
 def supplement_admin():
     """Add ratelimit supplement cases to admin workbook."""
-    wb_path = '/home/v/Dev/ttt-expert-v1/expert-system/output/admin/admin.xlsx'
+    wb_path = '/home/v/Dev/ttt-expert-v2/test-docs/admin/admin.xlsx'
     wb = openpyxl.load_workbook(wb_path)
 
     # Add cases to TS-ADM-PMTool-Edge sheet

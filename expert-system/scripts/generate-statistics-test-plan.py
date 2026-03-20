@@ -5,7 +5,7 @@ import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
-OUTPUT = "/home/v/Dev/ttt-expert-v1/expert-system/output/test-plan-statistics.xlsx"
+OUTPUT = "/home/v/Dev/ttt-expert-v2/test-docs/test-plan-statistics.xlsx"
 
 # Shared styles
 HEADER_FONT = Font(name="Arial", bold=True, size=11, color="FFFFFF")

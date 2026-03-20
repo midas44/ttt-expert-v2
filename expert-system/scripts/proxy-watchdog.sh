@@ -6,7 +6,7 @@
 # If not, restarts adguardvpn-cli. Run via cron every 2-5 minutes.
 #
 # Crontab entry:
-#   */3 * * * * /home/v/Dev/ttt-expert-v1/expert-system/scripts/proxy-watchdog.sh >> /home/v/Dev/ttt-expert-v1/expert-system/logs/proxy-watchdog.log 2>&1
+#   */3 * * * * /home/v/Dev/ttt-expert-v2/expert-system/scripts/proxy-watchdog.sh >> /home/v/Dev/ttt-expert-v2/expert-system/logs/proxy-watchdog.log 2>&1
 #
 
 set -euo pipefail

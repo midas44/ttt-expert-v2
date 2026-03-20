@@ -1538,7 +1538,7 @@ def main():
         count = write_ts_tab(ws, suite_name, cases)
         print(f"  {suite_id}: {count} cases")
 
-    out_path = "/home/v/Dev/ttt-expert-v1/expert-system/output/admin/admin.xlsx"
+    out_path = "/home/v/Dev/ttt-expert-v2/test-docs/admin/admin.xlsx"
     wb.save(out_path)
     print(f"\nSaved: {out_path}")
     print(f"Total: {TOTAL_CASES} test cases across {len(SUITES)} suites")

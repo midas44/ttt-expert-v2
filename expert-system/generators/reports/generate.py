@@ -1709,7 +1709,7 @@ RISKS = [
 # BUILD WORKBOOK
 # =====================================================================
 
-OUTPUT = "/home/v/Dev/ttt-expert-v1/expert-system/output/reports/reports.xlsx"
+OUTPUT = "/home/v/Dev/ttt-expert-v2/test-docs/reports/reports.xlsx"
 
 wb = openpyxl.Workbook()
 

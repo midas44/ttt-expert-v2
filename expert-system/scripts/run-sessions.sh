@@ -292,6 +292,30 @@ After bootstrap, begin Orientation (§10 Sessions 1-3):
 
 At session end, follow §9.3 (update all underscore-prefixed files).
 PROMPT
+    elif [[ "$phase" == "autotest_generation" ]]; then
+        cat <<PROMPT
+This is session ${session_num}. Phase: autotest_generation (Phase C). autonomy.mode is "full" — do not wait for human approval.
+
+Follow §12 (Phase C — Autotest Generation) session protocol:
+1. Read config.yaml (check autotest.* settings)
+2. Read autotests/manifest/test-cases.json for test case inventory
+3. Query SQLite autotest_tracking for current progress
+4. Select next test cases to generate per autotest.priority_order × autotest.type_priority
+5. For each selected test case (up to autotest.max_tests_per_session):
+   a. Enrich from vault: search QMD for module knowledge, read relevant notes
+   b. Check existing page objects and fixtures for reuse
+   c. Generate: data class, page objects (if needed), fixtures (if needed), test spec
+   d. Verify: run the test via npx playwright test --project=chrome-headless
+   e. Fix failures (up to autotest.auto_fix_attempts): use playwright-vpn for selector discovery
+   f. Track: update SQLite autotest_tracking + manifest JSON
+
+$(if (( session_num % 5 == 0 )); then echo "This is session ${session_num} (multiple of 5) — also run maintenance per §9.4."; fi)
+
+At session end:
+- Update _SESSION_BRIEFING.md with Phase C progress
+- Update _AUTOTEST_PROGRESS.md vault note with coverage metrics
+- Commit generated autotest code
+PROMPT
     else
         cat <<PROMPT
 This is session ${session_num}. Phase: ${phase}. autonomy.mode is "full" — do not wait for human approval.
@@ -447,7 +471,7 @@ main() {
     session_num=$(( $(get_state_field "session_number") + 1 ))
 
     # Count sessions per phase
-    local phase_a_count phase_b_count
+    local phase_a_count phase_b_count phase_c_count
     phase_a_count=$(python3 -c "
 import json
 with open('$STATE_FILE') as f:
@@ -460,9 +484,15 @@ with open('$STATE_FILE') as f:
     s = json.load(f)
 print(sum(1 for x in s['sessions'] if x.get('phase') == 'generation'))
 " 2>/dev/null || echo 0)
+    phase_c_count=$(python3 -c "
+import json
+with open('$STATE_FILE') as f:
+    s = json.load(f)
+print(sum(1 for x in s['sessions'] if x.get('phase') == 'autotest_generation'))
+" 2>/dev/null || echo 0)
 
     log "Starting from session $session_num (max: $MAX_SESSIONS)"
-    log "Phase A sessions: $phase_a_count, Phase B sessions: $phase_b_count"
+    log "Phase A sessions: $phase_a_count, Phase B sessions: $phase_b_count, Phase C sessions: $phase_c_count"
     log "Model: $MODEL, effort: $EFFORT"
     log "Phase: $PHASE"
     log "Log dir: $LOG_DIR"

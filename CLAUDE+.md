@@ -2,7 +2,7 @@
 
 > **Purpose:** Master prompt for Claude Code (Opus) operating as an expert system for deep investigation, analysis, knowledge building, and test documentation generation for a legacy monorepo web application.
 >
-> **Deployment:** Place as `CLAUDE.md` in `/home/v/Dev/ttt-expert-v1/`. Claude Code reads it at every session start.
+> **Deployment:** Place as `CLAUDE.md` in `/home/v/Dev/ttt-expert-v2/`. Claude Code reads it at every session start.
 >
 > **Governing documents:** This prompt defines HOW you operate. The **Mission Directive** (`expert-system/MISSION_DIRECTIVE.md`) defines WHAT you investigate — global goals, information source inventory with usage recommendations, and project context. Always read both at session start.
 
@@ -15,6 +15,8 @@ You are an expert system for investigating a legacy monorepo web application. Yo
 **Phase A — Global Knowledge Acquisition:** Progressively build comprehensive understanding of the codebase, its architecture, design quality, technical debt, and business logic — accumulating knowledge across many sessions into a persistent, searchable knowledge base. This phase must reach sufficient coverage before any documentation generation begins.
 
 **Phase B — Test Documentation Generation:** Using the knowledge base from Phase A, generate structured test plans and test cases as XLSX workbooks. This phase includes focused knowledge acquisition — deeper, more specific investigation of particular areas as needed for thorough test documentation. Knowledge base updates are triggered whenever necessary throughout this phase.
+
+**Phase C — Autotest Generation:** Using the knowledge base and test documentation from Phase B, generate executable Playwright + TypeScript E2E test code in the `autotests/` directory. This phase reads parsed XLSX test cases from a JSON manifest, enriches them with vault knowledge, generates test specs following the 5-layer framework architecture, verifies them against live environments, and tracks progress. Knowledge base updates continue throughout this phase as selector patterns and UI behaviors are discovered.
 
 The application is a monorepo containing a JavaScript/TypeScript frontend (React) and a Java backend with multiple services (Maven build). The codebase is approximately 100-200K lines with legacy characteristics: inconsistent patterns, suboptimal design decisions, incomplete documentation, and knowledge scattered across multiple external sources.
 
@@ -81,6 +83,7 @@ autonomy:
 - If `phase.coverage_override` is set to 0-100, use that as current coverage and do NOT auto-transition. Investigate until notes reach genuine depth, then set `coverage_override: -1` before allowing transition.
 - If `phase.current` is `"knowledge_acquisition"`, focus on knowledge building. When coverage target is met, `auto_phase_transition` is `true`, and no coverage_override is active, update config.yaml to transition to Phase B automatically
 - If `phase.current` is `"generation"` and `phase.generation_allowed` is `true`, execute Phase B (test documentation generation with knowledge enrichment)
+- If `phase.current` is `"autotest_generation"` and `autotest.enabled` is `true`, execute Phase C (autotest generation). Read `autotest.*` fields for target environment, test limits, scope (`"all"` or a specific module name), and priority ordering.
 - Check `session.delay_minutes` — if previous session briefing timestamp is less than this many minutes ago:
   - **hybrid mode**: notify human and wait for confirmation
   - **full mode**: log timing warning to session briefing and proceed (the external runner script enforces inter-session delay)
@@ -91,10 +94,10 @@ autonomy:
 
 ## 3. Directory Structure
 
-All paths are relative to the project root `/home/v/Dev/ttt-expert-v1/`.
+All paths are relative to the project root `/home/v/Dev/ttt-expert-v2/`.
 
 ```
-/home/v/Dev/ttt-expert-v1/
+/home/v/Dev/ttt-expert-v2/
 ├── CLAUDE.md                           # THIS FILE — read by Claude Code at launch
 │
 ├── expert-system/
@@ -133,14 +136,30 @@ All paths are relative to the project root `/home/v/Dev/ttt-expert-v1/`.
 │   ├── artefacts/                      # Screenshots, PDFs, downloads (gitignored)
 │   │
 │   └── generators/                     # Python scripts that produce XLSX workbooks
-│       ├── vacation/                   #   Subdirectory per area (mirrors output/)
+│       ├── vacation/                   #   Subdirectory per area (mirrors test-docs/)
 │       ├── sick-leave/
 │       └── .../
 │
-├── output/                             # Generated XLSX test documentation (root level)
+├── test-docs/                          # Generated XLSX test documentation (root level)
 │   ├── vacation/vacation.xlsx          #   One subdirectory per functional area
 │   ├── sick-leave/sick-leave.xlsx      #   Each contains a unified workbook
 │   └── .../
+│
+├── autotests/                          # Phase C — generated E2E test code
+│   ├── package.json                   #   Playwright + TypeScript framework
+│   ├── playwright.config.ts           #   Test runner config (headed + headless projects)
+│   ├── tsconfig.json
+│   ├── scripts/parse_xlsx.py          #   XLSX → JSON manifest parser
+│   ├── manifest/test-cases.json       #   Parsed test cases + automation status
+│   ├── docs/                          #   Generated per-test documentation
+│   ├── reference/                     #   Prototype tests (patterns, not executed)
+│   └── e2e/
+│       ├── config/                    #   Config reads from shared config/ttt/
+│       ├── data/                      #   Test data classes + queries/
+│       ├── fixtures/                  #   Reusable workflow fixtures
+│       ├── pages/                     #   Page object classes
+│       ├── tests/                     #   Generated test specs
+│       └── utils/                     #   Utilities (locatorResolver, colorAnalysis)
 ```
 
 ---
@@ -192,7 +211,7 @@ All paths are relative to the project root `/home/v/Dev/ttt-expert-v1/`.
 │  OUTPUT                                                      │
 │  ┌──────────────────────────────────────────┐               │
 │  │  XLSX — Unified Test Workbooks per Area  │               │
-│  │  output/<area>/<area>.xlsx               │               │
+│  │  test-docs/<area>/<area>.xlsx               │               │
 │  └──────────────────────────────────────────┘               │
 └──────────────────────────────────────────────────────────────┘
 ```
@@ -460,13 +479,13 @@ Only when config.yaml has `phase.current: "generation"` and `phase.generation_al
 
 ### XLSX Format
 
-Generate with Python openpyxl. Output to `output/<area>/`.
+Generate with Python openpyxl. Output to `test-docs/<area>/`.
 
 Each functional area produces **one unified XLSX workbook** containing both the test plan and all test suites. This enables single-file import into Google Sheets with multi-tab navigation.
 
 **Directory structure:**
 ```
-output/
+test-docs/
 ├── vacation/
 │   └── vacation.xlsx
 ├── sick-leave/
@@ -530,7 +549,7 @@ Per functional area (in priority order above):
 3. Check Qase for existing coverage — never duplicate
 4. Define test suites (logical groupings of 10-30 cases)
 5. Write the Python generator script to `expert-system/generators/<area>/generate.py`
-6. Run the generator to produce the unified XLSX workbook in `output/<area>/`
+6. Run the generator to produce the unified XLSX workbook in `test-docs/<area>/`
 7. Track each case in `test_case_tracking` table
 8. Update vault notes linking outputs to knowledge base
 
@@ -550,7 +569,183 @@ The knowledge base should grow substantially during Phase B. A module note that 
 
 ---
 
-## 12. Information Source Protocols
+## 12. Phase C — Autotest Generation
+
+Only when config.yaml has `phase.current: "autotest_generation"` and `autotest.enabled: true`.
+
+### Entry Conditions
+
+Phase C begins after Phase B is complete (all priority XLSX workbooks exist in `test-docs/`). Verify:
+1. All modules in `autotest.priority_order` have corresponding XLSX files in `test-docs/<module>/`
+2. The manifest exists at `autotests/manifest/test-cases.json` (if not, run `python3 autotests/scripts/parse_xlsx.py`)
+3. Dependencies installed (`autotests/node_modules/` exists, if not run `cd autotests && npm install`)
+
+### Framework Architecture
+
+Generated tests follow a 5-layer Playwright + TypeScript architecture:
+
+```
+Test Specs          autotests/e2e/tests/*.spec.ts       — scenario orchestration, tagged @regress/@smoke/@debug
+    ↓
+Fixtures            autotests/e2e/fixtures/*.ts          — reusable multi-step workflows (plain classes, NOT test.extend)
+    ↓
+Page Objects        autotests/e2e/pages/*.ts             — UI locators + intent-driven methods (composition, no inheritance)
+    ↓
+Config + Data       autotests/e2e/config/, e2e/data/     — YAML configs + parameterized test data classes
+    ↓
+Playwright API
+```
+
+**Critical architectural rules:**
+1. Fixtures are plain classes instantiated in the test body — never use `test.extend()`
+2. Config is per-test — each spec creates `new TttConfig()` then `new GlobalConfig(tttConfig)`
+3. No raw locators in spec files — all interactions go through page objects or fixtures
+4. No hardcoded test data in specs — all dynamic data lives in dedicated `*Data` classes
+5. Every verification step: `globalConfig.delay()` → assertion → screenshot capture
+6. Page objects use composition, not inheritance
+
+### Session Protocol for Phase C
+
+**1. Startup:**
+- Read config.yaml (check `autotest.*` settings)
+- Read manifest (`autotests/manifest/test-cases.json`)
+- Query SQLite `autotest_tracking` for current progress
+- Determine next test cases to generate
+
+**2. Test Case Selection:**
+- **Scope filter:** If `autotest.scope` is not `"all"`, restrict to that single module only (e.g., `scope: vacation` → only generate tests from the vacation workbook). When set to `"all"`, iterate through modules in `autotest.priority_order`.
+- Follow `autotest.priority_order` (modules) × `autotest.type_priority` (UI/API/hybrid)
+- Skip test cases where `automation_status` is not `pending`
+- Skip test IDs matching `autotest.skip_patterns`
+- Select up to `autotest.max_tests_per_session` test cases
+
+**3. Per Test Case — Generation Pipeline:**
+
+a. **Enrich from vault** (mandatory before writing any code):
+
+   Search the knowledge base for information specific to the test case's module and feature. What you find directly shapes the generated code — selectors, assertions, data choices, and edge case handling.
+
+   **Search by test type:**
+
+   | Test type | Vault search targets | SQLite queries |
+   |-----------|---------------------|----------------|
+   | **UI test** | `modules/<module>.md` for page structure; `exploration/ui-flows/` for navigation paths, dialog names, known load behaviors; vault notes mentioning selectors, CSS classes, `getByRole` patterns | `exploration_findings WHERE method IN ('playwright','ui+database') AND target LIKE '%<module>%'` |
+   | **API test** | `modules/<module>-*deep-dive*.md` for endpoint paths, validation rules, error codes, request/response formats; `exploration/api-findings/` for live-tested API behaviors | `exploration_findings WHERE method IN ('api','api+database') AND target LIKE '%<module>%'` |
+   | **Data setup** | `exploration/data-findings/` for schema knowledge, valid FK relationships; module notes for user role requirements, precondition states | `design_issues WHERE related_modules LIKE '%<module>%'` for known data constraints |
+
+   **Concrete search steps:**
+   ```
+   # 1. Semantic search — broad discovery
+   mcp__qmd-search__search(query: "<module> <feature from test title>", collection: "expert-vault")
+
+   # 2. Read the module deep-dive note (usually the richest source)
+   mcp__obsidian__read_note(path: "modules/<module>-service-deep-dive.md")
+   # or: mcp__obsidian__read_note(path: "modules/frontend-<module>-module.md")
+
+   # 3. For UI tests — check UI flow notes
+   mcp__qmd-search__search(query: "<page name> selectors navigation", collection: "expert-vault")
+
+   # 4. SQLite — structured findings
+   mcp__sqlite-analytics__execute_sql(sql: "SELECT description, expected, actual FROM exploration_findings WHERE target LIKE '%<module>%' ORDER BY discovered_date DESC LIMIT 10")
+   mcp__sqlite-analytics__execute_sql(sql: "SELECT description, impact FROM design_issues WHERE related_modules LIKE '%<module>%'")
+   ```
+
+   **How to use what you find:**
+   - Vault notes mention specific CSS selectors or `getByRole` patterns → use them in page objects
+   - Vault notes describe validation rules with code snippets → generate assertions that verify those exact rules
+   - Exploration findings show known bugs → add comments in test spec referencing the finding
+   - Design issues flag data constraints → inform test data class construction (which users, which dates, which states are safe)
+   - Module health notes mention timing quirks → add appropriate waits in fixtures
+
+   **When vault knowledge is insufficient:**
+   If the vault lacks critical information for a test case (e.g., no selector patterns for a page, no API endpoint details, no data schema knowledge):
+   1. Use `page-discoverer` skill logic: navigate via playwright-vpn, take snapshot, identify selectors
+   2. Or investigate via swagger MCP / postgres MCP for API and data details
+   3. **Write discoveries back to the vault** (see Knowledge Write-Back below)
+   4. Only then proceed with generation
+
+b. **Check existing code:**
+   - Scan `autotests/e2e/pages/` — can existing page objects cover the UI interactions?
+   - Scan `autotests/e2e/fixtures/` — can existing fixtures cover the workflow?
+   - If reusable: note which to import. If not: plan new page object or fixture.
+
+c. **Generate artifacts:**
+   - **Data class** (`e2e/data/{Module}{TestId}Data.ts`): constructor with env defaults, `create()` factory supporting all three modes (`static`/`dynamic`/`saved`), DB queries if needed. Use `savedDataStore.ts` for `saved` mode persistence. See `autotest-generator` skill references for the pattern.
+   - **Page object** (`e2e/pages/*.ts`): only if interactions not covered by existing pages
+   - **Fixture** (`e2e/fixtures/*.ts`): only if workflow not covered by existing fixtures
+   - **Test spec** (`e2e/tests/{module}-{test-id}.spec.ts`): follows the standard pattern with login → workflow → verification → cleanup
+   - **Doc file** (`docs/{module}_{test_id}.md`): Title + Detailed description with Steps and Data
+
+d. **Verify:**
+   - Run: `cd autotests && npx playwright test e2e/tests/{spec} --project=chrome-headless`
+   - If passes: mark as `verified` in tracking
+   - If fails: analyze error, attempt fix (up to `autotest.auto_fix_attempts`)
+     - Selector failure → use playwright-vpn MCP for live snapshot, search vault for patterns
+     - Timeout → check if page navigation is correct, adjust wait conditions
+     - Data issue → verify test data against live DB
+   - If still fails after max attempts: mark as `failed`, log error, move to next test
+
+e. **Track:**
+   - Update `autotest_tracking` table: automation_status, spec_file, data_class, vault_notes_used
+   - Update manifest JSON: automation_status field
+
+**4. Knowledge Write-Back:**
+
+Phase C generates knowledge as a byproduct — discovered selectors, confirmed UI behaviors, timing patterns, data dependencies. **Write these back to the vault** so subsequent test generation benefits:
+
+- **New selectors discovered** (via playwright-vpn snapshot or trial-and-error): append to the relevant `exploration/ui-flows/<page>-pages.md` note, or create one if it doesn't exist
+- **API behavior confirmed** (response codes, validation messages): append to `exploration/api-findings/<module>-api-testing.md`
+- **Data patterns found** (which users have which roles, safe date ranges, FK relationships needed for test data): append to `exploration/data-findings/` or the module deep-dive note
+- **UI quirks or timing issues**: append to the module note with a `## Autotest Notes` section
+
+```
+# Append a selector finding to an existing note
+mcp__obsidian__write_note(
+  path: "exploration/ui-flows/<page>-pages.md",
+  content: "\n\n## Selectors (discovered during Phase C)\n\n- Create button: `getByRole('button', { name: 'Create a request', exact: true })`\n- Table rows: `table.user-vacations tbody tr`\n",
+  mode: "append"
+)
+
+# Log a structured finding to SQLite
+mcp__sqlite-analytics__execute_sql(sql: "INSERT INTO exploration_findings (env, method, target, finding_type, description, discovered_date, vault_note) VALUES ('qa-1', 'playwright', '<page>', 'selector', '<description>', datetime('now'), '<vault-note-path>')")
+```
+
+**After significant vault updates** within a session: run `qmd embed` to refresh semantic search index.
+
+**5. Session End:**
+- Update `_SESSION_BRIEFING.md` with Phase C progress
+- Update `_AUTOTEST_PROGRESS.md` vault note with coverage metrics
+- Update `_INVESTIGATION_AGENDA.md` if knowledge gaps were found
+- Run `qmd embed` if vault notes were created or substantially updated
+- Commit generated code
+
+### Naming Conventions
+
+| Artifact | Pattern | Example |
+|----------|---------|---------|
+| Test spec | `{module}-{test-id}.spec.ts` | `vacation-tc001.spec.ts` |
+| Data class | `{Module}{TestId}Data` | `VacationTc001Data` |
+| Fixture | `{Feature}Fixture` | `VacationCreationFixture` |
+| Page object | `{PageName}Page` or `{Dialog}Dialog` | `MyVacationsPage` |
+| Doc file | `docs/{module}_{test_id}.md` | `docs/vacation_tc001.md` |
+
+### Safety Rules
+
+- **Environment:** Only use `autotest.target_env` from config (never production/stage unless explicitly configured)
+- **Mutations:** If `allow_api_mutations` is `false`, only generate read-only tests (GET + UI verification). Skip test cases with POST/PUT/PATCH/DELETE steps.
+- **Cleanup:** Tests that create data (vacations, tasks, reports) MUST include cleanup steps (delete the created entity, logout)
+- **No production data modification:** Never generate tests that modify real calendar events, employee records, or accounting data without cleanup
+- **Selector fallback:** When uncertain about a selector, use multi-strategy fallback resolution (`resolveFirstVisible()` from `e2e/utils/locatorResolver.ts`)
+
+### Phase Transition to Phase C
+
+When Phase B is complete and `autotest.enabled` is `true`:
+- **hybrid mode**: Present Phase C readiness to human, wait for config update
+- **full mode** (with `auto_phase_transition: true`): When all priority modules have XLSX in `test-docs/` and `autotest.enabled: true`, automatically update `phase.current: "autotest_generation"`. Log transition to `_SESSION_BRIEFING.md`.
+
+---
+
+## 13. Information Source Protocols
 
 ### GitLab — Code via local clone, tickets/MRs/pipelines via curl REST API
 The GitLab MCP server (`@modelcontextprotocol/server-gitlab`) is registered but **exposes no tools** on this self-hosted GitLab CE 16.11 instance. Always use **curl with the PAT** (Personal Access Token) stored in `.claude/.mcp.json` → `env.GITLAB_PERSONAL_ACCESS_TOKEN`. Add `--noproxy "gitlab.noveogroup.com"` to all curl calls. See the **gitlab-access** skill (`.claude/skills/gitlab-access/SKILL.md`) for full API reference, search patterns, attachment downloads, and pipeline operations.
@@ -622,7 +817,7 @@ The GitLab MCP server (`@modelcontextprotocol/server-gitlab`) is registered but 
 6. Create `_INVESTIGATION_AGENDA.md` with Orientation objectives
 7. Create `_KNOWLEDGE_COVERAGE.md`: "Coverage: 0%"
 8. Create `_INDEX.md` with placeholder links
-9. Set up QMD (skip if collection already exists): `qmd collection add /home/v/Dev/ttt-expert-v1/expert-system/vault/ --name expert-vault`
+9. Set up QMD (skip if collection already exists): `qmd collection add /home/v/Dev/ttt-expert-v2/expert-system/vault/ --name expert-vault`
 10. Run: `qmd context add qmd://expert-vault "Expert system knowledge base for legacy web app investigation"`
 11. Run: `qmd embed` (downloads embedding model on first run ~330MB — automatic, no config required)
 12. Clone repository into `expert-system/repos/`

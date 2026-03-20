@@ -1756,7 +1756,7 @@ RISKS = [
 # BUILD WORKBOOK
 # =====================================================================
 
-OUTPUT = "/home/v/Dev/ttt-expert-v1/expert-system/output/sick-leave/sick-leave.xlsx"
+OUTPUT = "/home/v/Dev/ttt-expert-v2/test-docs/sick-leave/sick-leave.xlsx"
 
 wb = openpyxl.Workbook()
 

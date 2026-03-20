@@ -125,7 +125,7 @@ PLANNER_S74_CASES = [
 
 def supplement_planner():
     """Add S74 live-testing-verified cases to planner workbook."""
-    wb_path = '/home/v/Dev/ttt-expert-v1/expert-system/output/planner/planner.xlsx'
+    wb_path = '/home/v/Dev/ttt-expert-v2/test-docs/planner/planner.xlsx'
     wb = openpyxl.load_workbook(wb_path)
 
     # Add cases to TS-Planner-CloseTag sheet

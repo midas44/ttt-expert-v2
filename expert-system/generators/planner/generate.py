@@ -1211,7 +1211,7 @@ def main():
         ws.sheet_properties.tabColor = TAB_COLOR_TS
         write_ts_tab(ws, suite_name, suite_info["data"])
 
-    out_path = "/home/v/Dev/ttt-expert-v1/expert-system/output/planner/planner.xlsx"
+    out_path = "/home/v/Dev/ttt-expert-v2/test-docs/planner/planner.xlsx"
     wb.save(out_path)
 
     total = sum(len(s["data"]) for s in ALL_SUITES.values())

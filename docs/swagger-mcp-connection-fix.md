@@ -56,8 +56,8 @@ Each server uses the same wrapper script but with different env vars (`OPENAPI_S
 Install `@ivotoby/openapi-mcp-server` into a local `node_modules` so `npx` is no longer needed:
 
 ```bash
-mkdir -p /home/v/Dev/ttt-expert-v1/.claude/mcp-tools
-npm install --prefix /home/v/Dev/ttt-expert-v1/.claude/mcp-tools @ivotoby/openapi-mcp-server
+mkdir -p /home/v/Dev/ttt-expert-v2/.claude/mcp-tools
+npm install --prefix /home/v/Dev/ttt-expert-v2/.claude/mcp-tools @ivotoby/openapi-mcp-server
 ```
 
 This creates the binary at:
@@ -152,7 +152,7 @@ exec /usr/local/bin/node "$SCRIPT_DIR/node_modules/@ivotoby/openapi-mcp-server/b
 Make executable:
 
 ```bash
-chmod +x /home/v/Dev/ttt-expert-v1/.claude/mcp-tools/start-swagger-mcp.sh
+chmod +x /home/v/Dev/ttt-expert-v2/.claude/mcp-tools/start-swagger-mcp.sh
 ```
 
 ### Step 3: Configure MCP servers in `.claude/.mcp.json`
@@ -164,7 +164,7 @@ Each swagger server entry looks like:
   "swagger-{env}-{service}-{group}": {
     "type": "stdio",
     "command": "/usr/bin/bash",
-    "args": ["/home/v/Dev/ttt-expert-v1/.claude/mcp-tools/start-swagger-mcp.sh"],
+    "args": ["/home/v/Dev/ttt-expert-v2/.claude/mcp-tools/start-swagger-mcp.sh"],
     "env": {
       "OPENAPI_SPEC_PATH": "https://ttt-{env-full}.noveogroup.com/api/{service}/v2/api-docs?group={group}",
       "API_BASE_URL": "https://ttt-{env-full}.noveogroup.com/api/{service}",
