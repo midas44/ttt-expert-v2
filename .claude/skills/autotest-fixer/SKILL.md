@@ -100,7 +100,7 @@ or add `waitForLoadState('networkidle')` after navigation.
 Re-run the test to confirm it passes:
 
 ```bash
-cd /home/v/Dev/ttt-autom-v2/autotests && npx playwright test <spec-file> --reporter=list --repeat-each=3
+cd /home/v/Dev/ttt-expert-v2/autotests && npx playwright test <spec-file> --reporter=list --repeat-each=3
 ```
 
 Using `--repeat-each=3` helps catch flaky fixes that only work sometimes.

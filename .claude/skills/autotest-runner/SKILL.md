@@ -31,7 +31,7 @@ Ask the user or infer what to run:
 | Scope | Command |
 |-------|---------|
 | All tests | `npx playwright test` |
-| Single spec | `npx playwright test e2e/specs/reports/tc-042.spec.ts` |
+| Single spec | `npx playwright test e2e/tests/reports-tc042.spec.ts` |
 | Module (by tag) | `npx playwright test --grep @reports` |
 | Priority (by tag) | `npx playwright test --grep @critical` |
 | Project (browser) | `npx playwright test --project=chromium` |
@@ -40,7 +40,7 @@ Ask the user or infer what to run:
 ### 2. Execute Tests
 
 ```bash
-cd /home/v/Dev/ttt-autom-v2/autotests && npx playwright test [filters] \
+cd /home/v/Dev/ttt-expert-v2/autotests && npx playwright test [filters] \
   --reporter=list,json \
   --output=test-results/
 ```
@@ -48,7 +48,7 @@ cd /home/v/Dev/ttt-autom-v2/autotests && npx playwright test [filters] \
 For long suites, run in background and monitor:
 
 ```bash
-cd /home/v/Dev/ttt-autom-v2/autotests && npx playwright test [filters] \
+cd /home/v/Dev/ttt-expert-v2/autotests && npx playwright test [filters] \
   --reporter=json > test-results/run-$(date +%Y%m%d-%H%M%S).json 2>&1
 ```
 

@@ -50,95 +50,85 @@ Before creating new files, always check what already exists:
 
 ```
 autotests/e2e/pages/       -- Page Object classes (reuse existing ones)
-autotests/e2e/fixtures/    -- Test fixtures (reuse existing auth, navigation, data setup)
-autotests/e2e/specs/       -- Existing specs (avoid duplication, follow conventions)
-autotests/e2e/data/        -- Data classes and test data
-autotests/e2e/config/      -- Environment config, base URLs, credentials
+autotests/e2e/fixtures/    -- Test fixtures (reuse existing workflows)
+autotests/e2e/tests/       -- Existing test specs (avoid duplication, follow conventions)
+autotests/e2e/data/        -- Data classes, queries/, saved/
+autotests/e2e/config/      -- Environment config (reads shared config/ttt/)
+autotests/reference/       -- Prototype tests from ttt-autom-v2 (patterns, not executed)
 ```
 
-Read 2-3 existing spec files to match the project's coding conventions.
+Read 2-3 existing files in `e2e/pages/` and `e2e/fixtures/` to match conventions.
 
 ### 4. Generate Test Artifacts
 
-Follow the 5-layer architecture (specs -> fixtures -> pages -> config+data -> Playwright API):
+Follow the 5-layer architecture (tests -> fixtures -> pages -> config+data -> Playwright API):
 
-**a) Data class** (`e2e/data/<module>.data.ts`):
-- All test data in typed classes/objects
-- No hardcoded values in specs -- everything comes from data classes
-- Environment-specific data handled via config
+**a) Data class** (`e2e/data/{Module}{TestId}Data.ts`, e.g. `VacationTc001Data.ts`):
+- `static async create(mode, tttConfig)` factory supporting static/dynamic/saved modes
+- Constructor params read from `process.env` with documented defaults
+- DB queries in `e2e/data/queries/` if dynamic mode needs them
+- Use `savedDataStore.ts` for saved mode persistence
 
-**b) Page Object** (`e2e/pages/<module>.page.ts`) -- only if not already existing:
-- All locators encapsulated in page class
-- Action methods return promises
-- No raw locators leak outside the page object
+**b) Page Object** (`e2e/pages/{PageName}Page.ts`) -- only if not already existing:
+- All locators as `private readonly` fields
+- Intent-driven methods, no raw locator wrappers
+- Composition, no inheritance
 
-**c) Fixtures** (`e2e/fixtures/<module>.fixture.ts`) -- only if not already existing:
-- Auth fixtures (login as specific role)
-- Navigation fixtures (go to specific page)
-- Data setup/teardown fixtures (API calls to prepare state)
+**c) Fixtures** (`e2e/fixtures/{Feature}Fixture.ts`) -- only if not already existing:
+- Plain classes instantiated in test body (NOT `test.extend()`)
+- Compose page objects internally
 
-**d) Spec file** (`e2e/specs/<module>/<test-case-id>.spec.ts`):
+**d) Spec file** (`e2e/tests/{module}-{test-id}.spec.ts`, e.g. `vacation-tc001.spec.ts`):
 - Uses fixtures for setup, page objects for interaction, data classes for values
-- Every verification step follows the pattern: delay -> assert -> screenshot
-- Tags match module and priority from the test case
-- Descriptive test.describe and test blocks matching the test case title
+- Every verification step: `globalConfig.delay()` -> assert -> screenshot via `VerificationFixture`
+- Tag: `@regress` (or `@smoke`/`@debug`)
+- Login -> workflow -> verification -> cleanup (logout + page.close())
 
 ### 5. Run the Test
 
 After generation, run the test to verify it passes:
 
 ```bash
-cd autotests && npx playwright test e2e/specs/<module>/<test-case-id>.spec.ts --reporter=list
+cd autotests && npx playwright test e2e/tests/{module}-{test-id}.spec.ts --project=chrome-headless
 ```
 
 If it fails, diagnose and fix (invoke `autotest-fixer` skill if needed).
 
 ### 6. Track in SQLite
 
-Log the automation result:
+Update the tracking record:
 
 ```sql
-INSERT INTO autotest_tracking (test_case_id, module, status, spec_file, generated_at)
-VALUES ('<TC-ID>', '<module>', 'generated', '<spec-path>', datetime('now'));
+UPDATE autotest_tracking
+SET automation_status = 'generated', spec_file = '<spec-path>', data_class = '<data-class-path>', updated_date = datetime('now')
+WHERE test_id = '<TC-ID>';
 ```
 
 ## Architecture Rules
 
-These rules exist because the framework must be maintainable across hundreds of tests.
-
-1. **No raw locators in specs.** Every element interaction goes through a page object.
-   Specs should read like business logic, not DOM manipulation.
-
-2. **No hardcoded data in specs.** All test data lives in data classes. This enables
-   environment switching and data-driven testing.
-
-3. **Every verification: delay -> assert -> screenshot.** UI state can lag behind
-   actions. Always wait for the expected state, assert it, then capture evidence.
-
-4. **Reuse before creating.** Check existing pages/ and fixtures/ before generating
-   new ones. Duplicate page objects cause maintenance nightmares.
-
-5. **Vault-first knowledge.** The expert vault contains hard-won knowledge about TTT
-   module behavior, quirks, and timing issues. Always search it before generating.
+1. **No raw locators in specs.** All interactions via page objects or fixtures.
+2. **No hardcoded data in specs.** All in `*Data` classes under `e2e/data/`.
+3. **Every verification: delay -> assert -> screenshot** via `VerificationFixture`.
+4. **Reuse before creating.** Check existing pages/ and fixtures/ first.
+5. **Vault-first knowledge.** Search the vault before generating — it has selectors, validation rules, and quirks.
+6. **Three data modes.** Every data class must support static, dynamic, and saved.
 
 ## References
 
 Read these files for detailed framework conventions and code patterns:
 
-- `references/framework-spec.md` -- Full 5-layer architecture specification
-- `references/generation-guidelines.md` -- Code style, naming, and pattern guidelines
-
-These reference files will be created as the framework matures. If they do not exist yet,
-use the conventions observed in existing spec files under `autotests/e2e/specs/`.
+- `references/framework-spec.md` -- Full 5-layer architecture specification, boilerplate, selector priority, TTT quirks
+- `references/generation-guidelines.md` -- Data modes, vault integration, cleanup requirements
 
 ## Example Output Structure
 
-For test case TC-042 in the Reports module:
+For test case TC-RPT-042 in the Reports module:
 
 ```
 autotests/e2e/
-  specs/reports/tc-042-submit-weekly-report.spec.ts
-  pages/reports.page.ts          (created or reused)
-  fixtures/reports.fixture.ts    (created or reused)
-  data/reports.data.ts           (created or extended)
+  tests/reports-tc042.spec.ts
+  pages/ReportsPage.ts             (created or reused)
+  fixtures/ReportSubmitFixture.ts   (created or reused)
+  data/ReportsTc042Data.ts          (created)
+  data/queries/reportQueries.ts     (extended if dynamic data needed)
 ```

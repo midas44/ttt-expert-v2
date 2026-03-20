@@ -24,6 +24,45 @@ def load_state(state_file):
         return json.load(f)
 
 
+def phase_info(phase):
+    """Return (css_class, label, short_label) for a phase name."""
+    if 'autotest' in phase:
+        return 'l-auto', 'Autotest Generation', 'Auto'
+    if 'acq' in phase:
+        return 'l-acq', 'Knowledge Acquisition', 'Acq'
+    if 'gen' in phase:
+        return 'l-gen', 'Documentation Generation', 'Gen'
+    return 'l-unk', phase, '?'
+
+
+def load_autotest_stats(project_root):
+    """Load autotest tracking stats from SQLite if available."""
+    db_path = project_root / 'expert-system' / 'analytics.db'
+    if not db_path.exists():
+        return None
+    try:
+        import sqlite3
+        conn = sqlite3.connect(str(db_path))
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute("""
+            SELECT module,
+                   COUNT(*) as total,
+                   SUM(CASE WHEN automation_status = 'verified' THEN 1 ELSE 0 END) as verified,
+                   SUM(CASE WHEN automation_status = 'generated' THEN 1 ELSE 0 END) as generated,
+                   SUM(CASE WHEN automation_status = 'failed' THEN 1 ELSE 0 END) as failed,
+                   SUM(CASE WHEN automation_status = 'pending' THEN 1 ELSE 0 END) as pending
+            FROM autotest_tracking
+            GROUP BY module
+            ORDER BY module
+        """).fetchall()
+        conn.close()
+        if not rows:
+            return None
+        return [dict(r) for r in rows]
+    except Exception:
+        return None
+
+
 def generate_html(state, output_file):
     sessions = state.get('sessions', [])
     if not sessions:
@@ -202,6 +241,7 @@ def generate_html(state, output_file):
   .l-timeout {{ color: #d29922; border-color: #9e6a03; background: #9e6a0322; }}
   .l-acq {{ color: #58a6ff; border-color: #1f6feb; background: #1f6feb22; }}
   .l-gen {{ color: #bc8cff; border-color: #8b5cf6; background: #8b5cf622; }}
+  .l-auto {{ color: #39d2c0; border-color: #1a7f72; background: #1a7f7222; }}
   .l-unk {{ color: #7d8590; border-color: #30363d; background: #30363d44; }}
 
   .detail {{
@@ -273,8 +313,7 @@ def generate_html(state, output_file):
 
     for phase, p in sorted(phases.items()):
         avg_p = p['total_sec'] / p['count'] / 60 if p['count'] else 0
-        l_cls = 'l-acq' if 'acq' in phase else ('l-gen' if 'gen' in phase else 'l-unk')
-        label = 'Knowledge Acquisition' if 'acq' in phase else ('Generation' if 'gen' in phase else phase)
+        l_cls, label, _ = phase_info(phase)
         html += f"""<tr>
   <td><span class="label {l_cls}">{label}</span></td>
   <td class="mono">{p['count']}</td>
@@ -314,7 +353,71 @@ def generate_html(state, output_file):
 </table>
 </div>
 <p class="note">Per-tool MCP usage not available in claude -p output. Turns = tool calls + responses.</p>
+"""
 
+    # Autotest progress section (only if tracking data exists)
+    autotest_stats = load_autotest_stats(Path(__file__).resolve().parent.parent.parent)
+    if autotest_stats:
+        at_total = sum(r['total'] for r in autotest_stats)
+        at_verified = sum(r['verified'] for r in autotest_stats)
+        at_generated = sum(r['generated'] for r in autotest_stats)
+        at_failed = sum(r['failed'] for r in autotest_stats)
+        at_pending = sum(r['pending'] for r in autotest_stats)
+        at_done = at_verified + at_generated
+        at_pct = at_done * 100 / at_total if at_total else 0
+
+        html += f"""
+<div class="section">Autotest Generation (Phase C)</div>
+<div class="metrics">
+  <div class="metric">
+    <div class="val c-cyan">{at_total}</div>
+    <div class="lbl">Total Test Cases</div>
+  </div>
+  <div class="metric">
+    <div class="val c-green">{at_verified}</div>
+    <div class="lbl">Verified</div>
+  </div>
+  <div class="metric">
+    <div class="val c-blue">{at_generated}</div>
+    <div class="lbl">Generated</div>
+  </div>
+  <div class="metric">
+    <div class="val c-red">{at_failed}</div>
+    <div class="lbl">Failed</div>
+  </div>
+  <div class="metric">
+    <div class="val c-muted">{at_pending}</div>
+    <div class="lbl">Pending</div>
+  </div>
+  <div class="metric">
+    <div class="val c-orange">{at_pct:.1f}%</div>
+    <div class="lbl">Coverage</div>
+  </div>
+</div>
+<div class="table-wrap">
+<table>
+<tr><th>Module</th><th class="r">Total</th><th class="r">Verified</th><th class="r">Generated</th><th class="r">Failed</th><th class="r">Pending</th><th class="r">Coverage</th></tr>
+"""
+        for r in autotest_stats:
+            done = r['verified'] + r['generated']
+            pct = done * 100 / r['total'] if r['total'] else 0
+            pct_cls = 'c-green' if pct >= 50 else ('c-orange' if pct > 0 else 'c-muted')
+            html += f"""<tr>
+  <td>{r['module']}</td>
+  <td class="mono r">{r['total']}</td>
+  <td class="mono r c-green">{r['verified'] or '-'}</td>
+  <td class="mono r c-blue">{r['generated'] or '-'}</td>
+  <td class="mono r{'  c-red' if r['failed'] else ''}">{r['failed'] or '-'}</td>
+  <td class="mono r c-muted">{r['pending']}</td>
+  <td class="mono r {pct_cls}">{pct:.1f}%</td>
+</tr>"""
+
+        html += """
+</table>
+</div>
+"""
+
+    html += """
 <div class="section">Session History</div>
 <div class="table-wrap">
 <table>
@@ -331,8 +434,7 @@ def generate_html(state, output_file):
             status = f'<span class="label l-fail">FAIL {exit_code}</span>'
 
         phase = s.get('phase', 'unknown')
-        l_cls = 'l-acq' if 'acq' in phase else ('l-gen' if 'gen' in phase else 'l-unk')
-        phase_short = 'Acq' if 'acq' in phase else ('Gen' if 'gen' in phase else '?')
+        l_cls, _, phase_short = phase_info(phase)
         ts = s.get('timestamp', '')[:16].replace('T', ' ')
         dur = s.get('duration_sec', 0)
         turns = s.get('num_turns', '')

@@ -73,10 +73,8 @@ Show the user:
 If the user wants tracking, sync the manifest to the SQLite analytics database:
 
 ```sql
-INSERT OR REPLACE INTO autotest_tracking (test_case_id, module, title, priority, status)
-SELECT tc_id, module, title, priority, 'pending'
-FROM (VALUES ...)
-WHERE NOT EXISTS (SELECT 1 FROM autotest_tracking WHERE test_case_id = tc_id AND status != 'pending');
+INSERT OR IGNORE INTO autotest_tracking (test_id, module, suite, title, type, priority, automation_status, created_date, updated_date)
+VALUES ('<test_id>', '<module>', '<suite>', '<title>', '<type>', '<priority>', 'pending', datetime('now'), datetime('now'));
 ```
 
 This preserves the status of already-automated test cases while adding new ones.

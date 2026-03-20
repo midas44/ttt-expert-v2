@@ -35,11 +35,11 @@ Query the SQLite tracking table (add `WHERE module = '<scope>'` if scope is not 
 ```sql
 -- Overall progress
 SELECT
-  status,
+  automation_status,
   COUNT(*) as count,
   ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM autotest_tracking), 1) as pct
 FROM autotest_tracking
-GROUP BY status
+GROUP BY automation_status
 ORDER BY count DESC;
 ```
 
@@ -48,27 +48,28 @@ ORDER BY count DESC;
 SELECT
   module,
   COUNT(*) as total,
-  SUM(CASE WHEN status = 'generated' THEN 1 ELSE 0 END) as automated,
-  SUM(CASE WHEN status = 'passing' THEN 1 ELSE 0 END) as passing,
-  SUM(CASE WHEN status = 'failing' THEN 1 ELSE 0 END) as failing,
-  SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
-  ROUND(SUM(CASE WHEN status IN ('generated','passing') THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1) as coverage_pct
+  SUM(CASE WHEN automation_status = 'generated' THEN 1 ELSE 0 END) as generated,
+  SUM(CASE WHEN automation_status = 'verified' THEN 1 ELSE 0 END) as verified,
+  SUM(CASE WHEN automation_status = 'failed' THEN 1 ELSE 0 END) as failed,
+  SUM(CASE WHEN automation_status = 'pending' THEN 1 ELSE 0 END) as pending,
+  ROUND(SUM(CASE WHEN automation_status IN ('generated','verified') THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1) as coverage_pct
 FROM autotest_tracking
 GROUP BY module
 ORDER BY coverage_pct ASC;
 ```
 
-### 2. Calculate Metrics
+Status values: `pending`, `in_progress`, `generated`, `verified`, `failed`, `skipped`.
+
+### 3. Calculate Metrics
 
 Key metrics to report:
 
-- **Overall coverage**: automated / total test cases (%)
+- **Overall coverage**: (generated + verified) / total test cases (%)
 - **Per-module coverage**: each module's automation percentage
-- **Pass rate**: passing / automated (% of automated tests that work)
+- **Verification rate**: verified / (generated + verified) — % of generated tests confirmed working
 - **Priority coverage**: critical and high priority test cases automated (%)
-- **Velocity**: tests automated per week (from generated_at timestamps)
 
-### 3. Prioritize Next Tests
+### 4. Prioritize Next Tests
 
 Recommend the next tests to automate using this priority order:
 
@@ -80,15 +81,15 @@ Recommend the next tests to automate using this priority order:
 
 ```sql
 -- Next 10 tests to automate
-SELECT t.test_case_id, t.module, t.title, t.priority,
+SELECT t.test_id, t.module, t.title, t.priority,
   CASE
-    WHEN t.priority = 'critical' THEN 1
-    WHEN t.priority = 'high' THEN 2
-    WHEN t.priority = 'medium' THEN 3
+    WHEN t.priority = 'Critical' THEN 1
+    WHEN t.priority = 'High' THEN 2
+    WHEN t.priority = 'Medium' THEN 3
     ELSE 4
   END as priority_rank
 FROM autotest_tracking t
-WHERE t.status = 'pending'
+WHERE t.automation_status = 'pending'
 ORDER BY priority_rank ASC, t.module ASC
 LIMIT 10;
 ```
@@ -129,7 +130,7 @@ import json, os
 with open('autotests/manifest/test-cases.json') as f:
     manifest = json.load(f)
 specs = set()
-for root, dirs, files in os.walk('autotests/e2e/specs'):
+for root, dirs, files in os.walk('autotests/e2e/tests'):
     for f in files:
         if f.endswith('.spec.ts'):
             specs.add(f.replace('.spec.ts', ''))

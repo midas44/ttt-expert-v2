@@ -10,7 +10,7 @@ import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
 
-OUTPUT = "/home/v/Dev/ttt-expert-v1/expert-system/output/test-cases-statistics.xlsx"
+OUTPUT = "/home/v/Dev/ttt-expert-v2/test-docs/test-cases-statistics.xlsx"
 
 # ── Styles ─────────────────────────────────────────────────────────
 HEADER_FONT = Font(name="Arial", bold=True, size=10, color="FFFFFF")

@@ -4,7 +4,7 @@ session:
   offhours_utc: 15:00-03:00
   max_duration_minutes: 120
 phase:
-  current: generation
+  current: autotest_generation
   generation_allowed: true
   coverage_override: -1
 thresholds:
@@ -35,11 +35,11 @@ autonomy:
   effort: max
   allow_api_mutations: true
 autotest:
-  enabled: false
+  enabled: true
   target_env: qa-1
   max_tests_per_session: 5
   auto_fix_attempts: 3
-  scope: all                        # "all" or a module name from test-docs/ (vacation, sick-leave, etc.)
+  scope: vacation                   # "all" or a module name from test-docs/ (vacation, sick-leave, etc.)
   priority_order:
   - vacation
   - sick-leave
