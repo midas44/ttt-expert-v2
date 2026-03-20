@@ -13580,7 +13580,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Terminal state. See TS-Vac-Payment for detailed payment tests",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-049",
@@ -14152,7 +14152,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Core payment flow. Days deducted at approval, not payment",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-089",
@@ -14166,7 +14166,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "ADMINISTRATIVE = unpaid leave (за свой счёт)",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-090",
@@ -14180,7 +14180,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "checkForPayment validates total days match",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-091",
@@ -14208,7 +14208,7 @@
               "module_component": "VacationStatusManager",
               "notes": "",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-093",

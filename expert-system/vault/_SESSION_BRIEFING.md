@@ -1,71 +1,68 @@
 ---
 type: session
 updated: '2026-03-20'
-session: 91
+session: 92
 phase: autotest_generation
 ---
-# Session 91 Briefing — Phase C (Autotest Generation)
+# Session 92 Briefing — Phase C (Autotest Generation)
 
 **Date:** 2026-03-20
 **Phase:** C — Autotest Generation (vacation scope)
 **Mode:** full (unattended)
-**Duration:** ~25 min
+**Duration:** ~20 min
 
 ## Summary
 
-Generated and verified 5 new vacation API tests (TC-022, TC-023, TC-032, TC-043, TC-052). All 5 pass on qa-1. TC-031 was attempted but skipped — API_SECRET_TOKEN bypasses ownership checks, making per-user permission tests infeasible without CAS auth. Replaced with TC-043. Total vacation coverage: **40/173 (23.1%)**, up from 35/173 (20.2%).
+Generated and verified 5 new vacation payment API tests (TC-048, TC-088, TC-089, TC-090, TC-092). All 5 pass on qa-1. This is a cohesive payment cluster covering the pay endpoint (PUT /pay/{id}) from multiple angles: happy path, ADMINISTRATIVE type, wrong day split, and wrong status. TC-088 includes DB-level verification of the vacation_payment record. Total vacation coverage: **45/173 (26.0%)**, up from 40/173 (23.1%).
 
 ## Tests Generated This Session
 
 | Test ID | Title | Type | Status | Fix Attempts |
 |---------|-------|------|--------|-------------|
-| TC-VAC-022 | Create vacation with notifyAlso list | API functional | verified | 0 |
-| TC-VAC-023 | Create vacation with invalid notifyAlso login | API negative | verified | 0 |
-| TC-VAC-032 | Update with overlapping dates | API validation | verified | 1 (assertion fix: check message field) |
-| TC-VAC-043 | REJECTED→APPROVED re-approval without edit | API status flow | verified | 1 (approve endpoint: PUT /approve/{id} not POST /{id}/approve) |
-| TC-VAC-052 | Invalid transition NEW→PAID | API negative | verified | 0 |
+| TC-VAC-048 | APPROVED→PAID status transition (terminal) | API functional | verified | 0 |
+| TC-VAC-088 | Pay APPROVED REGULAR vacation with DB verification | API functional | verified | 1 (DB column/FK fix) |
+| TC-VAC-089 | Pay ADMINISTRATIVE vacation happy path | API functional | verified | 0 |
+| TC-VAC-090 | Pay with wrong day split (total mismatch) | API negative | verified | 0 |
+| TC-VAC-092 | Pay NEW vacation (wrong status) | API negative | verified | 0 |
 
 ## Key Discoveries
 
-### API_SECRET_TOKEN bypasses ownership checks
-- TC-031 attempted to update a vacation as a non-owner user by sending `login=otherUser` in the PUT body.
-- Result: 200 OK — the update succeeded. The API_SECRET_TOKEN authenticates as a privileged system user that passes `hasAccess()` regardless of the login field.
-- The `login` field in update requests is data, not auth context. `employeeService.getCurrent()` returns the system user from the token.
-- **Impact:** All permission-based tests (TC-031, TC-053, TC-037) requiring per-user auth cannot be automated with API_SECRET_TOKEN alone. Need CAS authentication for these.
-- Marked TC-031 as `skipped` with reason.
+### vacation_payment table schema (DB-level payment verification)
+- `vacation_payment` table: columns `id` (PK), `regular_days`, `administrative_days`, `payed_at`
+- Relationship: `vacation.vacation_payment_id` → `vacation_payment.id` (FK on vacation table, NOT shared PK)
+- vacation_payment.id is an auto-generated sequence (values in 1.4M range), NOT equal to vacation.id (51K range)
+- Query pattern: `JOIN ttt_vacation.vacation_payment vp ON v.vacation_payment_id = vp.id WHERE v.id = $1`
 
-### Crossing validation error format
-- `exception.validation.vacation.dates.crossing` appears in the `message` field, not `errorCode`.
-- The `errorCode` is `exception.validation.fail` (generic).
-- Error detail: `errors[0].code` = `exception.validation.fail`, `errors[0].message` = `exception.validation.vacation.dates.crossing`.
-- Assertion pattern: check both `errorCode` and `message`/`errors[].message` for specific error strings.
+### PAID is truly terminal
+- Cancel PAID → returns 400 (confirmed by TC-048 step 5)
+- Delete PAID+EXACT → blocked (confirmed by existing knowledge, cleanup skipped)
+- PAID vacations with EXACT period_type leave permanent test records
 
-### Approve endpoint is PUT, not POST
-- VacationController: `@PutMapping(value = "/approve/{vacationId}")`
-- URL pattern: `PUT /api/vacation/v1/vacations/approve/{id}`
-- All status transition endpoints use PUT and `/action/{id}` pattern (not `/{id}/action`).
+### Pay endpoint behavior confirmed
+- PUT /v1/vacations/pay/{id} with `{regularDaysPayed, administrativeDaysPayed}` body
+- For REGULAR: send regularDaysPayed = regularDays, administrativeDaysPayed = 0
+- For ADMINISTRATIVE: send regularDaysPayed = 0, administrativeDaysPayed = administrativeDays
+- Wrong sum → 400 with `exception.vacation.pay.days.not.equal`
+- Wrong status (NEW) → 400 (PayVacationServiceImpl validates APPROVED+EXACT)
+- API response wraps in `{vacation: {...}, paymentDTO: {...}}` after pay
 
-### notifyAlso validation works correctly
-- Valid logins: accepted, vacation created with 200.
-- Invalid login ("nonexistent_user_xyz_999"): rejected with 400, `@EmployeeLoginCollectionExists` validator fires.
-- The GET response for a vacation does NOT include `notifyAlso` in the response body — it's stored in `vacation_notify_also` table only.
-
-### REJECTED→APPROVED re-approval confirmed
-- Direct re-approval from REJECTED→APPROVED works without editing the vacation first.
-- The transition `add(REJECTED, APPROVED, PM/DM/ADMIN)` is confirmed in live testing.
-- This is Known Bug #5 in the business rules reference.
+### ADMINISTRATIVE vacation payment
+- ADMINISTRATIVE vacations follow same create→approve→pay flow as REGULAR
+- On create: regularDays=0, administrativeDays>0
+- On pay: regularDaysPayed=0, administrativeDaysPayed=N
+- No impact on paid leave balance (unpaid leave)
 
 ## State for Next Session
 
-- **Vacation automated:** 40/173 (23.1%)
+- **Vacation automated:** 45/173 (26.0%)
 - **Skipped (need CAS auth):** TC-031 (update by non-owner)
+- **Week offsets used this session:** 144 (TC-048), 148 (TC-088), 152 (TC-089), 156 (TC-090), 160 (TC-092)
 - **Next tests — good candidates:**
-  - TC-VAC-046 (APPROVED→CANCELED blocked by canBeCancelled guard) — status flow
-  - TC-VAC-048 (APPROVED→PAID accountant pays) — key payment flow
-  - TC-VAC-055 (status transition verify event published) — if observable
+  - TC-VAC-046 (APPROVED→CANCELED blocked by canBeCancelled guard) — needs period state investigation
   - TC-VAC-056 (approve with crossing vacation blocked) — validation
   - TC-VAC-057 (add optional approvers on creation) — feature test
-  - TC-VAC-011 (create next-year before Feb 1 cutoff) — boundary
-  - TC-VAC-017 (create as readOnly user) — permission (may need CAS)
-- **Week offsets used this session:** 120 (TC-022), 128/132 (TC-032), 136 (TC-052), 140 (TC-043)
-- **Known constraints:** Use offsets 144+ for future tests; permission tests need CAS auth, not API_SECRET_TOKEN
+  - TC-VAC-091 (pay already PAID vacation) — negative, pairs with TC-092
+  - TC-VAC-082 (available days endpoint newDays=0) — API endpoint test
+  - TC-VAC-121 (non-existent vacation ID → 404) — error handling
+  - TC-VAC-055 (status transition event published) — may need special verification
+- **Known constraints:** Use offsets 164+ for future tests; permission tests need CAS auth; PAID vacations leave permanent records

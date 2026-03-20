@@ -56,29 +56,39 @@
 - [x] Session maintenance: backfilled generation_session, verified tracking integrity, QMD index OK
 - [x] All 5 tests verified passing (25 total, 14.5% vacation coverage)
 
+### Session 92 (Phase C — 5 Vacation Payment Tests)
+- [x] Generated TC-VAC-048 (APPROVED→PAID terminal state), TC-VAC-088 (pay REGULAR with DB verification)
+- [x] Generated TC-VAC-089 (pay ADMINISTRATIVE), TC-VAC-090 (wrong day split), TC-VAC-092 (pay NEW)
+- [x] Discovered: vacation_payment FK is vacation.vacation_payment_id (not shared PK, auto-sequence IDs)
+- [x] Discovered: PAID terminal confirmed (cancel returns 400), PAID+EXACT cannot be deleted
+- [x] TC-088 required 1 fix (DB column names and FK pattern)
+- [x] All 5 tests verified passing (45 total, 26.0% vacation coverage)
+
 </details>
 
 ## Phase C — Autotest Generation (Active)
 
-**Current scope**: vacation (173 test cases, 25 automated = 14.5%)
+**Current scope**: vacation (173 test cases, 45 automated = 26.0%)
 **Target env**: qa-1
 **Constraint**: API_SECRET_TOKEN authenticates as pvaynmaster only
 **pvaynmaster office**: Персей (office_id=20, AV=true)
 **Week offsets used (2026)**: 0, 3, 6, 9, 12, 15, 18, 21 (polluted with DELETED ghosts)
-**Week offsets used (2027-2028)**: 45, 48, 51, 54, 57, 60, 63, 66, 69, 72, 75
-**Known issues**: crossing check counts DELETED; batch deadlocks on employee_vacation
+**Week offsets used (2027-2029)**: 45, 48, 51, 54, 57, 60, 63, 66, 69, 72, 75, 120, 128, 132, 136, 140, 144, 148, 152, 156, 160
+**Known issues**: crossing check counts DELETED; batch deadlocks on employee_vacation; PAID+EXACT vacations are permanent records
 **API response notes**: regularDays/administrativeDays (not days); ServiceException → specific errorCode; ValidationException → generic errorCode + specific message
+**DB notes**: vacation_payment FK is on vacation.vacation_payment_id (NOT shared PK); vacation_payment.id is auto-sequence (1.4M range)
 
 ## Active Items
 
 ### P0 — Next Session
 - [ ] Generate next batch of vacation API tests (5 more from manifest)
-  - Critical API remaining: TC-VAC-048 (APPROVED→PAID), TC-VAC-088 (pay happy path)
-  - High API: TC-VAC-009 (AV=false insufficient days), TC-VAC-015 (null optionalApprovers CPO)
-  - Medium: TC-VAC-011 (next-year cutoff), TC-VAC-046 (canBeCancelled guard)
+  - Critical API remaining: TC-VAC-069 (AV=false accrual), TC-VAC-164 (FIFO redistribution)
+  - High API: TC-VAC-046 (canBeCancelled guard), TC-VAC-056 (approve crossing blocked)
+  - High API: TC-VAC-057 (optional approvers on create), TC-VAC-091 (pay already PAID)
+  - Medium: TC-VAC-082 (available days endpoint), TC-VAC-121 (non-existent vacation 404)
 - [ ] Investigate JWT token acquisition: `get-full-jwt-token-using-pst` swagger endpoint
-  - Unlocks: accountant role (pay tests), different-user tests, AV=false office employees
-  - Priority over individual tests — would unlock 20+ test cases
+  - Unlocks: accountant role, different-user tests, AV=false office employees
+  - Priority over individual tests — would unlock 20+ permission-based test cases
 
 ### P1 — High Priority
 - [ ] Address DELETED ghost problem

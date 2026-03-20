@@ -534,3 +534,28 @@ POST with paymentMonth omitted reliably returns HTTP 500 (NPE). The error respon
 - Invalid login rejected (400) by `@EmployeeLoginCollectionExists` DTO validator.
 - GET /vacations/{id} response does NOT include notifyAlso — data is only in the DB table.
 - Colleague logins can be found via: `SELECT login FROM ttt_backend.employee WHERE enabled=true AND login != ownerLogin`.
+
+
+## Autotest Notes (Session 92)
+
+### vacation_payment Table Schema (DB-Level Payment Verification)
+**Discovered**: Session 92, TC-VAC-088 initial failures.
+- `ttt_vacation.vacation_payment` columns: `id` (bigint PK), `regular_days` (int), `administrative_days` (int), `payed_at` (date)
+- The FK is on the vacation table: `vacation.vacation_payment_id → vacation_payment.id`
+- vacation_payment.id is auto-generated (values in 1.4M range), NOT equal to vacation.id (51K range)
+- NOT a shared-PK pattern. The vacation table holds the FK, not vacation_payment.
+- Correct query: `SELECT vp.regular_days, vp.administrative_days, vp.payed_at FROM ttt_vacation.vacation v JOIN ttt_vacation.vacation_payment vp ON v.vacation_payment_id = vp.id WHERE v.id = $1`
+
+### Pay Endpoint Detailed Behavior
+- PUT /v1/vacations/pay/{id} — body: `{regularDaysPayed: N, administrativeDaysPayed: M}`
+- Validation: N + M must equal vacation.days (regularDays + administrativeDays)
+- Wrong sum → 400, errorCode: `exception.vacation.pay.days.not.equal`
+- Wrong status (not APPROVED) → 400 (PayVacationServiceImpl.checkForPayment validates APPROVED + EXACT)
+- Success response wraps payment info: `{vacation: {..., status: "PAID"}, paymentDTO: {payedAt, regularDaysPayed, administrativeDaysPayed}}`
+- ADMINISTRATIVE pay: regularDaysPayed=0, administrativeDaysPayed=N (no balance impact)
+
+### PAID Terminal State Confirmed
+- Cancel PAID → HTTP 400 (checkVacation → hasAccess returns false for PAID vacations)
+- Delete PAID+EXACT → blocked by ServiceException("exception.vacation.delete.notAllowed")
+- PAID vacations with EXACT periodType are permanent records in test environments
+- Week offsets 144-160 used for payment tests (permanent PAID records at those dates)
