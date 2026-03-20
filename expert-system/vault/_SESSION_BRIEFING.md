@@ -1,60 +1,62 @@
 ---
-session: 98
+session: 99
 phase: autotest_generation
 updated: '2026-03-20'
 ---
-# Session 98 Briefing (Phase C — Autotest Generation)
+# Session 99 Briefing (Phase C — Autotest Generation)
 
 **Date:** 2026-03-20
 **Phase:** Autotest Generation (vacation scope)
-**Tests generated:** 5 verified + 1 skipped (TC-119, TC-120, TC-122, TC-123, TC-124 + TC-126 skipped)
+**Tests generated:** 5 verified (TC-125, TC-127, TC-128, TC-065, TC-167)
 
 ## What was done
 
-Generated and verified 5 vacation API error handling tests on qa-1:
+Generated and verified 5 vacation API tests on qa-1:
 
 | Test ID | Title | Type | Suite | Result |
 |---------|-------|------|-------|--------|
-| TC-VAC-119 | Malformed JSON request body — empty 400 response | API | TS-Vac-APIErrors | PASS |
-| TC-VAC-120 | Invalid date format — stack trace leakage | API | TS-Vac-APIErrors | PASS |
-| TC-VAC-122 | Missing required fields — validation errors array | API | TS-Vac-APIErrors | PASS |
-| TC-VAC-123 | Type mismatch — string for numeric field | API | TS-Vac-APIErrors | PASS |
-| TC-VAC-124 | Exception class leakage in error responses | API | TS-Vac-APIErrors | PASS |
+| TC-VAC-125 | ServiceException vs ValidationException format difference | API | TS-Vac-APIErrors | PASS |
+| TC-VAC-127 | Empty request body — 400 response | API | TS-Vac-APIErrors | PASS |
+| TC-VAC-128 | Very large vacation — 365 day boundary | API | TS-Vac-APIErrors | PASS |
+| TC-VAC-065 | Notify-also with required flag behavior | API | TS-Vac-Approval | PASS |
+| TC-VAC-167 | availablePaidDays API returns correct values for AV=true | API | TS-VAC-AVMultiYear | PASS |
 
-Skipped:
-| Test ID | Title | Reason |
-|---------|-------|--------|
-| TC-VAC-126 | Sick leave crossing vacation — 409 CONFLICT | API_SECRET_TOKEN lacks AUTHENTICATED_USER authority for POST /sick-leaves (403) |
-
-Session 15 maintenance completed: tracking integrity verified (78 spec files, 74 verified, 5 skipped in DB), no duplicates, no orphans.
+TC-096 (payment date adjustment on approval) was deferred — requires approve period > report period gap which doesn't exist on qa-1 (both are 2026-03-01 for all offices).
 
 ## Key Discoveries
 
-1. **API_SECRET_TOKEN cannot access sick leave endpoints** — POST `/api/vacation/v1/sick-leaves` returns 403. The sick leave controller requires `AUTHENTICATED_USER` authority which the token doesn't have. The vacation controller works because it uses `AUTHENTICATED_USER || VACATIONS_CREATE`. This blocks all cross-module sick-leave tests.
+1. **Past date validation is ConstraintViolation, not ServiceException** — `@VacationCreateRequest` validator fires as `MethodArgumentNotValidException` with `errorCode: "exception.validation"` + errors[]. Same format as missing @NotNull fields.
 
-2. **HttpMessageNotReadableException returns completely empty 400 body** — no JSON, no error details, no errorCode. The client gets a bare 400 status with 0 bytes body. Confirmed as a usability issue.
+2. **Approve/{nonExistentId} returns ConstraintViolationException** — `@VacationIdExistsValidator` on the path variable triggers `javax.validation.ConstraintViolationException` (not ServiceException). The response has `errorCode: "exception.validation"` with `errors[{field: "vacationId", code: "VacationIdExistsValidator"}]`.
 
-3. **Exception class leakage is universal** — every error response (except HttpMessageNotReadableException) includes the `exception` field with full Java class name like `com.noveogroup.ttt.common.exception.ServiceException`. This leaks internal package structure.
+3. **Real ServiceException requires service-layer failure** — only triggers when validation passes but business logic rejects (e.g., double-approve returns `VacationSecurityException` 403). The key structural difference: application exceptions have NO errors[] array; validation exceptions HAVE errors[] array with field-level details.
 
-4. **MethodArgumentNotValidException errors array confirmed** — missing @NotNull fields produce `errors[]` with `{field, code, message}` per field. Code values include "NotNull".
+4. **vacation_notify_also columns**: `vacation` (not vacation_id), `approver` (not approver_id), `required` (boolean, default false). All user-submitted notifyAlso entries get `required=false` because `listRequired()` is a no-op.
 
-5. **MethodArgumentTypeMismatchException** — errorCode is `exception.type.mismatch`, message includes expected type ("Long").
+5. **availablePaidDays endpoint requires paymentDate** — `GET /v1/vacationdays/available` needs `employeeLogin`, `newDays`, `paymentDate`, `usePaymentDateFilter`. The `newDays` parameter doesn't subtract — it simulates planned consumption for daysNotEnough calculation.
+
+6. **No approve > report period gap on qa-1** — all offices have APPROVE and REPORT periods set to the same date (2026-03-01). This blocks TC-096 (payment date auto-adjustment on approval).
+
+7. **365-day REGULAR vacation rejected** — insufficient days (pvaynmaster has ~125 days total). Error response provides error information. ADMINISTRATIVE type behavior for large vacations was also documented.
 
 ## Coverage
 
-- **Vacation automated:** 74/173 (42.8%)
-- **Total automated:** 74/1071 (6.9%)
+- **Vacation automated:** 79/173 (45.7%)
+- **Total automated:** 79/1071 (7.4%)
 - **Skipped:** 5 (TC-VAC-031, TC-VAC-058, TC-VAC-046, TC-VAC-099, TC-VAC-126)
 
 ## Week Offsets Used
 
-No new date offsets used this session — all 5 verified tests are read-only API error tests (no vacation creation). TC-126 (skipped) would have used offset 221.
+- TC-125: offset 221 (create → approve → double-approve for ServiceException)
+- TC-065: offset 224 (create with notifyAlso)
+- TC-167: offset 227 (create 5-day vacation to verify balance decrease)
+- TC-127, TC-128: no offsets (error tests, no vacation creation)
 
 ## Next Session Candidates
 
-- **TS-Vac-APIErrors remaining:** TC-125 (ServiceException vs ValidationException format), TC-VAC-056 (approve with crossing)
-- **Blocked by pass NPE:** TC-067, TC-068, TC-053, TC-056 — try on timemachine env
-- **DayCalc suite:** TC-069 (AV=false accrual — needs different office employee), TC-085 (employment +3mo — needs newly hired employee)
-- **Create suite:** TC-018 (CPO auto-approver), TC-019 (regular employee auto-approver) — need different users
-- **JWT investigation:** Still needed for permission-based tests and sick leave cross-module tests
-- **Begin UI test generation** — at 42.8%, well past 30% threshold
+- **TC-096**: Deferred — needs approve period advancement or different environment
+- **TS-Vac-APIErrors complete**: All 8 test cases in suite now automated (TC-119, 120, 122, 123, 124, 125, 127, 128)
+- **JWT investigation**: Still needed for permission-based tests (15 pending in TS-Vac-Permissions)
+- **TS-Vac-Approval remaining**: TC-065 done this session, TC-067/068 blocked by pass NPE
+- **TS-VAC-AVMultiYear**: TC-167 done, TC-164 (FIFO cross-year) and TC-165 (edit redistribution) remain
+- **Begin UI test generation**: At 45.7%, well past threshold
