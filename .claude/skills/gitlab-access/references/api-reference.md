@@ -23,6 +23,7 @@ Auth header: `PRIVATE-TOKEN: <token>` (read from `.claude/.mcp.json`)
 |---|---|---|---|
 | Get issue | GET | `/projects/:id/issues/:iid` | `:iid` is the issue number shown in the URL |
 | List issue notes | GET | `/projects/:id/issues/:iid/notes?per_page=100` | Comments and system events |
+| Create issue note | POST | `/projects/:id/issues/:iid/notes` | Body: `{"body": "markdown text"}` — adds a comment |
 | List issue labels | — | Included in issue response | `labels` array field |
 | Search issues | GET | `/projects/:id/issues?search=KEYWORD&labels=LABEL&per_page=100&scope=all` | See search params below |
 
@@ -56,7 +57,7 @@ Auth header: `PRIVATE-TOKEN: <token>` (read from `.claude/.mcp.json`)
 | PAT info | GET | `/personal_access_tokens/self` | Shows scopes, expiry |
 | GitLab version | GET | `/version` | |
 
-### Pipelines
+### Pipelines & Jobs
 
 | Operation | Method | Endpoint | Notes |
 |---|---|---|---|
@@ -64,7 +65,12 @@ Auth header: `PRIVATE-TOKEN: <token>` (read from `.claude/.mcp.json`)
 | Filter by branch | GET | `/projects/:id/pipelines?ref=BRANCH&per_page=10` | |
 | Filter by status | GET | `/projects/:id/pipelines?status=success` | Values: `success`, `failed`, `running`, `pending`, `skipped`, `canceled` |
 | Get pipeline | GET | `/projects/:id/pipelines/:pipeline_id` | Full pipeline details |
-| List pipeline jobs | GET | `/projects/:id/pipelines/:pipeline_id/jobs` | |
+| List pipeline jobs | GET | `/projects/:id/pipelines/:pipeline_id/jobs?per_page=100` | Returns all jobs in the pipeline |
+| Get job | GET | `/projects/:id/jobs/:job_id` | Full job details incl. status |
+| Play manual job | POST | `/projects/:id/jobs/:job_id/play` | Triggers a manual job; job must have `status: "manual"` |
+| Cancel job | POST | `/projects/:id/jobs/:job_id/cancel` | Cancel a running/pending job |
+| Retry job | POST | `/projects/:id/jobs/:job_id/retry` | Retry a failed job |
+| Get job log | GET | `/projects/:id/jobs/:job_id/trace` | Returns raw text log output |
 
 ### Repository
 
@@ -151,3 +157,36 @@ Example:
 - Full URL: `https://gitlab.noveogroup.com/noveo-internal-tools/ttt-spring/uploads/6fb7affd82cd01a44240f20961d8fdea/footer_vs_pipeline.png`
 
 These URLs require web session auth — see the main SKILL.md for download instructions.
+
+---
+
+## Job Response Fields
+
+Key fields returned by `GET /projects/:id/jobs/:job_id` or in pipeline jobs list:
+
+```
+id              — int, unique job ID (used in play/cancel/retry/trace endpoints)
+name            — string, job name (e.g. "deploy-qa-1-release", "migrate-qa-1")
+stage           — string, pipeline stage (e.g. "deploy", "migrate", "restart")
+status          — string, one of: "manual", "pending", "running", "success", "failed", "canceled", "skipped"
+started_at      — ISO timestamp | null
+finished_at     — ISO timestamp | null
+duration        — float | null, seconds
+web_url         — full browser URL to the job page
+runner          — object | null, runner that executed the job
+pipeline        — object with id, ref, sha, status
+```
+
+## CI Environment Mapping
+
+| Environment | Pipeline branch | Deploy job name | Migrate job | Restart job |
+|---|---|---|---|---|
+| dev | `development-ttt` | `deploy-dev` | `migrate-dev` | `restart-dev` |
+| qa-1 | `development-ttt` | `deploy-qa-1-develop` | `migrate-qa-1` | `restart-qa-1` |
+| qa-1 | `release/*` | `deploy-qa-1-release` | `migrate-qa-1` | `restart-qa-1` |
+| qa-2 | `development-ttt` | `deploy-qa-2-develop` | `migrate-qa-2` | `restart-qa-2` |
+| qa-2 | `release/*` | `deploy-qa-2-release` | `migrate-qa-2` | `restart-qa-2` |
+| timemachine | `development-ttt` | `deploy-timemachine-develop` | `migrate-timemachine` | `restart-timemachine` |
+| timemachine | `release/*` | `deploy-timemachine-release` | `migrate-timemachine` | `restart-timemachine` |
+| preprod | `release/*` | `deploy-preprod-release` | `migrate-preprod` | `restart-preprod` |
+| stage | `stage` | `deploy-stage` | `migrate-stage` | `restart-stage` |
