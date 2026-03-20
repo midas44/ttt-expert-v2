@@ -104,20 +104,31 @@
 - [x] TC-084 required 1 fix (column name + FIFO assertion correction)
 - [x] All 5 tests verified passing (59 total, 34.1% vacation coverage)
 
+### Session 96 (Phase C — 5 Vacation API Tests + 1 Skipped)
+- [x] Generated TC-VAC-098 (payment dates inverted range bug), TC-VAC-093 (negative days validation)
+- [x] Generated TC-VAC-094 (payment type alignment bug), TC-VAC-064 (orphan approvals on delete)
+- [x] Generated TC-VAC-063 (edit dates resets optional approvals to ASKED)
+- [x] Skipped TC-VAC-099 (cancel after accounting period — paymentMonth validation blocks past-period creation)
+- [x] Discovered: office_period table is in ttt_backend schema (NOT ttt_vacation), columns: id/office/type/start_date
+- [x] Discovered: paymentMonth in past rejected at creation with `validation.vacation.dates.payment`
+- [x] TC-099 required 1 fix attempt (table name), then skipped due to fundamental setup limitation
+- [x] All 5 tests verified passing (64 total, 37.0% vacation coverage)
+
 </details>
 
 ## Phase C — Autotest Generation (Active)
 
-**Current scope**: vacation (173 test cases, 59 automated = 34.1%)
+**Current scope**: vacation (173 test cases, 69 automated = 39.9%)
 **Target env**: qa-1
 **Constraint**: API_SECRET_TOKEN authenticates as pvaynmaster only
 **pvaynmaster office**: Персей (office_id=20, AV=true)
+**pvaynmaster manager**: ilnitsky (but self-approves as DEPARTMENT_MANAGER)
 **Week offsets used (2026)**: 0, 3, 6, 9, 12, 15, 18, 21 (polluted with DELETED ghosts)
-**Week offsets used (2027-2029)**: 45, 48, 51, 54, 57, 60, 63, 66, 69, 72, 75, 120, 128, 132, 136, 140, 144, 148, 152, 156, 160, 164, 167, 170, 173, 176, 179, 182, 185, 188, 191
+**Week offsets used (2027-2030)**: 45, 48, 51, 54, 57, 60, 63, 66, 69, 72, 75, 120, 128, 132, 136, 140, 144, 148, 152, 156, 160, 164, 167, 170, 173, 176, 179, 182, 185, 188, 191, 194, 197, 200, 203, 206, 209, 212, 215, 218
 **Cross-year dates used**: 2030-12-29 to 2031-01-02
-**Known issues**: crossing check counts DELETED; batch deadlocks on employee_vacation; PAID+EXACT vacations are permanent records; UPDATE on DELETED un-deletes; no API for vacation optional approvals
-**API response notes**: regularDays/administrativeDays (not days); ServiceException → specific errorCode; ValidationException → generic errorCode + specific message
-**DB notes**: vacation_payment FK is on vacation.vacation_payment_id (NOT shared PK); vacation_payment.id is auto-sequence (1.4M range); vacation_approval includes primary approver row; vacation_days_distribution column is `vacation` (not vacation_id), uses FIFO from earliest balance year
+**Known issues**: crossing check counts DELETED; batch deadlocks on employee_vacation; PAID+EXACT vacations are permanent records; UPDATE on DELETED un-deletes; no API for vacation optional approvals; paymentMonth in past rejected at creation; PUT /pass/{id} NPEs on qa-1 (Caffeine cache bug); EmployeeWatcherServiceImpl.listRequired() is a no-op stub
+**API response notes**: regularDays/administrativeDays (not days); ServiceException → specific errorCode; ValidationException → generic errorCode + specific message; approver field is full DTO object (not string login)
+**DB notes**: vacation_payment FK is on vacation.vacation_payment_id (NOT shared PK); vacation_payment.id is auto-sequence (1.4M range); vacation_approval includes primary approver row; vacation_days_distribution column is `vacation` (not vacation_id), uses FIFO from earliest balance year; office_period is in ttt_backend schema (NOT ttt_vacation); vacation.approver column (not approver_id); timeline table tracks all status events
 
 ## Active Items
 
@@ -126,20 +137,22 @@
   - Unlocks: accountant role, different-user tests, AV=false office employees
   - Priority over individual tests — would unlock 20+ permission-based test cases (TC-017, TC-053, etc.)
 - [ ] Generate next batch of vacation API tests (up to 5 from manifest)
-  - TC-094 (payment type alignment bug — admin paid as regular)
-  - TC-093 (pay with negative days)
-  - TC-099 (cancel REGULAR+APPROVED after accounting period — blocked)
-  - TC-063 (edit dates resets optional approvals to ASKED)
-  - TC-069 (AV=false accrual formula — may need AV=false employee)
-- [ ] Begin UI test generation — at 34.1%, well past 30% threshold
+  - TC-018 (CPO auto-approver self-assignment)
+  - TC-019 (regular employee auto-approver assignment)
+  - TC-037 (approver edits via EDIT_APPROVER permission)
+  - TC-069 (AV=false basic accrual formula — needs AV=false employee)
+  - TC-096 (payment date adjustment on approval)
+- [ ] Begin UI test generation — at 39.9%, well past 30% threshold
   - Start with 1-2 simple UI verification tests
 
 ### P1 — High Priority
 - [ ] Start TS-Vac-Permissions suite (0/15 automated, blocked by JWT investigation)
   - TC-104 (employee views own), TC-105 (employee creates), TC-106 (readOnly blocked)
-- [ ] Address TS-Vac-Approval suite (3/15 automated)
-  - TC-058 skipped — no vacation approval API endpoint, needs UI test
-- [ ] Address TS-Vac-DayCalc suite (4/15 automated)
+- [ ] Address TS-Vac-Approval suite (6/15 automated, TC-058 skipped, TC-063/064 done)
+  - TC-067/068 blocked by pass endpoint NPE — try on timemachine
+- [ ] Address TS-Vac-DayCalc suite (5/15 automated)
+- [ ] TC-099 needs report period advancement — try on timemachine env with clock manipulation
+- [ ] Investigate pass endpoint NPE on qa-1 — may need service restart or bug report
 - [ ] Add retry-on-500 utility for deadlock handling in batch runs
 
 ### P2 — Medium Priority
@@ -148,7 +161,7 @@
   - Or build SQL cleanup script for DELETED/CANCELED records
 - [ ] Monitor #2724 for PATCH gateway routing fix
 - [ ] Periodic cleanup of test data on qa-1
-- [ ] Investigate clock manipulation on timemachine for time-dependent tests (TC-011)
+- [ ] Investigate clock manipulation on timemachine for time-dependent tests (TC-011, TC-034)
 
 ### P3 — Backlog
 - [ ] #2842 — Contractor termination: stalled 2+ months
