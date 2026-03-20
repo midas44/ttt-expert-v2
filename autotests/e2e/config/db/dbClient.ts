@@ -39,6 +39,14 @@ export class DbClient {
     return rows[0];
   }
 
+  async queryOneOrNull<T extends QueryResultRow>(
+    sql: string,
+    params: unknown[] = [],
+  ): Promise<T | null> {
+    const rows = await this.query<T>(sql, params);
+    return rows.length > 0 ? rows[0] : null;
+  }
+
   async close(): Promise<void> {
     await this.pool.end();
   }

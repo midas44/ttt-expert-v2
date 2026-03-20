@@ -6,9 +6,9 @@
 - P2: Medium — within next 5 sessions
 - P3: Low — backlog
 
-## Completed (Sessions 1-87)
+## Completed (Sessions 1-88)
 <details>
-<summary>Sessions 1-87 completed items (click to expand)</summary>
+<summary>Sessions 1-88 completed items (click to expand)</summary>
 
 ### Sessions 1-83
 - 83 sessions of knowledge acquisition, Phase B generation, and monitoring
@@ -39,48 +39,58 @@
 - [x] All 5 tests verified passing individually (15 total, 8.7% vacation coverage)
 
 ### Session 87 (Phase C — 5 More Vacation API Tests)
-- [x] Generated TC-VAC-010 (insufficient days AV=true — negative), TC-VAC-013 (overlapping/crossing — negative)
+- [x] Generated TC-VAC-010 (insufficient days AV=true), TC-VAC-013 (overlapping/crossing)
 - [x] Generated TC-VAC-027 (update APPROVED dates → status reset to NEW)
 - [x] Generated TC-VAC-047 (APPROVED→REJECTED), TC-VAC-130 (schedule filters/pagination)
-- [x] Discovered: ValidationException puts specific code in `message`, not `errorCode` (errorCode is always "exception.validation.fail")
-- [x] Discovered: v2 availability-schedule requires `from`/`to` params (NPE without), uses `totalCount` not `totalElements`
-- [x] TC-010 needed 1 fix (3yr span for AV=true balance), TC-013 needed 2 fixes (message field), TC-130 needed 2 fixes (from/to + totalCount)
+- [x] Discovered: ValidationException puts specific code in `message`, not `errorCode`
+- [x] Discovered: v2 availability-schedule requires `from`/`to` params (NPE without)
 - [x] All 5 tests verified passing (20 total, 11.6% vacation coverage)
+
+### Session 88 (Phase C — 5 More + Maintenance)
+- [x] Generated TC-VAC-007 (REGULAR 5-day boundary), TC-VAC-008 (ADMINISTRATIVE 1-day)
+- [x] Generated TC-VAC-014 (null paymentMonth NPE bug)
+- [x] Generated TC-VAC-026 (update NEW dates), TC-VAC-030 (update PAID immutable)
+- [x] Discovered: API response uses regularDays/administrativeDays (not days field)
+- [x] Discovered: PAID vacation update returns 400 (permission service returns empty set)
+- [x] Added queryOneOrNull() to DbClient for nullable queries
+- [x] Session maintenance: backfilled generation_session, verified tracking integrity, QMD index OK
+- [x] All 5 tests verified passing (25 total, 14.5% vacation coverage)
 
 </details>
 
 ## Phase C — Autotest Generation (Active)
 
-**Current scope**: vacation (173 test cases, 20 automated = 11.6%)
+**Current scope**: vacation (173 test cases, 25 automated = 14.5%)
 **Target env**: qa-1
 **Constraint**: API_SECRET_TOKEN authenticates as pvaynmaster only
 **pvaynmaster office**: Персей (office_id=20, AV=true)
-**Week offsets used (2026)**: 0, 3, 6, 9, 12, 15, 18, 21 (all polluted with DELETED ghosts)
-**Week offsets used (2027)**: 45(tc002), 48(tc003), 51(tc045), 54(tc013), 57(tc027-orig), 60(tc027-upd), 63(tc047)
+**Week offsets used (2026)**: 0, 3, 6, 9, 12, 15, 18, 21 (polluted with DELETED ghosts)
+**Week offsets used (2027-2028)**: 45, 48, 51, 54, 57, 60, 63, 66, 69, 72, 75
 **Known issues**: crossing check counts DELETED; batch deadlocks on employee_vacation
-**API error patterns**: ServiceException → specific errorCode; ValidationException → generic errorCode + specific message
+**API response notes**: regularDays/administrativeDays (not days); ServiceException → specific errorCode; ValidationException → generic errorCode + specific message
 
 ## Active Items
 
 ### P0 — Next Session
 - [ ] Generate next batch of vacation API tests (5 more from manifest)
   - Critical API remaining: TC-VAC-048 (APPROVED→PAID), TC-VAC-088 (pay happy path)
-  - High API: TC-VAC-008 (empty login), TC-VAC-009 (missing fields), TC-VAC-011 (past date create)
-  - Need JWT token for multi-user tests (accountant role for pay)
+  - High API: TC-VAC-009 (AV=false insufficient days), TC-VAC-015 (null optionalApprovers CPO)
+  - Medium: TC-VAC-011 (next-year cutoff), TC-VAC-046 (canBeCancelled guard)
 - [ ] Investigate JWT token acquisition: `get-full-jwt-token-using-pst` swagger endpoint
-  - May enable authenticating as any user (accountant, different employee)
+  - Unlocks: accountant role (pay tests), different-user tests, AV=false office employees
+  - Priority over individual tests — would unlock 20+ test cases
 
 ### P1 — High Priority
 - [ ] Address DELETED ghost problem
-  - Try vacation-test API `del-vacation-using-del` / `del-vacations-using-del` (needs correct auth)
+  - Try vacation-test API `del-vacation-using-del` / `del-vacations-using-del`
   - Or build SQL cleanup script for DELETED/CANCELED records
 - [ ] Add retry-on-500 utility for deadlock handling in batch runs
-- [ ] Explore UI test generation (after API coverage improves)
+- [ ] Explore UI test generation (after API coverage reaches ~30%)
 
 ### P2 — Medium Priority
 - [ ] Monitor #2724 for PATCH gateway routing fix
-- [ ] Monitor for new MRs / Sprint 16 activity
 - [ ] Periodic cleanup of test data on qa-1
+- [ ] Investigate clock manipulation on timemachine for time-dependent tests (TC-011)
 
 ### P3 — Backlog
 - [ ] #2842 — Contractor termination: stalled 2+ months

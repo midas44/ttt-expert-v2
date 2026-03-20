@@ -427,3 +427,80 @@ This means sending malformed JSON gets no error details — just `ResponseEntity
 - [[exploration/api-findings/payment-flow-live-testing]] — payment bug findings
 - [[analysis/role-permission-matrix]] — cross-module permission matrix
 - [[patterns/error-handling-agreement]] — error handling patterns
+
+
+## Autotest Notes (Phase C Discoveries)
+
+### minimalVacationDuration = 1 (not 5)
+**Discovered**: Session 85, TC-VAC-006 initial failure.
+The `vacationProperties.getMinimalVacationDuration()` is configured as **1** in `application.yml` (`vacation.minimal-vacation-duration: 1`). No per-environment overrides exist — all environments use 1. The Javadoc comment says "5" but the actual config is "1". The duration check compares **working days** (not calendar days) via `VacationDaysCalculatorImpl.calculateDays()` against this minimum. A Mon-Wed (3 working day) REGULAR vacation passes; only vacations with 0 working days (e.g., Sat-Sun) trigger `validation.vacation.duration`.
+
+### Update endpoint requires `id` in request body
+**Discovered**: Session 85, TC-VAC-044 initial failure.
+`PUT /v1/vacations/{vacationId}` requires the vacation `id` field in the JSON request body in addition to the URL path parameter. Without it: `IllegalArgumentException: The given id must not be null!` (JPA `findById` called with null from DTO).
+
+### Cancel endpoint: PUT /cancel/{id}
+Confirmed working. Returns updated vacation with status=CANCELED. No request body needed.
+
+### Delete endpoint: DELETE /{id}
+Confirmed working. Soft delete — record persists with status=DELETED. GET still returns the record.
+
+
+## Autotest Notes (Session 86)
+
+### pvaynmaster Office Discovery
+- pvaynmaster is in **Персей** office (office_id=20, advance_vacation=true)
+- Annual norm: 24 days for 2026 and 2027
+- Prior sessions labeled TC-001 as "AV=false" — incorrect. pvaynmaster was always AV=true.
+
+### Crossing Check Includes DELETED Records
+- The `exception.validation.vacation.dates.crossing` validation counts ALL vacation records regardless of status, including DELETED and CANCELED.
+- Soft-deleted vacations create permanent "ghost" conflicts that block future creates at those dates.
+- This is a design issue: DELETED should be excluded from crossing validation.
+- Impact on testing: every test run that creates+deletes a vacation permanently blocks that date range.
+
+### ADMINISTRATIVE Vacation Behavior
+- paymentType=ADMINISTRATIVE creates an unpaid vacation
+- Min duration check applies same as REGULAR (minimalVacationDuration=1 working day)
+- No available days validation — ADMINISTRATIVE can be created regardless of balance
+- Approver is still auto-assigned (same as REGULAR)
+
+### AV=true Day Calculation
+- GET /api/vacation/v1/vacationdays/available returns `availablePaidDays` for AV=true employees
+- In March 2026, pvaynmaster shows availablePaidDays significantly above monthly prorated (3/12 * 24 = 6)
+- Confirms full year balance available from Jan 1, not monthly accrual
+
+### Batch Run Deadlocks
+- Running multiple vacation create/approve/cancel tests back-to-back causes PostgreSQL deadlocks
+- Root: `employee_vacation` table row contention during VacationRecalculationServiceImpl
+- Each vacation create/cancel triggers FIFO redistribution which locks employee_vacation rows
+- Error: `org.springframework.dao.CannotAcquireLockException: deadlock detected`
+- Mitigation: run tests individually or with 2+ second gaps between them
+
+
+## Autotest Notes (Session 88)
+
+### Create/Update Response: regularDays/administrativeDays (not days)
+**Discovered**: Session 88, TC-VAC-007/008 initial failure.
+The vacation create/update API response does NOT include a `days` field. Instead it returns:
+- `regularDays` (integer) — working days counted as paid leave
+- `administrativeDays` (integer) — working days counted as unpaid leave
+For a REGULAR vacation Mon-Fri: `regularDays: 5, administrativeDays: 0`
+For an ADMINISTRATIVE 1-day: `regularDays: 0, administrativeDays: 1`
+The internal `vacation.days` field (used in DB `vacation.days` column) is calculated server-side as `regularDays + administrativeDays` but is NOT exposed in the API response.
+
+### pvaynmaster optionalApprovers Auto-Assignment
+When pvaynmaster (CPO, self-approver) creates a vacation, the system automatically adds their manager `ilnitsky` as an optional approver with status=ASKED. This is the CPO auto-approver path from `VacationServiceImpl.createVacation()`.
+
+### Week Offsets Used (2027-2028)
+Previous (2027): 45, 48, 51, 54, 57, 60, 63
+New (2027-2028): 66 (TC-026 original), 69 (TC-026 updated), 72 (TC-007), 75 (TC-008)
+
+### Update Response for NEW Status
+PUT update on a NEW vacation returns the same response format as create. Status remains "NEW", dates and regularDays are recalculated. No status reset occurs (already NEW).
+
+### PAID Vacation Immutability Confirmed
+PUT update on a PAID vacation returns HTTP 400. PAID is terminal — `NON_EDITABLE_STATUSES` set blocks all edits. Permission service returns empty set for PAID vacations. Even the vacation owner cannot modify.
+
+### Null paymentMonth → HTTP 500 Confirmed
+POST with paymentMonth omitted reliably returns HTTP 500 (NPE). The error response body varies — sometimes includes `exception: "java.lang.NullPointerException"`, sometimes a generic 500 with minimal detail. Bug still present on qa-1.
