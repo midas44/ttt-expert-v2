@@ -13794,7 +13794,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "State reset prevents stale approvals on modified vacations",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-064",
@@ -13808,7 +13808,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Known orphan issue — no FK cascade on soft delete",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-065",
@@ -14222,7 +14222,7 @@
               "module_component": "DTO validation",
               "notes": "@Range annotation on payment DTO fields",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-094",
@@ -14236,7 +14236,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Missing validation: payment type should match vacation type",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-095",
@@ -14292,7 +14292,7 @@
               "module_component": "VacationPaymentDatesController",
               "notes": "Missing date order validation",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-099",
@@ -14306,7 +14306,7 @@
               "module_component": "VacationPermissionService",
               "notes": "Same guard protects reject and delete",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "skipped"
             },
             {
               "test_id": "TC-VAC-100",
