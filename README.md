@@ -177,7 +177,7 @@ Each workbook contains: Plan Overview, Feature Matrix, Risk Assessment, and TS-*
 
 ## Repository Structure
 
-**Remote:** `https://github.com/midas44/ttt-expert-v1.git` (branch: `main`; public, requires foreign VPN to access from RF)
+**Remote:** `https://github.com/midas44/ttt-expert-v2.git` (branch: `main`; public, requires foreign VPN to access from RF)
 
 **What is in the repo:**
 

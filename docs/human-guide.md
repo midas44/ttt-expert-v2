@@ -90,7 +90,7 @@ chmod +x Obsidian-*.AppImage
 mv Obsidian-*.AppImage ~/Applications/
 ```
 
-Open Obsidian → "Open folder as vault" → navigate to `/home/v/Dev/ttt-expert-v1/expert-system/vault/`.
+Open Obsidian → "Open folder as vault" → navigate to `/home/v/Dev/ttt-expert-v2/expert-system/vault/`.
 
 **No Obsidian plugins are required.** The MCP server for Claude Code is a standalone npm package (see 2.5). Obsidian is used purely as a human viewing/editing tool.
 
@@ -107,7 +107,7 @@ bun install -g https://github.com/tobi/qmd
 qmd --version
 
 # Set up vault collection
-qmd collection add /home/v/Dev/ttt-expert-v1/expert-system/vault/ --name expert-vault
+qmd collection add /home/v/Dev/ttt-expert-v2/expert-system/vault/ --name expert-vault
 qmd context add qmd://expert-vault "Expert system knowledge base for legacy web app investigation"
 
 # Build embeddings (first run downloads ~330MB model)
@@ -134,7 +134,7 @@ claude mcp add-json obsidian --scope user '{
   "command": "npx",
   "args": [
     "@mauricio.wolff/mcp-obsidian@latest",
-    "/home/v/Dev/ttt-expert-v1/expert-system/vault"
+    "/home/v/Dev/ttt-expert-v2/expert-system/vault"
   ]
 }'
 ```
@@ -153,7 +153,7 @@ Register with Claude Code:
 
 ```bash
 claude mcp add --transport stdio sqlite-analytics -- \
-  npx @bytebase/dbhub --dsn "sqlite:///home/v/Dev/ttt-expert-v1/expert-system/analytics.db"
+  npx @bytebase/dbhub --dsn "sqlite:///home/v/Dev/ttt-expert-v2/expert-system/analytics.db"
 ```
 
 Alternative — @anthropic/mcp-server-sqlite:
@@ -162,7 +162,7 @@ Alternative — @anthropic/mcp-server-sqlite:
 npm install -g @anthropic/mcp-server-sqlite
 
 claude mcp add --transport stdio sqlite-analytics -- \
-  npx @anthropic/mcp-server-sqlite /home/v/Dev/ttt-expert-v1/expert-system/analytics.db
+  npx @anthropic/mcp-server-sqlite /home/v/Dev/ttt-expert-v2/expert-system/analytics.db
 ```
 
 ---
@@ -170,7 +170,7 @@ claude mcp add --transport stdio sqlite-analytics -- \
 ## 3. Directory Setup
 
 ```bash
-PROJECT=/home/v/Dev/ttt-expert-v1
+PROJECT=/home/v/Dev/ttt-expert-v2
 
 # Create structure
 mkdir -p $PROJECT/expert-system/{vault,scripts,repos,output}
@@ -188,12 +188,12 @@ mkdir -p $PROJECT/expert-system/vault/exploration/{ui-flows,api-findings,data-fi
 ### 4.1 Implementation Prompt
 
 ```bash
-cp case1-implementation-prompt.md /home/v/Dev/ttt-expert-v1/CLAUDE.md
+cp case1-implementation-prompt.md /home/v/Dev/ttt-expert-v2/CLAUDE.md
 ```
 
 ### 4.2 Config File
 
-Create `/home/v/Dev/ttt-expert-v1/expert-system/config.yaml`:
+Create `/home/v/Dev/ttt-expert-v2/expert-system/config.yaml`:
 
 ```yaml
 session:
@@ -230,7 +230,7 @@ current_sprint: 15
 
 ### 4.3 Mission Directive
 
-Create `/home/v/Dev/ttt-expert-v1/expert-system/MISSION_DIRECTIVE.md`:
+Create `/home/v/Dev/ttt-expert-v2/expert-system/MISSION_DIRECTIVE.md`:
 
 ```markdown
 # Mission Directive
@@ -346,7 +346,7 @@ code --install-extension redhat.vscode-yaml
 ## 7. Verification Checklist
 
 ```bash
-PROJECT=/home/v/Dev/ttt-expert-v1
+PROJECT=/home/v/Dev/ttt-expert-v2
 
 # System dependencies
 java --version                          # OpenJDK 17+
@@ -394,7 +394,7 @@ qmd search "test" -c expert-vault
 1. Verify QMD daemon: `qmd status`
 2. Review/edit `expert-system/config.yaml` if needed
 3. Review/edit `expert-system/MISSION_DIRECTIVE.md` if priorities changed
-4. Start: `cd /home/v/Dev/ttt-expert-v1 && claude`
+4. Start: `cd /home/v/Dev/ttt-expert-v2 && claude`
 5. Claude reads CLAUDE.md + config.yaml, follows session protocol
 6. Review and approve Claude's proposed plan
 
@@ -422,7 +422,7 @@ When knowledge acquisition is sufficient:
 2. Browse vault in Obsidian graph view
 3. Check module_health:
    ```bash
-   sqlite3 /home/v/Dev/ttt-expert-v1/expert-system/analytics.db \
+   sqlite3 /home/v/Dev/ttt-expert-v2/expert-system/analytics.db \
      "SELECT module, tech_debt_score, last_analyzed FROM module_health ORDER BY last_analyzed"
    ```
 4. Edit config.yaml:
@@ -445,7 +445,7 @@ When knowledge acquisition is sufficient:
 
 ### Vault Health (weekly)
 ```bash
-find /home/v/Dev/ttt-expert-v1/expert-system/vault -name "*.md" | wc -l
+find /home/v/Dev/ttt-expert-v2/expert-system/vault -name "*.md" | wc -l
 qmd status         # check embed freshness
 qmd embed          # incremental re-embed
 qmd embed -f       # force full rebuild
@@ -453,7 +453,7 @@ qmd embed -f       # force full rebuild
 
 ### SQLite Health
 ```bash
-sqlite3 /home/v/Dev/ttt-expert-v1/expert-system/analytics.db "
+sqlite3 /home/v/Dev/ttt-expert-v2/expert-system/analytics.db "
   SELECT 'analysis_runs', count(*) FROM analysis_runs
   UNION ALL SELECT 'module_health', count(*) FROM module_health
   UNION ALL SELECT 'design_issues', count(*) FROM design_issues
@@ -466,13 +466,13 @@ sqlite3 /home/v/Dev/ttt-expert-v1/expert-system/analytics.db "
 ### Backup
 ```bash
 # Git for vault (recommended)
-cd /home/v/Dev/ttt-expert-v1/expert-system/vault
+cd /home/v/Dev/ttt-expert-v2/expert-system/vault
 git init   # first time
 git add -A && git commit -m "Snapshot $(date +%Y-%m-%d)"
 
 # Full backup
 tar -czf ~/ttt-expert-backup-$(date +%Y%m%d).tar.gz \
-  /home/v/Dev/ttt-expert-v1/expert-system/
+  /home/v/Dev/ttt-expert-v2/expert-system/
 ```
 
 ### QMD Auto-start
@@ -488,7 +488,7 @@ fi
 ## 10. Troubleshooting
 
 ### mcp-obsidian Issues
-- Verify: `npx @mauricio.wolff/mcp-obsidian@latest /home/v/Dev/ttt-expert-v1/expert-system/vault` (should start without error, Ctrl+C to stop)
+- Verify: `npx @mauricio.wolff/mcp-obsidian@latest /home/v/Dev/ttt-expert-v2/expert-system/vault` (should start without error, Ctrl+C to stop)
 - Check MCP registration: `claude mcp get obsidian`
 - Test in Claude Code: ask "list files in the vault"
 
@@ -499,8 +499,8 @@ fi
 - Test: `qmd search "test" -c expert-vault`
 
 ### SQLite MCP Errors
-- `ls /home/v/Dev/ttt-expert-v1/expert-system/analytics.db`
-- `sqlite3 /home/v/Dev/ttt-expert-v1/expert-system/analytics.db ".tables"`
+- `ls /home/v/Dev/ttt-expert-v2/expert-system/analytics.db`
+- `sqlite3 /home/v/Dev/ttt-expert-v2/expert-system/analytics.db ".tables"`
 - Claude creates schema on first session; or run SQL from CLAUDE.md Section 6 manually
 
 ### Maven/Java Analysis
@@ -560,7 +560,7 @@ fi
 [ ] Copy implementation prompt as CLAUDE.md at project root
 [ ] Install VS Code extensions (Section 6)
 [ ] Run verification checklist (Section 7)
-[ ] Start: cd /home/v/Dev/ttt-expert-v1 && claude
+[ ] Start: cd /home/v/Dev/ttt-expert-v2 && claude
 ```
 
 ---

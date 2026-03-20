@@ -584,7 +584,7 @@ Claude Code requires `HTTP_PROXY=http://127.0.0.1:2080` (AdGuard VPN in SOCKS mo
 
 ```bash
 # Add to crontab (crontab -e):
-*/3 * * * * /home/v/Dev/ttt-expert-v1/expert-system/scripts/proxy-watchdog.sh >> /home/v/Dev/ttt-expert-v1/expert-system/logs/proxy-watchdog.log 2>&1
+*/3 * * * * /home/v/Dev/ttt-expert-v2/expert-system/scripts/proxy-watchdog.sh >> /home/v/Dev/ttt-expert-v2/expert-system/logs/proxy-watchdog.log 2>&1
 ```
 
 The watchdog script (`expert-system/scripts/proxy-watchdog.sh`) tests connectivity through the proxy and runs `adguardvpn-cli disconnect && adguardvpn-cli connect -l FI` on failure. Logs only appear when a restart was needed.

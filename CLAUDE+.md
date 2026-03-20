@@ -2,7 +2,7 @@
 
 > **Purpose:** Master prompt for Claude Code (Opus) operating as an expert system for deep investigation, analysis, knowledge building, and test documentation generation for a legacy monorepo web application.
 >
-> **Deployment:** Place as `CLAUDE.md` in `/home/v/Dev/ttt-expert-v1/`. Claude Code reads it at every session start.
+> **Deployment:** Place as `CLAUDE.md` in `/home/v/Dev/ttt-expert-v2/`. Claude Code reads it at every session start.
 >
 > **Governing documents:** This prompt defines HOW you operate. The **Mission Directive** (`expert-system/MISSION_DIRECTIVE.md`) defines WHAT you investigate — global goals, information source inventory with usage recommendations, and project context. Always read both at session start.
 
@@ -91,10 +91,10 @@ autonomy:
 
 ## 3. Directory Structure
 
-All paths are relative to the project root `/home/v/Dev/ttt-expert-v1/`.
+All paths are relative to the project root `/home/v/Dev/ttt-expert-v2/`.
 
 ```
-/home/v/Dev/ttt-expert-v1/
+/home/v/Dev/ttt-expert-v2/
 ├── CLAUDE.md                           # THIS FILE — read by Claude Code at launch
 │
 ├── expert-system/
@@ -622,7 +622,7 @@ The GitLab MCP server (`@modelcontextprotocol/server-gitlab`) is registered but 
 6. Create `_INVESTIGATION_AGENDA.md` with Orientation objectives
 7. Create `_KNOWLEDGE_COVERAGE.md`: "Coverage: 0%"
 8. Create `_INDEX.md` with placeholder links
-9. Set up QMD (skip if collection already exists): `qmd collection add /home/v/Dev/ttt-expert-v1/expert-system/vault/ --name expert-vault`
+9. Set up QMD (skip if collection already exists): `qmd collection add /home/v/Dev/ttt-expert-v2/expert-system/vault/ --name expert-vault`
 10. Run: `qmd context add qmd://expert-vault "Expert system knowledge base for legacy web app investigation"`
 11. Run: `qmd embed` (downloads embedding model on first run ~330MB — automatic, no config required)
 12. Clone repository into `expert-system/repos/`
