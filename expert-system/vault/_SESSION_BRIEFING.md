@@ -1,57 +1,53 @@
 ---
-session: 22
+session: 24
 phase: autotest_generation
 updated: '2026-03-21'
 ---
-# Session 22 Briefing (Phase C — Autotest Generation, Fresh Start)
+# Session 24 Briefing (Phase C — Autotest Generation)
 
 **Date:** 2026-03-21
-**Phase:** Autotest Generation (vacation scope — regeneration after guidelines update)
-**Tests verified:** 4 new (TC-002, TC-003, TC-004, TC-005)
-**Tests blocked:** 1 (TC-001: @CurrentUser + AV=false)
-**Vacation scope status:** 168 pending, 4 verified, 1 blocked
-
-## Context
-
-User deleted all previous vacation autotests (`bad autotests removed` commit) and updated generation guidelines with stricter data generation requirements (compound queries, realistic data ranges, anti-patterns). Session 22 starts fresh: reparsed XLSX manifest, reset SQLite tracking, and began regenerating vacation tests following the improved guidelines.
+**Phase:** Autotest Generation (vacation scope)
+**Tests generated:** 5 new (TC-013, TC-014, TC-015, TC-016, TC-018)
+**Tests blocked:** 3 new (TC-017, TC-019, TC-020)
+**Vacation scope status:** 155 pending, 13 verified, 5 blocked
 
 ## What was done
 
-1. **Reparsed manifest** — all 10 modules (1071 test cases) now have parsed test case data with `classified_type` and `automation_status` fields
-2. **Reset SQLite tracking** — deleted stale vacation tracking rows, re-inserted all 1071 cases as pending
-3. **Generated 5 vacation API tests** from TS-Vac-Create suite (Critical + High priority)
+Generated 5 vacation API tests + marked 3 as blocked:
 
-| Test ID | Title | Type | Suite | Result |
-|---------|-------|------|-------|--------|
-| TC-VAC-001 | Create REGULAR vacation (AV=false) | API | TS-Vac-Create | BLOCKED |
-| TC-VAC-002 | Create REGULAR vacation (AV=true) | API | TS-Vac-Create | PASS |
-| TC-VAC-003 | Create ADMINISTRATIVE vacation | API | TS-Vac-Create | PASS |
-| TC-VAC-004 | Past date validation error | API | TS-Vac-Create | PASS |
-| TC-VAC-005 | Date order validation error | API | TS-Vac-Create | PASS |
+| Test ID | Title | Type | Result | Notes |
+|---------|-------|------|--------|-------|
+| TC-VAC-013 | Overlapping vacation (dates crossing) | API/Negative | PASS | Creates setup vacation, overlaps it. Error in `message` field not `code`. |
+| TC-VAC-014 | Null paymentMonth — NPE bug | API/Known-bug | PASS | HTTP 500 confirmed. NPE at VacationAvailablePaidDaysCalculatorImpl:73. |
+| TC-VAC-015 | Null optionalApprovers — NPE (CPO) | API/Known-bug | PASS | HTTP 500 confirmed. NPE at VacationServiceImpl:155 on CPO path. |
+| TC-VAC-016 | Non-existent employee login | API/Negative | PASS | @EmployeeLoginExists validator fires. Simple static data class. |
+| TC-VAC-018 | CPO auto-approver self-assignment | API/Functional | PASS | Self-approval verified. Manager ilnitsky added as optional (ASKED). |
+| TC-VAC-017 | Create as readOnly user | API/Negative | BLOCKED | @CurrentUser forces pvaynmaster (not readOnly). |
+| TC-VAC-019 | Regular employee auto-approver | API/Functional | BLOCKED | @CurrentUser forces pvaynmaster (CPO, not ROLE_EMPLOYEE). |
+| TC-VAC-020 | No-manager self-approval | API/Functional | BLOCKED | @CurrentUser forces pvaynmaster (has manager). |
 
 ## Key Discoveries
 
-1. **API response structure**: POST /api/vacation/v1/vacations returns `{ vacation: {...}, vacationDays: {...} }` — data wrapped in `vacation` key, not flat
-2. **Error response structure**: Top-level `errorCode` is always `exception.validation`; specific error codes live in `errors[].code`
-3. **@CurrentUser enforced**: API_SECRET_TOKEN authenticates as `pvaynmaster` (AV=true office). The `@CurrentUser` DTO validator rejects any other login with `validation.notcurrentuser`. This blocks all API tests requiring AV=false employees.
-4. **pvaynmaster is CPO** in Персей office (AV=true) — self-approves vacations, manager ilnitsky added as optional approver
-5. **Manifest structure**: `modules.{name}.suites.{suite}.test_cases[]` with `classified_type` field (UI/API/hybrid) separate from `type` (Functional/Negative/Boundary)
+1. **Response wrapper structure**: Create endpoint returns `{vacation: {...}, vacationDays: {...}}`. Previous tests (TC-002..010) must have used the correct path already. TC-013/018 needed fix after first run.
+2. **Error field inconsistency**: Crossing validation uses `code: "exception.validation.fail"` with actual error in `message` field. Other validators (login, duration) put the error directly in `code`. Must check both fields.
+3. **Both NPE bugs active**: paymentMonth and optionalApprovers NPEs still present on qa-1. No fix deployed.
+4. **pvaynmaster identity confirmed**: CPO (ROLE_DEPARTMENT_MANAGER), AV=true (Персей office), manager = ilnitsky (csId 65).
 
-## Blocker Categories
+## Fix History
 
-| Blocker | Impact | Tests |
-|---------|--------|-------|
-| @CurrentUser (AV=false needs different user) | Cannot test AV=false via API_SECRET_TOKEN | TC-VAC-001 |
+- TC-013 run 1: `setupJson.id` → `setupJson.vacation?.id` (response wrapper)
+- TC-013 run 2: Error matching `e.code ===` → `e.code === || e.message ===` (error field location)
+- TC-018 run 1: Same response wrapper fix applied preemptively
 
 ## Coverage
 
-- **Vacation automated:** 4/173 (2.3%) — fresh restart
-- **Vacation blocked:** 1/173 (0.6%)
-- **Vacation pending:** 168/173 (97.1%)
+- **Vacation automated:** 13/173 (7.5%)
+- **Vacation blocked:** 5/173 (2.9%)
+- **Vacation pending:** 155/173 (89.6%)
 
 ## Next Steps
 
-1. Continue generating vacation API tests from TS-Vac-Create (TC-006 through TC-018)
-2. Focus on tests that work with pvaynmaster (AV=true, CPO): ADMINISTRATIVE tests, boundary tests, more negative tests
-3. Move to TS-Vac-StatusFlow and TS-Vac-Approval suites after Create is done
-4. Write vault note documenting discovered API response format and @CurrentUser constraint
+1. Continue TS-Vac-Create suite: TC-011, TC-012 (next-year cutoff — needs clock manipulation)
+2. Skip to TC-021..TC-025 for remaining create-path tests feasible with pvaynmaster
+3. Move to TS-Vac-StatusFlow (TC-039..TC-055) for approve/reject/cancel workflow tests
+4. @CurrentUser blocker analysis: 5 blocked tests so far. If more accumulate, investigate CAS per-user auth or env config changes.

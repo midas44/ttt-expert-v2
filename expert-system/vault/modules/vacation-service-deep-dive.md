@@ -638,3 +638,57 @@ All error responses (except HttpMessageNotReadableException) include these stand
 
 ### Cross-Year Vacation Dates Used
 - TC-161: 2037-12-22 → 2038-01-09 (Dec→Jan cross-year)
+
+
+## Autotest Notes (Session 23)
+
+### employee_vacation Table (Correct Schema for Available Days)
+- Table: `ttt_vacation.employee_vacation` (NOT `vacation_days`)
+- Columns: `id` (PK), `employee` (FK bigint), `available_vacation_days` (numeric), `year` (int)
+- FK column is `employee`, not `employee_id`
+- Query for total available: `SELECT SUM(ev.available_vacation_days) FROM ttt_vacation.employee_vacation ev JOIN ttt_vacation.employee e ON e.id = ev.employee WHERE e.login = $1`
+
+### Holiday Impact on Working Days Count
+- Mon-Fri (5 calendar days) may yield 4 regularDays if one day is a public holiday in the office calendar
+- The `VacationDaysCalculatorImpl.calculateDays()` uses the office-specific production calendar
+- Assertions on regularDays for Mon-Fri windows should use `>= 4` not `== 5`
+
+### Duration Validation: Real Minimum is 1, Not 5
+- minimalVacationDuration=1 confirmed across all environments (qa-1, timemachine, stage)
+- Test doc TC-VAC-006 says "< 5 days" but the actual trigger is 0 working days
+- Only Sat-Sun (or holiday-only) ranges produce 0 working days → `validation.vacation.duration`
+- A 3-day Mon-Wed vacation (3 working days) passes fine since 3 >= 1
+
+### Insufficient Days Validation Order
+- DTO-level `VacationCreateValidator` fires BEFORE service-level `findCrossingVacations`
+- So `validation.vacation.duration` (insufficient balance) returns even if the dates would also conflict with ghost records
+- This makes negative tests for insufficient days reliable regardless of date conflicts
+
+
+## Autotest Notes (Session 24)
+
+### Response wrapper structure
+Create endpoint (`POST /api/vacation/v1/vacations`) returns a wrapper object:
+```json
+{
+  "vacation": { "id": 51589, "employee": {...}, "approver": {...}, "status": "NEW", ... },
+  "vacationDays": { "availableDays": 24, "reservedDays": 14, ... }
+}
+```
+Access vacation ID via `response.vacation.id`, approver via `response.vacation.approver`.
+
+### Error field inconsistency
+- **Crossing validation**: `{code: "exception.validation.fail", message: "exception.validation.vacation.dates.crossing", field: "startDate"}` — actual error in `message`, not `code`
+- **Other validators** (login, duration): error code directly in `code` field
+- When matching errors in tests, always check BOTH `code` and `message` fields
+
+### NPE bugs still active (qa-1, 2026-03-21)
+- **paymentMonth null** → HTTP 500 (TC-014 confirmed)
+- **optionalApprovers null on CPO path** → HTTP 500 (TC-015 confirmed)
+
+### pvaynmaster identity (qa-1)
+- Login: pvaynmaster, csId: 249
+- Office: Персей (id: 20, AV=true)
+- Role: ROLE_DEPARTMENT_MANAGER (CPO)
+- Manager: ilnitsky (csId: 65)
+- Self-approval: confirmed (approver = self, manager as optional with ASKED status)

@@ -13082,7 +13082,7 @@
               "module_component": "VacationCRUDService.findCrossingVacations",
               "notes": "3 overlap patterns: start-inside, end-inside, enclosing",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-014",
@@ -13096,7 +13096,7 @@
               "module_component": "VacationCreateRequestDTO, VacationAvailablePaidDaysCalculatorImpl",
               "notes": "Known NPE vulnerability. DTO lacks @NotNull on paymentMonth",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-015",
@@ -13110,7 +13110,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "NPE only on CPO code path. Send optionalApprovers: [] to workaround",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-016",
@@ -13124,7 +13124,7 @@
               "module_component": "DTO validation",
               "notes": "@EmployeeLoginExists custom validator on login field",
               "classified_type": "hybrid",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-017",
@@ -13138,7 +13138,7 @@
               "module_component": "VacationPermissionService, classPermissionService",
               "notes": "readOnly flag blocks all write operations",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "blocked"
             },
             {
               "test_id": "TC-VAC-018",
@@ -13152,7 +13152,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "CPO pattern: self-approve + manager as optional",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-019",
@@ -13166,7 +13166,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Standard flow: manager is primary approver",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "blocked"
             },
             {
               "test_id": "TC-VAC-020",
@@ -13180,7 +13180,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Fallback path when no manager exists",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "blocked"
             },
             {
               "test_id": "TC-VAC-021",
