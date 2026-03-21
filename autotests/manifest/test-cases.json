@@ -13510,7 +13510,7 @@
               "module_component": "VacationStatusManager",
               "notes": "Confirmed possible in live testing. add(REJECTED, APPROVED, PM/DM/ADMIN)",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-044",
@@ -13524,7 +13524,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Key business rule. Code: add(APPROVED, NEW, ROLE_EMPLOYEE)",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-045",
@@ -13538,7 +13538,7 @@
               "module_component": "VacationServiceImpl, VacationPermissionService",
               "notes": "canBeCancelled guard determines if cancel is available",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-046",
@@ -13566,7 +13566,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Approver can reject an already-approved vacation",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-048",
@@ -13580,7 +13580,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Terminal state. See TS-Vac-Payment for detailed payment tests",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-049",

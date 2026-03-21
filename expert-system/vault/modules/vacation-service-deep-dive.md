@@ -692,3 +692,14 @@ Access vacation ID via `response.vacation.id`, approver via `response.vacation.a
 - Role: ROLE_DEPARTMENT_MANAGER (CPO)
 - Manager: ilnitsky (csId: 65)
 - Self-approval: confirmed (approver = self, manager as optional with ASKED status)
+
+
+## Autotest Notes (Session 26)
+
+- **PUT update requires `id` in body** — `PUT /v1/vacations/{id}` expects `id` field in the JSON request body in addition to the URL path parameter. Omitting it causes `IllegalArgumentException: The given id must not be null!` (400). Full update body: `{id, login, startDate, endDate, paymentType, paymentMonth, optionalApprovers, notifyAlso}`.
+- **Pay body format confirmed** — `PUT /v1/vacations/pay/{id}` body: `{"regularDaysPayed": N, "administrativeDaysPayed": N}`. Sum must equal vacation's total working days. For REGULAR 5-day: `{"regularDaysPayed": 5, "administrativeDaysPayed": 0}`. The `days` field in the vacation response object provides the correct total.
+- **REJECTED→APPROVED confirmed** — `VacationStatusManager` allows direct re-approval from REJECTED without requiring an edit. Transition map: `REJECTED → [APPROVED]`.
+- **APPROVED→REJECTED confirmed** — Approver can reject an already-approved vacation. Days returned to pool, FIFO redistribution triggered.
+- **APPROVED→NEW on date edit confirmed** — Editing dates via PUT resets status from APPROVED to NEW. Optional approvals also reset to ASKED.
+- **APPROVED→CANCELED confirmed** — `canBeCancelled` guard passes for future vacations where paymentDate is after the office report period.
+- **APPROVED→PAID confirmed** — Terminal state. PAID+EXACT cannot be canceled, rejected, or deleted via normal API. Cleanup requires test API endpoint or accepting persistence.
