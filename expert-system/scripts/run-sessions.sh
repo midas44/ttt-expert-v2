@@ -141,6 +141,13 @@ parse_config() {
     MAX_DURATION_MINUTES=$(read_yaml "session.max_duration_minutes")
     PHASE=$(read_yaml "phase.current")
 
+    # Promo peak hours config
+    PROMO_ENABLED=$(read_yaml "promo.enabled" 2>/dev/null || echo "false")
+    PROMO_PEAK_HOURS=$(read_yaml "promo.peak_hours_utc" 2>/dev/null || echo "")
+    PROMO_WEEKDAYS_ONLY=$(read_yaml "promo.weekdays_only" 2>/dev/null || echo "true")
+    PROMO_EXPIRES=$(read_yaml "promo.expires" 2>/dev/null || echo "")
+    PROMO_BUFFER=$(read_yaml "promo.buffer_minutes" 2>/dev/null || echo "40")
+
     STATE_FILE="$LOG_DIR/runner-state.json"
 
     # CLI override
@@ -177,6 +184,106 @@ get_current_delay() {
         fi
     fi
     echo "$DELAY_MINUTES"
+}
+
+# ── Promo peak hours ────────────────────────────────────────────────────────
+
+is_promo_active() {
+    # Check if promo feature is enabled and not expired
+    [[ "$PROMO_ENABLED" != "True" && "$PROMO_ENABLED" != "true" ]] && return 1
+    [[ -z "$PROMO_PEAK_HOURS" ]] && return 1
+
+    if [[ -n "$PROMO_EXPIRES" ]]; then
+        local today
+        today=$(date -u +%Y-%m-%d)
+        [[ "$today" > "$PROMO_EXPIRES" ]] && return 1
+    fi
+
+    # Weekdays only check
+    if [[ "$PROMO_WEEKDAYS_ONLY" == "True" || "$PROMO_WEEKDAYS_ONLY" == "true" ]]; then
+        local dow
+        dow=$(date -u +%u)  # 1=Mon ... 7=Sun
+        (( dow > 5 )) && return 1
+    fi
+
+    return 0
+}
+
+is_promo_peak() {
+    # Returns 0 if currently inside promo peak hours
+    is_promo_active || return 1
+
+    local hour start end_part end
+    hour=$(date -u +%-H)
+    start="${PROMO_PEAK_HOURS%%:*}"
+    start="${start%%:*}"  # handle "12:00" -> "12"
+    end_part="${PROMO_PEAK_HOURS##*-}"
+    end="${end_part%%:*}"
+    start=$((10#$start)); end=$((10#$end)); hour=$((10#$hour))
+
+    if (( start <= end )); then
+        (( hour >= start && hour < end )) && return 0
+    else
+        (( hour >= start || hour < end )) && return 0
+    fi
+    return 1
+}
+
+is_promo_buffer() {
+    # Returns 0 if starting a session now would likely overlap into peak hours
+    is_promo_active || return 1
+    is_promo_peak && return 1  # already in peak — handled separately
+
+    local now_minutes start peak_start_minutes minutes_until_peak
+    now_minutes=$(( $(date -u +%-H) * 60 + $(date -u +%-M) ))
+    start="${PROMO_PEAK_HOURS%%:*}"
+    start="${start%%:*}"
+    peak_start_minutes=$(( 10#$start * 60 ))
+
+    if (( peak_start_minutes > now_minutes )); then
+        minutes_until_peak=$(( peak_start_minutes - now_minutes ))
+    else
+        minutes_until_peak=$(( 1440 - now_minutes + peak_start_minutes ))
+    fi
+
+    (( minutes_until_peak <= PROMO_BUFFER && minutes_until_peak > 0 )) && return 0
+    return 1
+}
+
+wait_for_offpeak() {
+    # If in promo peak or buffer zone, sleep until peak ends
+    parse_config  # re-read (promo may have been toggled)
+
+    local end_part end_hour now_minutes end_minutes wait_minutes
+
+    if is_promo_peak; then
+        end_part="${PROMO_PEAK_HOURS##*-}"
+        end_hour="${end_part%%:*}"
+        now_minutes=$(( $(date -u +%-H) * 60 + $(date -u +%-M) ))
+        end_minutes=$(( 10#$end_hour * 60 ))
+        if (( end_minutes > now_minutes )); then
+            wait_minutes=$(( end_minutes - now_minutes ))
+        else
+            wait_minutes=$(( 1440 - now_minutes + end_minutes ))
+        fi
+        log "PROMO: Peak hours active (${PROMO_PEAK_HOURS} UTC). Waiting ${wait_minutes} minutes until off-peak."
+        sleep $(( wait_minutes * 60 ))
+        return
+    fi
+
+    if is_promo_buffer; then
+        end_part="${PROMO_PEAK_HOURS##*-}"
+        end_hour="${end_part%%:*}"
+        now_minutes=$(( $(date -u +%-H) * 60 + $(date -u +%-M) ))
+        end_minutes=$(( 10#$end_hour * 60 ))
+        if (( end_minutes > now_minutes )); then
+            wait_minutes=$(( end_minutes - now_minutes ))
+        else
+            wait_minutes=$(( 1440 - now_minutes + end_minutes ))
+        fi
+        log "PROMO: Buffer zone — session would overlap peak hours. Waiting ${wait_minutes} minutes until off-peak."
+        sleep $(( wait_minutes * 60 ))
+    fi
 }
 
 # ── State management ─────────────────────────────────────────────────────────
@@ -499,12 +606,18 @@ print(sum(1 for x in s['sessions'] if x.get('phase') == 'autotest_generation'))
     log "Stop flag: $STOP"
     log "Session timeout: $((MAX_DURATION_MINUTES + 30)) minutes"
     log "Session delay: ${DELAY_MINUTES}min (working) / ${DELAY_MINUTES_OFFHOURS}min (off-hours: ${OFFHOURS_UTC} UTC)"
+    if [[ "$PROMO_ENABLED" == "True" || "$PROMO_ENABLED" == "true" ]]; then
+        log "Promo: pause during peak ${PROMO_PEAK_HOURS} UTC (weekdays only: ${PROMO_WEEKDAYS_ONLY}), buffer: ${PROMO_BUFFER}min, expires: ${PROMO_EXPIRES}"
+    fi
 
     local stop_reason="unknown"
 
     while check_stop_conditions "$session_num"; do
         # Re-read config each iteration (phase may have changed)
         parse_config
+
+        # Pause during promo peak hours (waits until off-peak, then re-reads config)
+        wait_for_offpeak
 
         local prompt
         prompt=$(build_prompt "$session_num" "$PHASE")
