@@ -1,5 +1,5 @@
 {
-  "generated": "2026-03-20T09:28:55.302522+00:00",
+  "generated": "2026-03-21T13:50:00.173864+00:00",
   "total_cases": 1071,
   "modules": {
     "accounting": {
@@ -12914,7 +12914,7 @@
               "module_component": "VacationServiceImpl, VacationCreateValidator",
               "notes": "Core happy path. Verify via DB: SELECT * FROM vacation WHERE id=<new_id>",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-002",
@@ -12928,7 +12928,7 @@
               "module_component": "VacationServiceImpl, AdvanceCalculationStrategy",
               "notes": "AV=true offices use different calculation strategy",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-003",
@@ -12942,7 +12942,7 @@
               "module_component": "VacationServiceImpl, VacationCreateValidator",
               "notes": "ADMINISTRATIVE skips duration and availability checks",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-004",
@@ -12956,7 +12956,7 @@
               "module_component": "VacationCreateValidator",
               "notes": "Backend validation; frontend also blocks this via date picker",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-005",
@@ -12970,7 +12970,7 @@
               "module_component": "VacationCreateValidator",
               "notes": "",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-006",
@@ -12984,7 +12984,7 @@
               "module_component": "VacationCreateValidator",
               "notes": "Frontend-backend gap: UI min=1 day, backend min=5 days for REGULAR",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-007",
@@ -12998,7 +12998,7 @@
               "module_component": "VacationCreateValidator",
               "notes": "Boundary: exactly at minimalVacationDuration threshold",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-008",
@@ -13012,7 +13012,7 @@
               "module_component": "VacationCreateValidator",
               "notes": "ADMINISTRATIVE type skips duration validation entirely",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-009",
@@ -13026,7 +13026,7 @@
               "module_component": "VacationCreateValidator, RegularCalculationStrategy",
               "notes": "AV=false: negative balance never allowed, blocks at creation",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-010",
@@ -13040,7 +13040,7 @@
               "module_component": "VacationCreateValidator, AdvanceCalculationStrategy",
               "notes": "AV=true: can go negative via norm deviation but create validator still checks total",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-011",
@@ -13054,7 +13054,7 @@
               "module_component": "VacationCreateValidator",
               "notes": "Configurable cutoff date. Boundary: Jan 31 vs Feb 1",
               "classified_type": "API",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-012",
@@ -13068,7 +13068,7 @@
               "module_component": "VacationCreateValidator",
               "notes": "Boundary companion to TC-VAC-011",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-013",
@@ -13082,7 +13082,7 @@
               "module_component": "VacationCRUDService.findCrossingVacations",
               "notes": "3 overlap patterns: start-inside, end-inside, enclosing",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-014",
@@ -13096,7 +13096,7 @@
               "module_component": "VacationCreateRequestDTO, VacationAvailablePaidDaysCalculatorImpl",
               "notes": "Known NPE vulnerability. DTO lacks @NotNull on paymentMonth",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-015",
@@ -13110,7 +13110,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "NPE only on CPO code path. Send optionalApprovers: [] to workaround",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-016",
@@ -13124,7 +13124,7 @@
               "module_component": "DTO validation",
               "notes": "@EmployeeLoginExists custom validator on login field",
               "classified_type": "hybrid",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-017",
@@ -13138,7 +13138,7 @@
               "module_component": "VacationPermissionService, classPermissionService",
               "notes": "readOnly flag blocks all write operations",
               "classified_type": "API",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-018",
@@ -13152,7 +13152,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "CPO pattern: self-approve + manager as optional",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-019",
@@ -13166,7 +13166,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Standard flow: manager is primary approver",
               "classified_type": "API",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-020",
@@ -13180,7 +13180,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Fallback path when no manager exists",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-021",
@@ -13194,7 +13194,7 @@
               "module_component": "VacationRecalculationService",
               "notes": "Days deducted at creation (for NEW status tracking), final deduction at approval",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-022",
@@ -13208,7 +13208,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Notify-also with required=false is informational only",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-023",
@@ -13222,7 +13222,7 @@
               "module_component": "DTO validation",
               "notes": "@EmployeeLoginCollectionExists validates each login in list",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-024",
@@ -13236,7 +13236,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Comment field has no @Size annotation — test with very long string too",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-025",
@@ -13250,7 +13250,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "No @Size annotation on comment field. DB column type determines actual limit",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             }
           ]
         },
@@ -13268,7 +13268,7 @@
               "module_component": "VacationServiceImpl, VacationUpdateValidator",
               "notes": "Update of NEW vacation doesn't trigger status change",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-027",
@@ -13282,7 +13282,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Key business rule: editing dates resets approval. Code: add(APPROVED, NEW, ROLE_EMPLOYEE)",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-028",
@@ -13296,7 +13296,7 @@
               "module_component": "VacationUpdateValidator",
               "notes": "CANCELED/REJECTED skip day limit validation in update path",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-029",
@@ -13310,7 +13310,7 @@
               "module_component": "VacationUpdateValidator",
               "notes": "Key difference from create: REJECTED vacations skip limit adjustments",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-030",
@@ -13324,7 +13324,7 @@
               "module_component": "VacationPermissionService",
               "notes": "PAID is in NON_EDITABLE_STATUSES set",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-031",
@@ -13338,7 +13338,7 @@
               "module_component": "VacationStatusManager",
               "notes": "Owner check: request.getEmployeeId().equals(employee.getId())",
               "classified_type": "API",
-              "automation_status": "skipped"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-032",
@@ -13352,7 +13352,7 @@
               "module_component": "VacationCRUDService",
               "notes": "findCrossingVacations excludes current vacation ID from check",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-033",
@@ -13366,7 +13366,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "State reset behavior confirmed in code and live testing",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-034",
@@ -13380,7 +13380,7 @@
               "module_component": "VacationUpdateValidator",
               "notes": "Code: Update validator does NOT call isNextVacationAvailable()",
               "classified_type": "API",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-035",
@@ -13394,7 +13394,7 @@
               "module_component": "VacationServiceImpl, VacationRecalculationService",
               "notes": "Type change triggers recalculation of day pool",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-036",
@@ -13408,7 +13408,7 @@
               "module_component": "VacationRepository",
               "notes": "",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-037",
@@ -13422,7 +13422,7 @@
               "module_component": "VacationPermissionService",
               "notes": "EDIT_APPROVER granted when isApprover && !NON_EDITABLE_STATUSES",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-038",
@@ -13436,7 +13436,7 @@
               "module_component": "VacationCRUDService",
               "notes": "correctPaymentMonth auto-adjusts; isPaymentDateCorrect validates",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             }
           ]
         },
@@ -13454,7 +13454,7 @@
               "module_component": "VacationServiceImpl, VacationStatusManager",
               "notes": "Core approval flow. Write lock acquired via findByIdAndAcquireWriteLock",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-040",
@@ -13468,7 +13468,7 @@
               "module_component": "VacationServiceImpl, VacationStatusManager",
               "notes": "Reject uses VACATIONS_DELETE permission (shared with cancel/delete)",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-041",
@@ -13482,7 +13482,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-042",
@@ -13496,7 +13496,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Soft delete, not physical. DELETED is terminal.",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-043",
@@ -13510,7 +13510,7 @@
               "module_component": "VacationStatusManager",
               "notes": "Confirmed possible in live testing. add(REJECTED, APPROVED, PM/DM/ADMIN)",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-044",
@@ -13524,7 +13524,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Key business rule. Code: add(APPROVED, NEW, ROLE_EMPLOYEE)",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-045",
@@ -13538,7 +13538,7 @@
               "module_component": "VacationServiceImpl, VacationPermissionService",
               "notes": "canBeCancelled guard determines if cancel is available",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-046",
@@ -13552,7 +13552,7 @@
               "module_component": "VacationPermissionService",
               "notes": "Critical accounting guard. Same logic blocks reject and delete too",
               "classified_type": "API",
-              "automation_status": "skipped"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-047",
@@ -13566,7 +13566,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Approver can reject an already-approved vacation",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-048",
@@ -13580,7 +13580,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Terminal state. See TS-Vac-Payment for detailed payment tests",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-049",
@@ -13594,7 +13594,7 @@
               "module_component": "VacationStatusManager",
               "notes": "Edge case: CANCELED in FINAL_STATUSES but explicit transition exists",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-050",
@@ -13608,7 +13608,7 @@
               "module_component": "VacationStatusManager, VacationPermissionService",
               "notes": "Verify truly terminal — no way to modify PAID vacation",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-051",
@@ -13622,7 +13622,7 @@
               "module_component": "VacationStatusManager",
               "notes": "DELETED is a soft-delete terminal state",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-052",
@@ -13636,7 +13636,7 @@
               "module_component": "VacationStatusManager",
               "notes": "Transition map enforces workflow order",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-053",
@@ -13650,7 +13650,7 @@
               "module_component": "VacationStatusManager",
               "notes": "Security: only designated approver can approve",
               "classified_type": "API",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-054",
@@ -13664,7 +13664,7 @@
               "module_component": "VacationRepository",
               "notes": "Pessimistic locking via findByIdAndAcquireWriteLock",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-055",
@@ -13678,7 +13678,7 @@
               "module_component": "EventPublisher, Timeline",
               "notes": "Events trigger notifications via RabbitMQ",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-056",
@@ -13692,7 +13692,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Approve re-checks for crossing; another vacation may have been created between A's creation and approval",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             }
           ]
         },
@@ -13710,7 +13710,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Optional approvers stored in vacation_approval table",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-058",
@@ -13724,7 +13724,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Optional approvals are informational — don't affect main status",
               "classified_type": "UI",
-              "automation_status": "skipped"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-059",
@@ -13738,7 +13738,7 @@
               "module_component": "EventPublisher",
               "notes": "Event fires when ALL optional approvals are APPROVED",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-060",
@@ -13752,7 +13752,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "DB evidence: 21% of vacations reassigned. old→optional, new→primary",
               "classified_type": "hybrid",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-061",
@@ -13766,7 +13766,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Same error code as delete guard (reused)",
               "classified_type": "hybrid",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-062",
@@ -13780,7 +13780,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-063",
@@ -13794,7 +13794,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "State reset prevents stale approvals on modified vacations",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-064",
@@ -13808,7 +13808,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Known orphan issue — no FK cascade on soft delete",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-065",
@@ -13822,7 +13822,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Subtle distinction: notify-also vs optional-approver",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-066",
@@ -13836,7 +13836,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Optional approvals are independent — mixed states allowed",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-067",
@@ -13850,7 +13850,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Reassignment adds, doesn't replace",
               "classified_type": "API",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-068",
@@ -13864,7 +13864,7 @@
               "module_component": "EmailService, VacationNotificationHelper",
               "notes": "Notification uses hardcoded production URL (design issue)",
               "classified_type": "API",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             }
           ]
         },
@@ -13882,7 +13882,7 @@
               "module_component": "VacationAvailablePaidDaysCalculatorImpl",
               "notes": "Core calculation for Russian offices",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-070",
@@ -13896,7 +13896,7 @@
               "module_component": "RegularCalculationStrategy",
               "notes": "AV=false: never show negative balance to user",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-071",
@@ -13910,7 +13910,7 @@
               "module_component": "VacationAvailablePaidDaysCalculatorImpl",
               "notes": "AV=true: no accrual calculation, full year immediately",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-072",
@@ -13924,7 +13924,7 @@
               "module_component": "AdvanceCalculationStrategy",
               "notes": "Key difference from AV=false: negative is valid and displayed",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-073",
@@ -13938,7 +13938,7 @@
               "module_component": "AvailableDaysRecalculationServiceImpl",
               "notes": "REPORTING_NORM is hardcoded to 8 hours",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-074",
@@ -13952,7 +13952,7 @@
               "module_component": "AvailableDaysRecalculationServiceImpl",
               "notes": "Undertime uses FIFO year consumption like vacations",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-075",
@@ -13966,7 +13966,7 @@
               "module_component": "VacationRecalculationService",
               "notes": "FIFO = First In, First Out — consume oldest days first",
               "classified_type": "UI",
-              "automation_status": "covered"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-076",
@@ -13980,7 +13980,7 @@
               "module_component": "VacationRecalculationService",
               "notes": "Recalculation is comprehensive: returns all, then re-distributes",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-077",
@@ -13994,7 +13994,7 @@
               "module_component": "VacationRecalculationService",
               "notes": "Sprint 15 #3347: smart reallocation without unnecessary conversion",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-078",
@@ -14008,7 +14008,7 @@
               "module_component": "EmployeeDaysServiceImpl",
               "notes": "Correction reflected in timeline/event feed",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-079",
@@ -14022,7 +14022,7 @@
               "module_component": "EmployeeDaysServiceImpl",
               "notes": "AV=false: corrections cannot produce negative balance",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-080",
@@ -14036,7 +14036,7 @@
               "module_component": "EmployeeDaysServiceImpl",
               "notes": "AV=true: negative corrections allowed",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-081",
@@ -14050,7 +14050,7 @@
               "module_component": "VacationAvailablePaidDaysCalculatorImpl",
               "notes": "Maternity flag overrides standard year-based calculation",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-082",
@@ -14064,7 +14064,7 @@
               "module_component": "VacationAvailablePaidDaysCalculatorImpl",
               "notes": "newDays=0 triggers binary search algorithm",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-083",
@@ -14078,7 +14078,7 @@
               "module_component": "VacationAvailablePaidDaysCalculatorImpl",
               "notes": "Missing input validation on newDays parameter",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-084",
@@ -14092,7 +14092,7 @@
               "module_component": "VacationDaysDistributor",
               "notes": "Cross-year boundary case. DB: vacation_days_distribution has year column",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-085",
@@ -14106,7 +14106,7 @@
               "module_component": "VacationCreateValidator",
               "notes": "Employment duration check: REGULAR requires >= 3 months",
               "classified_type": "API",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-086",
@@ -14120,7 +14120,7 @@
               "module_component": "CalendarUpdateProcessor, VacationRecalculationService",
               "notes": "Calendar→Vacation event chain via RabbitMQ",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-087",
@@ -14134,7 +14134,7 @@
               "module_component": "VacationDaysController",
               "notes": "Useful for verifying FIFO consumption and corrections",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             }
           ]
         },
@@ -14152,7 +14152,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Core payment flow. Days deducted at approval, not payment",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-089",
@@ -14166,7 +14166,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "ADMINISTRATIVE = unpaid leave (за свой счёт)",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-090",
@@ -14180,7 +14180,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "checkForPayment validates total days match",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-091",
@@ -14194,7 +14194,7 @@
               "module_component": "VacationStatusManager",
               "notes": "Idempotency: second payment attempt blocked",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-092",
@@ -14208,7 +14208,7 @@
               "module_component": "VacationStatusManager",
               "notes": "",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-093",
@@ -14222,7 +14222,7 @@
               "module_component": "DTO validation",
               "notes": "@Range annotation on payment DTO fields",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-094",
@@ -14236,7 +14236,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Missing validation: payment type should match vacation type",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-095",
@@ -14250,7 +14250,7 @@
               "module_component": "VacationServiceImpl, ShedLock",
               "notes": "Cron job. Test via test-api endpoint",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-096",
@@ -14264,7 +14264,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Auto-adjustment at approval time, not creation time",
               "classified_type": "API",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-097",
@@ -14278,7 +14278,7 @@
               "module_component": "VacationPaymentDatesController",
               "notes": "Provides valid payment month options for vacation form",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-098",
@@ -14292,7 +14292,7 @@
               "module_component": "VacationPaymentDatesController",
               "notes": "Missing date order validation",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-099",
@@ -14306,7 +14306,7 @@
               "module_component": "VacationPermissionService",
               "notes": "Same guard protects reject and delete",
               "classified_type": "API",
-              "automation_status": "skipped"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-100",
@@ -14320,7 +14320,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Confirmed in live testing: days deducted at approval, not payment",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-101",
@@ -14334,7 +14334,7 @@
               "module_component": "VacationStatusUpdateJob",
               "notes": "Critical accounting bug — orphaned payment processing entries",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-102",
@@ -14348,7 +14348,7 @@
               "module_component": "Timeline, EventPublisher",
               "notes": "Audit trail gap — payment details not recorded in timeline",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-103",
@@ -14362,7 +14362,7 @@
               "module_component": "VacationMapper, DTO conversion",
               "notes": "Data representation inconsistency between DB and API",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             }
           ]
         },
@@ -14380,7 +14380,7 @@
               "module_component": "VacationPermissionProvider",
               "notes": "Basic access — all logged-in employees can view own vacations",
               "classified_type": "API",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-105",
@@ -14394,7 +14394,7 @@
               "module_component": "VacationPermissionService",
               "notes": "",
               "classified_type": "API",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-106",
@@ -14408,7 +14408,7 @@
               "module_component": "VacationPermissionService",
               "notes": "readOnly flag is checked first in permission calculation",
               "classified_type": "API",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-107",
@@ -14422,7 +14422,7 @@
               "module_component": "VacationPermissionProvider",
               "notes": "Contractor permissions unclear in code — no explicit grants",
               "classified_type": "API",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-108",
@@ -14436,7 +14436,7 @@
               "module_component": "VacationPermissionProvider",
               "notes": "PM, DM, TL, ADM, VALL have VIEW_APPROVES",
               "classified_type": "hybrid",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-109",
@@ -14450,7 +14450,7 @@
               "module_component": "VacationPermissionProvider",
               "notes": "ACC, CACC, ADM, VALL have VIEW_PAYMENTS",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-110",
@@ -14464,7 +14464,7 @@
               "module_component": "VacationStatusManager, VacationPermissionService",
               "notes": "",
               "classified_type": "API",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-111",
@@ -14478,7 +14478,7 @@
               "module_component": "VacationStatusManager",
               "notes": "Code: MANAGER_ROLES = {PM, DM, CHIEF_ACCOUNTANT} — ADMIN missing",
               "classified_type": "API",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-112",
@@ -14492,7 +14492,7 @@
               "module_component": "VacationPermissionService",
               "notes": "Critical accounting guard",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-113",
@@ -14506,7 +14506,7 @@
               "module_component": "VacationStatusManager",
               "notes": "Owner check: request.getEmployeeId().equals(employee.getId())",
               "classified_type": "API",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-114",
@@ -14520,7 +14520,7 @@
               "module_component": "SecurityConfig, @PreAuthorize",
               "notes": "Pattern A: hasAuthority('AUTHENTICATED_USER') || hasAuthority('SPECIFIC')",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-115",
@@ -14534,7 +14534,7 @@
               "module_component": "Frontend routing, PrivateRoute",
               "notes": "Frontend gap — backend API protects data but UI shows pages",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-116",
@@ -14548,7 +14548,7 @@
               "module_component": "VacationStatusManager",
               "notes": "MANAGER_ROLES = {PM, DM, CHIEF_ACCOUNTANT}",
               "classified_type": "API",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-117",
@@ -14562,7 +14562,7 @@
               "module_component": "VacationPermissionProvider",
               "notes": "Permission boundary: DM sees employees but not day corrections",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             }
           ]
         },
@@ -14580,7 +14580,7 @@
               "module_component": "PageableRequestDTOToBOConverter",
               "notes": "NPE — missing null check on pagination params",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-119",
@@ -14594,7 +14594,7 @@
               "module_component": "RestErrorHandler",
               "notes": "CRITICAL: HttpMessageNotReadableException returns empty body",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-120",
@@ -14608,7 +14608,7 @@
               "module_component": "RestErrorHandler, MethodArgumentTypeMismatchException",
               "notes": "Info disclosure — internal Java class names in error response",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-121",
@@ -14622,7 +14622,7 @@
               "module_component": "VacationRepository",
               "notes": "Standard 404 handling",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-122",
@@ -14636,7 +14636,7 @@
               "module_component": "RestErrorHandler",
               "notes": "MethodArgumentNotValidException maps to 400 with errors array",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-123",
@@ -14650,7 +14650,7 @@
               "module_component": "RestErrorHandler",
               "notes": "Global exception handler for type mismatches",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-124",
@@ -14664,7 +14664,7 @@
               "module_component": "RestErrorHandler",
               "notes": "Information disclosure — Java class names in every error response",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-125",
@@ -14678,7 +14678,7 @@
               "module_component": "RestErrorHandler",
               "notes": "Two different error response formats based on exception type",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-126",
@@ -14692,7 +14692,7 @@
               "module_component": "SickLeaveCrossingVacationException",
               "notes": "Only exception that maps to 409. All others map to 400/403/404",
               "classified_type": "API",
-              "automation_status": "skipped"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-127",
@@ -14706,7 +14706,7 @@
               "module_component": "RestErrorHandler",
               "notes": "Same as malformed JSON — empty body response",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-128",
@@ -14720,7 +14720,7 @@
               "module_component": "VacationCreateValidator, VacationPaymentDTO",
               "notes": "Boundary value: maximum possible vacation duration",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-129",
@@ -14734,7 +14734,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Race condition possibility — no DB-level date overlap constraint",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-130",
@@ -14748,7 +14748,7 @@
               "module_component": "VacationController",
               "notes": "Comprehensive filter testing. v2 sort format: [+-]fieldname",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             }
           ]
         },
@@ -14766,7 +14766,7 @@
               "module_component": "Vacation / Day Calculation",
               "notes": "KEY RISK: RegularCalculationStrategy uses current office norm for both accrual AND compensation (-normDays), but currentYearDays may have been initialized with the old office norm. Verify DB: employee_days.days for current year.",
               "classified_type": "hybrid",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-132",
@@ -14780,7 +14780,7 @@
               "module_component": "Vacation / Day Calculation",
               "notes": "Cross-strategy transfer is high risk — verify employee_days table is properly adjusted for the strategy change.",
               "classified_type": "API",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-133",
@@ -14794,7 +14794,7 @@
               "module_component": "Vacation / Office Sync",
               "notes": "EmployeeOfficeChangedProcessor: isCalendarsAreEqual() allows immediate update when calendars match. Tests the 'safe path'.",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-134",
@@ -14808,7 +14808,7 @@
               "module_component": "Vacation / Office Sync",
               "notes": "This is the known architectural decision: mid-year changes with different calendars are deferred. Verify the divergence is intentional and documented.",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-135",
@@ -14822,7 +14822,7 @@
               "module_component": "Vacation / Create Validation",
               "notes": "Config-driven: nextYearAvailableFromMonth. Default Feb, but verify actual config value on test env. Ticket #3322 mentions Dec-01 which conflicts with code.",
               "classified_type": "API",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-136",
@@ -14836,7 +14836,7 @@
               "module_component": "Vacation / Day Calculation",
               "notes": "AV=true allows negative balances. Verify negative carry-over arithmetic.",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-137",
@@ -14850,7 +14850,7 @@
               "module_component": "Vacation / Day Calculation",
               "notes": "Test with employee who has 3+ years of data. Check employee_days for each year.",
               "classified_type": "hybrid",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-138",
@@ -14864,7 +14864,7 @@
               "module_component": "Vacation / Norm Deviation",
               "notes": "Hardcoded REPORTING_NORM=8. Verify with non-standard work hours.",
               "classified_type": "API",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-139",
@@ -14878,7 +14878,7 @@
               "module_component": "Vacation / Maternity",
               "notes": "EmployeeMaternityBeginEventListener.onMaternityBegin() only rejects NEW.",
               "classified_type": "API",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-140",
@@ -14892,7 +14892,7 @@
               "module_component": "Vacation / Create Validation",
               "notes": "Uses TimeUtils.today() — test with clock at 23:59 Jan 31 and 00:00 Feb 1.",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-141",
@@ -14906,7 +14906,7 @@
               "module_component": "Vacation / Calendar Integration",
               "notes": "Bug 2 from #2876: type change or deletion after calendar switch triggers 'Calculation error'. Check if fixed in current build.",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-142",
@@ -14920,7 +14920,7 @@
               "module_component": "Vacation / Status Job",
               "notes": "VacationStatusUpdateJob fixedDelay=600000ms. Test the timing window.",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             }
           ]
         },
@@ -14938,7 +14938,7 @@
               "module_component": "Vacation / Maternity",
               "notes": "EmployeeMaternityBeginEventListener. Real data: afanaseva maternity Sep 15 → accrued=-7 (28 × 107/365 = 8.2 → 8? Verify rounding).",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-144",
@@ -14952,7 +14952,7 @@
               "module_component": "Vacation / Maternity",
               "notes": "Production bug V2.1.25: race condition with annual accrual job re-set next year to 24 after zeroing. Verify no race.",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-145",
@@ -14966,7 +14966,7 @@
               "module_component": "Vacation / Maternity",
               "notes": "Real data: apliskina maternity end Oct 28 → accrued=+4. Confirmed.",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-146",
@@ -14980,7 +14980,7 @@
               "module_component": "Vacation / Maternity",
               "notes": "Real data: dshipacheva maternity end Dec 27 → 2026 days = 24 (full restore).",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-147",
@@ -14994,7 +14994,7 @@
               "module_component": "Vacation / Maternity",
               "notes": "Real data: dshipacheva maternity end 2025-12-27, accrued=0, 2026=24.",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-148",
@@ -15008,7 +15008,7 @@
               "module_component": "Vacation / Maternity",
               "notes": "VacationAvailabilityChecker: maternity employee uses total across all years instead of per-year strategy. Real data: iromanenko maternity since 2024-06.",
               "classified_type": "API",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-149",
@@ -15022,7 +15022,7 @@
               "module_component": "Vacation / Maternity",
               "notes": "Real data: mgrishkevich has -1 days while on maternity. zmustafina also at -1. System does not prevent this.",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-150",
@@ -15036,7 +15036,7 @@
               "module_component": "Vacation / Maternity",
               "notes": "Real data: dprotopopova had BEGIN + END on 2024-09-25 (1.25 hours apart). accrued=-6 then +6. Same-day correction scenario.",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-151",
@@ -15050,7 +15050,7 @@
               "module_component": "Vacation / Maternity",
               "notes": "Production bug: mgrishkevich, edobrovlyanskaya, afanaseva had 2026 days incorrectly set to 24 after maternity begin. Fixed by manual migration.",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-152",
@@ -15064,7 +15064,7 @@
               "module_component": "Vacation / Maternity + Office Sync",
               "notes": "Interaction between EmployeeOfficeChangedProcessor and maternity state. If norm differs: days were subtracted at old rate, restored at new rate.",
               "classified_type": "API",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             }
           ]
         },
@@ -15082,7 +15082,7 @@
               "module_component": "Vacation / CS Office Settings",
               "notes": "CSSalaryOfficeVacationData.firstVacation exists in CS model but is NOT used in TTT. The 3-month restriction may be enforced differently or not at all.",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-154",
@@ -15096,7 +15096,7 @@
               "module_component": "Vacation / CS Office Settings",
               "notes": "CSSalaryOfficeVacationData.burnOff is defined but NOT synced or used. When implemented: test that days expire after configured months.",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-155",
@@ -15110,7 +15110,7 @@
               "module_component": "Vacation / CS Office Sync",
               "notes": "CSSalaryOfficeSynchronizer only processes 3 of 7 CS vacation fields. Remaining 4 ignored without error.",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-156",
@@ -15124,7 +15124,7 @@
               "module_component": "Sick Leave / CS Office Settings",
               "notes": "CSSalaryOfficeVacationData.sickLeave is boolean in CS model. NOT used in TTT sick leave service. Verify contractor access rules.",
               "classified_type": "API",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             }
           ]
         },
@@ -15142,7 +15142,7 @@
               "module_component": "Calendar / Migration",
               "notes": "11 offices migrated in 2024. Russia→Cyprus is the most common migration path.",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-158",
@@ -15156,7 +15156,7 @@
               "module_component": "Vacation / Calendar Integration",
               "notes": "The since_year boundary in office_calendar determines which calendar applies. Cross-boundary vacations are a key risk area.",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-159",
@@ -15170,7 +15170,7 @@
               "module_component": "Vacation / Office Transfer",
               "notes": "Same-calendar transfer is the 'safe' path in EmployeeOfficeChangedProcessor.",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-160",
@@ -15184,7 +15184,7 @@
               "module_component": "Vacation / Office Transfer",
               "notes": "EmployeeOfficeChangedProcessor defers mid-year cross-calendar changes. This is the documented architectural decision — test the deferred path.",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             }
           ]
         },
@@ -15202,7 +15202,7 @@
               "module_component": "Vacation / Frontend / VacationEventsModal",
               "notes": "Core fix verification: MR !5169 changed userVacationDays.currentYear → userVacationDays.availablePaidDays in VacationEventsModal.js:120 and UserVacationsPage.js:102. This test verifies the fix is deployed.",
               "classified_type": "hybrid",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-162",
@@ -15216,7 +15216,7 @@
               "module_component": "Vacation / Frontend / UserVacationsPage",
               "notes": "Second display location fixed by MR !5169: UserVacationsPage.js:102. Both modal and page must show `availablePaidDays`.",
               "classified_type": "hybrid",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-163",
@@ -15230,7 +15230,7 @@
               "module_component": "Vacation / Balance / Display",
               "notes": "QA sub-bug #3: omaksimova reported that future vacations don't affect the available days display. Verify whether this is fixed or still open. The fix (availablePaidDays) should account for future allocations.",
               "classified_type": "hybrid",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-164",
@@ -15244,7 +15244,7 @@
               "module_component": "Vacation / Balance / Redistribution",
               "notes": "Core redistribution test. The bug was that the frontend showed 0 available days after cross-year vacation, even though backend correctly redistributed. Now tests both backend redistribution AND frontend display accuracy.",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-165",
@@ -15258,7 +15258,7 @@
               "module_component": "Vacation / Balance / Redistribution",
               "notes": "Tests the recalculation engine (VacationRecalculationServiceImpl). Editing returns ALL regular days to pool then re-distributes. This is the complex case #3361 Case 2 described.",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-166",
@@ -15272,7 +15272,7 @@
               "module_component": "Vacation / Frontend / Redux Reducer",
               "notes": "MR !5211 fix: removed safeToFixed() wrapper from daysLimitation in myVacation/reducer.ts:175. Verify via Redux DevTools or console.",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-167",
@@ -15286,7 +15286,7 @@
               "module_component": "Vacation / API / VacationDays",
               "notes": "The BDD test from dev (snavrockiy) confirmed: POST vacation → distribution 2025:21 → balance 2025:0, 2026:21 → availablePaidDays returns 21.0 (not 0). This test verifies that contract on live environment.",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-168",
@@ -15300,7 +15300,7 @@
               "module_component": "Vacation / Frontend / Waiting Period",
               "notes": "QA sub-bugs #4 and #4.1: omaksimova reported missing tooltip for new employees and incorrect 3-month calculation for rehired employees. imalakhovskaia clarified: 3-month period from first employment day. snavrockiy said fix is merged but ticket still open.",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             }
           ]
         },
@@ -15318,7 +15318,7 @@
               "module_component": "Vacation / API / VacationUpdateValidator",
               "notes": "Update validator delegates past-date check to create validator (line 187). BDD Scenario 3 (vacation.feature:607) covers this path. Runs for both AV=false and AV=true.",
               "classified_type": "hybrid",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-170",
@@ -15332,7 +15332,7 @@
               "module_component": "Vacation / API / VacationCreateValidator",
               "notes": "BDD Scenario 2 (vacation.feature:584) verifies both errors returned. isStartEndDatesCorrect() collects all constraint violations in a single pass, then returns false. The && short-circuits isValidVacationDuration and isNextVacationAvailable.",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-171",
@@ -15346,7 +15346,7 @@
               "module_component": "Vacation / API / VacationCreateValidator",
               "notes": "The validation uses startDate.isBefore(today) — strict less-than. Today is NOT 'before' today, so it passes. BDD Scenario 1 uses a 5-day gap (Jan 10 vs Jan 15). This test targets the exact boundary.",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-172",
@@ -15360,7 +15360,7 @@
               "module_component": "Vacation / Frontend / i18n",
               "notes": "Codebase grep confirmed: no translation entries for 'start.date.in.past', 'dates.order', 'next.year.not.available' in frontend i18n files. Only 'duration' and 'too.early' have proper translations. This is a UX defect — user sees a technical key string instead of human-readable message.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-173",
@@ -15374,7 +15374,7 @@
               "module_component": "Vacation / Backend / EmployeeDaysServiceImpl",
               "notes": "Same MR !5116 as #3369. Changed calculateDaysBeforeAndAfter(year, year-2) to calculateDaysNotAfter(year). SQL changed from 'WHERE year <= :before AND year >= :after' to 'WHERE year <= :year'. Affects VacationAvailablePaidDaysCalculatorImpl.calculate() line 94.",
               "classified_type": "hybrid",
-              "automation_status": "verified"
+              "automation_status": "pending"
             }
           ]
         }
