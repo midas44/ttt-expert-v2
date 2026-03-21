@@ -613,3 +613,28 @@ All error responses (except HttpMessageNotReadableException) include these stand
 - `PUT /v1/vacations/pass/{vacationId}` still returns 500 on qa-1
 - Caffeine cache BoundedLocalCache.computeIfAbsent NPE persists
 - Blocks TC-067 (change approver) and TC-068 (notification on approver change)
+
+
+## Autotest Notes (Session 103)
+
+### @CurrentUser DTO Validator Blocks Multi-User API Tests
+**Discovered**: Session 103, TC-VAC-019 failure (400, `validation.notcurrentuser`).
+`VacationCreateRequestDTO.login` has `@CurrentUser(groups=CreateGroup.class)` annotation. This validates that `request.getLogin()` matches `employeeService.getCurrent().getLogin()` at the DTO validation layer — BEFORE service logic runs. API_SECRET_TOKEN maps to pvaynmaster's identity, so only `login: "pvaynmaster"` passes this check.
+
+**Impact on all "different user" tests:**
+- TC-VAC-019 (regular employee auto-approver) — BLOCKED
+- TC-VAC-017 (create as readOnly user) — BLOCKED  
+- Any test requiring vacation creation for a non-pvaynmaster employee via API — BLOCKED
+- The `@CurrentUser` annotation fires for `CreateGroup` only — update DTO uses `UpdateGroup` which may not have this check (unverified)
+- This is a different blocker than `hasAccess()` bypass (session 91). `hasAccess()` is service-level; `@CurrentUser` is DTO-level.
+
+**Resolution**: Per-user CAS authentication needed. The API_SECRET_TOKEN can only create/update vacations for the user it authenticates as (pvaynmaster).
+
+### Week Offsets Used (Session 103)
+- TC-169: offset 251
+- TC-173: offset 257
+- TC-137: offset 260
+- TC-161: cross-year 2037-12-22 → 2038-01-09
+
+### Cross-Year Vacation Dates Used
+- TC-161: 2037-12-22 → 2038-01-09 (Dec→Jan cross-year)

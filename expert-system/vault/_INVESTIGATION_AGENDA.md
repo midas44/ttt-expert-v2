@@ -6,9 +6,9 @@
 - P2: Medium — within next 5 sessions
 - P3: Low — backlog
 
-## Completed (Sessions 1-102)
+## Completed (Sessions 1-103)
 <details>
-<summary>Sessions 1-102 completed items (click to expand)</summary>
+<summary>Sessions 1-103 completed items (click to expand)</summary>
 
 ### Sessions 1-83
 - 83 sessions of knowledge acquisition, Phase B generation, and monitoring
@@ -29,48 +29,52 @@
 - [x] TC-VAC-095, TC-VAC-153 generated but blocked by qa-1 API 502 outage
 
 ### Session 102 (Phase C — 2 Fixed + 2 New, 90 total)
-- [x] TC-VAC-095 fixed (URL path: `/v1/test/vacations/pay-expired-approved`) — PASS
-- [x] TC-VAC-153 fixed (column: `first_date` not `first_day`) — PASS
-- [x] TC-VAC-170 generated (dual validation: past date + end<start) — PASS
-- [x] TC-VAC-018 generated (CPO self-approval + manager optional) — PASS
-- [x] Confirmed: vacation_approval schema: id, vacation, employee, status (no required/approver columns)
-- [x] Confirmed: pass endpoint still NPE on qa-1 (500)
-- [x] Identified: remaining vacation API tests blocked by auth/env constraints
+- [x] TC-VAC-095, TC-VAC-153 fixed and verified
+- [x] TC-VAC-170, TC-VAC-018 generated and verified
+
+### Session 103 (Phase C — 4 Verified + 1 Blocked, 94 total)
+- [x] TC-VAC-169 (update past date validation) — PASS
+- [x] TC-VAC-173 (year-end balance unbounded sum) — PASS (API /years filters zero-balance years)
+- [x] TC-VAC-137 (multi-year FIFO verification) — PASS
+- [x] TC-VAC-161 (availablePaidDays after cross-year vacation) — PASS
+- [x] TC-VAC-019 blocked: @CurrentUser DTO validator rejects non-pvaynmaster login on create
+- [x] TC-VAC-017 blocked: same @CurrentUser constraint
+- [x] Session 20 maintenance: SQLite audit, no duplicates/orphans found
 
 </details>
 
 ## Phase C — Autotest Generation (Active)
 
-**Current scope**: vacation (173 test cases, 90 automated = 52.0%)
+**Current scope**: vacation (173 test cases, 94 automated = 54.3%)
 **Target env**: qa-1
-**Constraint**: API_SECRET_TOKEN authenticates as pvaynmaster only; JWT endpoint requires existing CAS token (no arbitrary user generation)
+**Constraint**: API_SECRET_TOKEN authenticates as pvaynmaster only; @CurrentUser DTO validator rejects other logins on create
 **pvaynmaster office**: Персей (office_id=20, AV=true)
 **pvaynmaster manager**: ilnitsky (but self-approves as DEPARTMENT_MANAGER)
 **Week offsets used (2026)**: 0, 3, 6, 9, 12, 15, 18, 21 (polluted with DELETED ghosts)
-**Week offsets used (2027-2031)**: 45, 48, 51, 54, 57, 60, 63, 66, 69, 72, 75, 120, 128, 132, 136, 140, 144, 148, 152, 156, 160, 164, 167, 170, 173, 176, 179, 182, 185, 188, 191, 194, 197, 200, 203, 206, 209, 212, 215, 218, 221, 224, 227, 230, 239, 242, 245, 248
-**Cross-year dates used**: 2030-12-29→2031-01-02 (TC-084), 2032-12-15→2033-01-09 (TC-164), 2035-12-18→2036-01-05 (TC-165)
-**Known issues**: crossing check fires at CREATION (all statuses including NEW, DELETED); batch deadlocks on employee_vacation; PAID+EXACT vacations are permanent records; UPDATE on DELETED un-deletes; no API for vacation optional approvals; paymentMonth in past rejected at creation; PUT /pass/{id} NPEs on qa-1 (Caffeine cache bug — still broken session 102); EmployeeWatcherServiceImpl.listRequired() is a no-op stub; API_SECRET_TOKEN lacks AUTHENTICATED_USER for sick leave endpoints; all offices have approve=report period (no gap for TC-096); JWT endpoint is token exchange only (not a generator); API_SECRET_TOKEN bypasses hasAccess() ownership checks (blocks all permission tests)
+**Week offsets used (2027-2031)**: 45, 48, 51, 54, 57, 60, 63, 66, 69, 72, 75, 120, 128, 132, 136, 140, 144, 148, 152, 156, 160, 164, 167, 170, 173, 176, 179, 182, 185, 188, 191, 194, 197, 200, 203, 206, 209, 212, 215, 218, 221, 224, 227, 230, 239, 242, 245, 248, 251, 257, 260
+**Cross-year dates used**: 2030-12-29→2031-01-02 (TC-084), 2032-12-15→2033-01-09 (TC-164), 2035-12-18→2036-01-05 (TC-165), 2037-12-22→2038-01-09 (TC-161)
+**Known issues**: crossing check fires at CREATION (all statuses including NEW, DELETED); batch deadlocks on employee_vacation; PAID+EXACT vacations are permanent records; UPDATE on DELETED un-deletes; no API for vacation optional approvals; paymentMonth in past rejected at creation; PUT /pass/{id} NPEs on qa-1 (Caffeine cache bug — still broken session 102); EmployeeWatcherServiceImpl.listRequired() is a no-op stub; API_SECRET_TOKEN lacks AUTHENTICATED_USER for sick leave endpoints; all offices have approve=report period (no gap for TC-096); JWT endpoint is token exchange only (not a generator); API_SECRET_TOKEN bypasses hasAccess() ownership checks (blocks all permission tests); @CurrentUser DTO validator rejects non-pvaynmaster login on create (blocks TC-019, TC-017, all different-user create tests)
 **API response notes**: regularDays/administrativeDays (not days); ServiceException → specific errorCode; ValidationException → generic errorCode + specific message; approver field is full DTO object (not string login); HttpMessageNotReadableException → empty 400 body; exception field leaks full Java class name in ALL error responses; ConstraintViolationException also uses "exception.validation" + errors[]; availablePaidDays endpoint requires paymentDate param; PUT /v1/vacations requires /{id} in URL path (405 without)
-**DB notes**: vacation_payment FK is on vacation.vacation_payment_id (NOT shared PK); vacation_payment.id is auto-sequence (1.4M range); vacation_approval columns: id, vacation, employee, status (NO required, NO approver column); vacation_days_distribution column is `vacation` (not vacation_id), uses FIFO from earliest balance year; office_period is in ttt_backend schema (NOT ttt_vacation); vacation.approver column (not approver_id); timeline table tracks all status events; vacation_notify_also columns: vacation, approver (not _id suffixed), required (default false); pg driver returns Date objects — use getFullYear() not String().slice(0,4); ttt_calendar.calendar_days stores EXCEPTIONS only (duration: 0=holiday, 7=shortened, 8=transferred) — standard working days are implied; no burn_off or first_vacation columns exist in ttt_vacation.office (CS settings unimplemented); employee table: first_date (not first_day)
+**DB notes**: vacation_payment FK is on vacation.vacation_payment_id (NOT shared PK); vacation_payment.id is auto-sequence (1.4M range); vacation_approval columns: id, vacation, employee, status (NO required, NO approver column); vacation_days_distribution column is `vacation` (not vacation_id), uses FIFO from earliest balance year; office_period is in ttt_backend schema (NOT ttt_vacation); vacation.approver column (not approver_id); timeline table tracks all status events; vacation_notify_also columns: vacation, approver (not _id suffixed), required (default false); pg driver returns Date objects — use getFullYear() not String().slice(0,4); ttt_calendar.calendar_days stores EXCEPTIONS only (duration: 0=holiday, 7=shortened, 8=transferred) — standard working days are implied; no burn_off or first_vacation columns exist in ttt_vacation.office (CS settings unimplemented); employee table: first_date (not first_day); API /vacationdays/{login}/years filters out zero-balance years from response
 **Test API path pattern**: `/v1/test/vacations/<action>` (NOT `/test/<action>`)
 
 ## Active Items
 
 ### P0 — Next Session
-- [ ] **Strategic decision: expand beyond API_SECRET_TOKEN API tests**
-  - Option A: Implement CAS login via Playwright for per-user tests (unlocks permissions suite)
-  - Option B: Switch scope to sick-leave or day-off module
-  - Option C: Switch target_env to timemachine for clock-dependent tests
-- [ ] Fix TC-084 latent bug: String(Date).slice(0,4) gives weekday not year
-- [ ] Generate more vacation tests from remaining feasible pool
+- [ ] **Strategic decision: expand scope beyond vacation**
+  - Vacation feasible API tests nearly exhausted (72 pending but most blocked by auth/env)
+  - Option A: Switch scope to sick-leave module (next in priority_order)
+  - Option B: Implement CAS login via Playwright for per-user tests (unlocks ~20 vacation tests)
+  - Option C: Switch target_env to timemachine for clock-dependent tests (TC-011, TC-034, TC-135)
 
 ### P1 — High Priority (Blocked — need strategy decision)
-- [ ] **TS-Vac-Permissions suite (0/15 automated)** — blocked by API_SECRET_TOKEN bypassing hasAccess()
+- [ ] **TS-Vac-Permissions suite (0/15 automated)** — blocked by API_SECRET_TOKEN bypassing hasAccess() + @CurrentUser
   - TC-053, TC-104, TC-105, TC-106, TC-107, TC-110, TC-111, TC-113, TC-116
   - Need CAS per-user login (Playwright UI) or per-user JWT tokens
+- [ ] **Different-user create tests** — blocked by @CurrentUser DTO validator
+  - TC-019 (regular employee auto-approver), TC-017 (readOnly user)
 - [ ] **Pass endpoint NPE** — blocks TC-067, TC-068
   - PUT /v1/vacations/pass/{id} returns 500 on qa-1
-  - Try on timemachine env, or file bug report
 - [ ] **Clock-dependent tests** — need timemachine env
   - TC-011 (next-year before Feb 1), TC-034 (update bypasses next-year), TC-135 (nextYearAvailableFromMonth)
 - [ ] **Complex employee state tests**

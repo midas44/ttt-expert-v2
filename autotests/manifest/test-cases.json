@@ -13138,7 +13138,7 @@
               "module_component": "VacationPermissionService, classPermissionService",
               "notes": "readOnly flag blocks all write operations",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "blocked"
             },
             {
               "test_id": "TC-VAC-018",
@@ -13166,7 +13166,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Standard flow: manager is primary approver",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "blocked"
             },
             {
               "test_id": "TC-VAC-020",
@@ -14850,7 +14850,7 @@
               "module_component": "Vacation / Day Calculation",
               "notes": "Test with employee who has 3+ years of data. Check employee_days for each year.",
               "classified_type": "hybrid",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-138",
@@ -15202,7 +15202,7 @@
               "module_component": "Vacation / Frontend / VacationEventsModal",
               "notes": "Core fix verification: MR !5169 changed userVacationDays.currentYear \u2192 userVacationDays.availablePaidDays in VacationEventsModal.js:120 and UserVacationsPage.js:102. This test verifies the fix is deployed.",
               "classified_type": "hybrid",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-162",
@@ -15318,7 +15318,7 @@
               "module_component": "Vacation / API / VacationUpdateValidator",
               "notes": "Update validator delegates past-date check to create validator (line 187). BDD Scenario 3 (vacation.feature:607) covers this path. Runs for both AV=false and AV=true.",
               "classified_type": "hybrid",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-170",
@@ -15374,7 +15374,7 @@
               "module_component": "Vacation / Backend / EmployeeDaysServiceImpl",
               "notes": "Same MR !5116 as #3369. Changed calculateDaysBeforeAndAfter(year, year-2) to calculateDaysNotAfter(year). SQL changed from 'WHERE year <= :before AND year >= :after' to 'WHERE year <= :year'. Affects VacationAvailablePaidDaysCalculatorImpl.calculate() line 94.",
               "classified_type": "hybrid",
-              "automation_status": "pending"
+              "automation_status": "verified"
             }
           ]
         }
