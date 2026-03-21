@@ -64,10 +64,16 @@ Read 2-3 existing files in `e2e/pages/` and `e2e/fixtures/` to match conventions
 Follow the 5-layer architecture (tests -> fixtures -> pages -> config+data -> Playwright API):
 
 **a) Data class** (`e2e/data/{Module}{TestId}Data.ts`, e.g. `VacationTc001Data.ts`):
-- `static async create(mode, tttConfig)` factory supporting static/dynamic/saved modes
-- Constructor params read from `process.env` with documented defaults
-- DB queries in `e2e/data/queries/` if dynamic mode needs them
-- Use `savedDataStore.ts` for saved mode persistence
+- Read the test case `preconditions` and `notes` from the manifest — extract ALL data requirements
+- Build a **compound DB query** satisfying all preconditions simultaneously (office type AND sufficient days AND has manager AND correct role — not just one criterion)
+- Consult vault for **implicit criteria** not in preconditions — e.g., approval needs `manager_id IS NOT NULL`, payment needs APPROVED+EXACT, CPO self-approval needs ROLE_DEPARTMENT_MANAGER
+- Think through the **full test workflow** — if the test creates→approves→pays, the employee must satisfy requirements for ALL steps
+- Use `ORDER BY random() LIMIT 1` so different tests pick different employees — prevents calendar contention
+- After fetching, **validate** the data satisfies all criteria before returning
+- NEVER hardcode the same username across multiple data classes
+- Implement all three modes: `static` (env vars + defaults), `dynamic` (compound DB queries), `saved` (loadSaved → dynamic → saveToDisk)
+- API_SECRET_TOKEN is env-wide, NOT user-specific — any employee login works
+- See `references/generation-guidelines.md` § "Smart Data Generation" for patterns
 
 **b) Page Object** (`e2e/pages/{PageName}Page.ts`) -- only if not already existing:
 - All locators as `private readonly` fields

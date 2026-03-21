@@ -86,6 +86,11 @@ declare const process: { env: Record<string, string | undefined> };
 
 import { loadSaved, saveToDisk } from "./savedDataStore";
 
+// IMPORTANT: Constructor defaults are static-mode fallbacks only.
+// Dynamic mode MUST implement the DB query from test case preconditions.
+// Never hardcode the same username across multiple data classes.
+// API_SECRET_TOKEN is env-wide — any employee login works with it.
+
 // Constructor args interface — used for saved mode serialization
 interface Tc001Args { username: string; startDate: string; endDate: string }
 
@@ -95,6 +100,7 @@ export class VacationTc001Data {
   readonly endDate: string;
 
   constructor(
+    // Static-mode fallbacks only — dynamic mode queries DB for a suitable employee
     username = process.env.VAC_TC001_USER ?? "pvaynmaster",
     startDate = process.env.VAC_TC001_START ?? "01.04.2026",
     endDate = process.env.VAC_TC001_END ?? "05.04.2026",

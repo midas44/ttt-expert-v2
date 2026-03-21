@@ -151,7 +151,6 @@ All paths are relative to the project root `/home/v/Dev/ttt-expert-v2/`.
 │   ├── tsconfig.json
 │   ├── scripts/parse_xlsx.py          #   XLSX → JSON manifest parser
 │   ├── manifest/test-cases.json       #   Parsed test cases + automation status
-│   ├── docs/                          #   Generated per-test documentation
 │   ├── reference/                     #   Prototype tests (patterns, not executed)
 │   └── e2e/
 │       ├── config/                    #   Config reads from shared config/ttt/
@@ -657,6 +656,15 @@ a. **Enrich from vault** (mandatory before writing any code):
    - Design issues flag data constraints → inform test data class construction (which users, which dates, which states are safe)
    - Module health notes mention timing quirks → add appropriate waits in fixtures
 
+   **Read the test case preconditions from the manifest.** The `preconditions` and `notes` fields contain the data generation contract — explicit SQL queries, employee criteria, and state requirements. These are **requirements, not suggestions**:
+   - Parse ALL preconditions and build a compound DB query that satisfies them simultaneously (e.g., AV=false office AND sufficient days AND has manager AND no conflicts — all in one query)
+   - Consult the vault for **implicit criteria** not stated in preconditions — e.g., approval flow requires `manager_id IS NOT NULL`, payment requires APPROVED+EXACT status, CPO self-approval needs ROLE_DEPARTMENT_MANAGER
+   - Consider the full test workflow: if the test creates→approves→pays, the employee must have a manager who can approve, sufficient days, and the office type must support the payment flow
+   - Use `ORDER BY random() LIMIT 1` so different tests select different employees — prevents calendar contention
+   - After fetching data, validate it satisfies all criteria before returning
+   - **Keep data realistic:** vacations max 1–1.5 years ahead (not 2030+), use enabled employees with normal balances, respect open accounting periods. Unrealistic data breaks app workflows. Compute dates from `new Date()` + week offset, not hardcoded far-future years.
+   - The `API_SECRET_TOKEN` is an environment-wide service token — any employee login works with it
+
    **When vault knowledge is insufficient:**
    If the vault lacks critical information for a test case (e.g., no selector patterns for a page, no API endpoint details, no data schema knowledge):
    1. Use `page-discoverer` skill logic: navigate via playwright-vpn, take snapshot, identify selectors
@@ -670,11 +678,10 @@ b. **Check existing code:**
    - If reusable: note which to import. If not: plan new page object or fixture.
 
 c. **Generate artifacts:**
-   - **Data class** (`e2e/data/{Module}{TestId}Data.ts`): constructor with env defaults, `create()` factory supporting all three modes (`static`/`dynamic`/`saved`), DB queries if needed. Use `savedDataStore.ts` for `saved` mode persistence. See `autotest-generator` skill references for the pattern.
+   - **Data class** (`e2e/data/{Module}{TestId}Data.ts`): The `create()` factory MUST implement dynamic mode by translating ALL test case preconditions into a compound DB query that satisfies them simultaneously. Think through the full test workflow — if the test creates→approves→pays a vacation, the employee must have a manager (for approval), sufficient days, correct office type, and the right role. Consult vault notes for implicit criteria not stated in preconditions (e.g., approval requires manager_id IS NOT NULL). Use `ORDER BY random() LIMIT 1` so different tests pick different employees. After fetching, validate the data satisfies all criteria. Constructor defaults are fallbacks for static mode only. Implement all three modes. Never hardcode the same username across multiple data classes. See `generation-guidelines.md` § "Smart Data Generation" for detailed patterns.
    - **Page object** (`e2e/pages/*.ts`): only if interactions not covered by existing pages
    - **Fixture** (`e2e/fixtures/*.ts`): only if workflow not covered by existing fixtures
    - **Test spec** (`e2e/tests/{module}-{test-id}.spec.ts`): follows the standard pattern with login → workflow → verification → cleanup
-   - **Doc file** (`docs/{module}_{test_id}.md`): Title + Detailed description with Steps and Data
 
 d. **Verify:**
    - Run: `cd autotests && npx playwright test e2e/tests/{spec} --project=chrome-headless`
@@ -727,7 +734,7 @@ mcp__sqlite-analytics__execute_sql(sql: "INSERT INTO exploration_findings (env, 
 | Data class | `{Module}{TestId}Data` | `VacationTc001Data` |
 | Fixture | `{Feature}Fixture` | `VacationCreationFixture` |
 | Page object | `{PageName}Page` or `{Dialog}Dialog` | `MyVacationsPage` |
-| Doc file | `docs/{module}_{test_id}.md` | `docs/vacation_tc001.md` |
+
 
 ### Safety Rules
 

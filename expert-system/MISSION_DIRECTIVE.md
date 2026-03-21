@@ -146,5 +146,6 @@ where envURL = https://ttt-[env].noveogroup.com (e.g. https://ttt-qa-1.noveogrou
 - Priority order follows the same order as Phase B (Absences → Reports → Accounting → Administration)
 - Knowledge base (vault) must be consulted before generating each test — for selectors, validation rules, known UI quirks, and edge cases
 - Use existing page objects and fixtures when possible; create new ones only when needed
+- Data classes MUST implement the data generation strategy described in XLSX preconditions — if preconditions contain SQL queries or employee criteria, the dynamic mode must query the DB accordingly, not hardcode values. Never hardcode the same username across multiple data classes.
 - Track progress in SQLite `autotest_tracking` table
 - Skills: autotest-generator, autotest-runner, autotest-fixer, xlsx-parser, autotest-progress, page-discoverer
