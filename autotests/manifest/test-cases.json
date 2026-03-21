@@ -13422,7 +13422,7 @@
               "module_component": "VacationPermissionService",
               "notes": "EDIT_APPROVER granted when isApprover && !NON_EDITABLE_STATUSES",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-038",
@@ -13966,7 +13966,7 @@
               "module_component": "VacationRecalculationService",
               "notes": "FIFO = First In, First Out \u2014 consume oldest days first",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "covered"
             },
             {
               "test_id": "TC-VAC-076",
@@ -13980,7 +13980,7 @@
               "module_component": "VacationRecalculationService",
               "notes": "Recalculation is comprehensive: returns all, then re-distributes",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-077",
@@ -13994,7 +13994,7 @@
               "module_component": "VacationRecalculationService",
               "notes": "Sprint 15 #3347: smart reallocation without unnecessary conversion",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "blocked"
             },
             {
               "test_id": "TC-VAC-078",
@@ -15216,7 +15216,7 @@
               "module_component": "Vacation / Frontend / UserVacationsPage",
               "notes": "Second display location fixed by MR !5169: UserVacationsPage.js:102. Both modal and page must show `availablePaidDays`.",
               "classified_type": "hybrid",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-163",

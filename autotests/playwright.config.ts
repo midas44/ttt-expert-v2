@@ -23,6 +23,7 @@ function resolveBrowserSettings(
           args: [
             `--window-position=${globalConfig.windowPositionX},${globalConfig.windowPositionY}`,
             `--window-size=${globalConfig.windowWidth},${globalConfig.windowHeight}`,
+            "--no-proxy-server",
           ],
         },
       };

@@ -6,9 +6,9 @@
 - P2: Medium — within next 5 sessions
 - P3: Low — backlog
 
-## Completed (Sessions 1-103)
+## Completed (Sessions 1-104)
 <details>
-<summary>Sessions 1-103 completed items (click to expand)</summary>
+<summary>Sessions 1-104 completed items (click to expand)</summary>
 
 ### Sessions 1-83
 - 83 sessions of knowledge acquisition, Phase B generation, and monitoring
@@ -33,36 +33,41 @@
 - [x] TC-VAC-170, TC-VAC-018 generated and verified
 
 ### Session 103 (Phase C — 4 Verified + 1 Blocked, 94 total)
-- [x] TC-VAC-169 (update past date validation) — PASS
-- [x] TC-VAC-173 (year-end balance unbounded sum) — PASS (API /years filters zero-balance years)
-- [x] TC-VAC-137 (multi-year FIFO verification) — PASS
-- [x] TC-VAC-161 (availablePaidDays after cross-year vacation) — PASS
-- [x] TC-VAC-019 blocked: @CurrentUser DTO validator rejects non-pvaynmaster login on create
-- [x] TC-VAC-017 blocked: same @CurrentUser constraint
-- [x] Session 20 maintenance: SQLite audit, no duplicates/orphans found
+- [x] TC-VAC-169, TC-VAC-173, TC-VAC-137, TC-VAC-161 — all verified
+- [x] TC-VAC-019, TC-VAC-017 blocked: @CurrentUser DTO validator
+- [x] Session 20 maintenance
+
+### Session 104 (Phase C — 3 Verified + 2 Marked, 95 total)
+- [x] TC-VAC-076 (FIFO cancel redistribution) — PASS
+- [x] TC-VAC-037 (approver update, EDIT_APPROVER) — PASS
+- [x] TC-VAC-162 (UI availablePaidDays hybrid) — PASS (5 selector fix attempts)
+- [x] TC-VAC-075 marked covered (by TC-137)
+- [x] TC-VAC-077 marked blocked (risky balance mutation)
+- [x] Key discovery: headless browser proxy bypass (HTTP_PROXY= env vars), React initial "0 in YYYY" render
 
 </details>
 
 ## Phase C — Autotest Generation (Active)
 
-**Current scope**: vacation (173 test cases, 94 automated = 54.3%)
+**Current scope**: vacation (173 test cases, 95 automated = 54.9%)
 **Target env**: qa-1
 **Constraint**: API_SECRET_TOKEN authenticates as pvaynmaster only; @CurrentUser DTO validator rejects other logins on create
 **pvaynmaster office**: Персей (office_id=20, AV=true)
 **pvaynmaster manager**: ilnitsky (but self-approves as DEPARTMENT_MANAGER)
 **Week offsets used (2026)**: 0, 3, 6, 9, 12, 15, 18, 21 (polluted with DELETED ghosts)
-**Week offsets used (2027-2031)**: 45, 48, 51, 54, 57, 60, 63, 66, 69, 72, 75, 120, 128, 132, 136, 140, 144, 148, 152, 156, 160, 164, 167, 170, 173, 176, 179, 182, 185, 188, 191, 194, 197, 200, 203, 206, 209, 212, 215, 218, 221, 224, 227, 230, 239, 242, 245, 248, 251, 257, 260
+**Week offsets used (2027-2031)**: 45, 48, 51, 54, 57, 60, 63, 66, 69, 72, 75, 120, 128, 132, 136, 140, 144, 148, 152, 156, 160, 164, 167, 170, 173, 176, 179, 182, 185, 188, 191, 194, 197, 200, 203, 206, 209, 212, 215, 218, 221, 224, 227, 230, 239, 242, 245, 248, 251, 257, 260, 263, 266, 269, 272, 275
 **Cross-year dates used**: 2030-12-29→2031-01-02 (TC-084), 2032-12-15→2033-01-09 (TC-164), 2035-12-18→2036-01-05 (TC-165), 2037-12-22→2038-01-09 (TC-161)
-**Known issues**: crossing check fires at CREATION (all statuses including NEW, DELETED); batch deadlocks on employee_vacation; PAID+EXACT vacations are permanent records; UPDATE on DELETED un-deletes; no API for vacation optional approvals; paymentMonth in past rejected at creation; PUT /pass/{id} NPEs on qa-1 (Caffeine cache bug — still broken session 102); EmployeeWatcherServiceImpl.listRequired() is a no-op stub; API_SECRET_TOKEN lacks AUTHENTICATED_USER for sick leave endpoints; all offices have approve=report period (no gap for TC-096); JWT endpoint is token exchange only (not a generator); API_SECRET_TOKEN bypasses hasAccess() ownership checks (blocks all permission tests); @CurrentUser DTO validator rejects non-pvaynmaster login on create (blocks TC-019, TC-017, all different-user create tests)
+**Known issues**: crossing check fires at CREATION (all statuses including NEW, DELETED); batch deadlocks on employee_vacation; PAID+EXACT vacations are permanent records; UPDATE on DELETED un-deletes; no API for vacation optional approvals; paymentMonth in past rejected at creation; PUT /pass/{id} NPEs on qa-1 (Caffeine cache bug — still broken session 102); EmployeeWatcherServiceImpl.listRequired() is a no-op stub; API_SECRET_TOKEN lacks AUTHENTICATED_USER for sick leave endpoints; all offices have approve=report period (no gap for TC-096); JWT endpoint is token exchange only (not a generator); API_SECRET_TOKEN bypasses hasAccess() ownership checks (blocks all permission tests); @CurrentUser DTO validator rejects non-pvaynmaster login on create (blocks TC-019, TC-017, all different-user create tests); headless chrome-headless-shell ignores --no-proxy-server flag (must clear HTTP_PROXY env vars); React vacation page renders "0 in YYYY" initially then updates after async API response
 **API response notes**: regularDays/administrativeDays (not days); ServiceException → specific errorCode; ValidationException → generic errorCode + specific message; approver field is full DTO object (not string login); HttpMessageNotReadableException → empty 400 body; exception field leaks full Java class name in ALL error responses; ConstraintViolationException also uses "exception.validation" + errors[]; availablePaidDays endpoint requires paymentDate param; PUT /v1/vacations requires /{id} in URL path (405 without)
 **DB notes**: vacation_payment FK is on vacation.vacation_payment_id (NOT shared PK); vacation_payment.id is auto-sequence (1.4M range); vacation_approval columns: id, vacation, employee, status (NO required, NO approver column); vacation_days_distribution column is `vacation` (not vacation_id), uses FIFO from earliest balance year; office_period is in ttt_backend schema (NOT ttt_vacation); vacation.approver column (not approver_id); timeline table tracks all status events; vacation_notify_also columns: vacation, approver (not _id suffixed), required (default false); pg driver returns Date objects — use getFullYear() not String().slice(0,4); ttt_calendar.calendar_days stores EXCEPTIONS only (duration: 0=holiday, 7=shortened, 8=transferred) — standard working days are implied; no burn_off or first_vacation columns exist in ttt_vacation.office (CS settings unimplemented); employee table: first_date (not first_day); API /vacationdays/{login}/years filters out zero-balance years from response
 **Test API path pattern**: `/v1/test/vacations/<action>` (NOT `/test/<action>`)
+**UI test notes**: CAS demo login: fill input[name='username'] + click LOGIN button; My Vacations page title: `.page-body__title:has-text('My vacations and days off')`; available days span selector: use page.evaluate() to find `<span>` matching `/^\d+ in \d{4}$/` with polling for non-zero value
 
 ## Active Items
 
 ### P0 — Next Session
 - [ ] **Strategic decision: expand scope beyond vacation**
-  - Vacation feasible API tests nearly exhausted (72 pending but most blocked by auth/env)
+  - Vacation feasible API tests nearly exhausted (69 pending but most blocked by auth/env)
   - Option A: Switch scope to sick-leave module (next in priority_order)
   - Option B: Implement CAS login via Playwright for per-user tests (unlocks ~20 vacation tests)
   - Option C: Switch target_env to timemachine for clock-dependent tests (TC-011, TC-034, TC-135)
