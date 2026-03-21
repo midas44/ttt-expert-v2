@@ -149,12 +149,23 @@ Generated test data must be **realistic and similar to existing data** in the sy
 - Implementing `static` mode only and ignoring `dynamic`
 - Building a query that matches only ONE precondition while ignoring others
 - Ignoring SQL queries provided in the `notes` or `preconditions` fields
-- Commenting "API_SECRET_TOKEN authenticates as X" — the token is env-wide, not user-specific
 - Using the same hardcoded dates across tests — compute from `new Date()` in dynamic mode
 - Creating vacations years into the future (2030+) — max 1–1.5 years ahead
 - Selecting an employee without checking they have the required role/manager/office type
+- Generating API-only tests when the test case describes a UI scenario — default is always UI
+- Using `API_SECRET_TOKEN` for business endpoint calls — it authenticates as the token owner only (see below)
 
-**The API_SECRET_TOKEN** is an environment-wide service token resolved from the DB `token_permissions` table. It is NOT tied to any specific user. Any employee login works with it.
+### Authentication Strategy
+
+**`API_SECRET_TOKEN` is NOT an environment-wide service token.** It is resolved via `DatabaseApiTokenResolver` and authenticates as the **token owner** (pvaynmaster on qa-1). The `@CurrentUser` validator checks that `login` in the request body matches the authenticated principal. So API calls with `API_SECRET_TOKEN` + a different `login` will FAIL on `@CurrentUser` endpoints.
+
+| Scenario | Auth method |
+|----------|-----------|
+| **UI tests** (default) | Browser login via `LoginFixture` — works for any employee |
+| **Test endpoints** (clock, sync, cleanup) | `API_SECRET_TOKEN` — these don't use `@CurrentUser` |
+| **API calls needing specific user** (rare) | JWT via `POST /api/ttt/v1/auth/token` — get a token for any employee |
+
+**Most tests should use browser login.** Only use API calls for test setup/teardown and data verification.
 
 ## Fixture & Page Object Rules
 

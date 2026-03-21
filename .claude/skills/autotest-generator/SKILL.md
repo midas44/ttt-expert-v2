@@ -72,7 +72,6 @@ Follow the 5-layer architecture (tests -> fixtures -> pages -> config+data -> Pl
 - After fetching, **validate** the data satisfies all criteria before returning
 - NEVER hardcode the same username across multiple data classes
 - Implement all three modes: `static` (env vars + defaults), `dynamic` (compound DB queries), `saved` (loadSaved → dynamic → saveToDisk)
-- API_SECRET_TOKEN is env-wide, NOT user-specific — any employee login works
 - See `references/generation-guidelines.md` § "Smart Data Generation" for patterns
 
 **b) Page Object** (`e2e/pages/{PageName}Page.ts`) -- only if not already existing:
@@ -85,10 +84,12 @@ Follow the 5-layer architecture (tests -> fixtures -> pages -> config+data -> Pl
 - Compose page objects internally
 
 **d) Spec file** (`e2e/tests/{module}-{test-id}.spec.ts`, e.g. `vacation-tc001.spec.ts`):
-- Uses fixtures for setup, page objects for interaction, data classes for values
+- **UI-first**: uses `{ page }` from Playwright — login via browser, interact via page objects, verify visible results
 - Every verification step: `globalConfig.delay()` -> assert -> screenshot via `VerificationFixture`
 - Tag: `@regress` (or `@smoke`/`@debug`)
-- Login -> workflow -> verification -> cleanup (logout + page.close())
+- Login → navigate → interact → verify → cleanup (logout + page.close())
+- API calls ONLY for: test endpoints (clock, sync), data verification (DB checks), or explicit API-only steps
+- Auth: browser login for UI (any employee), `API_SECRET_TOKEN` for test endpoints only, JWT for API calls needing user context
 
 ### 5. Run the Test
 

@@ -6,7 +6,7 @@ This project contains an expert knowledge base for the TTT (Time Tracking Tool) 
 
 - **Obsidian vault** (`expert-system/vault/`, 191 notes, ~222K tokens) — search via `mcp__qmd-search__` tools or read directly via `mcp__obsidian__` tools
 - **SQLite analytics** (`expert-system/analytics.db`) — query via `mcp__sqlite-analytics__execute_sql`
-- **Generated test docs** (`test-docs/` — 10 XLSX workbooks, 1,233 test cases)
+- **Generated test docs** (`test-docs/` — XLSX workbooks per module, UI-first test cases)
 - **Autotests** (`autotests/` — Playwright + TypeScript E2E framework, generated from XLSX test cases)
 
 ## Available MCPs

@@ -56,27 +56,22 @@ test("test_name @regress", async ({ page }, testInfo) => {
 });
 ```
 
-## API Test Boilerplate
+## API Call Boilerplate (for test endpoints and setup only)
+
+API calls should ONLY be used in tests for: test endpoints (clock manipulation, sync, cleanup), data verification, or rare cases where a test step explicitly requires API interaction. Most tests should use the UI Test Boilerplate above.
 
 ```typescript
-import { test, expect } from "@playwright/test";
-import { writeFile } from "node:fs/promises";
+// Use API_SECRET_TOKEN ONLY for test/admin endpoints (no @CurrentUser validation)
+// This token authenticates as its owner (pvaynmaster on qa-1) — NOT any user
+const headers = { API_SECRET_TOKEN: tttConfig.apiToken };
+const clockUrl = tttConfig.buildUrl("/api/ttt/test/v1/clock");
+await request.patch(clockUrl, { headers, data: { dateTime: "2026-04-01T10:00:00" } });
 
-test("api_test_name @regress", async ({ request }, testInfo) => {
-  const tttConfig = new TttConfig();
-  const data = new ApiTestData();
-  expect(tttConfig.apiToken, "apiToken required").toBeTruthy();
-
-  const url = tttConfig.buildUrl("/api/ttt/v1/...");
-  const headers = { API_SECRET_TOKEN: tttConfig.apiToken };
-
-  const response = await request.get(url, { headers });
-  expect(response.status()).toBe(200);
-
-  const filePath = testInfo.outputPath("response.json");
-  await writeFile(filePath, JSON.stringify(await response.json(), null, 2), "utf-8");
-  await testInfo.attach("response", { path: filePath, contentType: "application/json" });
-});
+// For API calls that need a specific user context, use JWT:
+// const jwtResponse = await request.post(tttConfig.buildUrl("/api/ttt/v1/auth/token"),
+//   { headers, data: { login: data.username } });
+// const jwt = (await jwtResponse.json()).token;
+// const userHeaders = { Authorization: `Bearer ${jwt}` };
 ```
 
 ## Data Class Pattern
@@ -89,7 +84,8 @@ import { loadSaved, saveToDisk } from "./savedDataStore";
 // IMPORTANT: Constructor defaults are static-mode fallbacks only.
 // Dynamic mode MUST implement the DB query from test case preconditions.
 // Never hardcode the same username across multiple data classes.
-// API_SECRET_TOKEN is env-wide — any employee login works with it.
+// API_SECRET_TOKEN authenticates as its OWNER (pvaynmaster on qa-1) — NOT any user.
+// For UI tests, auth is via browser login (any employee). For API needing user context, use JWT.
 
 // Constructor args interface — used for saved mode serialization
 interface Tc001Args { username: string; startDate: string; endDate: string }

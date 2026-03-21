@@ -4,9 +4,10 @@ session:
   offhours_utc: 15:00-03:00
   max_duration_minutes: 120
 phase:
-  current: autotest_generation
+  current: generation
   generation_allowed: true
   coverage_override: -1
+  scope: vacation                    # "all" or a module name — restricts Phase A/B to this area
 thresholds:
   knowledge_coverage_target: 0.8
   note_quality_min_links: 2
@@ -30,22 +31,22 @@ autonomy:
   consecutive_failure_limit: 3
   auto_phase_transition: true
   log_dir: expert-system/logs
-  stop: false
+  stop: true
   model: opus
   effort: max
   allow_api_mutations: true
 promo:
   enabled: true
-  peak_hours_utc: "12:00-18:00"     # pause autonomous sessions during this UTC window
-  weekdays_only: true                # peak hours apply only Mon-Fri (weekends are all off-peak)
-  expires: "2026-03-29"              # promo ends — feature auto-disables after this date
-  buffer_minutes: 40                 # don't start session if it would likely overlap into peak hours
+  peak_hours_utc: 12:00-18:00
+  weekdays_only: true
+  expires: '2026-03-29'
+  buffer_minutes: 40
 autotest:
   enabled: true
   target_env: qa-1
   max_tests_per_session: 5
   auto_fix_attempts: 3
-  scope: vacation                   # "all" or a module name from test-docs/ (vacation, sick-leave, etc.)
+  scope: vacation
   priority_order:
   - vacation
   - sick-leave
@@ -59,6 +60,5 @@ autotest:
   - cross-service
   type_priority:
   - UI
-  - API
   - hybrid
   skip_patterns: []

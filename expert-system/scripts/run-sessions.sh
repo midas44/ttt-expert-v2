@@ -140,6 +140,7 @@ parse_config() {
     OFFHOURS_UTC=$(read_yaml "session.offhours_utc")
     MAX_DURATION_MINUTES=$(read_yaml "session.max_duration_minutes")
     PHASE=$(read_yaml "phase.current")
+    PHASE_SCOPE=$(read_yaml "phase.scope" 2>/dev/null || echo "all")
 
     # Promo peak hours config
     PROMO_ENABLED=$(read_yaml "promo.enabled" 2>/dev/null || echo "false")
@@ -399,14 +400,40 @@ After bootstrap, begin Orientation (§10 Sessions 1-3):
 
 At session end, follow §9.3 (update all underscore-prefixed files).
 PROMPT
+    elif [[ "$phase" == "generation" ]]; then
+        cat <<PROMPT
+This is session ${session_num}. Phase: generation (Phase B). autonomy.mode is "full" — do not wait for human approval.
+
+Follow §11 (Phase B — Test Documentation Generation) session protocol:
+1. Read config.yaml — check phase.scope for module restriction
+2. Read _SESSION_BRIEFING.md — if it references a different phase, execute Phase Reset Protocol (§9.5) first
+3. Read _INVESTIGATION_AGENDA.md, MISSION_DIRECTIVE.md
+4. Query SQLite for recent activity and test_case_tracking progress
+5. If scope restricts to a specific module, work ONLY on that module
+
+For the target module:
+a. Enrich knowledge first — explore the UI via Playwright, read vault notes, check code
+b. Write test steps as UI/browser actions (login, navigate, click, fill, verify) — NOT API calls
+c. API steps only for: test endpoints (clock), data verification (DB checks), features with no UI
+d. Include SQL query hints in Preconditions for dynamic test data generation
+e. Generate the Python script and XLSX workbook
+f. Track cases in test_case_tracking table
+
+CRITICAL: Test steps MUST describe what a user does in the browser. See §11 "Test Step Writing Rules" for correct vs wrong examples.
+
+$(if (( session_num % 5 == 0 )); then echo "This is session ${session_num} (multiple of 5) — also run maintenance per §9.4."; fi)
+
+At session end, follow §9.3 (update all underscore-prefixed files).
+PROMPT
     elif [[ "$phase" == "autotest_generation" ]]; then
         cat <<PROMPT
 This is session ${session_num}. Phase: autotest_generation (Phase C). autonomy.mode is "full" — do not wait for human approval.
 
 Follow §12 (Phase C — Autotest Generation) session protocol:
 1. Read config.yaml (check autotest.* settings)
-2. Read autotests/manifest/test-cases.json for test case inventory
-3. Query SQLite autotest_tracking for current progress
+2. Read _SESSION_BRIEFING.md — if it references a different phase, execute Phase Reset Protocol (§9.5) first
+3. Read autotests/manifest/test-cases.json for test case inventory
+4. Query SQLite autotest_tracking for current progress
 4. Select next test cases to generate per autotest.priority_order × autotest.type_priority
 5. For each selected test case (up to autotest.max_tests_per_session):
    a. Enrich from vault: search QMD for module knowledge, read relevant notes
@@ -612,9 +639,17 @@ print(sum(1 for x in s['sessions'] if x.get('phase') == 'autotest_generation'))
 
     local stop_reason="unknown"
 
+    local prev_phase="$PHASE"
+
     while check_stop_conditions "$session_num"; do
         # Re-read config each iteration (phase may have changed)
         parse_config
+
+        # Detect phase change — log it (vault reset is handled by the agent per §9.5)
+        if [[ "$PHASE" != "$prev_phase" ]]; then
+            log "Phase changed: $prev_phase → $PHASE (agent will execute Phase Reset Protocol §9.5)"
+            prev_phase="$PHASE"
+        fi
 
         # Pause during promo peak hours (waits until off-peak, then re-reads config)
         wait_for_offpeak

@@ -43,9 +43,10 @@ session:
   max_duration_minutes: 240      # Soft limit — begin wrap-up when approaching
 
 phase:
-  current: "knowledge_acquisition"   # "knowledge_acquisition" or "generation"
+  current: "knowledge_acquisition"   # "knowledge_acquisition", "generation", or "autotest_generation"
   generation_allowed: false          # Set automatically when auto_phase_transition is true
   coverage_override: 0              # Force coverage to this value (0-100). Set -1 or remove to use computed value.
+  scope: "all"                       # "all" or a module name (e.g. "vacation") — restricts Phase A/B to this area
 
 thresholds:
   knowledge_coverage_target: 0.8
@@ -84,6 +85,7 @@ autonomy:
 - If `phase.current` is `"knowledge_acquisition"`, focus on knowledge building. When coverage target is met, `auto_phase_transition` is `true`, and no coverage_override is active, update config.yaml to transition to Phase B automatically
 - If `phase.current` is `"generation"` and `phase.generation_allowed` is `true`, execute Phase B (test documentation generation with knowledge enrichment)
 - If `phase.current` is `"autotest_generation"` and `autotest.enabled` is `true`, execute Phase C (autotest generation). Read `autotest.*` fields for target environment, test limits, scope (`"all"` or a specific module name), and priority ordering.
+- **Scope filter (Phase A/B/C):** If `phase.scope` is not `"all"`, restrict ALL phase work to that single module only. Phase A: only investigate that module. Phase B: only generate XLSX for that module. Phase C uses `autotest.scope` independently. When scope is a module name, skip all other modules in the priority order.
 - Check `session.delay_minutes` — if previous session briefing timestamp is less than this many minutes ago:
   - **hybrid mode**: notify human and wait for confirmation
   - **full mode**: log timing warning to session briefing and proceed (the external runner script enforces inter-session delay)
@@ -440,6 +442,29 @@ INVESTIGATE → ANALYZE → SYNTHESIZE → STORE → CONNECT
 ### 9.4 Maintenance (every 5-10 sessions)
 Compress old investigations, detect stale notes, audit cross-references, clean SQLite, refine agenda.
 
+### 9.5 Phase Reset Protocol
+
+**Every phase transition (A→B, B→C, or any restart of a phase) MUST reset the vault control files** to prevent stale context from the previous phase leaking into the new one. This is critical because `_SESSION_BRIEFING.md` and `_INVESTIGATION_AGENDA.md` accumulate phase-specific knowledge (constraints, blockers, patterns) that may be misleading in a different phase.
+
+**On phase transition, perform these steps:**
+
+1. **`_SESSION_BRIEFING.md`** — overwrite with a clean Phase N start message:
+   - State which phase is starting and why (transition or restart)
+   - Summarize what the previous phase accomplished (brief — 2-3 lines)
+   - List what the new phase needs to do first
+   - Note any vault content from previous phases that should be read selectively (e.g., "Autotest Notes sections in deep-dive notes are Phase C-specific — read for business logic, ignore automation constraints")
+
+2. **`_INVESTIGATION_AGENDA.md`** — overwrite with new phase priorities:
+   - Move completed items from previous phase into a `<details>` collapsed section
+   - Set P0/P1/P2 items appropriate for the new phase
+   - Clear any phase-specific constraints (e.g., API token limitations from Phase C don't apply to Phase B)
+
+3. **`_KNOWLEDGE_COVERAGE.md`** — update to reflect new phase's coverage goals (e.g., Phase B measures XLSX generation progress, Phase C measures autotest coverage)
+
+4. **SQLite tracking tables** — if restarting a phase (not continuing), truncate the relevant tracking table (`test_case_tracking` for Phase B, `autotest_tracking` for Phase C)
+
+**Do NOT delete or modify vault knowledge notes** (modules/, exploration/, etc.) — only the control/coordination files above. The accumulated knowledge is valuable across all phases; only the operational context needs resetting.
+
 ---
 
 ## 10. Phase A — Global Knowledge Acquisition
@@ -464,7 +489,7 @@ Update `_KNOWLEDGE_COVERAGE.md` comprehensively, query module_health for gaps.
 **Coverage override:** If `phase.coverage_override` is set to 0-100 in config.yaml, use that value as the current coverage instead of computing it. This allows the human to force a coverage reset (e.g., `coverage_override: 0` to restart deep investigation). When the override is present and >= 0, do NOT auto-transition regardless of computed coverage — investigate until the notes genuinely reach the depth described below, then remove the override (set to -1) before allowing transition.
 
 - **hybrid mode**: Present coverage report to human with Phase B readiness recommendation. Human updates config.yaml to enable generation.
-- **full mode** (with `auto_phase_transition: true`): When coverage >= `thresholds.knowledge_coverage_target` AND no coverage_override is active (value is -1 or field absent), automatically update `config.yaml` to set `phase.current: "generation"` and `phase.generation_allowed: true`. Log the transition decision to `_SESSION_BRIEFING.md`. The next session will begin Phase B.
+- **full mode** (with `auto_phase_transition: true`): When coverage >= `thresholds.knowledge_coverage_target` AND no coverage_override is active (value is -1 or field absent), automatically update `config.yaml` to set `phase.current: "generation"` and `phase.generation_allowed: true`. Log the transition decision to `_SESSION_BRIEFING.md`. **Reset vault control files** (see Phase Reset Protocol below). The next session will begin Phase B.
 
 **Important:** Coverage assessment must be based on **depth, not breadth**. A module is not "covered" until its vault notes contain concrete testable details — validation rules with code snippets, error paths, permission requirements per endpoint, boundary values, and state transitions. A 200-word overview note does not count toward coverage.
 
@@ -475,6 +500,8 @@ Update `_KNOWLEDGE_COVERAGE.md` comprehensively, query module_health for gaps.
 ## 11. Phase B — Test Documentation Generation
 
 Only when config.yaml has `phase.current: "generation"` and `phase.generation_allowed: true`.
+
+**Scope:** If `phase.scope` is not `"all"`, generate XLSX only for that module (e.g., `scope: vacation` → only vacation.xlsx). Skip all other modules.
 
 ### XLSX Format
 
@@ -514,7 +541,7 @@ test-docs/
 | **TS-\<Suite2\>** | Test cases for second test suite (e.g., TS-Vacation-Approval) |
 | ... | One TS- tab per test suite within the functional area |
 
-**Test suite naming:** `TS-<Area>-<Focus>` — e.g., `TS-Vacation-CRUD`, `TS-Vacation-Approval`, `TS-SickLeave-Lifecycle`, `TS-Reports-API`. Choose suites that group logically related test cases (typically 10-30 cases per suite).
+**Test suite naming:** `TS-<Area>-<Focus>` — e.g., `TS-Vacation-CRUD`, `TS-Vacation-Approval`, `TS-SickLeave-Lifecycle`, `TS-Reports-Submission`. Choose suites that group logically related test cases (typically 10-30 cases per suite).
 
 **Test case columns** (all TS- tabs):
 - Test ID (TC-AREA-NNN), Title, Preconditions, Steps, Expected Result, Priority, Type, Requirement Ref, Module/Component, Notes
@@ -529,6 +556,45 @@ test-docs/
 - Hyperlinks styled as blue underlined text
 - Tab colors: green for plan tabs, blue for TS- tabs
 
+### Test Step Writing Rules — UI-First (CRITICAL)
+
+Test steps describe **what a user does in the browser**, not API calls. This is the most important rule for Phase B.
+
+**Default: UI/frontend steps.** Every test case that represents a user-facing scenario MUST have steps written as browser actions:
+```
+CORRECT:
+1. Login as employee with sufficient vacation days
+2. Navigate to My Vacations page
+3. Click "Create a request" button
+4. In the creation dialog, select type "Regular", set start date to next Monday, end date to next Friday
+5. Set payment month to the first day of the vacation month
+6. Click "Send" button
+7. Verify success notification appears
+8. Verify new vacation row in the table with status "New"
+
+WRONG:
+1. POST /api/vacation/v1/vacations
+2. Body: {login, startDate, endDate, paymentType: REGULAR, ...}
+3. Verify response status 200
+```
+
+**When API/DB steps are appropriate (exceptions only):**
+- **Test endpoints** — clock manipulation (`PATCH /api/ttt/test/v1/clock`), employee sync, notification triggers — these have no UI equivalent
+- **Data verification** — checking DB state after a UI action (e.g., "Verify in DB: SELECT status FROM vacation WHERE id = <created_id>")
+- **Test data setup/teardown** — creating precondition data that would be impractical through UI (e.g., setting up multiple vacations for a conflict test)
+- **Explicitly API-only features** — endpoints exposed to integrated projects, webhooks, service-to-service communication
+
+**Step writing guidelines:**
+1. Use the user's perspective: "Click", "Navigate to", "Fill in", "Select", "Verify on page"
+2. Reference UI elements by their visible labels, not CSS selectors or API field names
+3. Include what the user should see after each significant action (notifications, status changes, table updates)
+4. For preconditions that need test environment manipulation, prefix with "SETUP:" (e.g., "SETUP: Set server clock to Jan 15 via test API")
+5. For data verification beyond what's visible in UI, prefix with "DB-CHECK:" (e.g., "DB-CHECK: Verify vacation_days.days decreased by 5")
+6. The Preconditions column should describe data requirements with SQL query hints for the automation layer (e.g., "Employee in AV=false office. Query: SELECT e.login FROM employee e JOIN office o ON e.office_id = o.id WHERE o.advance_vacation = false AND e.enabled = true")
+7. The Notes column can reference API endpoints and DB tables for the automation layer, but Steps must remain UI-focused
+
+**Pure API test suites** — If a module has endpoints with no UI representation (service integration APIs, webhooks), create a separate suite prefixed `TS-<Area>-API` for those cases only. These are the exception, not the default.
+
 ### Generation Order
 
 Generate documentation in priority order defined in `MISSION_DIRECTIVE.md` § Priority Areas:
@@ -540,9 +606,11 @@ Generate documentation in priority order defined in `MISSION_DIRECTIVE.md` § Pr
 
 Within each priority group, generate the most complex/bug-prone area first (e.g., vacation before day-off, since vacation has more bugs and approval workflows).
 
+**Scope restriction:** If `phase.scope` is a specific module name, generate only that module's XLSX regardless of priority order.
+
 ### Generation Workflow
 
-Per functional area (in priority order above):
+Per functional area (in priority order above, or single module if scope is set):
 1. Focused knowledge check via QMD + vault notes + SQLite
 2. Identify gaps — if insufficient, investigate deeper first (see Knowledge Updates below)
 3. Check Qase for existing coverage — never duplicate
@@ -564,6 +632,12 @@ Phase B is not just generation — it requires **deeper, more specific investiga
 4. **Only generate test cases** after the knowledge base for that module has been enriched to the point where every test case can reference specific, concrete details — not abstract descriptions
 5. **Pause generation** if knowledge is insufficient — investigate first, update vault and SQLite, then resume with improved knowledge
 
+**UI investigation is essential for Phase B.** Since test steps are now UI-focused, you must explore the actual UI via Playwright before writing test cases:
+- Navigate the pages related to the module, take snapshots, identify button labels and form fields
+- Document the exact user workflow: which page, which button, which dialog, which fields
+- Note UI-specific behaviors: loading spinners, confirmation dialogs, error messages displayed to the user
+- Write discoveries to vault (`exploration/ui-flows/`) so they inform both Phase B step writing and Phase C automation
+
 The knowledge base should grow substantially during Phase B. A module note that was 300 words in Phase A should become 1500-3000 words after Phase B enrichment, with code snippets, validation rules, boundary values, and concrete behavioral details.
 
 ---
@@ -574,8 +648,8 @@ Only when config.yaml has `phase.current: "autotest_generation"` and `autotest.e
 
 ### Entry Conditions
 
-Phase C begins after Phase B is complete (all priority XLSX workbooks exist in `test-docs/`). Verify:
-1. All modules in `autotest.priority_order` have corresponding XLSX files in `test-docs/<module>/`
+Phase C begins after Phase B is complete for the modules in scope. Verify:
+1. The module(s) in `autotest.scope` (or all in `autotest.priority_order` if scope is `"all"`) have corresponding XLSX files in `test-docs/<module>/`
 2. The manifest exists at `autotests/manifest/test-cases.json` (if not, run `python3 autotests/scripts/parse_xlsx.py`)
 3. Dependencies installed (`autotests/node_modules/` exists, if not run `cd autotests && npm install`)
 
@@ -613,7 +687,7 @@ Playwright API
 
 **2. Test Case Selection:**
 - **Scope filter:** If `autotest.scope` is not `"all"`, restrict to that single module only (e.g., `scope: vacation` → only generate tests from the vacation workbook). When set to `"all"`, iterate through modules in `autotest.priority_order`.
-- Follow `autotest.priority_order` (modules) × `autotest.type_priority` (UI/API/hybrid)
+- Follow `autotest.priority_order` (modules) × `autotest.type_priority` (UI first, then hybrid)
 - Skip test cases where `automation_status` is not `pending`
 - Skip test IDs matching `autotest.skip_patterns`
 - Select up to `autotest.max_tests_per_session` test cases
@@ -624,12 +698,12 @@ a. **Enrich from vault** (mandatory before writing any code):
 
    Search the knowledge base for information specific to the test case's module and feature. What you find directly shapes the generated code — selectors, assertions, data choices, and edge case handling.
 
-   **Search by test type:**
+   **Search targets:**
 
-   | Test type | Vault search targets | SQLite queries |
-   |-----------|---------------------|----------------|
-   | **UI test** | `modules/<module>.md` for page structure; `exploration/ui-flows/` for navigation paths, dialog names, known load behaviors; vault notes mentioning selectors, CSS classes, `getByRole` patterns | `exploration_findings WHERE method IN ('playwright','ui+database') AND target LIKE '%<module>%'` |
-   | **API test** | `modules/<module>-*deep-dive*.md` for endpoint paths, validation rules, error codes, request/response formats; `exploration/api-findings/` for live-tested API behaviors | `exploration_findings WHERE method IN ('api','api+database') AND target LIKE '%<module>%'` |
+   | Area | Vault search targets | SQLite queries |
+   |------|---------------------|----------------|
+   | **UI interactions** | `modules/<module>.md` for page structure; `exploration/ui-flows/` for navigation paths, dialog names, button labels, form fields, known load behaviors; vault notes mentioning selectors, `getByRole` patterns | `exploration_findings WHERE method IN ('playwright','ui+database') AND target LIKE '%<module>%'` |
+   | **Business logic** | `modules/<module>-*deep-dive*.md` for validation rules, error codes, state machines, permission checks | `exploration_findings WHERE target LIKE '%<module>%'` |
    | **Data setup** | `exploration/data-findings/` for schema knowledge, valid FK relationships; module notes for user role requirements, precondition states | `design_issues WHERE related_modules LIKE '%<module>%'` for known data constraints |
 
    **Concrete search steps:**
@@ -663,7 +737,6 @@ a. **Enrich from vault** (mandatory before writing any code):
    - Use `ORDER BY random() LIMIT 1` so different tests select different employees — prevents calendar contention
    - After fetching data, validate it satisfies all criteria before returning
    - **Keep data realistic:** vacations max 1–1.5 years ahead (not 2030+), use enabled employees with normal balances, respect open accounting periods. Unrealistic data breaks app workflows. Compute dates from `new Date()` + week offset, not hardcoded far-future years.
-   - The `API_SECRET_TOKEN` is an environment-wide service token — any employee login works with it
 
    **When vault knowledge is insufficient:**
    If the vault lacks critical information for a test case (e.g., no selector patterns for a page, no API endpoint details, no data schema knowledge):
@@ -677,11 +750,20 @@ b. **Check existing code:**
    - Scan `autotests/e2e/fixtures/` — can existing fixtures cover the workflow?
    - If reusable: note which to import. If not: plan new page object or fixture.
 
-c. **Generate artifacts:**
+c. **Generate artifacts (UI-first):**
    - **Data class** (`e2e/data/{Module}{TestId}Data.ts`): The `create()` factory MUST implement dynamic mode by translating ALL test case preconditions into a compound DB query that satisfies them simultaneously. Think through the full test workflow — if the test creates→approves→pays a vacation, the employee must have a manager (for approval), sufficient days, correct office type, and the right role. Consult vault notes for implicit criteria not stated in preconditions (e.g., approval requires manager_id IS NOT NULL). Use `ORDER BY random() LIMIT 1` so different tests pick different employees. After fetching, validate the data satisfies all criteria. Constructor defaults are fallbacks for static mode only. Implement all three modes. Never hardcode the same username across multiple data classes. See `generation-guidelines.md` § "Smart Data Generation" for detailed patterns.
-   - **Page object** (`e2e/pages/*.ts`): only if interactions not covered by existing pages
+   - **Page object** (`e2e/pages/*.ts`): only if interactions not covered by existing pages. Most tests WILL need page objects — this is the primary interaction layer.
    - **Fixture** (`e2e/fixtures/*.ts`): only if workflow not covered by existing fixtures
-   - **Test spec** (`e2e/tests/{module}-{test-id}.spec.ts`): follows the standard pattern with login → workflow → verification → cleanup
+   - **Test spec** (`e2e/tests/{module}-{test-id}.spec.ts`): **UI-first** — uses `{ page }` from Playwright, logs in via browser, interacts through page objects, verifies visible results. Pattern: login → navigate → interact → verify → cleanup (logout + page.close())
+
+   **Authentication strategy for generated tests:**
+   | Scenario | Auth method | How |
+   |----------|-----------|-----|
+   | **UI business scenarios** (default) | Browser login | `LoginFixture` — types username/password into the login form, any employee works |
+   | **Test endpoint calls** (clock, sync, notifications) | API_SECRET_TOKEN | `tttConfig.apiToken` — this token authenticates as its **owner** (pvaynmaster on qa-1). Use ONLY for test/admin endpoints that don't require `@CurrentUser` validation |
+   | **API calls needing user context** (rare — only when test step explicitly requires API) | JWT token | `POST /api/ttt/v1/auth/token` to get a JWT for any employee, then use as Bearer token |
+
+   **CRITICAL: `API_SECRET_TOKEN` is NOT an environment-wide service token.** It resolves to its owner (pvaynmaster on qa-1) via `DatabaseApiTokenResolver`. The `@CurrentUser` validator checks that `login` in the request body matches the authenticated principal. So API calls with `API_SECRET_TOKEN` + a different `login` will FAIL on `@CurrentUser` endpoints. This is why most tests must use **UI login** (which works for any employee) or **JWT auth** (for API calls needing a specific user).
 
 d. **Verify:**
    - Run: `cd autotests && npx playwright test e2e/tests/{spec} --project=chrome-headless`
@@ -746,9 +828,9 @@ mcp__sqlite-analytics__execute_sql(sql: "INSERT INTO exploration_findings (env, 
 
 ### Phase Transition to Phase C
 
-When Phase B is complete and `autotest.enabled` is `true`:
+When Phase B is complete for the modules in scope and `autotest.enabled` is `true`:
 - **hybrid mode**: Present Phase C readiness to human, wait for config update
-- **full mode** (with `auto_phase_transition: true`): When all priority modules have XLSX in `test-docs/` and `autotest.enabled: true`, automatically update `phase.current: "autotest_generation"`. Log transition to `_SESSION_BRIEFING.md`.
+- **full mode** (with `auto_phase_transition: true`): When all modules in scope have XLSX in `test-docs/` and `autotest.enabled: true`, automatically update `phase.current: "autotest_generation"`. Log transition to `_SESSION_BRIEFING.md`. Copy `phase.scope` value to `autotest.scope` if set. **Reset vault control files** (see Phase Reset Protocol below).
 
 ---
 

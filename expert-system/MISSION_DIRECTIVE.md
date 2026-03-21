@@ -131,16 +131,19 @@ where envURL = https://ttt-[env].noveogroup.com (e.g. https://ttt-qa-1.noveogrou
 ### Phase B — XLSX Test Documentation
 - Test plans as XLSX (one per major module/feature area)
 - Test cases as XLSX (detailed, executable)
-- Must include description how to generate input test data (by database mining with criteria, random generation in given range, timestamp addition, static values etc.)
-- Can include UI, API and DB actions
+- **UI-first test steps** — steps describe user actions in the browser (login, navigate, click, fill, verify), NOT raw API calls. API steps only for: test endpoints (clock, sync), data verification (DB checks), or features with no UI
+- Preconditions must include SQL query hints for dynamic test data generation (by database mining with criteria, random employee selection, timestamp computation, static values etc.)
+- Generation scope configurable via `phase.scope` in config.yaml (`"all"` or a specific module name)
 - Compatible with Google Sheets import
 - English only
 
 ### Phase C — Autotest Generation
 - Executable Playwright + TypeScript E2E tests generated from XLSX test documentation
+- **UI-first**: tests use browser login and page interactions by default. API calls only for test endpoints, data setup/teardown, or explicit API-only steps
 - Test code lives in `autotests/` directory, follows 5-layer architecture: test specs → fixtures → page objects → config+data → Playwright API
 - XLSX test cases are parsed into a JSON manifest (`autotests/manifest/test-cases.json`) via `autotests/scripts/parse_xlsx.py`
 - Each generated test must support three data modes: `static` (hardcoded defaults), `dynamic` (PostgreSQL queries for real data), `saved` (cached JSON for reproducibility)
+- **Authentication**: browser login for UI tests (any employee), `API_SECRET_TOKEN` for test endpoints only (it authenticates as the token owner, not any user), JWT for API calls needing specific user context
 - Tests are verified against live test environments (configured via `autotest.target_env` in config.yaml)
 - Generation scope can be limited to a single module via `autotest.scope` in config.yaml
 - Priority order follows the same order as Phase B (Absences → Reports → Accounting → Administration)

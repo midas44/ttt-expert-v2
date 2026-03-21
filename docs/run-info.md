@@ -4,6 +4,11 @@
   tmux new -s expert
   ./expert-system/scripts/run-sessions.sh
 
+  or
+
+  ./run.sh
+  tail -f expert-system/logs/runner.log
+
   ## Important Claude Code sessions: ##
 
   * Phase A - Phase B development
