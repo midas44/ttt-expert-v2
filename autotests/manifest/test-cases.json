@@ -12984,7 +12984,7 @@
               "module_component": "VacationCreateValidator",
               "notes": "Frontend-backend gap: UI min=1 day, backend min=5 days for REGULAR",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-007",
@@ -12998,7 +12998,7 @@
               "module_component": "VacationCreateValidator",
               "notes": "Boundary: exactly at minimalVacationDuration threshold",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-008",
@@ -13012,7 +13012,7 @@
               "module_component": "VacationCreateValidator",
               "notes": "ADMINISTRATIVE type skips duration validation entirely",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-009",
@@ -13026,7 +13026,7 @@
               "module_component": "VacationCreateValidator, RegularCalculationStrategy",
               "notes": "AV=false: negative balance never allowed, blocks at creation",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "blocked"
             },
             {
               "test_id": "TC-VAC-010",
@@ -13040,7 +13040,7 @@
               "module_component": "VacationCreateValidator, AdvanceCalculationStrategy",
               "notes": "AV=true: can go negative via norm deviation but create validator still checks total",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-011",
