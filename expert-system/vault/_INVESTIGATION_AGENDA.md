@@ -32,32 +32,44 @@
 - [x] Discovered: String(Date).slice(0,4) gives weekday not year (latent bug in TC-084)
 - [x] All 5 tests verified passing (84 total, 48.6% vacation coverage)
 
+### Session 101 (Phase C — 4 Generated, 2 Verified, qa-1 Outage)
+- [x] Generated TC-VAC-154 (vacation days carry-over — burnOff unused) — PASS
+- [x] Generated TC-VAC-157 (office calendar migration Russia→Cyprus) — PASS
+- [x] Generated TC-VAC-095 (auto-pay cron trigger) — blocked by qa-1 API 502
+- [x] Generated TC-VAC-153 (3-month restriction mechanism) — blocked by qa-1 API 502
+- [x] Discovered: calendar_days table stores exceptions only (duration 0/7/8), not all days
+- [x] Confirmed: no burn_off column in office table, no first_vacation column either
+- [x] Confirmed: Russia has 6 Jan holidays vs Cyprus 1; 12 offices migrated in 2024
+- [x] qa-1 full outage: ALL services 502, timemachine SSL reset — DB only accessible (86 total, 49.7%)
+
 </details>
 
 ## Phase C — Autotest Generation (Active)
 
-**Current scope**: vacation (173 test cases, 84 automated = 48.6%)
+**Current scope**: vacation (173 test cases, 86 automated = 49.7%)
 **Target env**: qa-1
 **Constraint**: API_SECRET_TOKEN authenticates as pvaynmaster only; JWT endpoint requires existing CAS token (no arbitrary user generation)
 **pvaynmaster office**: Персей (office_id=20, AV=true)
 **pvaynmaster manager**: ilnitsky (but self-approves as DEPARTMENT_MANAGER)
 **Week offsets used (2026)**: 0, 3, 6, 9, 12, 15, 18, 21 (polluted with DELETED ghosts)
-**Week offsets used (2027-2030)**: 45, 48, 51, 54, 57, 60, 63, 66, 69, 72, 75, 120, 128, 132, 136, 140, 144, 148, 152, 156, 160, 164, 167, 170, 173, 176, 179, 182, 185, 188, 191, 194, 197, 200, 203, 206, 209, 212, 215, 218, 221, 224, 227, 230, 239
+**Week offsets used (2027-2030)**: 45, 48, 51, 54, 57, 60, 63, 66, 69, 72, 75, 120, 128, 132, 136, 140, 144, 148, 152, 156, 160, 164, 167, 170, 173, 176, 179, 182, 185, 188, 191, 194, 197, 200, 203, 206, 209, 212, 215, 218, 221, 224, 227, 230, 239, 242, 245
 **Cross-year dates used**: 2030-12-29→2031-01-02 (TC-084), 2032-12-15→2033-01-09 (TC-164), 2035-12-18→2036-01-05 (TC-165)
 **Known issues**: crossing check fires at CREATION (all statuses including NEW, DELETED); batch deadlocks on employee_vacation; PAID+EXACT vacations are permanent records; UPDATE on DELETED un-deletes; no API for vacation optional approvals; paymentMonth in past rejected at creation; PUT /pass/{id} NPEs on qa-1 (Caffeine cache bug); EmployeeWatcherServiceImpl.listRequired() is a no-op stub; API_SECRET_TOKEN lacks AUTHENTICATED_USER for sick leave endpoints; all offices have approve=report period (no gap for TC-096); JWT endpoint is token exchange only (not a generator)
 **API response notes**: regularDays/administrativeDays (not days); ServiceException → specific errorCode; ValidationException → generic errorCode + specific message; approver field is full DTO object (not string login); HttpMessageNotReadableException → empty 400 body; exception field leaks full Java class name in ALL error responses; ConstraintViolationException also uses "exception.validation" + errors[]; availablePaidDays endpoint requires paymentDate param; PUT /v1/vacations requires /{id} in URL path (405 without)
-**DB notes**: vacation_payment FK is on vacation.vacation_payment_id (NOT shared PK); vacation_payment.id is auto-sequence (1.4M range); vacation_approval includes primary approver row; vacation_days_distribution column is `vacation` (not vacation_id), uses FIFO from earliest balance year; office_period is in ttt_backend schema (NOT ttt_vacation); vacation.approver column (not approver_id); timeline table tracks all status events; vacation_notify_also columns: vacation, approver (not _id suffixed), required (default false); pg driver returns Date objects — use getFullYear() not String().slice(0,4)
+**DB notes**: vacation_payment FK is on vacation.vacation_payment_id (NOT shared PK); vacation_payment.id is auto-sequence (1.4M range); vacation_approval includes primary approver row; vacation_days_distribution column is `vacation` (not vacation_id), uses FIFO from earliest balance year; office_period is in ttt_backend schema (NOT ttt_vacation); vacation.approver column (not approver_id); timeline table tracks all status events; vacation_notify_also columns: vacation, approver (not _id suffixed), required (default false); pg driver returns Date objects — use getFullYear() not String().slice(0,4); ttt_calendar.calendar_days stores EXCEPTIONS only (duration: 0=holiday, 7=shortened, 8=transferred) — standard working days are implied; no burn_off or first_vacation columns exist in ttt_vacation.office (CS settings unimplemented)
 
 ## Active Items
 
 ### P0 — Next Session
-- [ ] Generate next batch of vacation API tests (up to 5 from manifest)
+- [ ] **Verify TC-095 and TC-153** when qa-1 API recovers (code ready, just need to run)
+- [ ] Re-run TC-067 to check if pass endpoint NPE is resolved
+- [ ] Generate next batch of vacation tests (up to 5 from manifest)
   - TC-070 (AV=false negative balance shows 0 — UI test, may need Playwright)
   - TC-072 (AV=true negative balance allowed — UI test)
   - TC-075 (FIFO day consumption — earliest year first)
   - TC-076 (FIFO cancel returns days, redistributes)
   - TC-077 (FIFO insufficient → auto-convert to ADMINISTRATIVE)
-- [ ] Begin UI test generation — at 48.6%, consider 1-2 simple UI verification tests
+- [ ] Begin UI test generation — at 49.7%, consider Playwright-based tests
 - [ ] Fix TC-084 latent bug: String(Date).slice(0,4) gives weekday not year
 
 ### P1 — High Priority

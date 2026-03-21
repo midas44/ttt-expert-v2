@@ -1,61 +1,58 @@
 ---
-session: 100
+session: 101
 phase: autotest_generation
-updated: '2026-03-20'
+updated: '2026-03-21'
 ---
-# Session 100 Briefing (Phase C — Autotest Generation)
+# Session 101 Briefing (Phase C — Autotest Generation)
 
-**Date:** 2026-03-20
+**Date:** 2026-03-21
 **Phase:** Autotest Generation (vacation scope)
-**Tests generated:** 5 verified (TC-056, TC-164, TC-069, TC-165, TC-136)
+**Tests generated:** 4 (TC-154, TC-157, TC-095, TC-153)
+**Tests verified:** 2 (TC-154, TC-157) — TC-095, TC-153 blocked by qa-1 outage
 
 ## What was done
 
-Generated and verified 5 vacation API tests on qa-1:
+Generated 4 vacation tests, 2 verified passing, 2 blocked by environment outage:
 
 | Test ID | Title | Type | Suite | Result |
 |---------|-------|------|-------|--------|
-| TC-VAC-056 | Approve with crossing vacation — blocked | API | TS-Vac-StatusFlow | PASS |
-| TC-VAC-164 | FIFO redistribution across year boundary (Dec→Jan) | API | TS-Vac-Balance-Redistribution | PASS |
-| TC-VAC-069 | AV=false basic accrual formula — mid-year calculation | API | TS-Vac-DayCalc | PASS |
-| TC-VAC-165 | Edit multi-year vacation — redistribution recalculates | API | TS-Vac-Balance-Redistribution | PASS |
-| TC-VAC-136 | AV=true negative balance carry-over | API | TS-Vac-DayCalc | PASS |
-
-JWT endpoint investigated — it's a token exchange (requires existing CAS JWT), not a generator. Cannot create tokens for arbitrary users via API.
+| TC-VAC-154 | Vacation days carry-over — no expiration (burnOff unused) | API/DB | TS-Vac-CSSettings | PASS |
+| TC-VAC-157 | Office calendar migration — Russia to Cyprus verification | DB | TS-Vac-CalendarMigr | PASS |
+| TC-VAC-095 | Auto-pay expired approved vacations (cron trigger) | API | TS-Vac-Payment | BLOCKED (502) |
+| TC-VAC-153 | First vacation 3-month hardcoded restriction mechanism | API | TS-Vac-CSSettings | BLOCKED (502) |
 
 ## Key Discoveries
 
-1. **Crossing check fires at CREATION time, not just approval** — `findCrossingVacations` includes ALL statuses (NEW, APPROVED, PAID, DELETED). Cannot create two overlapping vacations even as NEW. TC-056 confirms crossing is enforced at creation, contradicting the test case assumption that it only fires at approval.
+1. **qa-1 API gateway fully down** — ALL services returning 502 Bad Gateway (vacation, ttt, calendar). DB (postgres) still accessible. Timemachine has SSL connection reset issues. Infrastructure outage, not service-specific.
 
-2. **PUT /v1/vacations requires /{id} in URL path** — `PUT /v1/vacations` without the ID returns 405 Method Not Allowed. Must use `PUT /v1/vacations/{id}`.
+2. **calendar_days table stores exceptions only** — `ttt_calendar.calendar_days` has `duration` column (0=holiday, 7=shortened, 8=transferred workday). Only ~500 rows total across all calendars — standard working days are implied, not stored.
 
-3. **String(Date_object).slice(0,4) gives day-of-week, not year** — PostgreSQL pg driver returns JavaScript Date objects. `String(date).slice(0,4)` gives "Mon " or "Fri ", not "2036". Must use `new Date(val).getFullYear()` or `.toISOString().slice(0,4)`. Existing TC-084 has same latent bug but passes coincidentally (checks `!=` on two different weekdays).
+3. **No burn_off column in office table** — Confirmed via information_schema query. `CSSalaryOfficeVacationData.burnOff` is never synced to DB. Days truly never expire.
 
-4. **JWT endpoint is token exchange only** — `POST /v1/security/jwt` takes `{token: "<existing-CAS-JWT>"}` and returns a TTT-signed JWT. Cannot generate tokens from scratch. Permission-based tests (TS-Vac-Permissions, 15 cases) remain blocked at API layer.
+4. **No first_vacation column in office table** — CS setting `firstVacation` is also unimplemented. The hardcoded `DaysLimitationService.Limit(3, 0)` is the only restriction mechanism.
 
-5. **AV=false accrual verified linear** — availablePaidDays for AV=false increases linearly with paymentDate month. Delta(month3→month6) ≈ 3×(norm/12), delta(month6→month12) ≈ 6×(norm/12). Non-negative clamping confirmed.
+5. **Russia vs Cyprus January holidays** — Russia has 6 non-working entries (Jan 1-5, 8 New Year break), Cyprus has 1 (Jan 1 only). 12 offices migrated in 2024, all from Russia to local calendars.
 
-6. **Edit vacation updates distribution** — shortening a cross-year vacation from Dec→Jan to Dec-only correctly recalculates vacation_days_distribution (fewer rows, lower total matching new regularDays).
+6. **TC-095 and TC-153 have ready-to-run specs** — Code generated with full data classes, DB verification, and cleanup. Just need API to come back online.
 
 ## Coverage
 
-- **Vacation automated:** 84/173 (48.6%)
-- **Total automated:** 84/1071 (7.8%)
+- **Vacation automated:** 86/173 (49.7%)
+- **Total automated:** 86/1071 (8.0%)
 - **Skipped:** 5 (TC-VAC-031, TC-VAC-058, TC-VAC-046, TC-VAC-099, TC-VAC-126)
+- **Generated but unverified:** 2 (TC-095, TC-153) — pending qa-1 recovery
 
 ## Week Offsets Used
 
-- TC-056: offset 230 (two overlapping vacations — crossing at creation confirmed)
-- TC-164: years 2032-2034 (Dec 15 → Jan 9 cross-year range)
-- TC-165: years 2035-2037 (Dec 18 → Jan 5, shortened to Dec 24)
-- TC-136: offset 239 (5-day vacation for balance decrease verification)
-- TC-069: no offsets (read-only accrual formula test)
+- TC-095: offset 242 (future vacation for auto-pay negative test)
+- TC-153: offset 245 (future vacation for restriction positive test)
+- TC-154: no offset (read-only)
+- TC-157: no offset (DB-only)
 
 ## Next Session Candidates
 
-- **Begin UI test generation** — at 48.6%, well past API-first threshold
-- **TS-Vac-DayCalc remaining**: TC-070 (AV=false negative shows 0), TC-072 (AV=true negative allowed), TC-075-077 (FIFO consumption/cancel/auto-convert)
-- **TS-Vac-Balance-Redistribution**: TC-164/165 done, remaining cases need multi-vacation setups
-- **TS-Vac-Permissions**: 15 cases, all blocked by JWT (need UI tests via Playwright login)
-- **Fix TC-084 latent bug**: String(Date).slice(0,4) gives weekday, not year — passes coincidentally
-- **TC-096 still deferred**: approve/report period gap doesn't exist on qa-1
+- **Verify TC-095 and TC-153** when qa-1 API recovers (top priority)
+- **Re-run TC-067** to check if pass endpoint NPE is resolved
+- **Continue API tests**: TC-VAC-067 (change approver), TC-VAC-068 (notification), TC-VAC-085 (3-month employment)
+- **Begin UI test generation** — at 49.7%, consider Playwright-based tests for permissions suite (TC-104+)
+- **Fix TC-084 latent bug**: String(Date).slice(0,4) gives weekday not year
