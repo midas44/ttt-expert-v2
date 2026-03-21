@@ -1,0 +1,13 @@
+{
+  "vacationId": 51755,
+  "distribution": [
+    {
+      "vacation": "51755",
+      "year": 2025,
+      "days": "5"
+    }
+  ],
+  "totalDistributed": 5,
+  "regularDays": 5,
+  "note": "FIFO: days consumed from earliest available balance year first"
+}

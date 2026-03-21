@@ -14,7 +14,6 @@ status: active
 related:
   - '[[vacation-service-deep-dive]]'
   - '[[day-off-service-implementation]]'
-  - '[[vacation-approval-workflow-e2e]]'
   - '[[calendar-service-deep-dive]]'
 branch: release/2.1
 ---

@@ -30,7 +30,7 @@ autonomy:
   consecutive_failure_limit: 3
   auto_phase_transition: true
   log_dir: expert-system/logs
-  stop: false
+  stop: true
   model: opus
   effort: max
   allow_api_mutations: true
