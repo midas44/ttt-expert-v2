@@ -6,39 +6,47 @@ import { DbClient } from "../config/db/dbClient";
 import { hasVacationConflict } from "./queries/vacationQueries";
 
 /**
- * Test data for TC-VAC-095: Auto-pay expired approved vacations (cron).
+ * Test data for TC-VAC-018: CPO auto-approver self-assignment.
  *
- * Creates a vacation, approves it, then triggers payExpiredApproved cron via test API.
- * Verifies that recently-approved vacation is NOT auto-paid (too new — must be >2 months old).
- * Also checks if any existing old APPROVED vacations get auto-paid by the cron.
+ * When a CPO/DM (isCPO=true) with a manager creates a vacation:
+ *   vacation.approverId = employee.getId()  — self-approve
+ *   employee.getManager().getLogin() added to optionalApprovers  — manager as optional
  *
- * Cron criteria: APPROVED vacations with endDate < today.minusMonths(2).withDayOfMonth(2).
- * Payment logic: REGULAR → regularDaysPayed; ADMINISTRATIVE → administrativeDaysPayed.
+ * pvaynmaster is DEPARTMENT_MANAGER (isCPO=true), manager=ilnitsky.
  */
-export class VacationTc095Data {
+export class VacationTc018Data {
   readonly login: string;
+  readonly managerLogin: string;
   readonly startDate: string;
   readonly endDate: string;
   readonly paymentType = "REGULAR";
   readonly paymentMonth: string;
   readonly authHeaderName = "API_SECRET_TOKEN";
   readonly vacationEndpoint = "/api/vacation/v1/vacations";
-  readonly payExpiredEndpoint = "/api/vacation/v1/test/vacations/pay-expired-approved";
 
   static async create(
     mode: TestDataMode,
     tttConfig: TttConfig,
-  ): Promise<VacationTc095Data> {
-    if (mode === "static") return new VacationTc095Data();
+  ): Promise<VacationTc018Data> {
+    if (mode === "static") return new VacationTc018Data();
     if (mode === "saved")
       throw new Error('testDataMode "saved" is not yet implemented');
 
     const login = "pvaynmaster";
     const db = new DbClient(tttConfig);
     try {
+      // Look up manager login from DB
+      const managerRow = await db.query<{ login: string }>(
+        `SELECT m.login FROM ttt_vacation.employee e
+         JOIN ttt_vacation.employee m ON e.manager = m.id
+         WHERE e.login = $1`,
+        [login],
+      );
+      const managerLogin = managerRow.length > 0 ? managerRow[0].login : "ilnitsky";
+
       const { startDate, endDate } =
-        await VacationTc095Data.findAvailableWeek(db, login, 242);
-      return new VacationTc095Data(login, startDate, endDate);
+        await VacationTc018Data.findAvailableWeek(db, login, 248);
+      return new VacationTc018Data(login, managerLogin, startDate, endDate);
     } finally {
       await db.close();
     }
@@ -75,11 +83,13 @@ export class VacationTc095Data {
   }
 
   constructor(
-    login = process.env.VACATION_TC095_LOGIN ?? "pvaynmaster",
-    startDate = process.env.VACATION_TC095_START ?? "2030-11-25",
-    endDate = process.env.VACATION_TC095_END ?? "2030-11-29",
+    login = process.env.VACATION_TC018_LOGIN ?? "pvaynmaster",
+    managerLogin = process.env.VACATION_TC018_MANAGER ?? "ilnitsky",
+    startDate = process.env.VACATION_TC018_START ?? "2031-01-13",
+    endDate = process.env.VACATION_TC018_END ?? "2031-01-17",
   ) {
     this.login = login;
+    this.managerLogin = managerLogin;
     this.startDate = startDate;
     this.endDate = endDate;
     this.paymentMonth = startDate.slice(0, 7) + "-01";

@@ -590,3 +590,26 @@ All error responses (except HttpMessageNotReadableException) include these stand
 - `errorCode` (application-specific error code)
 - `message` (human-readable or error code string)
 - `errors[]` (only for validation exceptions — per-field violations)
+
+
+## Autotest Notes (Phase C discoveries)
+
+### vacation_approval table schema
+- Columns: `id`, `vacation`, `employee`, `status` — NO `required` column, NO `approver` column
+- FK `employee` references the optional approver's employee ID (not named `approver`)
+- Status values observed: `ASKED` (initial), presumably `APPROVED`/`REJECTED`
+- The `required` attribute from `vacation_notify_also` does NOT exist here
+
+### vacation-test API paths
+- Test API paths follow `/v1/test/vacations/<action>` pattern (NOT `/test/<action>`)
+- Example: `POST /api/vacation/v1/test/vacations/pay-expired-approved` (not `/api/vacation/test/pay-expired-approved`)
+- Auth: same `API_SECRET_TOKEN` header as main API
+
+### employee table: first_date (not first_day)
+- Column is `first_date` (date type), not `first_day`
+- Used by DaysLimitationService for 3-month employment restriction check
+
+### pass endpoint still NPE (session 102, 2026-03-21)
+- `PUT /v1/vacations/pass/{vacationId}` still returns 500 on qa-1
+- Caffeine cache BoundedLocalCache.computeIfAbsent NPE persists
+- Blocks TC-067 (change approver) and TC-068 (notification on approver change)

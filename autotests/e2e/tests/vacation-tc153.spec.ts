@@ -26,7 +26,7 @@ test("vacation_tc153 - first vacation 3-month hardcoded restriction mechanism @r
     let monthsSinceHire: number;
     try {
       const empRow = await db.query(
-        `SELECT e.login, e.first_day, e.office_id, o.name as office_name,
+        `SELECT e.login, e.first_date, e.office_id, o.name as office_name,
                 o.advance_vacation as av_enabled
          FROM ttt_vacation.employee e
          LEFT JOIN ttt_vacation.office o ON e.office_id = o.id
@@ -35,7 +35,7 @@ test("vacation_tc153 - first vacation 3-month hardcoded restriction mechanism @r
       );
       expect(empRow.length, "Employee should exist").toBe(1);
 
-      firstDay = String(empRow[0].first_day);
+      firstDay = String(empRow[0].first_date);
       const firstDayDate = new Date(firstDay);
       const now = new Date();
       monthsSinceHire = (now.getFullYear() - firstDayDate.getFullYear()) * 12
