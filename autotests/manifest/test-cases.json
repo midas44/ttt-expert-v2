@@ -13194,7 +13194,7 @@
               "module_component": "VacationRecalculationService",
               "notes": "Days deducted at creation (for NEW status tracking), final deduction at approval",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-022",
@@ -13454,7 +13454,7 @@
               "module_component": "VacationServiceImpl, VacationStatusManager",
               "notes": "Core approval flow. Write lock acquired via findByIdAndAcquireWriteLock",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-040",
@@ -13468,7 +13468,7 @@
               "module_component": "VacationServiceImpl, VacationStatusManager",
               "notes": "Reject uses VACATIONS_DELETE permission (shared with cancel/delete)",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-041",
@@ -13482,7 +13482,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-042",
@@ -13496,7 +13496,7 @@
               "module_component": "VacationServiceImpl",
               "notes": "Soft delete, not physical. DELETED is terminal.",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-043",
