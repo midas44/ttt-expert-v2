@@ -1,40 +1,40 @@
 ---
-session: 26
+session: 27
 phase: autotest_generation
-updated: 2026-03-21
+updated: '2026-03-21'
 ---
-
-# Session 26 — Phase C: Autotest Generation
+# Session 27 — Phase C: Autotest Generation
 
 ## Completed
-Five new vacation StatusFlow API tests generated and verified (all passing on sequential run):
+Five new vacation API tests generated and verified (all passing on first or second run):
 
-| Test ID | Title | Result |
-|---------|-------|--------|
-| TC-VAC-043 | REJECTED → APPROVED (re-approval without edit) | ✅ Passed |
-| TC-VAC-044 | APPROVED → NEW (employee edits dates) | ✅ Passed |
-| TC-VAC-045 | APPROVED → CANCELED (employee cancels) | ✅ Passed |
-| TC-VAC-047 | APPROVED → REJECTED (approver rejects after approval) | ✅ Passed |
-| TC-VAC-048 | APPROVED → PAID (accountant pays) | ✅ Passed |
+| Test ID | Suite | Title | Result |
+|---------|-------|-------|--------|
+| TC-VAC-049 | StatusFlow | CANCELED → NEW (employee re-opens) | Passed |
+| TC-VAC-052 | StatusFlow | Invalid transition NEW → PAID (skipping approval) | Passed |
+| TC-VAC-055 | StatusFlow | Status transition — verify timeline event published | Passed |
+| TC-VAC-022 | Create | Create vacation with notifyAlso list | Passed |
+| TC-VAC-023 | Create | Create vacation with invalid notifyAlso login | Passed |
 
 ## Vacation Scope Status
-- **Verified**: 23 / 173 (13.3%)
-- **Blocked**: 5 / 173 (2.9%)
-- **Pending**: 145 / 173 (83.8%)
+- **Verified**: 28 / 173 (16.2%)
+- **Blocked**: 4 / 173 (2.3%)
+- **Pending**: 141 / 173 (81.5%)
 
-## Key Discoveries (Session 26)
-1. **PUT update body requires `id` field** — PUT /v1/vacations/{id} expects `id` in request body in addition to URL path. Omitting it causes `IllegalArgumentException: The given id must not be null!`
-2. **Pay endpoint body format confirmed** — `{"regularDaysPayed": N, "administrativeDaysPayed": N}` where sum must equal total vacation days. For REGULAR 5-day vacation: `{"regularDaysPayed": 5, "administrativeDaysPayed": 0}`
-3. **Concurrent test deadlocks** — Running multiple tests for the same user (pvaynmaster) in parallel causes deadlocks on `vacation_days_distribution` table. Tests must run with `--workers=1` or use different users.
-4. **Crossing check blocks concurrent approve** — When multiple vacations for the same user are created in parallel, the crossing validation on approve sees the other tests' vacations and fails. Same-user tests must run sequentially.
-5. **PAID cleanup limitation** — PAID+EXACT vacations cannot be canceled or deleted via normal API. Best-effort cleanup attempted but PAID records may persist.
+## Key Discoveries (Session 27)
+1. **Timeline table schema** — `ttt_vacation.timeline` stores event_type (VACATION_CREATED, VACATION_APPROVED, etc.), vacation FK, event_time, previous_status. Events are reliably created on every status transition. previous_status is only populated for some transitions (reject, cancel, delete), not for create/approve/pay.
+2. **vacation_notify_also FK column** — The column referencing the notified employee is named `approver` (misleading), not `employee` or `notify_employee`. FK points to ttt_vacation.employee.id.
+3. **DB bigint → JS string** — PostgreSQL bigint columns return as strings in Node.js pg driver. Must use `Number()` when comparing with API-returned numeric IDs.
+4. **Manifest/SQLite sync** — Fixed 4 tests (TC-VAC-002 through TC-VAC-005) that were verified in SQLite but not marked in manifest. Now fully synced at 28 verified.
+5. **TC-VAC-046 (canBeCancelled guard) deferred** — Requires vacation with paymentDate before office report period, which can't be set up without clock manipulation (timemachine) or period advancement. Needs P1 timemachine support.
+6. **TC-VAC-056 (crossing on approve) deferred** — Can't create two overlapping vacations for same user (crossing check runs on both create and update). Would need multi-user support or DB manipulation.
 
 ## Artifacts Created
-- Data classes: VacationTc043Data, VacationTc044Data, VacationTc045Data, VacationTc047Data, VacationTc048Data
-- Test specs: vacation-tc043.spec.ts through vacation-tc048.spec.ts (skipping tc046)
+- Data classes: VacationTc049Data, VacationTc052Data, VacationTc055Data, VacationTc022Data, VacationTc023Data
+- Test specs: vacation-tc049.spec.ts, vacation-tc052.spec.ts, vacation-tc055.spec.ts, vacation-tc022.spec.ts, vacation-tc023.spec.ts
 
 ## Next Steps
-- **TS-Vac-StatusFlow**: TC-046 (canBeCancelled guard), TC-049 (CANCELED→NEW re-open), TC-052-056 (invalid transitions + concurrent)
-- **TS-Vac-Create**: TC-022, TC-023, TC-024, TC-025 (notifyAlso, comments)
-- **TS-Vac-Update**: TC-026 through TC-038
-- **TS-Vac-Approval**: TC-057 through TC-068 (optional approvers, approver changes)
+- **TS-Vac-Create**: TC-024 (comment), TC-025 (long comment)
+- **TS-Vac-Update**: TC-026 through TC-038 (13 pending tests)
+- **TS-Vac-Approval**: TC-057 through TC-068 (12 pending tests)
+- **TS-Vac-StatusFlow remaining**: TC-050 (PAID terminal, UI), TC-051 (DELETED terminal, UI), TC-054 (concurrent, UI)

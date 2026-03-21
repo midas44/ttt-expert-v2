@@ -703,3 +703,46 @@ Access vacation ID via `response.vacation.id`, approver via `response.vacation.a
 - **APPROVED→NEW on date edit confirmed** — Editing dates via PUT resets status from APPROVED to NEW. Optional approvals also reset to ASKED.
 - **APPROVED→CANCELED confirmed** — `canBeCancelled` guard passes for future vacations where paymentDate is after the office report period.
 - **APPROVED→PAID confirmed** — Terminal state. PAID+EXACT cannot be canceled, rejected, or deleted via normal API. Cleanup requires test API endpoint or accepting persistence.
+
+
+## Autotest Notes (Session 27)
+
+### Timeline Table Schema (DB-Level Event Verification)
+- Table: `ttt_vacation.timeline`
+- Key columns: `id` (PK bigint), `employee` (FK), `event_time` (timestamptz), `event_type` (text), `vacation` (FK to vacation.id), `previous_status` (text nullable)
+- Event types observed: `VACATION_CREATED`, `VACATION_APPROVED`, `VACATION_REJECTED`, `VACATION_CANCELED`, `VACATION_DELETED`, `VACATION_PAID`
+- `previous_status` is only populated for reject (previous_status='APPROVED'), cancel (previous_status='APPROVED'), and delete (previous_status='CANCELED'/'REJECTED'). It is NULL for create, approve, and pay events.
+- Events are reliably created on every status transition — suitable for integration test assertions.
+
+### vacation_notify_also Table Schema
+- Table: `ttt_vacation.vacation_notify_also`
+- Columns: `id` (PK bigint), `vacation` (FK to vacation.id), `approver` (FK to employee.id — misleading name, actually the notified colleague), `required` (boolean, defaults false)
+- Unique index on `(vacation, approver)` — can't notify same person twice
+- `required=false` for informational notify-also; `required` may be `true` for other use cases
+- GET /vacations/{id} response does NOT include notifyAlso data — verification must be via DB query
+
+### DB Bigint Type Handling
+- PostgreSQL `bigint` columns return as JavaScript strings via the `pg` driver (not numbers)
+- When comparing DB FK values with API-returned numeric IDs, always use `Number(row.column)` for equality checks
+- Affects: vacation FK in vacation_notify_also, vacation_approval, timeline tables
+
+### CANCELED → NEW Transition Confirmed
+- PUT /v1/vacations/{id} with full update body (including `id` field) changes CANCELED → NEW
+- The transition works because `isNextStateAvailable(CANCELED, NEW)` finds the explicit entry in the transition map, even though CANCELED is in FINAL_STATUSES
+- Days are recalculated on re-open (regularDays and administrativeDays recomputed)
+- Status resets to NEW, same as a fresh vacation
+
+### Invalid NEW → PAID Confirmed
+- PUT /v1/vacations/pay/{id} on a NEW vacation returns HTTP 400
+- PayVacationServiceImpl.checkForPayment validates status must be APPROVED + periodType EXACT
+- The status check prevents any non-APPROVED vacation from being paid
+- Vacation status remains unchanged after the failed pay attempt
+
+### TC-046 (canBeCancelled) Deferred
+- Cannot set up paymentDate < reportPeriod scenario without clock manipulation or period advancement
+- Creating future vacations always sets paymentDate in the future → canBeCancelled returns true
+- Needs timemachine environment with clock set to a date after the vacation's paymentMonth
+
+### TC-056 (crossing on approve) Deferred
+- Cannot create two overlapping vacations for the same user — crossing check runs on both POST create and PUT update
+- Would need: (a) multi-user support to create overlapping vacations for different users, or (b) direct DB manipulation to insert an overlapping record, or (c) timing exploit between create and crossing check
