@@ -1,8 +1,0 @@
-{
-  "status": 200,
-  "availablePaidDays": 125,
-  "body": {
-    "availablePaidDays": 125,
-    "daysNotEnough": []
-  }
-}

@@ -1,7 +1,0 @@
-{
-  "vacationId": 51755,
-  "startDate": "2031-07-21",
-  "endDate": "2031-07-25",
-  "regularDays": 5,
-  "note": "Future vacation created — should affect current year available days via FIFO"
-}
