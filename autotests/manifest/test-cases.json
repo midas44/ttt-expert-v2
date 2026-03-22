@@ -402,7 +402,7 @@
               "module_component": "Vacation / My Vacations",
               "notes": "VacationRecalculationService.recalculate() triggered on cancel. FIFO redistribution runs.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-029",
@@ -1140,7 +1140,7 @@
               "module_component": "Vacation / Permissions",
               "notes": "hasAccess() checks approverId matches currentEmployee.id for manager roles.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-080",
@@ -1228,7 +1228,7 @@
               "module_component": "Vacation / Validation",
               "notes": "VacationCreateValidator: startDate.year > today.year AND today < Feb 1.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-086",
@@ -1242,7 +1242,7 @@
               "module_component": "Vacation / Validation",
               "notes": "minimalVacationDuration = 1 (not 5 as Javadoc says). Only 0-day ranges trigger this.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-087",
@@ -1354,7 +1354,7 @@
               "module_component": "Vacation / Validation",
               "notes": "AV=false cannot go negative. AV=true CAN create vacation exceeding balance.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-095",
