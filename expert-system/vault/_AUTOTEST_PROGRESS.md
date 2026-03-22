@@ -1,51 +1,52 @@
 # Autotest Generation Progress
 
-**Last updated:** 2026-03-22 (Session 44)
+**Updated:** 2026-03-22 (Session 45)
+**Phase:** C — Autotest Generation
+**Scope:** vacation module
+**Target env:** qa-1
 
-## Overall Coverage
-| Metric | Count | % |
-|--------|-------|---|
+## Overall Metrics
+| Metric | Count | Percentage |
+|--------|-------|------------|
 | Total test cases | 109 | 100% |
-| Verified | 63 | 57.8% |
+| Tracked (in DB) | 72 | 66.1% |
+| Verified | 68 | 62.4% |
 | Blocked | 2 | 1.8% |
 | Failed | 1 | 0.9% |
 | Skipped | 1 | 0.9% |
-| Pending | 42 | 38.5% |
+| Pending | 37 | 33.9% |
 
-## Coverage by Suite
-| Suite | Total | Verified | Blocked | Pending |
-|-------|-------|----------|---------|---------|
-| TS-Vac-CRUD | 16 | 14 | 0 | 2 |
-| TS-Vac-Lifecycle | 11 | 6 | 1 | 4 |
-| TS-Vac-Approval | 8 | 6 | 0 | 2 |
-| TS-Vac-Payment | 10 | 8 | 0 | 2 |
-| TS-Vac-DayCalc | 10 | 8 | 0 | 2 |
-| TS-Vac-DayCorrection | 10 | 8 | 0 | 2 |
-| TS-Vac-Chart | 10 | 2 | 0 | 8 |
-| TS-Vac-Permissions | 8 | 5 | 0 | 3 |
-| TS-Vac-Validation | 8 | 4 | 0 | 4 |
-| TS-Vac-Notifications | 10 | 1 | 1 | 8 |
-| TS-Vac-Integration | 8 | 1 | 0 | 7 |
-
-## Page Objects Created
-- MyVacationsPage (MainPage.ts) — vacation table, row operations, tabs
-- VacationCreateDialog — creation form, period, type, payment
-- VacationDetailsDialog — view details, delete action
-- VacationPaymentPage — payment queue, filtering
-- VacationDayCorrectionPage — inline editing, chip filter, confirm modal
-- AvailabilityChartPage — chart with CSS-hidden table workarounds (Session 44)
+## Per-Suite Breakdown
+| Suite | Total | Verified | Blocked | Failed | Skipped |
+|-------|-------|----------|---------|--------|---------|
+| TS-Vac-CRUD | 11 | 11 | 0 | 0 | 0 |
+| TS-Vac-Cancel | 2 | 2 | 0 | 0 | 0 |
+| TS-Vac-Chart | 5 | 5 | 0 | 0 | 0 |
+| TS-Vac-DayCalc | 1 | 1 | 0 | 0 | 0 |
+| TS-Vac-DayCorrection | 2 | 2 | 0 | 0 | 0 |
+| TS-Vac-Lifecycle | 5 | 4 | 1 | 0 | 0 |
+| TS-Vac-Payment | 4 | 4 | 0 | 0 | 0 |
+| TS-Vac-Permissions | 4 | 4 | 0 | 0 | 0 |
+| TS-Vac-Validation | 6 | 6 | 0 | 0 | 0 |
+| TS-Vacation-Approval | 7 | 7 | 0 | 0 | 0 |
+| TS-Vacation-AvailableDays | 2 | 2 | 0 | 0 | 0 |
+| TS-Vacation-CRUD | 5 | 5 | 0 | 0 | 0 |
+| TS-Vacation-DayCalc | 2 | 1 | 0 | 0 | 1 |
+| TS-Vacation-DayCorrection | 1 | 1 | 0 | 0 | 0 |
+| TS-Vacation-DayCounting | 2 | 2 | 0 | 0 | 0 |
+| TS-Vacation-Lifecycle | 3 | 2 | 1 | 0 | 0 |
+| TS-Vacation-Payment | 1 | 1 | 0 | 0 | 0 |
+| TS-Vacation-Permissions | 5 | 5 | 0 | 0 | 0 |
+| TS-Vacation-UI | 3 | 2 | 0 | 1 | 0 |
+| TS-Vacation-ViewFilter | 1 | 1 | 0 | 0 | 0 |
 
 ## Blocked Tests
-- **TC-VAC-027**: Needs accounting period close API (clock alone insufficient)
-- **TC-VAC-063**: Duplicate of TC-VAC-064
+- **TC-VAC-023**: Requires accounting period close API (canBeCancelled guard)
+- **TC-VAC-027**: Same — office.reportPeriod managed by accounting, not clock
 
-## Session History
-| Session | Tests Generated | Tests Verified | Notes |
-|---------|----------------|----------------|-------|
-| 30-38 | ~50 | ~45 | Initial generation batch |
-| 39 | 5 | 0 | CAS timeout issues |
-| 40 | 5 | 5 | Fixed getAvailableDays() |
-| 41 | 5 | 5 | Fixed TC-VAC-035/048 |
-| 42 | 5 | 5 | TC-VAC-080/081/082/049/050 |
-| 43 | 5 | 5 | TC-VAC-051/052/058/059/064 |
-| 44 | 5 | 4 | TC-VAC-065/066/069/073 verified, TC-VAC-027 blocked |
+## Session History (recent)
+- **S45**: TC-VAC-070/071/072/019/020 (5 verified) — chart months/search/nav + pagination + events feed
+- **S44**: TC-VAC-065/066/069/073 (4 verified), TC-VAC-027 blocked
+- **S43**: TC-VAC-051/052/058/059/064 (5 verified)
+- **S42**: TC-VAC-080/081/082/049/050 (5 verified)
+- **S41**: TC-VAC-035/048 fixed, TC-VAC-075/076/078 (5 verified)

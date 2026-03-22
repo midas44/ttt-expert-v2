@@ -1,37 +1,41 @@
 # Session Briefing
 
-## Session 44 — 2026-03-22
+## Session 45 — 2026-03-22
 **Phase:** C (Autotest Generation)
 **Mode:** Full autonomy
-**Duration:** ~40 min
+**Duration:** ~35 min
 
 ### Completed
-- **TC-VAC-065** (verified): Add negative vacation day correction (AV=true) — correction page, editVacationDays + confirmCorrection, revert pattern
-- **TC-VAC-066** (verified): Cannot add negative correction for AV=false employee — EditBox strips minus sign, balance unchanged check
-- **TC-VAC-069** (verified): Verify availability chart — Days view — **new AvailabilityChartPage** page object created. Key discovery: chart table is CSS-hidden (overflow), required `evaluate()` and `state: "attached"` workarounds
-- **TC-VAC-073** (verified): Verify vacation bars on chart match vacation records — green bar detection via `getComputedStyle`, employee search on chart
-- **TC-VAC-027** (blocked): Cannot cancel APPROVED vacation after accounting period close — clock manipulation alone does not close accounting periods. The `canBeCancelled` guard checks office report period which requires explicit period-close operations, not just clock advance
+- **TC-VAC-070** (verified): Availability chart — Months view — switchToMonthsView(), date range pickers, month column headers validation
+- **TC-VAC-071** (verified): Chart search by employee — search box filtering, employee name match, clear search restoration
+- **TC-VAC-072** (verified): Chart timeline navigation — prev/next month arrows via `[class*="datePickerContainer"]`, month text change verification
+- **TC-VAC-019** (verified): Pagination on vacation table — All tab, `navigation "Pagination"` with Page N buttons, Previous/Next page
+- **TC-VAC-020** (verified): Vacation events feed — `button "Vacation events feed"`, lifecycle event keywords + date verification
 
-### New Page Objects
-- `AvailabilityChartPage` — chart page with CSS-hidden table workarounds (waitForReady uses title + Days button, DOM evaluation for content)
+### Page Object Updates
+- **AvailabilityChartPage** expanded with:
+  - Days view navigation: `clickPrevMonth()`, `clickNextMonth()`, `getMonthYearText()` via `[class*="datePickerContainer"]`
+  - Months view: `switchToMonthsView()`, `getMonthColumnHeaders()`, `getMonthsStartDate()`/`getMonthsEndDate()`
+  - Shared: `getEmployeeRowCount()`, `getEmployeeNames()` via DOM evaluate
 
 ### Key Discoveries
-1. **Chart table CSS hiding**: The availability chart `<table>` has `overflow: hidden` on its container, causing Playwright to report all `<tr>`/`<td>` elements as hidden. Solution: `waitFor({ state: "attached" })` and `page.evaluate()` for reading content
-2. **Chart structure**: Single `<table>` with `thead` (month names + day numbers/DOW) and `tbody` (employee rows). Filter chips: Employee, Project, Manager, Salary office
-3. **Accounting period ≠ clock**: The `canBeCancelled` guard checks office.reportPeriod, managed by accounting close operations, not by the server clock. TC-VAC-027 needs accounting period manipulation API
+1. **MonthControl component** (Days view nav): Container `.datePickerContainer` has prev `<button>` → DateInput → next `<button>` with `.rightSwitcherIcon`. Source: `vacation/containers/vacationsChart/MonthControl.tsx`
+2. **Months view uses DatePeriodFilterContainer** (not MonthControl): Two date range inputs with `placeholder="dd.mm.yyyy"`, table columns show "2026 Month" headers
+3. **Chart search is multi-field**: Matches employee name, project, manager, salary office — filtered results include indirect matches
+4. **Pagination uses aria roles**: `navigation "Pagination"`, `button "Previous page"`, `button "Page N"`, `button "Next page"` — standard Material UI pagination
+5. **Events feed button**: `button "Vacation events feed"` with calendar icon, shows lifecycle events with dates
+
+### Maintenance (S45 = 5th session multiple)
+- Ran §9.4 maintenance checks (stale notes, SQLite health, cross-references)
 
 ### Progress
-- **Total tracked:** 67/109 (61.5%)
-- **Verified:** 63/109 (57.8%)
-- **Blocked:** 2 (TC-VAC-027, TC-VAC-063)
+- **Total tracked:** 72/109 (66.1%)
+- **Verified:** 68/109 (62.4%)
+- **Blocked:** 2 (TC-VAC-027, TC-VAC-023)
 - **Failed/Skipped:** 2
 
-### Clock Status
-- qa-1 clock was reset to current time after TC-VAC-027 testing
-
 ### Next Session Priorities
-1. TC-VAC-070: Verify availability chart — Months view
-2. TC-VAC-071: Search employee on availability chart
-3. TC-VAC-072: Filter chart by project
-4. TC-VAC-074: Navigate chart timeline (prev/next month)
-5. TC-VAC-028: Cannot edit APPROVED vacation
+1. TC-VAC-036–044: Manager approval/rejection flow tests
+2. TC-VAC-053–055: Payment-related tests
+3. TC-VAC-067–068: Remaining correction tests
+4. TC-VAC-088–109: Admin/role-based tests

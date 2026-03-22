@@ -80,4 +80,86 @@ export class AvailabilityChartPage {
   employeeRow(nameFragment: string): Locator {
     return this.page.locator("table tbody tr").filter({ hasText: nameFragment });
   }
+
+  // --- Days view navigation (MonthControl component) ---
+
+  /** The datePickerContainer holding prev button, month input, next button. */
+  private datePickerContainer(): Locator {
+    return this.page.locator('[class*="datePickerContainer"]');
+  }
+
+  /** Clicks the previous month arrow in Days view. */
+  async clickPrevMonth(): Promise<void> {
+    await this.datePickerContainer().locator("button").first().click();
+  }
+
+  /** Clicks the next month arrow in Days view. */
+  async clickNextMonth(): Promise<void> {
+    await this.datePickerContainer().locator("button").last().click();
+  }
+
+  /** Returns the current month/year text from the Days view navigation input. */
+  async getMonthYearText(): Promise<string> {
+    return await this.datePickerContainer().locator("input").inputValue();
+  }
+
+  // --- Months view ---
+
+  /** Switches to Months view and waits for it to load. */
+  async switchToMonthsView(): Promise<void> {
+    await this.monthsToggle().click();
+    // Months view replaces MonthControl with date range pickers
+    await this.page
+      .locator('input[placeholder="dd.mm.yyyy"]')
+      .first()
+      .waitFor({ state: "visible", timeout: 10000 });
+    // Wait for table to re-render with month columns
+    await this.page.locator("table tbody tr").first().waitFor({
+      state: "attached",
+      timeout: 15000,
+    });
+  }
+
+  /** Returns month column header texts in Months view (e.g. "2026\nMarch"). */
+  async getMonthColumnHeaders(): Promise<string[]> {
+    return await this.page.evaluate(() => {
+      const ths = Array.from(document.querySelectorAll("table thead th"));
+      return ths
+        .map((th) => th.textContent?.trim() ?? "")
+        .filter((t) => /\d{4}\s*[A-Z]/.test(t));
+    });
+  }
+
+  /** Returns the start date input value in Months view. */
+  async getMonthsStartDate(): Promise<string> {
+    return await this.page
+      .locator('input[placeholder="dd.mm.yyyy"]')
+      .first()
+      .inputValue();
+  }
+
+  /** Returns the end date input value in Months view. */
+  async getMonthsEndDate(): Promise<string> {
+    return await this.page
+      .locator('input[placeholder="dd.mm.yyyy"]')
+      .last()
+      .inputValue();
+  }
+
+  /** Returns the count of employee rows via DOM (bypasses CSS-hidden). */
+  async getEmployeeRowCount(): Promise<number> {
+    return await this.page.evaluate(() =>
+      document.querySelectorAll("table tbody tr").length,
+    );
+  }
+
+  /** Returns all employee names from the chart via DOM. */
+  async getEmployeeNames(): Promise<string[]> {
+    return await this.page.evaluate(() => {
+      const cells = document.querySelectorAll("table tbody tr td:first-child");
+      return Array.from(cells)
+        .map((c) => c.textContent?.trim() ?? "")
+        .filter((n) => n.length > 0);
+    });
+  }
 }
