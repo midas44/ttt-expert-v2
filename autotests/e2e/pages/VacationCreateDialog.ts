@@ -380,6 +380,37 @@ export class VacationCreateDialog {
     await this.dialog.waitFor({ state: "detached" }).catch(() => {});
   }
 
+  /** Checks if the dialog is still open. */
+  async isOpen(): Promise<boolean> {
+    return this.dialog.isVisible();
+  }
+
+  /**
+   * Returns visible error/validation text from the dialog or page notifications.
+   * Matches red-colored text in the dialog and toast notifications containing
+   * "error", "validation", "exception", or raw i18n keys.
+   */
+  async getErrorText(): Promise<string> {
+    // Strategy 1: red text inside dialog
+    const redEntries = await this.getRedTextEntries();
+    if (redEntries.length > 0) {
+      return redEntries.map((e) => e.text).join(" | ");
+    }
+    // Strategy 2: notification/alert/toast with error-like content
+    const errorNotification = this.page.locator(
+      '[role="alert"], [class*="notification"], [class*="toast"], [class*="error"]',
+    ).filter({ hasText: /error|validation|exception|crossing|past/i });
+    if ((await errorNotification.count()) > 0) {
+      return (await errorNotification.first().textContent())?.trim() ?? "";
+    }
+    // Strategy 3: raw i18n keys displayed as text (known bug)
+    const rawKey = this.page.locator('text=/validation\\.|exception\\./');
+    if ((await rawKey.count()) > 0) {
+      return (await rawKey.first().textContent())?.trim() ?? "";
+    }
+    return "";
+  }
+
   /** Returns all text entries in the dialog that have red-dominant color. */
   private async getRedTextEntries(): Promise<ColoredTextEntry[]> {
     const entries = await collectColoredText(this.dialog);

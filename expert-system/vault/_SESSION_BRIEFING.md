@@ -1,42 +1,40 @@
 # Session Briefing
 
-## Last Session: 36 — 2026-03-22
-**Phase:** C (autotest_generation) | **Mode:** full | **Env:** qa-1
+## Last Session: 37 (2026-03-22)
+**Phase:** C — Autotest Generation
+**Mode:** Full autonomy
+**Duration:** ~25 min
 
-### Completed
-- **TC-VAC-012** (verified): Verify total row in vacation table — navigates All tab, reads Regular/Administrative columns, sums and compares with total row
-- **TC-VAC-016** (verified): Verify Number of days auto-calculation — Mon-Fri=4-5 days, Sat-Sun=0. Fixed `getNumberOfDays()` DOM extraction method
-- **TC-VAC-017** (verified): Create vacation with optional approvers — non-CPO employee, verifies "Approved by" shows manager name
-- **TC-VAC-018** (verified): CPO creates vacation — self-approval. Fixed CPO identification (use `v.approver = e.id` not ROLE_DEPARTMENT_MANAGER). Fixed column name (`approver` not `approver_id`). Lowered minDays to 2 for low-balance CPOs
-- **TC-VAC-023** (blocked): Restore CANCELED vacation — no CANCELED vacations exist in qa-1. Only statuses present: PAID, DELETED, APPROVED, NEW, REJECTED. Test code written but cannot verify
+## Session 37 Summary
 
-### Key Discoveries & Fixes (Session 36)
-- VacationCreateDialog DOM: `<strong>Number of days:</strong> N` (text node sibling, not child element). Rewrote `getNumberOfDays()` using regex on parent textContent
-- VacationCreateDialog DOM: `<dt>Approved by</dt><dd><a>Name</a></dd>` pattern. Added `getApprovedByText()` and `getAgreedByText()` methods
-- CPO self-approval: identified by `EXISTS (SELECT 1 FROM vacation v WHERE v.employee = e.id AND v.approver = e.id)`, not by role
-- Vacation table column is `approver` (bigint FK), not `approver_id`
-- `findCpoEmployeeWithManager()` and `findNonCpoEmployeeWithManager()` added to vacationQueries.ts
+### Completed (5 tests: 1 fixed, 4 new)
+| Test ID | Title | Status | Fix Attempts |
+|---------|-------|--------|-------------|
+| TC-VAC-011 | Available vacation days yearly breakdown | verified (fix) | 5 |
+| TC-VAC-083 | Start date in the past — error message | verified | 3 |
+| TC-VAC-084 | End date before start date — error message | verified | 1 |
+| TC-VAC-087 | Overlapping vacation dates — crossing error | verified | 2 |
+| TC-VAC-014 | Create cross-year vacation (Dec→Jan) | verified | 3 |
 
-### Shared Code Created/Modified
-- `VacationCreateDialog.ts`: +3 methods (getNumberOfDays, getApprovedByText, getAgreedByText, getPaymentMonthText, cancel)
-- `vacationQueries.ts`: +2 query functions (findNonCpoEmployeeWithManager, findCpoEmployeeWithManager)
+### Key Findings
+- **Frontend validation patterns:** Formik disables Save when end < start (TC-084). Past start dates NOT caught by frontend — backend validates (TC-083). Overlapping dates handled by backend crossing error (TC-087).
+- **Table date format:** Vacation dates column uses "DD Mon YYYY - DD Mon YYYY" (English month names), not DD.MM.YYYY. Period patterns must use multi-format alternatives.
+- **Clock manipulation works:** TC-014 successfully uses `PATCH /api/ttt/v1/test/clock` to set server time to Nov 15 for cross-year testing, then resets via `POST /api/ttt/v1/test/clock/reset`.
+- **Calendar date picker:** VacationCreateDialog.selectDate() works reliably for future months via ‹/› navigation.
+- **VacationCreateDialog enhanced:** Added `isOpen()` and `getErrorText()` methods for validation tests.
+- **MainPage methods rewritten:** `getAvailableDaysFullText()`, `toggleYearlyBreakdown()`, `getYearlyBreakdownEntries()` now use CSS module class selectors instead of fragile heuristics.
 
-### Progress Summary
-| Metric | Value |
-|--------|-------|
-| Vacation total | 109 |
-| Verified | 27 |
-| Failed | 1 |
-| Blocked | 1 |
-| Pending | 80 |
-| Coverage | 26.6% |
+### Cumulative Progress
+- **Total tracked:** 33 (31 verified, 1 failed, 1 blocked)
+- **Manifest total:** 109 test cases
+- **Coverage:** 31/109 = 28.4% verified
 
-### Session Stats
-- Generated: 5 tests (4 verified, 1 blocked)
-- Cumulative sessions 28-36: 29 tests tracked (27 verified, 1 failed, 1 blocked)
+### State
+- Clock: RESET (TC-014 cleanup resets clock after each run)
+- No pending vacations left (TC-014 deletes its creation)
+- All generated files committed
 
-### Next Session Priorities
-1. Continue vacation UI tests from pending pool — target TC-VAC-019, TC-VAC-020, TC-VAC-021, TC-VAC-022
-2. Consider TC-VAC-023 alternative: make it self-contained (create → cancel → restore) or investigate if CANCELED status can be created via API
-3. Look at TC-VAC-009 (failed) — reattempt with fixes
-4. Payment-related tests (TS-Vac-Payment suite) may need clock manipulation via test API
+## Next Session Priorities
+1. Continue vacation validation tests (TC-VAC-085, TC-VAC-086, TC-VAC-088)
+2. Consider vacation approval flow tests (TC-VAC-025 through TC-VAC-034 range)
+3. Look at vacation editing tests (TC-VAC-015 through TC-VAC-020 range)

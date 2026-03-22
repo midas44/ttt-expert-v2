@@ -278,25 +278,21 @@ export class MyVacationsPage {
   /** Returns the full "Available vacation days" text (e.g., "22" or "4 in 2026"). */
   async getAvailableDaysFullText(): Promise<string> {
     await this.page.waitForLoadState("networkidle");
-    // The number may be "N in YYYY" or "N" and is rendered asynchronously.
-    // It appears in a sibling or child element near the "Available vacation days:" label.
+    // DOM: div.vacationDaysRowContainer > span "N\u00a0in\u00a0YYYY"
+    // The value span is a sibling container of the "Available vacation days:" label,
+    // inside a parent with class "m-b-20". Uses &nbsp; between tokens.
     return this.page.evaluate(() => {
-      for (const el of document.querySelectorAll("*")) {
-        const hasLabel = Array.from(el.childNodes).some(
-          (n) =>
-            n.nodeType === Node.TEXT_NODE &&
-            n.textContent?.includes("Available vacation days:"),
-        );
-        if (!hasLabel) continue;
-        // Search both this element's children AND parent's children (number may be a sibling)
-        const areas = [el, el.parentElement].filter(Boolean) as Element[];
-        for (const area of areas) {
-          for (const child of area.querySelectorAll("*")) {
-            const t = child.textContent?.trim();
-            if (!t) continue;
-            if (/^\d+\s+in\s+\d{4}$/.test(t)) return t;
-            if (/^\d+$/.test(t) && child.childElementCount === 0) return t;
-          }
+      // Strategy 1: find spans with "N in YYYY" pattern (handles &nbsp;)
+      for (const span of document.querySelectorAll("span")) {
+        const t = span.textContent?.trim() ?? "";
+        if (/^\d+[\s\u00a0]+in[\s\u00a0]+\d{4}$/.test(t)) return t;
+      }
+      // Strategy 2: find a standalone number near the label
+      const container = document.querySelector(".m-b-20, [class*='userVacationInfo']");
+      if (container) {
+        for (const el of container.querySelectorAll("span, div")) {
+          const t = el.textContent?.trim() ?? "";
+          if (/^\d+$/.test(t) && el.childElementCount === 0 && !el.closest("table")) return t;
         }
       }
       return "";
@@ -305,41 +301,33 @@ export class MyVacationsPage {
 
   /** Clicks the expand/collapse button next to available days for yearly breakdown. */
   async toggleYearlyBreakdown(): Promise<void> {
-    // Find the days number element (not inside table), then click sibling button
-    await this.page.evaluate(() => {
-      for (const el of document.querySelectorAll("*")) {
-        const t = el.textContent?.trim();
-        if (!t) continue;
-        const isMatch =
-          /^\d+\s+in\s+\d{4}$/.test(t) ||
-          (/^\d+$/.test(t) && (el as HTMLElement).childElementCount === 0);
-        if (isMatch && !el.closest("table")) {
-          const btn = el.parentElement?.querySelector("button");
-          if (btn) {
-            btn.click();
-            return;
-          }
-        }
-      }
-    });
+    // The yearly breakdown button has class "VacationDaysTooltip_numberOfDaysInfo"
+    // (unique to the available-days tooltip, not reused in table row tooltips).
+    const btn = this.page.locator('button[class*="VacationDaysTooltip_numberOfDaysInfo"]');
+    await btn.click();
   }
 
   /** Returns yearly breakdown entries from the open popup as {year, days} pairs. */
   async getYearlyBreakdownEntries(): Promise<{ year: string; days: string }[]> {
-    return this.page.evaluate(() => {
+    // DOM: div[class*="UserVacationsPage_vacationDaysTooltip"] contains
+    //   div[class*="tooltipItemContainer"] children, each with:
+    //     div[class*="titleOfTooltip"] = year, div[class*="contentOfTooltip"] = days
+    const tooltip = this.page.locator('[class*="UserVacationsPage_vacationDaysTooltip"]').first();
+    await tooltip.waitFor({ state: "visible", timeout: 5000 });
+    return tooltip.evaluate((el) => {
       const entries: { year: string; days: string }[] = [];
-      document.querySelectorAll("div").forEach((div) => {
-        const children = Array.from(div.children).filter(
-          (c) => c.tagName === "DIV",
-        );
-        if (children.length === 2) {
-          const y = children[0].textContent?.trim() ?? "";
-          const d = children[1].textContent?.trim() ?? "";
+      const items = el.querySelectorAll('div[class*="tooltipItemContainer"]');
+      for (const item of items) {
+        const title = item.querySelector('div[class*="titleOfTooltip"]');
+        const content = item.querySelector('div[class*="contentOfTooltip"]');
+        if (title && content) {
+          const y = title.textContent?.trim() ?? "";
+          const d = content.textContent?.trim() ?? "";
           if (/^\d{4}$/.test(y) && /^\d+$/.test(d)) {
             entries.push({ year: y, days: d });
           }
         }
-      });
+      }
       return entries;
     });
   }
