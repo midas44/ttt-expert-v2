@@ -227,6 +227,40 @@ export async function countVacationNotifyAlso(
   return Number(row.cnt);
 }
 
+interface EmployeeWithManagerRow {
+  employee_login: string;
+  manager_login: string;
+  employee_name: string;
+}
+
+/** Returns a random employee with sufficient days, their manager login, and display name. */
+export async function findEmployeeWithManager(
+  db: DbClient,
+  minDays: number,
+): Promise<EmployeeWithManagerRow> {
+  return db.queryOne<EmployeeWithManagerRow>(
+    `SELECT e.login AS employee_login,
+            m.login AS manager_login,
+            COALESCE(be.latin_first_name || ' ' || be.latin_last_name, e.login) AS employee_name
+     FROM ttt_vacation.employee e
+     JOIN ttt_vacation.employee_vacation ev ON e.id = ev.employee
+     JOIN ttt_vacation.employee m ON e.manager = m.id
+     LEFT JOIN ttt_backend.employee be ON be.login = e.login
+     WHERE e.enabled = true
+       AND m.enabled = true
+       AND ev.year = EXTRACT(YEAR FROM CURRENT_DATE)
+       AND (ev.available_vacation_days - COALESCE(
+         (SELECT SUM(v.regular_days)
+          FROM ttt_vacation.vacation v
+          WHERE v.employee = e.id
+            AND v.status IN ('NEW', 'APPROVED')),
+         0)) >= $1
+     ORDER BY random()
+     LIMIT 1`,
+    [minDays],
+  );
+}
+
 /** Checks whether a vacation overlaps with existing vacations for the given login. */
 export async function hasVacationConflict(
   db: DbClient,

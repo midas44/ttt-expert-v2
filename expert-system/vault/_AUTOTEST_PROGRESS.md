@@ -1,8 +1,11 @@
 ---
 type: analysis
-tags: [autotest, progress, phase-c]
-created: 2026-03-21
-updated: 2026-03-21
+tags:
+  - autotest
+  - progress
+  - phase-c
+created: 2026-03-21T00:00:00.000Z
+updated: 2026-03-21T00:00:00.000Z
 status: active
 ---
 
@@ -78,3 +81,38 @@ status: active
 - Pay body: `{"regularDaysPayed": N, "administrativeDaysPayed": N}`, sum must equal total days
 - REJECTED→APPROVED transition works without requiring an edit first (confirmed via VacationStatusManager)
 - APPROVED→REJECTED transition allowed — days returned to pool on rejection
+
+### Session 27 (API: TC-022, TC-023, TC-049, TC-052, TC-055)
+| Test ID | Spec File | Suite |
+|---------|-----------|-------|
+| TC-VAC-022 | vacation-tc022.spec.ts | TS-Vac-API |
+| TC-VAC-023 | vacation-tc023.spec.ts | TS-Vac-API |
+| TC-VAC-049 | vacation-tc049.spec.ts | TS-Vac-API |
+| TC-VAC-052 | vacation-tc052.spec.ts | TS-Vac-API |
+| TC-VAC-055 | vacation-tc055.spec.ts | TS-Vac-API |
+
+### Session 28 (API: TC-024, TC-025, TC-026, TC-027, TC-028)
+| Test ID | Spec File | Suite |
+|---------|-----------|-------|
+| TC-VAC-024 | vacation-tc024-api.spec.ts | TS-Vac-API |
+| TC-VAC-025 | vacation-tc025-api.spec.ts | TS-Vac-API |
+| TC-VAC-026 | vacation-tc026-api.spec.ts | TS-Vac-API |
+| TC-VAC-027 | vacation-tc027.spec.ts | TS-Vac-API |
+| TC-VAC-028 | vacation-tc028.spec.ts | TS-Vac-API |
+
+### Session 34 (UI: TC-024, TC-025, TC-026, TC-031, TC-032)
+| Test ID | Spec File | Suite | Fix Attempts |
+|---------|-----------|-------|-------------|
+| TC-VAC-024 | vacation-tc024.spec.ts | TS-Vac-CRUD | 0 (13.0s) |
+| TC-VAC-025 | vacation-tc025.spec.ts | TS-Vac-CRUD | 0 (7.8s) |
+| TC-VAC-026 | vacation-tc026.spec.ts | TS-Vac-CRUD | 0 (7.0s) |
+| TC-VAC-031 | vacation-tc031.spec.ts | TS-Vac-Approval | 3 (18.8s) |
+| TC-VAC-032 | vacation-tc032.spec.ts | TS-Vac-Approval | 3 (18.7s) |
+
+**Session 34 new artifacts:** `EmployeeRequestsPage.ts` (manager approval/rejection page object), `findEmployeeWithManager()` query (accounts for pending vacation day deductions).
+
+**Session 34 key fixes:**
+- CAS SSO isolation via `browser.newContext()` for multi-user tests
+- "Employees' requests" apostrophe in page title regex
+- `findEmployeeWithManager` query now subtracts pending (NEW/APPROVED) vacation `regular_days` from available balance
+- Rejected vacation cleanup: skip `waitForRowToDisappear` on Closed tab (row stays with Deleted status)
