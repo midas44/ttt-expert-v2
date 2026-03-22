@@ -1,36 +1,37 @@
 # Session Briefing
 
-## Last Session: 42 — 2026-03-22
-**Phase:** C (Autotest Generation)
-**Duration:** ~40 min
+**Last session:** 43 — 2026-03-22
+**Phase:** C — Autotest Generation
 **Autonomy:** full
 
-## Summary
+## Session 43 Summary
 
-Generated and verified 5 new tests: 3 permission tests + 2 payment tests.
+Generated and verified 5 test cases (+ 1 duplicate skip):
 
-### Generated (session 42)
-| Test ID | Title | Fix attempts | Status |
-|---------|-------|-------------|--------|
-| TC-VAC-080 | Verify permissions for NEW vacation (owner) | 1 (verify text must match visible page content) | **VERIFIED** (19.0s) |
-| TC-VAC-081 | Verify permissions for APPROVED vacation (owner) | 1 (same verify text fix) | **VERIFIED** (12.8s) |
-| TC-VAC-082 | Admin role full access across pages | 2 (dropdown selector fix → use `.navbar__list-item` pattern; HeaderNavigationFixture timeout → use direct URLs) | **VERIFIED** (34.7s) |
-| TC-VAC-049 | Pay administrative vacation | 3 (admin vacations have `administrative_days=0` in DB; pagination regex bug; adapted to search across pages for admin vacation row) | **VERIFIED** (9.4s) |
-| TC-VAC-050 | Cannot pay non-APPROVED vacation | 0 | **VERIFIED** (11.6s) |
+| Test ID | Title | Status | Notes |
+|---------|-------|--------|-------|
+| TC-VAC-051 | Payment page table and columns | verified | New page: VacationPaymentPage |
+| TC-VAC-052 | PAID status is terminal | verified | 3-context test (employee/accountant/manager), browser.newContext() |
+| TC-VAC-058 | FIFO day consumption (earliest year first) | verified | Uses toggleYearlyBreakdown(), create+verify+cleanup |
+| TC-VAC-059 | Working days exclude holidays | verified | Russian office + known holidays (May 1), avoids calendar DB |
+| TC-VAC-063 | Insufficient days warning (AV=false) | skipped | Duplicate of TC-VAC-094 |
+| TC-VAC-064 | Positive vacation day correction | verified | New page: VacationDayCorrectionPage, inline EditBox interaction |
 
-### Key Discoveries
-- Administrative vacations store day count in `regular_days` column, `administrative_days = 0` — DB naming is misleading
-- Administrative vacations appear on payment page WITHOUT "Not paid" status, WITHOUT checkboxes, WITHOUT action buttons — they cannot be paid via bulk payment UI
-- `VerificationFixture.verify(text)` asserts `text` is visible on the page — must use actual page content (e.g., "My vacations", "Vacation payment"), not descriptive labels
-- Navigation dropdown uses `.navbar__list-item` + `.navbar__list-drop-item` selectors (not `getByRole("button")`)
-- `HeaderNavigationFixture` can fail when called multiple times in sequence on different pages — safer to use direct URLs for multi-page access tests
+**Key discoveries:**
+- Calendar DB schema (`ttt_calendar.calendar_days`) has different columns than expected and no direct office→calendar link — used known Russian holidays instead for TC-VAC-059
+- PAID vacations have exactly 1 action button (view details), not 0
+- Payment page columns differ from My Vacations: Employee, Vacation dates, Duration, Vacation type, Salary office, Status, Actions
+- Correction page (`/vacation/days-correction`) uses inline EditBox component — `fill()` triggers blur prematurely, must use `keyboard.type()` after Ctrl+A
+- Correction page filter searches by "first name, last name" not login
+- Chief accountant (ROLE_CHIEF_ACCOUNTANT) has broadest visibility on correction page; regular accountants may see "No data"
 
-## Progress
-- **Total tracked:** 56 (54 verified, 1 failed, 1 blocked)
-- **Session output:** 5 tests verified
-- **Vacation coverage:** 56/109 = 51.4%
+**Coverage:** 59 verified, 1 skipped, 1 failed, 1 blocked = 62/109 (56.9%)
+**Remaining pending:** 47
 
 ## Next Session Priorities
-1. Continue payment tests: TC-VAC-051 (payment page columns), TC-VAC-052 (PAID terminal status)
-2. Approval tab tests: TC-VAC-036, TC-VAC-037, TC-VAC-038
-3. Day calculation tests: TC-VAC-058 (FIFO), TC-VAC-059 (holidays), TC-VAC-063 (insufficient days warning)
+
+1. TC-VAC-065: Negative vacation day correction (AV=true) — reuses VacationDayCorrectionPage
+2. TC-VAC-066: Cannot add negative correction for AV=false — negative test on same page
+3. TC-VAC-027: Cannot cancel APPROVED vacation after accounting period close — needs clock manipulation
+4. TC-VAC-069/073: Chart tests (Days view, vacation bars)
+5. Continue through remaining High-priority test cases

@@ -1,38 +1,49 @@
 # Autotest Progress
 
-## Overall Coverage (Vacation Module)
-- **Total test cases:** 109
-- **Tracked:** 56 (51.4%)
-  - Verified: 54
-  - Failed: 1 (TC-VAC-011)
-  - Blocked: 1 (TC-VAC-023)
-- **Remaining:** 53
+**Updated:** 2026-03-22 (Session 43)
 
-## Coverage by Suite
-| Suite | Total | Automated | Coverage |
-|-------|-------|-----------|----------|
-| TS-Vac-CRUD | 20 | 18 | 90% |
-| TS-Vac-Lifecycle | 14 | 10 | 71% |
-| TS-Vac-Approval | 14 | 5 | 36% |
-| TS-Vac-Payment | 8 | 3 | 38% |
-| TS-Vac-DayCalc | 10 | 4 | 40% |
-| TS-Vac-DayCorrection | 5 | 0 | 0% |
-| TS-Vac-Chart | 5 | 0 | 0% |
-| TS-Vac-Permissions | 10 | 8 | 80% |
-| TS-Vac-Validation | 8 | 4 | 50% |
-| TS-Vac-Notifications | 7 | 0 | 0% |
-| TS-Vac-Integration | 7 | 0 | 0% |
+## Vacation Module
 
-## Session History (Phase C)
-| Session | Tests Generated | Tests Verified | Cumulative |
-|---------|----------------|----------------|------------|
-| 27-33 | 30 | 28 | 28 |
-| 34-37 | 16 | 14 | 42 |
-| 38-39 | 9 | 5 | 44 |
-| 40 | 5 | 5 | 49 |
-| 41 | 5 | 5 | 51* |
-| 42 | 5 | 5 | 56* |
+| Metric | Value |
+|--------|-------|
+| Total test cases | 109 |
+| Verified | 59 |
+| Skipped (duplicates) | 1 |
+| Failed | 1 |
+| Blocked | 1 |
+| Pending | 47 |
+| **Coverage** | **56.9%** |
 
-*includes re-verified fixes from prior sessions
+### By Suite
 
-## Last Updated: Session 42 (2026-03-22)
+| Suite | Total | Automated | Pending |
+|-------|-------|-----------|---------|
+| TS-Vac-CRUD | ~15 | ~12 | ~3 |
+| TS-Vac-Lifecycle | ~12 | ~8 | ~4 |
+| TS-Vac-Approval | ~12 | ~10 | ~2 |
+| TS-Vac-Payment | ~10 | ~7 | ~3 |
+| TS-Vac-DayCalc | ~10 | ~8 | ~2 |
+| TS-Vac-DayCorrection | ~8 | ~1 | ~7 |
+| TS-Vac-Chart | ~10 | ~2 | ~8 |
+| TS-Vac-Permissions | ~8 | ~4 | ~4 |
+| TS-Vac-Validation | ~12 | ~5 | ~7 |
+| TS-Vac-Notifications | ~12 | ~2 | ~10 |
+
+### Page Objects Created
+
+| Page Object | File | Used By |
+|-------------|------|---------|
+| MyVacationsPage | pages/MainPage.ts | Most vacation tests |
+| VacationCreateDialog | pages/VacationCreateDialog.ts | Creation/editing tests |
+| VacationPaymentPage | pages/VacationPaymentPage.ts | TC-VAC-051, payment tests |
+| EmployeeRequestsPage | pages/EmployeeRequestsPage.ts | Manager approval tests |
+| VacationDayCorrectionPage | pages/VacationDayCorrectionPage.ts | TC-VAC-064, correction tests |
+
+### Recent Sessions
+
+| Session | Tests Generated | Tests Verified |
+|---------|----------------|----------------|
+| 43 | TC-VAC-051/052/058/059/064 | 5 verified, 1 skipped |
+| 42 | TC-VAC-080/081/082/049/050 | 5 verified |
+| 41 | TC-VAC-035/048/075/076/078 | 5 verified |
+| 40 | TC-VAC-046/060/061/074/077 | 5 verified |
