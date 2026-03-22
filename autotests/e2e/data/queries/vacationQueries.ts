@@ -233,7 +233,8 @@ interface EmployeeWithManagerRow {
   employee_name: string;
 }
 
-/** Returns a random employee with sufficient days, their manager login, and display name. */
+/** Returns a random employee with sufficient days, their manager login, and display name.
+ *  Excludes contractors and requires ROLE_EMPLOYEE to ensure vacation creation rights. */
 export async function findEmployeeWithManager(
   db: DbClient,
   minDays: number,
@@ -245,9 +246,12 @@ export async function findEmployeeWithManager(
      FROM ttt_vacation.employee e
      JOIN ttt_vacation.employee_vacation ev ON e.id = ev.employee
      JOIN ttt_vacation.employee m ON e.manager = m.id
-     LEFT JOIN ttt_backend.employee be ON be.login = e.login
+     JOIN ttt_backend.employee be ON be.login = e.login
+     JOIN ttt_backend.employee_global_roles r ON r.employee = be.id
      WHERE e.enabled = true
        AND m.enabled = true
+       AND (be.is_contractor IS NULL OR be.is_contractor = false)
+       AND r.role_name = 'ROLE_EMPLOYEE'
        AND ev.year = EXTRACT(YEAR FROM CURRENT_DATE)
        AND (ev.available_vacation_days - COALESCE(
          (SELECT SUM(v.regular_days)
@@ -259,6 +263,27 @@ export async function findEmployeeWithManager(
      LIMIT 1`,
     [minDays],
   );
+}
+
+/** Finds the vacation ID for a given employee login and date range. */
+export async function findVacationId(
+  db: DbClient,
+  login: string,
+  startIso: string,
+  endIso: string,
+): Promise<number> {
+  const row = await db.queryOne<{ id: string }>(
+    `SELECT v.id::text AS id
+     FROM ttt_vacation.vacation v
+     JOIN ttt_vacation.employee e ON e.id = v.employee
+     WHERE e.login = $1
+       AND v.start_date = $2::date
+       AND v.end_date = $3::date
+     ORDER BY v.id DESC
+     LIMIT 1`,
+    [login, startIso, endIso],
+  );
+  return Number(row.id);
 }
 
 /** Checks whether a vacation overlaps with existing vacations for the given login. */

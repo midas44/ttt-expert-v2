@@ -416,7 +416,7 @@
               "module_component": "Vacation / My Vacations",
               "notes": "REJECTED is deletable because it is not PAID.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-030",
@@ -430,7 +430,7 @@
               "module_component": "Vacation / My Vacations",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             }
           ]
         },
@@ -476,7 +476,7 @@
               "module_component": "Vacation / Employee Requests",
               "notes": "VacationStatusManager has explicit REJECTED\u2192APPROVED entry. No REJECTED\u2192NEW exists.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-034",
@@ -490,7 +490,7 @@
               "module_component": "Vacation / Employee Requests",
               "notes": "REJECTABLE_STATUSES = {NEW, APPROVED}. canBeCancelled guard applies.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-035",

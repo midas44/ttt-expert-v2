@@ -23,21 +23,33 @@ export class EmployeeRequestsPage {
     await this.page.waitForLoadState("networkidle");
   }
 
-  /** Returns a row matching the given text (employee name, dates, etc.). */
-  requestRow(text: string | RegExp): Locator {
-    return this.tableRows.filter({ hasText: text });
+  /** Clicks the "My department" sub-tab filter. */
+  async clickMyDepartmentTab(): Promise<void> {
+    await this.page.getByRole("button", { name: /^My department/i }).click();
+    await this.page.waitForLoadState("networkidle");
   }
 
-  /** Waits for a request row to appear. */
-  async waitForRequestRow(text: string | RegExp): Promise<Locator> {
-    const row = this.requestRow(text);
+  /** Returns a row matching ALL provided text filters (compound matching). */
+  requestRow(...filters: Array<string | RegExp>): Locator {
+    let locator: Locator = this.tableRows;
+    for (const filter of filters) {
+      locator = locator.filter({ hasText: filter });
+    }
+    return locator;
+  }
+
+  /** Waits for a request row matching all filters to appear. */
+  async waitForRequestRow(
+    ...filters: Array<string | RegExp>
+  ): Promise<Locator> {
+    const row = this.requestRow(...filters);
     await row.first().waitFor({ state: "visible" });
     return row;
   }
 
   /** Clicks the approve button (checkmark) on a matching row. */
-  async approveRequest(text: string | RegExp): Promise<void> {
-    const row = this.requestRow(text).first();
+  async approveRequest(...filters: Array<string | RegExp>): Promise<void> {
+    const row = this.requestRow(...filters).first();
     await row.waitFor({ state: "visible" });
     const btn = row.locator(
       '[data-testid="vacation-request-action-approve"]',
@@ -46,8 +58,8 @@ export class EmployeeRequestsPage {
   }
 
   /** Clicks the reject button (X icon) on a matching row. */
-  async rejectRequest(text: string | RegExp): Promise<void> {
-    const row = this.requestRow(text).first();
+  async rejectRequest(...filters: Array<string | RegExp>): Promise<void> {
+    const row = this.requestRow(...filters).first();
     await row.waitFor({ state: "visible" });
     const btn = row.locator(
       '[data-testid="vacation-request-action-reject"]',
@@ -55,9 +67,36 @@ export class EmployeeRequestsPage {
     await btn.click();
   }
 
-  /** Waits for a request row to disappear from the list. */
-  async waitForRequestRowToDisappear(text: string | RegExp): Promise<void> {
-    const row = this.requestRow(text);
+  /** Returns the text content of a specific column cell for a request row. */
+  async columnValue(
+    columnLabel: string,
+    ...rowFilters: Array<string | RegExp>
+  ): Promise<string> {
+    const row = this.requestRow(...rowFilters).first();
+    const headerCells = this.page.locator("table thead th");
+    const colIndex = await headerCells.evaluateAll(
+      (headers: Element[], label: string) => {
+        for (let i = 0; i < headers.length; i++) {
+          if (headers[i].textContent?.trim().toLowerCase().includes(label.toLowerCase())) {
+            return i;
+          }
+        }
+        return -1;
+      },
+      columnLabel,
+    );
+    if (colIndex === -1) {
+      throw new Error(`Column "${columnLabel}" not found in requests table`);
+    }
+    const cell = row.locator("td").nth(colIndex);
+    return (await cell.textContent()) ?? "";
+  }
+
+  /** Waits for a request row matching all filters to disappear from the list. */
+  async waitForRequestRowToDisappear(
+    ...filters: Array<string | RegExp>
+  ): Promise<void> {
+    const row = this.requestRow(...filters);
     await row.first().waitFor({ state: "detached", timeout: 10000 });
   }
 }
