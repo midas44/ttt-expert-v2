@@ -141,6 +141,7 @@ parse_config() {
     MAX_DURATION_MINUTES=$(read_yaml "session.max_duration_minutes")
     PHASE=$(read_yaml "phase.current")
     PHASE_SCOPE=$(read_yaml "phase.scope" 2>/dev/null || echo "all")
+    AUTOTEST_SCOPE=$(read_yaml "autotest.scope" 2>/dev/null || echo "all")
 
     # Promo peak hours config
     PROMO_ENABLED=$(read_yaml "promo.enabled" 2>/dev/null || echo "false")
@@ -505,6 +506,56 @@ check_stop_conditions() {
     return 0
 }
 
+# ── Phase C auto-stop (all test cases in scope covered) ─────────────────────
+check_phase_c_complete() {
+    [[ "$PHASE" != "autotest_generation" ]] && return 1
+
+    local db="$PROJECT_ROOT/expert-system/analytics.db"
+    local manifest="$PROJECT_ROOT/autotests/manifest/test-cases.json"
+    [[ ! -f "$db" ]] && return 1
+    [[ ! -f "$manifest" ]] && return 1
+
+    # Build scope filter: "all" → no filter, single/comma-separated → IN clause
+    local scope="$AUTOTEST_SCOPE"
+    local where_clause=""
+    if [[ "$scope" != "all" ]]; then
+        local modules
+        modules=$(echo "$scope" | tr ',' '\n' | sed 's/^ *//;s/ *$//' | sed "s/.*/'&'/" | paste -sd,)
+        where_clause="AND module IN ($modules)"
+    fi
+
+    # Count manifest total (source of truth for how many tests exist)
+    local manifest_total
+    manifest_total=$(python3 -c "
+import json, sys
+with open('$manifest') as f:
+    data = json.load(f)
+scope = '$scope'
+if scope == 'all':
+    mods = list(data.get('modules', {}).keys())
+else:
+    mods = [m.strip() for m in scope.split(',')]
+total = 0
+for mod in mods:
+    mod_data = data.get('modules', {}).get(mod, {})
+    for suite in mod_data.get('suites', {}).values():
+        total += len(suite.get('test_cases', []))
+print(total)
+" 2>/dev/null || echo "0")
+
+    # Count tracked (non-pending) in SQLite
+    local covered
+    covered=$(sqlite3 "$db" "SELECT COUNT(*) FROM autotest_tracking WHERE automation_status != 'pending' $where_clause;" 2>/dev/null || echo "0")
+
+    if [[ "$manifest_total" -gt 0 && "$covered" -ge "$manifest_total" ]]; then
+        log "Phase C complete: $covered/$manifest_total test cases covered in scope ($scope)"
+        sed -i 's/^  stop: false/  stop: true/' "$PROJECT_ROOT/expert-system/config.yaml"
+        STOP="True"
+        return 0
+    fi
+    return 1
+}
+
 # ── Vault versioning ─────────────────────────────────────────────────────────
 commit_vault() {
     local session_num="$1"
@@ -709,6 +760,9 @@ print(sum(1 for x in s['sessions'] if x.get('phase') == 'autotest_generation'))
             log "Session $session_num FAILED with exit code $exit_code (${duration}s)"
         fi
 
+        # Check if Phase C scope is fully covered → auto-stop
+        check_phase_c_complete
+
         session_num=$((session_num + 1))
 
         # Inter-session delay (skip if this was the last session)
@@ -721,6 +775,9 @@ print(sum(1 for x in s['sessions'] if x.get('phase') == 'autotest_generation'))
             sleep $(( current_delay * 60 ))
         fi
     done
+
+    # Re-read config for final state
+    parse_config
 
     # Determine stop reason
     if [[ "$STOP" == "True" ]]; then

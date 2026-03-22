@@ -1,91 +1,228 @@
 ---
 type: exploration
 tags:
-  - ui
   - vacation
-  - playwright
-  - timemachine
-created: '2026-03-12'
-updated: '2026-03-12'
+  - ui-flows
+  - selectors
+  - phase-b
+created: '2026-03-21'
+updated: '2026-03-21'
 status: active
-related:
-  - '[[REQ-vacations-master]]'
-  - '[[vacation-service-implementation]]'
-  - '[[multi-approver-workflow]]'
-  - '[[app-navigation]]'
 ---
-# Vacation UI Pages
+# Vacation UI Pages — Comprehensive Reference
 
-Explored on timemachine via Playwright. Manager perspective (dergachev).
+## Login Page (`/`)
+- Single textbox `#username` (no password on test env)
+- Button: `LOGIN`
+- Selectors: `page.locator('#username')`, `getByRole('button', { name: 'LOGIN' })`
 
-## My Vacations and Days Off (`/vacation/my`)
+## Main Navigation
+| Item | URL | Badge |
+|------|-----|-------|
+| My tasks | `/report` | — |
+| Calendar of absences | dropdown | count badge |
+| Confirmation | `/approve` | — |
+| Planner | `/planner` | — |
+| Statistics | dropdown | — |
+| Admin panel | dropdown | — |
+| Accounting | dropdown | — |
+| Notifications | `/notifications` | — |
 
-Redirects to `/vacation/my/my-vacation/OPENED`.
+### Calendar of absences dropdown
+| Item | URL |
+|------|-----|
+| My vacations and days off | `/vacation/my` |
+| My sick leaves | `/sick-leave/my` |
+| Availability chart | `/vacation/chart` |
+| Employees requests | `/vacation/request` |
+| Employees vacation days | `/vacation/vacation-days` |
+| Sick leaves of employees | `/vacation/sick-leaves-of-employees` |
 
-### Vacations Tab
-- **Info panel**: Available days count, expected year-end balance, regulation link, events feed button
-- **Filter tabs**: Open | Closed | All
-- **Table columns**: Vacation dates, Regular days, Administrative days, Vacation type (filterable), Approved by, Status (filterable), Payment month, Actions
-- **Actions**: Edit (pencil) + more options (three-dot)
-- **Total row** sums regular + administrative days
+## My Vacations Page (`/vacation/my`)
+Redirects to `/vacation/my/my-vacation/OPENED`
 
-### Days Off Tab (`/vacation/my/daysoff`)
-- Year selector (date picker)
-- "Weekend regulation" link (Confluence)
-- **Table columns**: Date of event (with day-of-week), Duration, Reason, Approved by, Status, Actions
-- **Localization bug**: Day-off reasons display in Russian even in EN mode (e.g., "Новый год")
-- Duration: "0" = full day-off, "7" = pre-holiday shortened day
-- Future dates have reschedule button
+### Tab bar
+- `button "Vacations"` (default active, red underline)
+- `button "Days off"`
 
-### Vacation Creation Dialog (Modal)
-- **Fields**:
-  - Vacation period: Two date pickers (DD.MM.YYYY), shows "Number of days: 0"
-  - Payment month: Date picker (month selector)
-  - Unpaid vacation: Checkbox
-  - Approved by: Auto-populated (links to CS profile)
-  - Agreed by: Empty field
-  - Also notify: Multi-select employee dropdown
-  - Comment: Textarea
-- **Links**: "See Vacation regulation" (Confluence)
-- **Buttons**: Cancel | Save
+### Available days section
+- Text: "Available vacation days: N in YYYY"
+- Info icon → popup with per-year breakdown
+- `link "Vacation regulation"` → Confluence
+- `button "Vacation events feed"`
 
-## Employees Requests (`/vacation/request`)
+### Action button
+- `button "Create a request"` — opens creation dialog
 
-Redirects to `/vacation/request/vacation-request/APPROVER`.
+### Filter tabs
+- `button "Open"` (default)
+- `button "Closed"`
+- `button "All"`
 
-- **Two main tabs**: Vacation requests | Days off rescheduling
-- **Sub-tabs**: Approval | Agreement | My department | My projects | Redirected
-- **Table columns**: Employee, Vacation dates, Vacation type, Manager, Approved by, Agreed by, Payment month, Status, Actions
+### Table columns
+| Column | Sortable | Filterable |
+|--------|----------|------------|
+| Vacation dates | Yes | No |
+| Regular days | Yes | No |
+| Administrative days | Yes | No |
+| Vacation type | Yes | Yes (checkboxes: All, Regular, Administrative) |
+| Approved by | Yes | No |
+| Status | Yes | Yes (checkboxes: All, New, Approved, Rejected, Paid, Finished, Deleted) |
+| Payment month | Yes | No |
+| Actions | No | No |
 
-## Employees Vacation Days (`/vacation/vacation-days`)
-- Search by first/last name
-- "Show dismissed employees" checkbox
-- **Columns**: Employee (sortable, CS link), Vacation days, Pending approval
-- Shows managed employees only (9 visible for this manager)
+### Actions per row
+- "..." icon → opens "Request details" dialog
+- Edit (pencil icon) for editable statuses
 
-## My Sick Leaves (`/sick-leave/my`)
-- "Add a sick note" button
-- **Columns**: Sick leave dates, Calendar days, Number, Accountant, State, Actions
-- States: "Ended"
+### Table footer
+- "Total" row summing Regular days and Administrative days
 
-## Sick Leaves of Employees (`/vacation/sick-leaves-of-employees`)
-- Two tabs: My department | My projects
-- "Add a sick note" button
-- **Columns**: Employee, Sick leave dates, Calendar days, State (filterable), Status (filterable), Actions
-- States: "Ended", "Rejected". Statuses: "Paid", "Rejected"
+## Vacation Creation Dialog
+**Title:** "Creating vacation request"
+
+| Field | Type | Label | Required |
+|-------|------|-------|----------|
+| Start date | datepicker | "Vacation period*" | Yes |
+| End date | datepicker | (range end) | Yes |
+| Day count | read-only | "Number of days:" | auto |
+| Payment month | month picker | "Vacation pay to be paid with salary for" | No |
+| Unpaid checkbox | checkbox | "Unpaid vacation" | No |
+| Approved by | read-only link | "Approved by" | auto |
+| Agreed by | read-only link | "Agreed by" | auto |
+| Also notify | multi-select | "Also notifty" (typo!) | No |
+| Comment | textarea | "Comment" | No |
+
+**Buttons:** `Cancel`, `Save` (green)
+
+**Selectors:**
+- `getByRole('button', { name: 'Create a request' })`
+- `getByRole('dialog', { name: 'Creating vacation request' })`
+- Unpaid: `getByRole('checkbox', { name: 'Unpaid vacation' })`
+- Save: `getByRole('button', { name: 'Save' })`
+
+## Request Details Dialog
+**Title:** "Request details"
+- Period, Number of days, Status, Vacation type, Payment month, Approved by, Agreed by
+- Button: `Close` (X icon)
+
+## Employee Requests Page (`/vacation/request`)
+### Top tabs
+- `button "Vacation requests (N)"` — pending count
+- `button "Days off rescheduling (N)"`
+
+### Sub-filter buttons
+- `button "Approval (N)"` — needs this user's approval
+- `button "Agreement (N)"` — needs agreement
+- `button "My department"`
+- `button "My projects"`
+- `button "Redirected"`
+
+### Table columns
+| Column | Sortable | Filterable |
+|--------|----------|------------|
+| Employee | Yes | No |
+| Vacation dates | Yes | No |
+| Vacation type | Yes | Yes |
+| Manager | Yes | No |
+| Approved by | Yes | No |
+| Agreed by | No | No (progress bar) |
+| Payment month | Yes | No |
+| Status | Yes | No |
+| Actions | No | No |
+
+### Action buttons per row (NEW status)
+1. Approve (checkmark) — `data-testid="vacation-request-action-approve"`
+2. Reject (X) — `data-testid="vacation-request-action-reject"`
+3. Redirect (arrow) — `data-testid="vacation-request-action-redirect"`
+4. Details (eye) — `data-testid="vacation-request-action-info"`
 
 ## Availability Chart (`/vacation/chart`)
-- Gantt-style timeline, one row per employee
-- Search by employee/project/manager/salary office
-- View toggle: Days | Months
-- Color coding: Blue = vacations, Green = longer absences
-- Weekends/holidays highlighted yellow
+- Search: "Search by employee / project / manager / salary office"
+- View toggle: `button "Days"` / `button "Months"`
+- Timeline navigation: left/right arrows
+- Green bars = approved vacations, blue = day-off/holidays
+- Weekend columns have yellow background
+- Today has distinct highlighting
 
-## Key Findings
-1. **Localization gap**: Day-off reasons are untranslated in EN mode
-2. **Auto-populated approver**: Vacation form pre-fills approved-by from employee's manager
-3. **Multi-approver UI**: "Agreed by" field separate from "Approved by"
-4. **Payment month selector**: Accountant-facing field visible on creation
-5. **Status-based filtering**: Both vacation type and status have filter dropdowns
+## Employees Vacation Days (`/vacation/vacation-days`)
+- Search: "First name, last name of the employee or of the manager"
+- Checkbox: "Show dismissed employees"
+- Table: Employee (link), Vacation days, Pending approval
 
-See also: [[REQ-vacations-master]], [[vacation-service-implementation]], [[multi-approver-workflow]], [[app-navigation]]
+
+## Autotest Discoveries (Phase C, Session 31)
+
+### Proxy Issue
+- Chromium headless inherits `HTTP_PROXY`/`HTTPS_PROXY` env vars even with `--no-proxy-server` flag
+- Fix: clear proxy env vars in `launchOptions.env` in playwright.config.ts
+- Without this fix, Chromium shows 502 Bad Gateway when navigating to VPN hosts
+
+### Concurrent Test Limitation
+- Running multiple vacation tests in parallel (default workers) causes "Server is unavailable" errors
+- The backend vacation service can't handle concurrent requests from different browser sessions
+- **Must use `--workers=1`** for vacation tests to avoid backend overload
+
+### Edit Dialog (TC-006, TC-007)
+- Pencil icon is the **first button** in the last `<td>` (Actions column) of the vacation row
+- Opens dialog titled "Editing vacation request" (vs "Creating vacation request" for new)
+- `VacationCreateDialog` handles both via regex `/(Creating|Editing) vacation request/i`
+- When editing an APPROVED vacation, warning text appears: "Changing the vacation dates will move the request to the 'New' status and send it for approval once again."
+- Save button becomes **disabled** if employee has insufficient available days for the new period
+
+### Cancel/Delete Flow (TC-021, TC-022)
+- "Cancel" in test cases maps to **Delete button** in Request Details dialog
+- `VacationDetailsDialog.deleteRequest()`: clicks Delete → confirms in "Delete the request?" confirmation dialog
+- After deletion, vacation disappears from Open tab and appears in Closed tab
+- Status in Closed tab shows either "Deleted" or "Canceled" (both are valid)
+
+### Available Days Widget
+- Located via `text=/Available vacation days/` → extract number with regex `(\d+)`
+- Shows current available days count, updates after vacation creation/cancellation
+
+### Tab Navigation
+- Open/Closed/All tabs are `<button>` elements matched by `getByRole("button", { name: /^Open$/i })`
+- After clicking a tab, `waitForLoadState("networkidle")` needed before interacting with table
+
+### Date Display Formats
+- Same-month: "23 – 27 Mar 2026"
+- Cross-month: "30 Mar – 16 Apr 2026"  
+- Different employees may show different day counts for same date range (office-specific calendars)
+
+### Data Constraints Discovered
+- `findEmployeeWithVacation` must check `available_vacation_days >= N` when test extends a vacation
+- Employee with 0 available days → Save button disabled in edit dialog
+- Cross-month vacation periods need pattern alternative 4 (`sDay sMonth ... eDay eMonth`) to match
+
+
+## Filter Behavior (discovered Session 33, Phase C)
+
+**Vacation type and Status column filters apply in REAL-TIME** while the dropdown is open. No need to close the dropdown before reading filtered table data.
+
+- Unchecking "All" unchecks all individual options → table shows "No data"
+- Checking an individual option immediately filters the table
+- Closing dropdown (click filter icon or Escape) preserves filter state
+- Clicking the "All" tab button resets all filters
+
+**Filter dropdown DOM structure:**
+- Filter checkboxes are inside the `<th>` column header element
+- Checkboxes use `role="checkbox"` with labels like "All", "Regular", "Administrative"
+- Filter icon is the last `<button>` inside the header cell
+
+**Reliable filter interaction pattern for tests:**
+```typescript
+await vacationsPage.openColumnFilter("Vacation type");
+await vacationsPage.toggleFilterCheckbox("All");       // uncheck all
+await page.waitForTimeout(500);                        // React re-render
+await vacationsPage.toggleFilterCheckbox("Administrative"); // check target
+await page.waitForTimeout(1000);                       // wait for table update
+// Read column texts while dropdown is still open — filter is already applied
+const typeValues = await vacationsPage.getColumnTexts("Vacation type");
+await page.keyboard.press("Escape");                   // dismiss dropdown
+```
+
+**Table structure notes:**
+- Data rows in first `<tbody>`, Total row in `<tfoot>` (separate rowgroup)
+- "No data" row has single merged `<td>` — `getColumnTexts` must filter by `td.length > colIndex`
+- Table is paginated for users with many vacations (20 per page)
+- `ttt_backend.employee` columns: `latin_first_name`, `latin_last_name` (NOT `first_name`, `last_name`)

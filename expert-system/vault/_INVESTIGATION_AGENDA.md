@@ -1,67 +1,51 @@
 ---
-type: investigation
-tags:
-  - agenda
-  - phase-b
+type: agenda
 updated: '2026-03-21'
-status: active
-scope: vacation
 ---
-# Investigation Agenda
+# Phase C — Autotest Generation Agenda
 
-## Priority Legend
-- P0: Critical — must complete this session
-- P1: High — target for next 1-2 sessions
-- P2: Medium — within next 5 sessions
-- P3: Low — backlog
+## Completed (S31-S32)
+- [x] Phase B → C transition with vault control file reset
+- [x] Re-parse XLSX into manifest (109 test cases)
+- [x] Generate TC-VAC-001 (create regular vacation) — verified
+- [x] Generate TC-VAC-006 (edit NEW vacation dates) — verified
+- [x] Generate TC-VAC-007 (edit APPROVED → status reset) — verified
+- [x] Generate TC-VAC-021 (cancel NEW vacation) — verified
+- [x] Generate TC-VAC-022 (cancel APPROVED vacation) — verified
+- [x] Generate TC-VAC-002 (create unpaid/administrative) — verified
+- [x] Generate TC-VAC-003 (create with comment) — verified
+- [x] Generate TC-VAC-005 (view request details) — verified
+- [x] Generate TC-VAC-010 (Open/Closed/All tabs) — verified
+- [x] Generate TC-VAC-013 (create vacation starting today) — verified
+- [x] Fix proxy issue in playwright.config.ts
+- [x] Fix available_vacation_days mismatch (use higher threshold + shorter vacation)
+- [x] Add VacationDetailsDialog.close(), MyVacationsPage.clickAllTab()/getRowCount()
+- [x] Add findEmployeeWithOpenAndClosedVacations query
 
-## Phase B — Vacation Test Documentation (Active)
+## P0 — Next Session (S33)
+- [ ] Generate next 5 vacation tests from manifest
+  - TC-VAC-004: Create vacation with "Also notify" colleagues
+  - TC-VAC-008: Verify vacation table columns and sorting
+  - TC-VAC-009: Verify vacation table filters (status and type)
+  - TC-VAC-011: Verify available vacation days display and yearly breakdown
+  - TC-VAC-015: Verify payment month auto-calculation
+- [ ] Verify all against qa-1 with `--workers=1`
+- [ ] Update tracking tables and manifest
 
-**Scope**: vacation module only
-**Approach**: UI-first test steps — describe browser actions, not API calls
+## P1 — Sessions 34-36
+- [ ] Complete remaining TS-Vac-CRUD suite
+- [ ] Start TS-Vac-Lifecycle and TS-Vac-Approval suites
+- [ ] Generate approval flow tests (TC-VAC-023 approve, TC-VAC-024 reject — need manager login)
+- [ ] Explore multi-role scenarios
 
-### P0 — Immediate
-- [ ] **Explore vacation UI flows via Playwright** — document page structure, button labels, form fields, dialog names for: My Vacations page, vacation creation dialog, vacation edit, approval actions, payment flow
-- [ ] **Write vault notes** for UI flows discovered → `exploration/ui-flows/vacation-pages.md`
-- [ ] **Review existing vault knowledge** — read `vacation-service-deep-dive.md` for validation rules, state transitions, permission checks (skip "Autotest Notes" sections which are Phase C-specific)
+## P2 — Sessions 37+
+- [ ] Status flow tests (TS-Vac-StatusFlow)
+- [ ] Day-off tests
+- [ ] Negative/boundary tests (TC-VAC-014 cross-year, TC-VAC-016+ validation)
+- [ ] Payment-related tests
 
-### P1 — High Priority
-- [ ] **Define test suites** — group vacation test cases into logical suites (CRUD, Approval, StatusFlow, DayCalc, Payment, Permissions, etc.)
-- [ ] **Write Python generator** — `expert-system/generators/vacation/generate.py` with UI-first test steps
-- [ ] **Generate vacation.xlsx** — unified workbook in `test-docs/vacation/`
-- [ ] **Track in SQLite** — populate `test_case_tracking` for all generated cases
-
-### P2 — Medium Priority
-- [ ] **Verify test steps against live UI** — spot-check that described UI flows match actual application behavior
-- [ ] **Check Qase for existing coverage** — ensure no duplication with existing test suites
-- [ ] **Knowledge enrichment** — if gaps found during generation, investigate via code/API/DB and update vault
-
-### P3 — Backlog (Other Modules — Not In Scope)
-- [ ] sick-leave, day-off, reports, statistics, accounting, admin, planner, security, cross-service
-- [ ] These await `phase.scope: all` or individual scope changes
-
-## Completed Phases
-<details>
-<summary>Phase A (Sessions 1-19) — Knowledge Acquisition</summary>
-
-- 191 vault notes, 170 analysis runs, 146 design issues, 207 exploration findings
-- Coverage target reached, auto-transitioned to Phase B
-</details>
-
-<details>
-<summary>Phase B v1 (Sessions 20-105) — Test Documentation (API-centric, DEPRECATED)</summary>
-
-- Generated 1,090 test cases across 10 modules as XLSX workbooks
-- **Problem**: test steps were written as raw API calls (POST /api/...) instead of UI actions
-- All XLSX, generators, and tracking data deleted on 2026-03-21
-- Restarting Phase B with UI-first instructions
-</details>
-
-<details>
-<summary>Phase C v1 (Sessions 20-28) — Autotest Generation (DEPRECATED)</summary>
-
-- Generated 33 verified API-based tests for vacation module
-- **Problem**: all tests used API calls because XLSX steps were API-centric; all hardcoded to pvaynmaster due to API_SECRET_TOKEN constraint
-- All generated tests, data classes, and tracking deleted on 2026-03-21
-- Phase C will restart after Phase B v2 completes
-</details>
+## Constraints
+- **Workers**: Must use `--workers=1` — backend can't handle concurrent vacation operations
+- **Proxy**: Fixed in playwright.config.ts — env vars cleared in launchOptions
+- **Vacation days**: DB `available_vacation_days` ≠ UI remaining balance. Use threshold ≥15 for 5-day vacations, ≥5 for 1-2 day vacations
+- **APPROVED vacations**: Queries must check available_vacation_days when extending periods

@@ -46,7 +46,7 @@ phase:
   current: "knowledge_acquisition"   # "knowledge_acquisition", "generation", or "autotest_generation"
   generation_allowed: false          # Set automatically when auto_phase_transition is true
   coverage_override: 0              # Force coverage to this value (0-100). Set -1 or remove to use computed value.
-  scope: "all"                       # "all" or a module name (e.g. "vacation") — restricts Phase A/B to this area
+  scope: "all"                       # "all", a module name, or a list — restricts Phase A/B to these areas
 
 thresholds:
   knowledge_coverage_target: 0.8
@@ -85,7 +85,7 @@ autonomy:
 - If `phase.current` is `"knowledge_acquisition"`, focus on knowledge building. When coverage target is met, `auto_phase_transition` is `true`, and no coverage_override is active, update config.yaml to transition to Phase B automatically
 - If `phase.current` is `"generation"` and `phase.generation_allowed` is `true`, execute Phase B (test documentation generation with knowledge enrichment)
 - If `phase.current` is `"autotest_generation"` and `autotest.enabled` is `true`, execute Phase C (autotest generation). Read `autotest.*` fields for target environment, test limits, scope (`"all"` or a specific module name), and priority ordering.
-- **Scope filter (Phase A/B/C):** If `phase.scope` is not `"all"`, restrict ALL phase work to that single module only. Phase A: only investigate that module. Phase B: only generate XLSX for that module. Phase C uses `autotest.scope` independently. When scope is a module name, skip all other modules in the priority order.
+- **Scope filter (Phase A/B/C):** If `phase.scope` is not `"all"`, restrict ALL phase work to the specified module(s). Scope can be a single module name (`"vacation"`) or a comma-separated list (`"vacation, statistics"`). Phase A: only investigate those modules. Phase B: only generate XLSX for those modules. Phase C uses `autotest.scope` independently (same format: `"all"`, single name, or comma-separated list). When scope is set, skip all modules not in the list.
 - Check `session.delay_minutes` — if previous session briefing timestamp is less than this many minutes ago:
   - **hybrid mode**: notify human and wait for confirmation
   - **full mode**: log timing warning to session briefing and proceed (the external runner script enforces inter-session delay)
@@ -501,7 +501,7 @@ Update `_KNOWLEDGE_COVERAGE.md` comprehensively, query module_health for gaps.
 
 Only when config.yaml has `phase.current: "generation"` and `phase.generation_allowed: true`.
 
-**Scope:** If `phase.scope` is not `"all"`, generate XLSX only for that module (e.g., `scope: vacation` → only vacation.xlsx). Skip all other modules.
+**Scope:** If `phase.scope` is not `"all"`, generate XLSX only for the specified module(s). Accepts a single name (`"vacation"`) or comma-separated list (`"vacation, statistics"`). Skip all modules not in scope.
 
 ### XLSX Format
 
@@ -606,7 +606,7 @@ Generate documentation in priority order defined in `MISSION_DIRECTIVE.md` § Pr
 
 Within each priority group, generate the most complex/bug-prone area first (e.g., vacation before day-off, since vacation has more bugs and approval workflows).
 
-**Scope restriction:** If `phase.scope` is a specific module name, generate only that module's XLSX regardless of priority order.
+**Scope restriction:** If `phase.scope` specifies module(s) (not `"all"`), generate XLSX only for those modules regardless of priority order.
 
 ### Generation Workflow
 
@@ -686,7 +686,7 @@ Playwright API
 - Determine next test cases to generate
 
 **2. Test Case Selection:**
-- **Scope filter:** If `autotest.scope` is not `"all"`, restrict to that single module only (e.g., `scope: vacation` → only generate tests from the vacation workbook). When set to `"all"`, iterate through modules in `autotest.priority_order`.
+- **Scope filter:** If `autotest.scope` is not `"all"`, restrict to the specified module(s) only. Accepts a single name (`"vacation"`) or comma-separated list (`"vacation, statistics"`). When set to `"all"`, iterate through modules in `autotest.priority_order`.
 - Follow `autotest.priority_order` (modules) × `autotest.type_priority` (UI first, then hybrid)
 - Skip test cases where `automation_status` is not `pending`
 - Skip test IDs matching `autotest.skip_patterns`
@@ -807,6 +807,14 @@ mcp__sqlite-analytics__execute_sql(sql: "INSERT INTO exploration_findings (env, 
 - Update `_INVESTIGATION_AGENDA.md` if knowledge gaps were found
 - Run `qmd embed` if vault notes were created or substantially updated
 - Commit generated code
+
+**6. Auto-stop when scope is fully covered:**
+After each session, check if all test cases in scope are covered. Compare the number of tracked (non-pending) entries against the manifest total:
+```sql
+-- Covered count (verified + failed + blocked)
+SELECT COUNT(*) FROM autotest_tracking WHERE automation_status != 'pending' AND module IN (<scope_modules>)
+```
+Compare against the manifest total for those modules. If covered >= manifest total, the scope is fully covered. Set `autonomy.stop: true` in config.yaml and log "Phase C complete — all test cases in scope covered" to `_SESSION_BRIEFING.md`. The runner also checks this independently after each session as a safety net.
 
 ### Naming Conventions
 

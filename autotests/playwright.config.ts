@@ -25,6 +25,13 @@ function resolveBrowserSettings(
             `--window-size=${globalConfig.windowWidth},${globalConfig.windowHeight}`,
             "--no-proxy-server",
           ],
+          env: {
+            ...process.env,
+            HTTP_PROXY: "",
+            HTTPS_PROXY: "",
+            http_proxy: "",
+            https_proxy: "",
+          },
         },
       };
     case "edge":

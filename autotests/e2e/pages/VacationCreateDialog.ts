@@ -16,7 +16,7 @@ const MONTH_MAP: Record<string, number> = {
 
 export class VacationCreateDialog {
   private readonly dialog = this.page.getByRole("dialog", {
-    name: /Creating vacation request/i,
+    name: /(Creating|Editing) vacation request/i,
   });
   private readonly unpaidCheckbox = this.dialog.locator(
     "input[type='checkbox']",
@@ -269,6 +269,39 @@ export class VacationCreateDialog {
     ];
     this.cachedNotifyInput = await resolveFirstVisible(candidates);
     return this.cachedNotifyInput;
+  }
+
+  /** Reads the payment month field value from the dialog. */
+  async getPaymentMonthText(): Promise<string> {
+    // Wait for payment dates API response
+    await this.page.waitForResponse(
+      (resp) => resp.url().includes("/paymentdates") && resp.status() === 200,
+      { timeout: 5000 },
+    ).catch(() => {});
+
+    // The payment month is the 3rd date-picker input (after start and end)
+    const count = await this.datePickerInputs.count();
+    if (count >= 3) {
+      return (await this.datePickerInputs.nth(2).inputValue())?.trim() ?? "";
+    }
+
+    // Fallback: read text from the payment month label area
+    const label = this.dialog.locator("text=/salary for/i").first();
+    if ((await label.count()) > 0) {
+      const parent = label.locator("..");
+      const text = (await parent.textContent()) ?? "";
+      const match = text.match(
+        /(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+\d{4}/i,
+      );
+      return match ? match[0].trim() : "";
+    }
+    return "";
+  }
+
+  /** Closes the dialog without saving (Escape key). */
+  async cancel(): Promise<void> {
+    await this.page.keyboard.press("Escape");
+    await this.dialog.waitFor({ state: "detached" }).catch(() => {});
   }
 
   /** Returns all text entries in the dialog that have red-dominant color. */

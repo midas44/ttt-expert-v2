@@ -184,6 +184,165 @@ export class MyVacationsPage {
     );
     return pollForMatch(candidates, { timeout: 7000 });
   }
+
+  /** Opens the edit dialog by clicking the pencil icon on a vacation row. */
+  async openEditDialog(period: string | RegExp): Promise<VacationCreateDialog> {
+    const row = this.vacationRow(period).first();
+    const actionsCell = row.locator("td").last();
+    await actionsCell.locator("button").first().click();
+    const dialog = new VacationCreateDialog(this.page);
+    await dialog.waitForOpen();
+    return dialog;
+  }
+
+  /** Clicks the "Closed" filter tab. */
+  async clickClosedTab(): Promise<void> {
+    await this.page.getByRole("button", { name: /^Closed$/i }).click();
+    await this.page.waitForLoadState("networkidle");
+  }
+
+  /** Clicks the "Open" filter tab. */
+  async clickOpenTab(): Promise<void> {
+    await this.page.getByRole("button", { name: /^Open$/i }).click();
+    await this.page.waitForLoadState("networkidle");
+  }
+
+  /** Reads the available vacation days count from the page header. */
+  async getAvailableDays(): Promise<number> {
+    const el = this.page.locator("text=/Available vacation days/");
+    const text = await el.textContent();
+    const match = text?.match(/(\d+)/);
+    return match ? parseInt(match[1], 10) : 0;
+  }
+
+  /** Clicks the "All" filter tab. */
+  async clickAllTab(): Promise<void> {
+    await this.page.getByRole("button", { name: /^All$/i }).click();
+    await this.page.waitForLoadState("networkidle");
+  }
+
+  /** Returns the count of visible vacation rows. */
+  async getRowCount(): Promise<number> {
+    return this.tableRows.count();
+  }
+
+  /** Clicks a column header button to toggle sort. */
+  async clickColumnSort(columnLabel: string): Promise<void> {
+    const header = this.page.locator("table thead th").filter({ hasText: columnLabel });
+    const sortButton = header.getByRole("button", { name: columnLabel });
+    await sortButton.click();
+    await this.page.waitForLoadState("networkidle");
+  }
+
+  /** Returns text values for a specific column across all visible data rows. */
+  async getColumnTexts(columnLabel: string): Promise<string[]> {
+    const headerCells = this.page.locator("table thead th");
+    const colIndex = await headerCells.evaluateAll(
+      (headers: Element[], label: string) => {
+        for (let i = 0; i < headers.length; i++) {
+          if (headers[i].textContent?.trim().toLowerCase().includes(label.toLowerCase())) return i;
+        }
+        return -1;
+      },
+      columnLabel,
+    );
+    if (colIndex === -1) throw new Error(`Column "${columnLabel}" not found`);
+    // Use evaluateAll to read all rows at once — avoids timeout on hidden/filtered rows
+    // Filter out "No data" rows (single merged cell) by checking cell count > colIndex
+    return this.page.locator("table tbody").first().locator("tr").evaluateAll(
+      (rows: Element[], idx: number) =>
+        rows
+          .filter((r) => (r as HTMLElement).offsetParent !== null)
+          .filter((r) => r.querySelectorAll("td").length > idx)
+          .map((r) => r.querySelectorAll("td")[idx]?.textContent?.trim() ?? ""),
+      colIndex,
+    );
+  }
+
+  /** Opens the filter dropdown for a filterable column (Vacation type, Status). */
+  async openColumnFilter(columnLabel: string): Promise<void> {
+    const header = this.page.locator("table thead th").filter({
+      hasText: new RegExp(columnLabel, "i"),
+    });
+    // The filter icon is the last button (after the sort text button)
+    const buttons = header.locator("button");
+    const count = await buttons.count();
+    await buttons.nth(count - 1).click();
+  }
+
+  /** Toggles a filter checkbox in an open filter dropdown. */
+  async toggleFilterCheckbox(optionLabel: string): Promise<void> {
+    await this.page.getByRole("checkbox", { name: optionLabel }).click();
+  }
+
+  /** Returns the full "Available vacation days" text (e.g., "22" or "4 in 2026"). */
+  async getAvailableDaysFullText(): Promise<string> {
+    await this.page.waitForLoadState("networkidle");
+    // The number may be "N in YYYY" or "N" and is rendered asynchronously.
+    // It appears in a sibling or child element near the "Available vacation days:" label.
+    return this.page.evaluate(() => {
+      for (const el of document.querySelectorAll("*")) {
+        const hasLabel = Array.from(el.childNodes).some(
+          (n) =>
+            n.nodeType === Node.TEXT_NODE &&
+            n.textContent?.includes("Available vacation days:"),
+        );
+        if (!hasLabel) continue;
+        // Search both this element's children AND parent's children (number may be a sibling)
+        const areas = [el, el.parentElement].filter(Boolean) as Element[];
+        for (const area of areas) {
+          for (const child of area.querySelectorAll("*")) {
+            const t = child.textContent?.trim();
+            if (!t) continue;
+            if (/^\d+\s+in\s+\d{4}$/.test(t)) return t;
+            if (/^\d+$/.test(t) && child.childElementCount === 0) return t;
+          }
+        }
+      }
+      return "";
+    });
+  }
+
+  /** Clicks the expand/collapse button next to available days for yearly breakdown. */
+  async toggleYearlyBreakdown(): Promise<void> {
+    // Find the days number element (not inside table), then click sibling button
+    await this.page.evaluate(() => {
+      for (const el of document.querySelectorAll("*")) {
+        const t = el.textContent?.trim();
+        if (!t) continue;
+        const isMatch =
+          /^\d+\s+in\s+\d{4}$/.test(t) ||
+          (/^\d+$/.test(t) && (el as HTMLElement).childElementCount === 0);
+        if (isMatch && !el.closest("table")) {
+          const btn = el.parentElement?.querySelector("button");
+          if (btn) {
+            btn.click();
+            return;
+          }
+        }
+      }
+    });
+  }
+
+  /** Returns yearly breakdown entries from the open popup as {year, days} pairs. */
+  async getYearlyBreakdownEntries(): Promise<{ year: string; days: string }[]> {
+    return this.page.evaluate(() => {
+      const entries: { year: string; days: string }[] = [];
+      document.querySelectorAll("div").forEach((div) => {
+        const children = Array.from(div.children).filter(
+          (c) => c.tagName === "DIV",
+        );
+        if (children.length === 2) {
+          const y = children[0].textContent?.trim() ?? "";
+          const d = children[1].textContent?.trim() ?? "";
+          if (/^\d{4}$/.test(y) && /^\d+$/.test(d)) {
+            entries.push({ year: y, days: d });
+          }
+        }
+      });
+      return entries;
+    });
+  }
 }
 
 // ---------------------------------------------------------------------------
