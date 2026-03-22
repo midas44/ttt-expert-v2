@@ -57,7 +57,7 @@ export class VacationTc048Data {
       // Find an APPROVED Regular vacation with payment month in current or future month
       const vacation = await db.queryOne<ApprovedVacationRow>(
         `SELECT e.login AS employee_login,
-                COALESCE(be.latin_first_name || ' ' || be.latin_last_name, e.login) AS employee_name,
+                COALESCE(be.latin_last_name || ' ' || be.latin_first_name, e.login) AS employee_name,
                 v.id::text AS vacation_id,
                 v.regular_days::text AS regular_days,
                 v.administrative_days::text AS administrative_days,
@@ -94,7 +94,7 @@ export class VacationTc048Data {
 
   constructor(
     accountantLogin = process.env.VACATION_TC048_ACCOUNTANT ?? "perekrest",
-    employeeName = "Abderrahim Nadim",
+    employeeName = "Nadim Abderrahim",
     vacationId = 0,
     regularDays = 1,
     administrativeDays = 0,

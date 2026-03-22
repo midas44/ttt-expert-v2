@@ -104,35 +104,25 @@ export class EmployeeRequestsPage {
 
   /** Selects a manager in the redirect dialog by typing their name and clicking the option. */
   async selectRedirectTarget(managerName: string): Promise<void> {
-    // The redirect dialog has a combobox/search field for selecting the new approver
-    const dialog = this.page.locator(".modal, [role='dialog'], .popup").filter({ hasText: /redirect|change.*approver/i });
-    await dialog.waitFor({ state: "visible", timeout: 5000 }).catch(() => {
-      // Fallback: the redirect may use an inline dropdown instead of a modal
-    });
+    const dialog = this.page.getByRole("dialog").filter({ hasText: /Redirect the request/i });
+    await dialog.waitFor({ state: "visible", timeout: 10000 });
 
-    // Try combobox input first
-    const input = this.page.locator("input[type='text'], input[type='search']").last();
-    await input.fill(managerName.split(" ")[0]); // Type first name to search
-    await this.page.waitForLoadState("networkidle");
+    // The dialog uses a react-select combobox
+    const combobox = dialog.getByRole("combobox");
+    await combobox.click();
+    // Type first few characters to filter
+    await combobox.fill(managerName.split(" ")[0]);
+    await this.page.waitForTimeout(500);
 
-    // Click the matching option
-    const option = this.page.locator(".dropdown-menu, .suggestions, [role='listbox'], [role='option']")
-      .filter({ hasText: managerName });
-    if (await option.count() > 0) {
-      await option.first().click();
-    } else {
-      // Fallback: click text match anywhere
-      await this.page.locator(`text=${managerName}`).first().click();
-    }
+    // Select the matching option from the listbox
+    const option = this.page.getByRole("option", { name: managerName });
+    await option.click();
   }
 
-  /** Confirms the redirect action (clicks confirm/save button in redirect dialog). */
+  /** Confirms the redirect action (clicks OK button in redirect dialog). */
   async confirmRedirect(): Promise<void> {
-    // Look for confirm/save button in the redirect context
-    const confirmBtn = this.page.getByRole("button", { name: /confirm|save|ok|redirect/i });
-    if (await confirmBtn.count() > 0) {
-      await confirmBtn.first().click();
-    }
+    const dialog = this.page.getByRole("dialog").filter({ hasText: /Redirect the request/i });
+    await dialog.getByRole("button", { name: "OK" }).click();
     await this.page.waitForLoadState("networkidle");
   }
 

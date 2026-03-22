@@ -26,9 +26,31 @@ export class VacationPaymentPage {
     return locator;
   }
 
-  /** Waits for a row matching all filters to appear. */
+  /** Waits for a row matching all filters, searching across pagination pages. */
   async waitForVacationRow(...filters: Array<string | RegExp>): Promise<Locator> {
     const row = this.vacationRow(...filters);
+    // Try current page first
+    const visible = await row.first().isVisible().catch(() => false);
+    if (visible) return row;
+
+    // Iterate through pagination pages
+    const pagination = this.page.locator('nav[aria-label="Pagination"]');
+    if (await pagination.count() > 0) {
+      const pageButtons = pagination.locator("button").filter({ hasNotText: /Previous|Next/i });
+      const pageCount = await pageButtons.count();
+      for (let i = 0; i < pageCount; i++) {
+        const btn = pageButtons.nth(i);
+        const text = (await btn.textContent()) ?? "";
+        if (!/^\d+$/.test(text.trim())) continue;
+        // Skip current page (already checked)
+        const ariaLabel = await btn.getAttribute("aria-label");
+        if (ariaLabel && ariaLabel.includes("current")) continue;
+        await btn.click();
+        await this.page.waitForLoadState("networkidle");
+        if (await row.first().isVisible().catch(() => false)) return row;
+      }
+    }
+    // Last resort: wait on current page (will throw on timeout)
     await row.first().waitFor({ state: "visible" });
     return row;
   }

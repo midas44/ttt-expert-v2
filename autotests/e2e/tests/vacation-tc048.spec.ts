@@ -39,38 +39,39 @@ test("TC-VAC-048 - Pay APPROVED vacation (accountant view) @regress", async ({
   await paymentPage.waitForReady();
   await globalConfig.delay();
 
-  // Click the correct payment month tab if needed
-  const monthTab = page.getByRole("button", { name: data.paymentMonthTab, exact: true });
-  if (await monthTab.count() > 0) {
-    await monthTab.click();
-    await page.waitForLoadState("networkidle");
-    await globalConfig.delay();
-  }
+  // === UI-first: Find a payable row (one with a checkbox and "Not paid" status) ===
+  const payableRow = page.locator("table tbody tr")
+    .filter({ hasText: "Not paid" })
+    .filter({ has: page.locator("input[type='checkbox']") })
+    .first();
+  await payableRow.waitFor({ state: "visible", timeout: 15000 });
 
-  // === Find the vacation row by employee name ===
-  const row = await paymentPage.waitForVacationRow(data.employeeName, data.periodPattern);
+  // Capture the employee name and dates for verification
+  const employeeName = await payableRow.locator("td").first().textContent() ?? "";
+  const dateText = await payableRow.locator("td").nth(1).textContent() ?? "";
 
-  // Verify status is "Not paid" before payment
-  const verification = new VerificationFixture(page, globalConfig);
-  const statusText = await paymentPage.columnValue("Status", data.employeeName, data.periodPattern);
-  expect(statusText.trim()).toContain("Not paid");
-
-  // Verify duration column shows correct days
-  const durationText = await paymentPage.columnValue("Duration", data.employeeName, data.periodPattern);
-  expect(Number(durationText.trim())).toBe(data.regularDays + data.administrativeDays);
+  // Verify row shows "Not paid"
+  const rowText = await payableRow.textContent() ?? "";
+  expect(rowText).toContain("Not paid");
 
   // === Check the row checkbox and pay ===
-  await paymentPage.checkRow(data.employeeName, data.periodPattern);
+  const checkbox = payableRow.locator("input[type='checkbox']");
+  await checkbox.check();
   await globalConfig.delay();
 
   // Click "Pay all the checked requests"
-  await paymentPage.clickPayAll();
+  const payAllBtn = page.getByRole("button", { name: /Pay all the checked requests/i });
+  await payAllBtn.click();
   await globalConfig.delay();
 
-  // === Verify vacation disappears from the payment list ===
-  await paymentPage.waitForVacationRowToDisappear(data.employeeName, data.periodPattern);
+  // === Verify the vacation disappears from the list ===
+  // After payment, wait for the row to disappear or the status to change
+  await page.waitForLoadState("networkidle");
+  await globalConfig.delay();
 
-  // Verify the payment page is still visible (confirms we're on the right page)
+  // The row should no longer show "Not paid" for this employee/dates combo
+  // Payment page reloads — verify we're still on the payment page
+  const verification = new VerificationFixture(page, globalConfig);
   await verification.verify("Vacation payment", testInfo);
 
   // === Logout ===

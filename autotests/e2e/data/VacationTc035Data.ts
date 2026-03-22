@@ -97,6 +97,7 @@ export class VacationTc035Data {
          AND m.enabled = true
          AND (be.is_contractor IS NULL OR be.is_contractor = false)
          AND r.role_name = 'ROLE_EMPLOYEE'
+         AND e.login NOT IN ('pvaynmaster')
          AND o.advance_vacation = true
          AND ev.year = EXTRACT(YEAR FROM CURRENT_DATE)
          AND (ev.available_vacation_days - COALESCE(
