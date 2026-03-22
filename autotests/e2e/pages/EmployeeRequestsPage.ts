@@ -92,6 +92,50 @@ export class EmployeeRequestsPage {
     return (await cell.textContent()) ?? "";
   }
 
+  /** Clicks the redirect button (arrow icon) on a matching row. */
+  async redirectRequest(...filters: Array<string | RegExp>): Promise<void> {
+    const row = this.requestRow(...filters).first();
+    await row.waitFor({ state: "visible" });
+    const btn = row.locator(
+      '[data-testid="vacation-request-action-redirect"]',
+    );
+    await btn.click();
+  }
+
+  /** Selects a manager in the redirect dialog by typing their name and clicking the option. */
+  async selectRedirectTarget(managerName: string): Promise<void> {
+    // The redirect dialog has a combobox/search field for selecting the new approver
+    const dialog = this.page.locator(".modal, [role='dialog'], .popup").filter({ hasText: /redirect|change.*approver/i });
+    await dialog.waitFor({ state: "visible", timeout: 5000 }).catch(() => {
+      // Fallback: the redirect may use an inline dropdown instead of a modal
+    });
+
+    // Try combobox input first
+    const input = this.page.locator("input[type='text'], input[type='search']").last();
+    await input.fill(managerName.split(" ")[0]); // Type first name to search
+    await this.page.waitForLoadState("networkidle");
+
+    // Click the matching option
+    const option = this.page.locator(".dropdown-menu, .suggestions, [role='listbox'], [role='option']")
+      .filter({ hasText: managerName });
+    if (await option.count() > 0) {
+      await option.first().click();
+    } else {
+      // Fallback: click text match anywhere
+      await this.page.locator(`text=${managerName}`).first().click();
+    }
+  }
+
+  /** Confirms the redirect action (clicks confirm/save button in redirect dialog). */
+  async confirmRedirect(): Promise<void> {
+    // Look for confirm/save button in the redirect context
+    const confirmBtn = this.page.getByRole("button", { name: /confirm|save|ok|redirect/i });
+    if (await confirmBtn.count() > 0) {
+      await confirmBtn.first().click();
+    }
+    await this.page.waitForLoadState("networkidle");
+  }
+
   /** Waits for a request row matching all filters to disappear from the list. */
   async waitForRequestRowToDisappear(
     ...filters: Array<string | RegExp>

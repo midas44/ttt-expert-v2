@@ -1,40 +1,49 @@
 # Session Briefing
 
-## Last Session: 38 (2026-03-22)
-**Phase:** C — Autotest Generation
+## Session 39 — 2026-03-22
+**Phase:** C (Autotest Generation)
 **Mode:** Full autonomy
-**Duration:** ~20 min
+**Duration:** ~60 min
 
-## Session 38 Summary
+### Summary
+Generated 5 vacation UI test specs with data classes. All tests compiled cleanly (TypeScript) but could NOT be verified against qa-1 due to persistent CAS authentication timeout ("Время ожидания прошло."). Even previously-verified tests (TC-VAC-028) fail — confirming this is an environment-wide CAS issue, not a code problem.
 
-### Completed (5 tests: 4 new, 1 existing verified)
-| Test ID | Title | Status | Fix Attempts |
-|---------|-------|--------|-------------|
-| TC-VAC-086 | Vacation with 0 working days (Sat-Sun only) — duration error | verified | 0 |
-| TC-VAC-085 | Next year vacation before Feb 1 — error | verified | 1 |
-| TC-VAC-028 | Verify days returned to balance after cancel | verified | 0 |
-| TC-VAC-079 | Non-approver cannot approve/reject vacation | verified | 1 |
-| TC-VAC-094 | Insufficient days for REGULAR vacation (AV=false) | verified | 2 |
+### Tests Generated
+| Test ID | Title | Status | Notes |
+|---------|-------|--------|-------|
+| TC-VAC-048 | Pay APPROVED vacation (accountant view) | generated | New VacationPaymentPage page object |
+| TC-VAC-045 | Approve vacation — verify days deducted | generated | 3-phase: create→approve→verify |
+| TC-VAC-056 | Verify available days AV=false | generated | Uses API comparison (availablePaidDays) |
+| TC-VAC-057 | Verify available days AV=true | generated | Uses API comparison, "N in YYYY" format |
+| TC-VAC-035 | Redirect vacation to another manager | generated | Fixed SQL bug, speculative redirect selectors |
 
 ### Key Findings
-- **TC-VAC-085 (clock manipulation):** After setting clock to Jan 15 and submitting next-year dates, the dialog stays open but `getErrorText()` returns empty — the error appears as a toast notification outside the dialog. Fixed by checking toast presence + dialogStillOpen as combined evidence of rejection.
-- **TC-VAC-079 (SQL fix):** Initial query used undefined alias `other_mgr` — fixed to `other_ve`. The Approval tab correctly filters to only show vacations where the logged-in manager IS the approver.
-- **TC-VAC-094 (net balance):** First attempt used raw `available_vacation_days` from DB which doesn't account for already-reserved NEW/APPROVED vacations. Fixed query to compute NET available (base - consumed). Also needed to handle case where dialog closes (vacation accepted) — added cleanup logic.
-- **TC-VAC-086 (zero days):** Simplest test — Save button is disabled when Number of days = 0. Passed first try.
-- **TC-VAC-028 (existing):** Was already generated in a prior session but never tracked/verified. Creates vacation, verifies days decrease, cancels, verifies days restored. Passed first try.
+1. **Available vacation days display**: The UI calls `GET /v1/vacationdays/available?employeeLogin=...&newDays=0&paymentDate=TODAY` for `availablePaidDays`. This is a complex backend calculation — NOT a simple DB field. Original approach (SQL net balance = available - consumed) was wrong. Fixed TC-056/TC-057 to compare UI vs API via `page.evaluate`.
+2. **SELECT DISTINCT + ORDER BY random()** is invalid PostgreSQL. Fixed in TC-035 data class by using GROUP BY instead.
+3. **VacationPaymentPage**: New page object for `/vacation/payment` — bulk payment via checkboxes + "Pay all the checked requests" button.
 
-### Cumulative Progress
-- **Total tracked:** 38 (36 verified, 1 failed, 1 blocked)
-- **Manifest total:** 109 test cases
-- **Coverage:** 36/109 = 33.0% verified
+### Progress
+- **Total tracked:** 43 vacation test cases
+- **Verified:** 36 (83.7%)
+- **Generated (unverified):** 5 (11.6%)
+- **Failed/Blocked:** 2 (4.7%)
 
-### State
-- Clock: RESET (TC-085 cleanup resets clock after each run)
-- No pending vacations left from test runs
-- All generated files committed
+### Files Created/Modified
+- `e2e/data/VacationTc048Data.ts` (new)
+- `e2e/data/VacationTc045Data.ts` (new)
+- `e2e/data/VacationTc056Data.ts` (new)
+- `e2e/data/VacationTc057Data.ts` (new)
+- `e2e/data/VacationTc035Data.ts` (new)
+- `e2e/tests/vacation-tc048.spec.ts` (new)
+- `e2e/tests/vacation-tc045.spec.ts` (new)
+- `e2e/tests/vacation-tc056.spec.ts` (new)
+- `e2e/tests/vacation-tc057.spec.ts` (new)
+- `e2e/tests/vacation-tc035.spec.ts` (new)
+- `e2e/pages/VacationPaymentPage.ts` (new)
+- `e2e/pages/EmployeeRequestsPage.ts` (modified — redirect methods)
 
-## Next Session Priorities
-1. Continue with remaining Critical tests: TC-VAC-048 (Payment), TC-VAC-056/057 (Day calc AV=false/true)
-2. High-priority approval flow tests: TC-VAC-035, TC-VAC-045, TC-VAC-046
-3. More validation tests: TC-VAC-088 (multiple errors), TC-VAC-090 (same-day), TC-VAC-091 (30+ days)
-4. Permission tests: TC-VAC-074-078
+### Next Session Priorities
+1. **P0:** Re-verify all 5 generated tests once CAS recovers
+2. **P0:** Verify TC-035 redirect dialog selectors against live UI (speculative)
+3. **P1:** Continue generating next batch of vacation tests
+4. **P1:** Write vault note on availablePaidDays calculation discovery
