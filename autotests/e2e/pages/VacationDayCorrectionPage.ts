@@ -21,22 +21,48 @@ export class VacationDayCorrectionPage {
   }
 
   /**
-   * Filters the table by employee login using the search/filter input.
-   * The page uses a multi-filter with employee search.
+   * Filters the table by employee name using the chip-based filter.
+   * Flow: click "Employee" chip button → dropdown appears → type to narrow → click matching option.
+   * The filter uses a two-step chip selector (not a simple text search).
+   * @param employeeName - "First Last" format (e.g. "Fedor Agafonov") as shown in dropdown.
    */
-  async filterByEmployee(login: string): Promise<void> {
-    const candidates = [
-      this.page.getByPlaceholder(/employee/i),
-      this.page.getByPlaceholder(/search/i),
-      this.page.locator("input[name*='employee' i]"),
-      this.page.locator("input[name*='search' i]"),
-      this.page.locator(".filter input").first(),
-      this.page.locator("input[type='text']").first(),
-    ];
-    const input = await resolveFirstVisible(candidates);
-    await input.fill(login);
-    // Wait for table to filter
-    await this.page.waitForTimeout(1500);
+  async filterByEmployee(employeeName: string): Promise<void> {
+    // The "Employee" button is in the filter area (a list sibling of the textbox),
+    // not the table column header. Locate via the filter container.
+    const filterArea = this.page.locator("table").first().locator("..");
+    // The chip buttons are in a list below the search textbox
+    const employeeChipBtn = filterArea
+      .locator("ul, ol, [role='list']")
+      .filter({ hasText: "Employee" })
+      .filter({ hasNotText: "Manager" })
+      .getByRole("button", { name: "Employee" });
+
+    // Fallback: locate by the list that contains both "Employee" and "Department manager" buttons
+    const fallbackBtn = this.page
+      .locator("button")
+      .filter({ hasText: /^Employee$/ })
+      .last(); // last one is the filter button (table header button comes first in DOM)
+
+    try {
+      await employeeChipBtn.click({ timeout: 3000 });
+    } catch {
+      await fallbackBtn.click({ timeout: 3000 });
+    }
+
+    // Step 2: Type first name in the textbox to narrow dropdown
+    const textbox = this.page.getByRole("textbox", {
+      name: /first name, last name/i,
+    });
+    const firstName = employeeName.split(" ")[0];
+    await textbox.pressSequentially(firstName, { delay: 50 });
+    await this.page.waitForTimeout(800);
+
+    // Step 3: Click the matching dropdown option button
+    const option = this.page.getByRole("button", { name: employeeName });
+    await option.click({ timeout: 5000 });
+
+    // Wait for table to re-render with filtered data
+    await this.page.waitForTimeout(2000);
   }
 
   /**

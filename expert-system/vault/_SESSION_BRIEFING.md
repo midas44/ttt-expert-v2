@@ -1,37 +1,37 @@
 # Session Briefing
 
-**Last session:** 43 — 2026-03-22
-**Phase:** C — Autotest Generation
-**Autonomy:** full
+## Session 44 — 2026-03-22
+**Phase:** C (Autotest Generation)
+**Mode:** Full autonomy
+**Duration:** ~40 min
 
-## Session 43 Summary
+### Completed
+- **TC-VAC-065** (verified): Add negative vacation day correction (AV=true) — correction page, editVacationDays + confirmCorrection, revert pattern
+- **TC-VAC-066** (verified): Cannot add negative correction for AV=false employee — EditBox strips minus sign, balance unchanged check
+- **TC-VAC-069** (verified): Verify availability chart — Days view — **new AvailabilityChartPage** page object created. Key discovery: chart table is CSS-hidden (overflow), required `evaluate()` and `state: "attached"` workarounds
+- **TC-VAC-073** (verified): Verify vacation bars on chart match vacation records — green bar detection via `getComputedStyle`, employee search on chart
+- **TC-VAC-027** (blocked): Cannot cancel APPROVED vacation after accounting period close — clock manipulation alone does not close accounting periods. The `canBeCancelled` guard checks office report period which requires explicit period-close operations, not just clock advance
 
-Generated and verified 5 test cases (+ 1 duplicate skip):
+### New Page Objects
+- `AvailabilityChartPage` — chart page with CSS-hidden table workarounds (waitForReady uses title + Days button, DOM evaluation for content)
 
-| Test ID | Title | Status | Notes |
-|---------|-------|--------|-------|
-| TC-VAC-051 | Payment page table and columns | verified | New page: VacationPaymentPage |
-| TC-VAC-052 | PAID status is terminal | verified | 3-context test (employee/accountant/manager), browser.newContext() |
-| TC-VAC-058 | FIFO day consumption (earliest year first) | verified | Uses toggleYearlyBreakdown(), create+verify+cleanup |
-| TC-VAC-059 | Working days exclude holidays | verified | Russian office + known holidays (May 1), avoids calendar DB |
-| TC-VAC-063 | Insufficient days warning (AV=false) | skipped | Duplicate of TC-VAC-094 |
-| TC-VAC-064 | Positive vacation day correction | verified | New page: VacationDayCorrectionPage, inline EditBox interaction |
+### Key Discoveries
+1. **Chart table CSS hiding**: The availability chart `<table>` has `overflow: hidden` on its container, causing Playwright to report all `<tr>`/`<td>` elements as hidden. Solution: `waitFor({ state: "attached" })` and `page.evaluate()` for reading content
+2. **Chart structure**: Single `<table>` with `thead` (month names + day numbers/DOW) and `tbody` (employee rows). Filter chips: Employee, Project, Manager, Salary office
+3. **Accounting period ≠ clock**: The `canBeCancelled` guard checks office.reportPeriod, managed by accounting close operations, not by the server clock. TC-VAC-027 needs accounting period manipulation API
 
-**Key discoveries:**
-- Calendar DB schema (`ttt_calendar.calendar_days`) has different columns than expected and no direct office→calendar link — used known Russian holidays instead for TC-VAC-059
-- PAID vacations have exactly 1 action button (view details), not 0
-- Payment page columns differ from My Vacations: Employee, Vacation dates, Duration, Vacation type, Salary office, Status, Actions
-- Correction page (`/vacation/days-correction`) uses inline EditBox component — `fill()` triggers blur prematurely, must use `keyboard.type()` after Ctrl+A
-- Correction page filter searches by "first name, last name" not login
-- Chief accountant (ROLE_CHIEF_ACCOUNTANT) has broadest visibility on correction page; regular accountants may see "No data"
+### Progress
+- **Total tracked:** 67/109 (61.5%)
+- **Verified:** 63/109 (57.8%)
+- **Blocked:** 2 (TC-VAC-027, TC-VAC-063)
+- **Failed/Skipped:** 2
 
-**Coverage:** 59 verified, 1 skipped, 1 failed, 1 blocked = 62/109 (56.9%)
-**Remaining pending:** 47
+### Clock Status
+- qa-1 clock was reset to current time after TC-VAC-027 testing
 
-## Next Session Priorities
-
-1. TC-VAC-065: Negative vacation day correction (AV=true) — reuses VacationDayCorrectionPage
-2. TC-VAC-066: Cannot add negative correction for AV=false — negative test on same page
-3. TC-VAC-027: Cannot cancel APPROVED vacation after accounting period close — needs clock manipulation
-4. TC-VAC-069/073: Chart tests (Days view, vacation bars)
-5. Continue through remaining High-priority test cases
+### Next Session Priorities
+1. TC-VAC-070: Verify availability chart — Months view
+2. TC-VAC-071: Search employee on availability chart
+3. TC-VAC-072: Filter chart by project
+4. TC-VAC-074: Navigate chart timeline (prev/next month)
+5. TC-VAC-028: Cannot edit APPROVED vacation

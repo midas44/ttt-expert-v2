@@ -388,7 +388,7 @@
               "module_component": "Vacation / My Vacations",
               "notes": "The canBeCancelled guard protects closed accounting periods from cancellation.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "blocked"
             },
             {
               "test_id": "TC-VAC-028",
@@ -936,7 +936,7 @@
               "module_component": "Vacation / Day Correction",
               "notes": "AV=true allows negative balance. AV=false rejects negative corrections.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-066",
@@ -950,7 +950,7 @@
               "module_component": "Vacation / Day Correction",
               "notes": "Design: AV=false cannot go negative → negative corrections rejected.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-067",
@@ -996,7 +996,7 @@
               "module_component": "Vacation / Chart",
               "notes": "Green bars = approved vacations. Blue = day-off/holidays.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-070",
@@ -1052,7 +1052,7 @@
               "module_component": "Vacation / Chart",
               "notes": "Only APPROVED and PAID vacations shown on chart (not NEW or REJECTED).",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             }
           ]
         },
