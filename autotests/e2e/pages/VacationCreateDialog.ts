@@ -271,6 +271,82 @@ export class VacationCreateDialog {
     return this.cachedNotifyInput;
   }
 
+  /** Reads the "Number of days" value from the dialog.
+   *  DOM structure: `<div><strong>Number of days:</strong> 5</div>` — value is a text node. */
+  async getNumberOfDays(): Promise<string> {
+    return this.dialog.evaluate((el) => {
+      // Strategy 1: find the container with "Number of days:" label and extract trailing number
+      for (const node of el.querySelectorAll("strong, b, label, span")) {
+        if (/number of days/i.test(node.textContent ?? "")) {
+          const parent = node.parentElement;
+          if (parent) {
+            // The number is a text node after the <strong> — get full textContent and extract
+            const full = parent.textContent?.trim() ?? "";
+            const match = full.match(/number of days[:\s]*(\d+)/i);
+            if (match) return match[1];
+          }
+        }
+      }
+      // Strategy 2: look for the pattern in the entire dialog text
+      const allText = el.textContent ?? "";
+      const match = allText.match(/number of days[:\s]*(\d+)/i);
+      if (match) return match[1];
+      return "";
+    });
+  }
+
+  /** Reads the "Approved by" field text from the dialog.
+   *  DOM structure: `<dt>Approved by</dt><dd><a>Name</a></dd>` */
+  async getApprovedByText(): Promise<string> {
+    return this.dialog.evaluate((el) => {
+      // Strategy 1: find <dt> with "Approved by" and read its sibling <dd>
+      for (const dt of el.querySelectorAll("dt")) {
+        if (/approved by/i.test(dt.textContent ?? "")) {
+          const dd = dt.nextElementSibling;
+          if (dd) return dd.textContent?.trim() ?? "";
+        }
+      }
+      // Strategy 2: find any element with "approved by" label and look for a link in parent
+      for (const node of el.querySelectorAll("*")) {
+        const text = node.textContent?.trim() ?? "";
+        if (/approved by/i.test(text) && text.length < 200) {
+          const parent = node.parentElement;
+          if (parent) {
+            const links = parent.querySelectorAll("a");
+            if (links.length > 0) return links[0].textContent?.trim() ?? "";
+          }
+        }
+      }
+      return "";
+    });
+  }
+
+  /** Reads the "Agreed by" / optional approver field text from the dialog.
+   *  DOM structure: `<dt>Agreed by</dt><dd><a>Name</a></dd>` */
+  async getAgreedByText(): Promise<string> {
+    return this.dialog.evaluate((el) => {
+      // Strategy 1: find <dt> with "Agreed by" and read its sibling <dd>
+      for (const dt of el.querySelectorAll("dt")) {
+        if (/agreed by/i.test(dt.textContent ?? "")) {
+          const dd = dt.nextElementSibling;
+          if (dd) return dd.textContent?.trim() ?? "";
+        }
+      }
+      // Strategy 2: fallback
+      for (const node of el.querySelectorAll("*")) {
+        const text = node.textContent?.trim() ?? "";
+        if (/agreed by/i.test(text) && text.length < 200) {
+          const parent = node.parentElement;
+          if (parent) {
+            const links = parent.querySelectorAll("a");
+            if (links.length > 0) return links[0].textContent?.trim() ?? "";
+          }
+        }
+      }
+      return "";
+    });
+  }
+
   /** Reads the payment month field value from the dialog. */
   async getPaymentMonthText(): Promise<string> {
     // Wait for payment dates API response

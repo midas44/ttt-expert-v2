@@ -1,46 +1,42 @@
-# Session 35 Briefing — Phase C Autotest Generation
+# Session Briefing
 
-**Timestamp:** 2026-03-22T02:45:00Z
-**Phase:** C — Autotest Generation (vacation module, qa-1)
-**Mode:** Full autonomy
+## Last Session: 36 — 2026-03-22
+**Phase:** C (autotest_generation) | **Mode:** full | **Env:** qa-1
 
-## Session Results
+### Completed
+- **TC-VAC-012** (verified): Verify total row in vacation table — navigates All tab, reads Regular/Administrative columns, sums and compares with total row
+- **TC-VAC-016** (verified): Verify Number of days auto-calculation — Mon-Fri=4-5 days, Sat-Sun=0. Fixed `getNumberOfDays()` DOM extraction method
+- **TC-VAC-017** (verified): Create vacation with optional approvers — non-CPO employee, verifies "Approved by" shows manager name
+- **TC-VAC-018** (verified): CPO creates vacation — self-approval. Fixed CPO identification (use `v.approver = e.id` not ROLE_DEPARTMENT_MANAGER). Fixed column name (`approver` not `approver_id`). Lowered minDays to 2 for low-balance CPOs
+- **TC-VAC-023** (blocked): Restore CANCELED vacation — no CANCELED vacations exist in qa-1. Only statuses present: PAID, DELETED, APPROVED, NEW, REJECTED. Test code written but cannot verify
 
-**4 tests verified, 0 blocked:**
+### Key Discoveries & Fixes (Session 36)
+- VacationCreateDialog DOM: `<strong>Number of days:</strong> N` (text node sibling, not child element). Rewrote `getNumberOfDays()` using regex on parent textContent
+- VacationCreateDialog DOM: `<dt>Approved by</dt><dd><a>Name</a></dd>` pattern. Added `getApprovedByText()` and `getAgreedByText()` methods
+- CPO self-approval: identified by `EXISTS (SELECT 1 FROM vacation v WHERE v.employee = e.id AND v.approver = e.id)`, not by role
+- Vacation table column is `approver` (bigint FK), not `approver_id`
+- `findCpoEmployeeWithManager()` and `findNonCpoEmployeeWithManager()` added to vacationQueries.ts
 
-| Test ID | Title | Status | Notes |
-|---------|-------|--------|-------|
-| TC-VAC-029 | Delete REJECTED vacation | verified | Compound matching on Approval tab |
-| TC-VAC-030 | Delete CANCELED vacation | verified | Fixed: skip delete if already Deleted after cancel |
-| TC-VAC-033 | Re-approve REJECTED vacation without edit | verified | API-based approval via JWT capture from network requests |
-| TC-VAC-034 | Reject APPROVED vacation | verified | API-based rejection via JWT capture, removed unreliable days check |
+### Shared Code Created/Modified
+- `VacationCreateDialog.ts`: +3 methods (getNumberOfDays, getApprovedByText, getAgreedByText, getPaymentMonthText, cancel)
+- `vacationQueries.ts`: +2 query functions (findNonCpoEmployeeWithManager, findCpoEmployeeWithManager)
 
-## Key Technical Discoveries
+### Progress Summary
+| Metric | Value |
+|--------|-------|
+| Vacation total | 109 |
+| Verified | 27 |
+| Failed | 1 |
+| Blocked | 1 |
+| Pending | 80 |
+| Coverage | 26.6% |
 
-### JWT Authentication Pattern for API Calls
-- The vacation API uses `API_SECRET_TOKEN` (header) or `TTT_JWT_TOKEN` (header) for auth
-- `API_SECRET_TOKEN` authenticates as its owner (pvaynmaster on qa-1) — NOT a service-wide token
-- Browser session cookies do NOT work for vacation REST API calls
-- **Reliable JWT extraction**: intercept network requests from manager's browser via `page.on("request")`, capture `ttt_jwt_token` header, then use it for API calls with `TTT_JWT_TOKEN` header
-- localStorage key for JWT is inconsistent — network interception is more reliable
+### Session Stats
+- Generated: 5 tests (4 verified, 1 blocked)
+- Cumulative sessions 28-36: 29 tests tracked (27 verified, 1 failed, 1 blocked)
 
-### My Department Tab Pagination Issue
-- The "My department" sub-tab on Employees Requests page shows ALL vacation statuses across 58+ pages
-- Finding a specific vacation is unreliable for automated tests
-- **Solution**: Use API calls (approve/reject) with the manager's JWT captured from browser network requests
-- Endpoints: `PUT /api/vacation/v1/vacations/approve/{vacationId}` and `PUT /api/vacation/v1/vacations/reject/{vacationId}`
-
-### Cancel vs Delete Behavior
-- Canceling an APPROVED vacation can result in either "Canceled" or "Deleted" status directly
-- Tests must handle both outcomes — skip the delete step if status is already "Deleted"
-- "Deleted" vacations have only 1 action button (no details dialog)
-
-## Running Total
-- **Verified:** 23/109 vacation TCs (21%)
-- **Failed:** 1 (TC-VAC-019)
-- **Remaining:** 85 pending
-
-## Next Session Priorities
-1. Continue vacation TC generation — next batch from manifest
-2. Focus on remaining approval/lifecycle TCs that may need JWT pattern
-3. Consider parallelization strategy for tests using same employee pool
+### Next Session Priorities
+1. Continue vacation UI tests from pending pool — target TC-VAC-019, TC-VAC-020, TC-VAC-021, TC-VAC-022
+2. Consider TC-VAC-023 alternative: make it self-contained (create → cancel → restore) or investigate if CANCELED status can be created via API
+3. Look at TC-VAC-009 (failed) — reattempt with fixes
+4. Payment-related tests (TS-Vac-Payment suite) may need clock manipulation via test API

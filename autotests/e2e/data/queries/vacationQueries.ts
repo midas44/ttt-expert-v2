@@ -286,6 +286,70 @@ export async function findVacationId(
   return Number(row.id);
 }
 
+/** Returns a non-CPO employee with sufficient days and a manager. */
+export async function findNonCpoEmployeeWithManager(
+  db: DbClient,
+  minDays: number,
+): Promise<EmployeeWithManagerRow> {
+  return db.queryOne<EmployeeWithManagerRow>(
+    `SELECT e.login AS employee_login,
+            m.login AS manager_login,
+            COALESCE(be.latin_first_name || ' ' || be.latin_last_name, e.login) AS employee_name
+     FROM ttt_vacation.employee e
+     JOIN ttt_vacation.employee_vacation ev ON e.id = ev.employee
+     JOIN ttt_vacation.employee m ON e.manager = m.id
+     JOIN ttt_backend.employee be ON be.login = e.login
+     WHERE e.enabled = true
+       AND m.enabled = true
+       AND (be.is_contractor IS NULL OR be.is_contractor = false)
+       AND ev.year = EXTRACT(YEAR FROM CURRENT_DATE)
+       AND ev.available_vacation_days >= $1
+       AND NOT EXISTS (
+         SELECT 1 FROM ttt_backend.employee_global_roles r
+         WHERE r.employee = be.id AND r.role_name = 'ROLE_DEPARTMENT_MANAGER'
+       )
+     ORDER BY random()
+     LIMIT 1`,
+    [minDays],
+  );
+}
+
+interface CpoEmployeeRow {
+  employee_login: string;
+  employee_name: string;
+  manager_login: string;
+  manager_name: string;
+}
+
+/** Returns a CPO employee with a manager — identified by having existing self-approved vacations. */
+export async function findCpoEmployeeWithManager(
+  db: DbClient,
+  minDays: number,
+): Promise<CpoEmployeeRow> {
+  return db.queryOne<CpoEmployeeRow>(
+    `SELECT e.login AS employee_login,
+            COALESCE(be.latin_first_name || ' ' || be.latin_last_name, e.login) AS employee_name,
+            m.login AS manager_login,
+            COALESCE(bm.latin_first_name || ' ' || bm.latin_last_name, m.login) AS manager_name
+     FROM ttt_vacation.employee e
+     JOIN ttt_vacation.employee_vacation ev ON e.id = ev.employee
+     JOIN ttt_vacation.employee m ON e.manager = m.id
+     JOIN ttt_backend.employee be ON be.login = e.login
+     JOIN ttt_backend.employee bm ON bm.login = m.login
+     WHERE e.enabled = true
+       AND m.enabled = true
+       AND ev.year = EXTRACT(YEAR FROM CURRENT_DATE)
+       AND ev.available_vacation_days >= $1
+       AND EXISTS (
+         SELECT 1 FROM ttt_vacation.vacation v
+         WHERE v.employee = e.id AND v.approver = e.id
+       )
+     ORDER BY random()
+     LIMIT 1`,
+    [minDays],
+  );
+}
+
 /** Checks whether a vacation overlaps with existing vacations for the given login. */
 export async function hasVacationConflict(
   db: DbClient,
