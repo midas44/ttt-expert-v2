@@ -226,3 +226,54 @@ await page.keyboard.press("Escape");                   // dismiss dropdown
 - "No data" row has single merged `<td>` — `getColumnTexts` must filter by `td.length > colIndex`
 - Table is paginated for users with many vacations (20 per page)
 - `ttt_backend.employee` columns: `latin_first_name`, `latin_last_name` (NOT `first_name`, `last_name`)
+
+
+## Available Days Counter — DOM Structure (discovered Session 40)
+
+The "Available vacation days" section on `/vacation/my` has a **split layout** where the label and value are in separate sibling containers:
+
+```html
+<!-- Row 1: Label -->
+<div class="UserVacationsPage_userVacationInfo__...">
+  <div class="UserVacationsPage_userVacationDaysWrapper__...">
+    <div class="UserVacationsPage_vacationDaysRowContainer__...">
+      Available vacation days:
+    </div>
+  </div>
+  <a class="info-link">...Vacation regulation...</a>
+</div>
+
+<!-- Row 2: Value (SIBLING, not child!) -->
+<div class="UserVacationsPage_userVacationInfo__...">
+  <div class="UserVacationsPage_userVacationDaysWrapper__...">
+    <div class="UserVacationsPage_vacationDaysRowContainer__...">
+      <span>30&nbsp;in&nbsp;2026</span>
+      <div class="custom-tooltip__wrapper">...</div>
+    </div>
+  </div>
+  <button>Vacation events feed</button>
+</div>
+```
+
+**Key insight:** `text=/Available vacation days/` matches the label element whose `textContent()` has NO digits. The count `<span>30&nbsp;in&nbsp;2026</span>` uses `&nbsp;` (U+00A0) between tokens.
+
+**Working selector pattern (used in `getAvailableDays()` and `getAvailableDaysFullText()`):**
+```typescript
+const text = await this.page.evaluate(() => {
+  for (const span of document.querySelectorAll("span")) {
+    const t = span.textContent?.trim() ?? "";
+    if (/^\d+[\s\u00a0]+in[\s\u00a0]+\d{4}$/.test(t)) return t;
+  }
+  return "";
+});
+```
+
+**Yearly breakdown button:** `button[class*="VacationDaysTooltip_numberOfDaysInfo"]` — unique to the available-days tooltip.
+
+## Employees Requests Page — Multiple Employee Rows
+
+When filtering by employee name on the Employees Requests page, **multiple rows may exist** for the same employee (from previous test runs or multiple vacations). Always filter by both employee name AND period pattern to target the specific row:
+```typescript
+await requestsPage.rejectRequest(data.employeeName, data.periodPattern);
+await requestsPage.waitForRequestRowToDisappear(data.employeeName, data.periodPattern);
+```

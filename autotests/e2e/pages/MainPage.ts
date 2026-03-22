@@ -209,9 +209,16 @@ export class MyVacationsPage {
 
   /** Reads the available vacation days count from the page header. */
   async getAvailableDays(): Promise<number> {
-    const el = this.page.locator("text=/Available vacation days/");
-    const text = await el.textContent();
-    const match = text?.match(/(\d+)/);
+    // "Available vacation days:" label and count (e.g. "30 in 2026") are in
+    // separate sibling containers. Use evaluate to find the count span directly.
+    const text = await this.page.evaluate(() => {
+      for (const span of document.querySelectorAll("span")) {
+        const t = span.textContent?.trim() ?? "";
+        if (/^\d+[\s\u00a0]+in[\s\u00a0]+\d{4}$/.test(t)) return t;
+      }
+      return "";
+    });
+    const match = text.match(/(\d+)/);
     return match ? parseInt(match[1], 10) : 0;
   }
 

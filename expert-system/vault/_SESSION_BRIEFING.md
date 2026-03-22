@@ -1,49 +1,66 @@
 # Session Briefing
 
-## Session 39 — 2026-03-22
+## Session 40 — 2026-03-22
 **Phase:** C (Autotest Generation)
 **Mode:** Full autonomy
-**Duration:** ~60 min
+**Duration:** ~55 min
 
 ### Summary
-Generated 5 vacation UI test specs with data classes. All tests compiled cleanly (TypeScript) but could NOT be verified against qa-1 due to persistent CAS authentication timeout ("Время ожидания прошло."). Even previously-verified tests (TC-VAC-028) fail — confirming this is an environment-wide CAS issue, not a code problem.
+Major bugfix session. Fixed `getAvailableDays()` returning 0 in MainPage.ts — root cause was split DOM structure where "Available vacation days:" label and count ("30 in 2026") are in separate sibling containers. Re-verified 3 session 39 tests (TC-VAC-045/056/057), generated and verified 5 new tests, fixed TC-VAC-046 row-targeting bug. Ran session 40 maintenance.
 
-### Tests Generated
+### Key Fix: getAvailableDays() DOM Structure
+The "Available vacation days:" label and the count (e.g. "30 in 2026") are in **separate sibling** `div.userVacationInfo` containers. The `text=/Available vacation days/` locator matched the label element whose `textContent()` has no digits → always returned 0. Fixed to use `page.evaluate()` scanning all `<span>` elements for `/^\d+[\s\u00a0]+in[\s\u00a0]+\d{4}$/` pattern. This fix unblocked TC-046, TC-060, TC-061 and validated TC-060 is not a false positive.
+
+### Tests Generated & Verified
 | Test ID | Title | Status | Notes |
 |---------|-------|--------|-------|
-| TC-VAC-048 | Pay APPROVED vacation (accountant view) | generated | New VacationPaymentPage page object |
-| TC-VAC-045 | Approve vacation — verify days deducted | generated | 3-phase: create→approve→verify |
-| TC-VAC-056 | Verify available days AV=false | generated | Uses API comparison (availablePaidDays) |
-| TC-VAC-057 | Verify available days AV=true | generated | Uses API comparison, "N in YYYY" format |
-| TC-VAC-035 | Redirect vacation to another manager | generated | Fixed SQL bug, speculative redirect selectors |
+| TC-VAC-046 | Reject vacation — verify days returned | verified | 3-phase: create→reject→verify days restored. Fixed row targeting with periodPattern filter |
+| TC-VAC-060 | Administrative vacation does not deduct days | verified | Re-verified with fixed getAvailableDays — genuine pass, not false positive |
+| TC-VAC-061 | Day recalculation after cancel | verified | Create→delete→verify days restored. Fixed verify text |
+| TC-VAC-074 | Employee can view own vacations only | verified | Dropdown menu check + direct URL access check |
+| TC-VAC-077 | Regular employee cannot access Payment page | verified | Menu visibility + direct URL access check |
 
-### Key Findings
-1. **Available vacation days display**: The UI calls `GET /v1/vacationdays/available?employeeLogin=...&newDays=0&paymentDate=TODAY` for `availablePaidDays`. This is a complex backend calculation — NOT a simple DB field. Original approach (SQL net balance = available - consumed) was wrong. Fixed TC-056/TC-057 to compare UI vs API via `page.evaluate`.
-2. **SELECT DISTINCT + ORDER BY random()** is invalid PostgreSQL. Fixed in TC-035 data class by using GROUP BY instead.
-3. **VacationPaymentPage**: New page object for `/vacation/payment` — bulk payment via checkboxes + "Pay all the checked requests" button.
+### Re-verified from Session 39
+| Test ID | Status |
+|---------|--------|
+| TC-VAC-045 | verified (CAS recovered) |
+| TC-VAC-056 | verified (CAS recovered) |
+| TC-VAC-057 | verified (CAS recovered) |
+
+### Still Pending from Session 39
+| Test ID | Status | Blocker |
+|---------|--------|---------|
+| TC-VAC-035 | generated | Redirect dialog selectors need live discovery |
+| TC-VAC-048 | generated | Payment page name/date format mismatch |
 
 ### Progress
-- **Total tracked:** 43 vacation test cases
-- **Verified:** 36 (83.7%)
-- **Generated (unverified):** 5 (11.6%)
-- **Failed/Blocked:** 2 (4.7%)
+- **Total tracked:** 48 vacation test cases
+- **Verified:** 44 (91.7%)
+- **Generated (unverified):** 2 (4.2%)
+- **Failed/Blocked:** 2 (4.2%)
+- **Remaining in manifest:** 61/109
 
-### Files Created/Modified
-- `e2e/data/VacationTc048Data.ts` (new)
-- `e2e/data/VacationTc045Data.ts` (new)
-- `e2e/data/VacationTc056Data.ts` (new)
-- `e2e/data/VacationTc057Data.ts` (new)
-- `e2e/data/VacationTc035Data.ts` (new)
-- `e2e/tests/vacation-tc048.spec.ts` (new)
-- `e2e/tests/vacation-tc045.spec.ts` (new)
-- `e2e/tests/vacation-tc056.spec.ts` (new)
-- `e2e/tests/vacation-tc057.spec.ts` (new)
-- `e2e/tests/vacation-tc035.spec.ts` (new)
-- `e2e/pages/VacationPaymentPage.ts` (new)
-- `e2e/pages/EmployeeRequestsPage.ts` (modified — redirect methods)
+### Files Modified
+- `e2e/pages/MainPage.ts` — fixed `getAvailableDays()` DOM selector
+- `e2e/tests/vacation-tc046.spec.ts` — new, row filter fix, page reload for days refresh
+- `e2e/tests/vacation-tc060.spec.ts` — new (session 40)
+- `e2e/tests/vacation-tc061.spec.ts` — new, fixed verify text
+- `e2e/tests/vacation-tc074.spec.ts` — new, fixed dropdown check + URL access
+- `e2e/tests/vacation-tc077.spec.ts` — new
+- `e2e/data/VacationTc046Data.ts` — new
+- `e2e/data/VacationTc060Data.ts` — new
+- `e2e/data/VacationTc061Data.ts` — new
+- `e2e/data/VacationTc074Data.ts` — new
+- `e2e/data/VacationTc077Data.ts` — new
+- `exploration/ui-flows/vacation-pages.md` — appended DOM structure findings
+
+### Maintenance (Session 40)
+- SQLite audit: no duplicate tracking entries, no orphans
+- Logged getAvailableDays selector discovery to exploration_findings
+- Vault notes updated with DOM structure findings
 
 ### Next Session Priorities
-1. **P0:** Re-verify all 5 generated tests once CAS recovers
-2. **P0:** Verify TC-035 redirect dialog selectors against live UI (speculative)
-3. **P1:** Continue generating next batch of vacation tests
-4. **P1:** Write vault note on availablePaidDays calculation discovery
+1. **P0:** Fix TC-VAC-035 redirect dialog selectors via live discovery
+2. **P0:** Fix TC-VAC-048 payment page format mismatch via live discovery
+3. **P1:** Generate next batch of vacation tests (target 5 new)
+4. **P2:** Investigate TC-VAC-011 failure, TC-VAC-023 blocker

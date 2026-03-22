@@ -54,7 +54,7 @@ export class VacationTc048Data {
          LIMIT 1`,
       );
 
-      // Find an APPROVED Regular vacation with payment month in a reasonable range
+      // Find an APPROVED Regular vacation with payment month in current or future month
       const vacation = await db.queryOne<ApprovedVacationRow>(
         `SELECT e.login AS employee_login,
                 COALESCE(be.latin_first_name || ' ' || be.latin_last_name, e.login) AS employee_name,
@@ -72,7 +72,8 @@ export class VacationTc048Data {
            AND v.payment_type = 'REGULAR'
            AND e.enabled = true
            AND v.regular_days > 0
-         ORDER BY random()
+           AND v.payment_date >= date_trunc('month', CURRENT_DATE)
+         ORDER BY v.payment_date ASC, random()
          LIMIT 1`,
       );
 

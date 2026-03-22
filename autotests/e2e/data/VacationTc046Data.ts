@@ -3,10 +3,7 @@ declare const process: { env: Record<string, string | undefined> };
 import type { TestDataMode } from "../config/configUtils";
 import type { TttConfig } from "../config/tttConfig";
 import { DbClient } from "../config/db/dbClient";
-import {
-  findEmployeeWithManager,
-  hasVacationConflict,
-} from "./queries/vacationQueries";
+import { hasVacationConflict } from "./queries/vacationQueries";
 
 const MONTH_ABBREVS = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -17,21 +14,14 @@ const MONTH_NAMES = [
   "July", "August", "September", "October", "November", "December",
 ];
 
-interface AltManagerRow {
-  login: string;
-  name: string;
-}
-
 /**
- * TC-VAC-035: Redirect vacation request to another manager.
- * Creates a vacation, then the original approver redirects it to a different manager.
+ * TC-VAC-046: Reject vacation — verify days returned.
+ * Employee creates vacation, manager rejects, verify days restored.
  */
-export class VacationTc035Data {
+export class VacationTc046Data {
   readonly employeeLogin: string;
   readonly managerLogin: string;
   readonly employeeName: string;
-  readonly altManagerLogin: string;
-  readonly altManagerName: string;
   readonly startDate: string;
   readonly endDate: string;
   readonly periodPattern: RegExp;
@@ -39,75 +29,56 @@ export class VacationTc035Data {
   static async create(
     mode: TestDataMode,
     tttConfig: TttConfig,
-  ): Promise<VacationTc035Data> {
-    if (mode === "static") return new VacationTc035Data();
+  ): Promise<VacationTc046Data> {
+    if (mode === "static") return new VacationTc046Data();
 
     const db = new DbClient(tttConfig);
     try {
-      // Prefer AV=true office to avoid monthly accrual issues
-      const emp = await VacationTc035Data.findEmployeeAvTrue(db);
-
-      // Find another enabled manager who is NOT the employee's current manager
-      const altMgr = await db.queryOne<AltManagerRow>(
-        `SELECT m.login,
-                COALESCE(bm.latin_first_name || ' ' || bm.latin_last_name, m.login) AS name
-         FROM ttt_vacation.employee e2
-         JOIN ttt_vacation.employee m ON e2.manager = m.id
-         JOIN ttt_backend.employee bm ON bm.login = m.login
-         WHERE m.enabled = true
-           AND m.login != $1
-           AND m.login != $2
-         GROUP BY m.login, bm.latin_first_name, bm.latin_last_name
+      // Find employee in AV=true office with manager and sufficient days
+      const emp = await db.queryOne<{
+        employee_login: string;
+        manager_login: string;
+        employee_name: string;
+      }>(
+        `SELECT e.login AS employee_login,
+                m.login AS manager_login,
+                COALESCE(be.latin_first_name || ' ' || be.latin_last_name, e.login) AS employee_name
+         FROM ttt_vacation.employee e
+         JOIN ttt_vacation.employee_vacation ev ON e.id = ev.employee
+         JOIN ttt_vacation.employee m ON e.manager = m.id
+         JOIN ttt_backend.employee be ON be.login = e.login
+         JOIN ttt_backend.employee_global_roles r ON r.employee = be.id
+         JOIN ttt_vacation.office o ON e.office_id = o.id
+         WHERE e.enabled = true
+           AND m.enabled = true
+           AND (be.is_contractor IS NULL OR be.is_contractor = false)
+           AND r.role_name = 'ROLE_EMPLOYEE'
+           AND o.advance_vacation = true
+           AND ev.year = EXTRACT(YEAR FROM CURRENT_DATE)
+           AND (ev.available_vacation_days - COALESCE(
+             (SELECT SUM(v.regular_days)
+              FROM ttt_vacation.vacation v
+              WHERE v.employee = e.id
+                AND v.status IN ('NEW', 'APPROVED')),
+             0)) >= 5
          ORDER BY random()
          LIMIT 1`,
-        [emp.manager_login, emp.employee_login],
       );
 
-      const range = await VacationTc035Data.findAvailableRange(
+      const range = await VacationTc046Data.findAvailableRange(
         db,
         emp.employee_login,
       );
-      return new VacationTc035Data(
+      return new VacationTc046Data(
         emp.employee_login,
         emp.manager_login,
         emp.employee_name,
-        altMgr.login,
-        altMgr.name,
         range.start,
         range.end,
       );
     } finally {
       await db.close();
     }
-  }
-
-  /** Find employee in AV=true office with manager and sufficient days */
-  private static async findEmployeeAvTrue(db: DbClient) {
-    return db.queryOne<{ employee_login: string; manager_login: string; employee_name: string }>(
-      `SELECT e.login AS employee_login,
-              m.login AS manager_login,
-              COALESCE(be.latin_first_name || ' ' || be.latin_last_name, e.login) AS employee_name
-       FROM ttt_vacation.employee e
-       JOIN ttt_vacation.employee_vacation ev ON e.id = ev.employee
-       JOIN ttt_vacation.employee m ON e.manager = m.id
-       JOIN ttt_backend.employee be ON be.login = e.login
-       JOIN ttt_backend.employee_global_roles r ON r.employee = be.id
-       JOIN ttt_vacation.office o ON e.office_id = o.id
-       WHERE e.enabled = true
-         AND m.enabled = true
-         AND (be.is_contractor IS NULL OR be.is_contractor = false)
-         AND r.role_name = 'ROLE_EMPLOYEE'
-         AND o.advance_vacation = true
-         AND ev.year = EXTRACT(YEAR FROM CURRENT_DATE)
-         AND (ev.available_vacation_days - COALESCE(
-           (SELECT SUM(v.regular_days)
-            FROM ttt_vacation.vacation v
-            WHERE v.employee = e.id
-              AND v.status IN ('NEW', 'APPROVED')),
-           0)) >= 5
-       ORDER BY random()
-       LIMIT 1`,
-    );
   }
 
   private static async findAvailableRange(
@@ -118,7 +89,6 @@ export class VacationTc035Data {
     const day = now.getDay();
     const daysUntilMonday = day === 0 ? 1 : day === 1 ? 7 : 8 - day;
     const monday = new Date(now);
-    // Start 2 weeks ahead to avoid holiday/accrual edge cases
     monday.setDate(now.getDate() + daysUntilMonday + 14);
 
     for (let attempt = 0; attempt < 16; attempt++) {
@@ -127,14 +97,14 @@ export class VacationTc035Data {
       const end = new Date(start);
       end.setDate(start.getDate() + 4);
 
-      const startIso = VacationTc035Data.toIso(start);
-      const endIso = VacationTc035Data.toIso(end);
+      const startIso = VacationTc046Data.toIso(start);
+      const endIso = VacationTc046Data.toIso(end);
 
       const conflict = await hasVacationConflict(db, login, startIso, endIso);
       if (!conflict) {
         return {
-          start: VacationTc035Data.toDdMmYyyy(start),
-          end: VacationTc035Data.toDdMmYyyy(end),
+          start: VacationTc046Data.toDdMmYyyy(start),
+          end: VacationTc046Data.toDdMmYyyy(end),
         };
       }
     }
@@ -152,19 +122,15 @@ export class VacationTc035Data {
   }
 
   constructor(
-    employeeLogin = process.env.VACATION_TC035_EMPLOYEE ?? "amelnikova",
-    managerLogin = process.env.VACATION_TC035_MANAGER ?? "pvaynmaster",
+    employeeLogin = process.env.VACATION_TC046_EMPLOYEE ?? "amelnikova",
+    managerLogin = process.env.VACATION_TC046_MANAGER ?? "pvaynmaster",
     employeeName = "Anna Melnikova",
-    altManagerLogin = process.env.VACATION_TC035_ALT_MANAGER ?? "dvovney",
-    altManagerName = "Dmitry Vovney",
-    startDate = process.env.VACATION_TC035_START ?? "07.04.2026",
-    endDate = process.env.VACATION_TC035_END ?? "10.04.2026",
+    startDate = process.env.VACATION_TC046_START ?? "13.04.2026",
+    endDate = process.env.VACATION_TC046_END ?? "17.04.2026",
   ) {
     this.employeeLogin = employeeLogin;
     this.managerLogin = managerLogin;
     this.employeeName = employeeName;
-    this.altManagerLogin = altManagerLogin;
-    this.altManagerName = altManagerName;
     this.startDate = startDate;
     this.endDate = endDate;
     this.periodPattern = this.buildPattern(startDate, endDate);
