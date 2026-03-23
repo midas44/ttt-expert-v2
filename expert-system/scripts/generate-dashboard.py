@@ -36,29 +36,70 @@ def phase_info(phase):
 
 
 def load_autotest_stats(project_root):
-    """Load autotest tracking stats from SQLite if available."""
+    """Load autotest tracking stats from SQLite + manifest for true totals."""
     db_path = project_root / 'expert-system' / 'analytics.db'
+    manifest_path = project_root / 'autotests' / 'manifest' / 'test-cases.json'
+
+    # Load manifest totals per module (source of truth for total count)
+    manifest_totals = {}
+    if manifest_path.exists():
+        try:
+            with open(manifest_path) as f:
+                mdata = json.load(f)
+            for mod, mod_data in mdata.get('modules', {}).items():
+                count = 0
+                for suite in mod_data.get('suites', {}).values():
+                    count += len(suite.get('test_cases', []))
+                if count > 0:
+                    manifest_totals[mod] = count
+        except Exception:
+            pass
+
     if not db_path.exists():
+        # Return manifest-only stats if no DB
+        if manifest_totals:
+            return [{'module': m, 'total': t, 'verified': 0, 'generated': 0,
+                     'failed': 0, 'pending': t, 'blocked': 0, 'skipped': 0}
+                    for m, t in sorted(manifest_totals.items())]
         return None
+
     try:
         import sqlite3
         conn = sqlite3.connect(str(db_path))
         conn.row_factory = sqlite3.Row
         rows = conn.execute("""
             SELECT module,
-                   COUNT(*) as total,
                    SUM(CASE WHEN automation_status = 'verified' THEN 1 ELSE 0 END) as verified,
                    SUM(CASE WHEN automation_status = 'generated' THEN 1 ELSE 0 END) as generated,
                    SUM(CASE WHEN automation_status = 'failed' THEN 1 ELSE 0 END) as failed,
-                   SUM(CASE WHEN automation_status = 'pending' THEN 1 ELSE 0 END) as pending
+                   SUM(CASE WHEN automation_status = 'blocked' THEN 1 ELSE 0 END) as blocked,
+                   SUM(CASE WHEN automation_status = 'skipped' THEN 1 ELSE 0 END) as skipped
             FROM autotest_tracking
             GROUP BY module
             ORDER BY module
         """).fetchall()
         conn.close()
-        if not rows:
-            return None
-        return [dict(r) for r in rows]
+
+        # Merge: use manifest total, fill in tracked statuses from DB
+        result = []
+        db_by_module = {r['module']: dict(r) for r in rows}
+        all_modules = sorted(set(list(manifest_totals.keys()) + list(db_by_module.keys())))
+        for mod in all_modules:
+            manifest_total = manifest_totals.get(mod, 0)
+            db = db_by_module.get(mod, {})
+            verified = db.get('verified', 0)
+            generated = db.get('generated', 0)
+            failed = db.get('failed', 0)
+            blocked = db.get('blocked', 0)
+            skipped = db.get('skipped', 0)
+            covered = verified + generated + failed + blocked + skipped
+            # Total from manifest; pending = total - covered
+            total = max(manifest_total, covered)
+            pending = total - covered
+            result.append({'module': mod, 'total': total, 'verified': verified,
+                          'generated': generated, 'failed': failed, 'pending': pending,
+                          'blocked': blocked, 'skipped': skipped})
+        return result if result else None
     except Exception:
         return None
 
@@ -362,6 +403,8 @@ def generate_html(state, output_file):
         at_verified = sum(r['verified'] for r in autotest_stats)
         at_generated = sum(r['generated'] for r in autotest_stats)
         at_failed = sum(r['failed'] for r in autotest_stats)
+        at_blocked = sum(r.get('blocked', 0) for r in autotest_stats)
+        at_skipped = sum(r.get('skipped', 0) for r in autotest_stats)
         at_pending = sum(r['pending'] for r in autotest_stats)
         at_done = at_verified + at_generated
         at_pct = at_done * 100 / at_total if at_total else 0
@@ -371,19 +414,19 @@ def generate_html(state, output_file):
 <div class="metrics">
   <div class="metric">
     <div class="val c-cyan">{at_total}</div>
-    <div class="lbl">Total Test Cases</div>
+    <div class="lbl">Total (from manifest)</div>
   </div>
   <div class="metric">
     <div class="val c-green">{at_verified}</div>
     <div class="lbl">Verified</div>
   </div>
   <div class="metric">
-    <div class="val c-blue">{at_generated}</div>
-    <div class="lbl">Generated</div>
-  </div>
-  <div class="metric">
     <div class="val c-red">{at_failed}</div>
     <div class="lbl">Failed</div>
+  </div>
+  <div class="metric">
+    <div class="val c-yellow">{at_blocked + at_skipped}</div>
+    <div class="lbl">Blocked/Skipped</div>
   </div>
   <div class="metric">
     <div class="val c-muted">{at_pending}</div>
@@ -396,18 +439,19 @@ def generate_html(state, output_file):
 </div>
 <div class="table-wrap">
 <table>
-<tr><th>Module</th><th class="r">Total</th><th class="r">Verified</th><th class="r">Generated</th><th class="r">Failed</th><th class="r">Pending</th><th class="r">Coverage</th></tr>
+<tr><th>Module</th><th class="r">Total</th><th class="r">Verified</th><th class="r">Failed</th><th class="r">Blocked</th><th class="r">Pending</th><th class="r">Coverage</th></tr>
 """
         for r in autotest_stats:
             done = r['verified'] + r['generated']
             pct = done * 100 / r['total'] if r['total'] else 0
+            blocked = r.get('blocked', 0) + r.get('skipped', 0)
             pct_cls = 'c-green' if pct >= 50 else ('c-orange' if pct > 0 else 'c-muted')
             html += f"""<tr>
   <td>{r['module']}</td>
   <td class="mono r">{r['total']}</td>
   <td class="mono r c-green">{r['verified'] or '-'}</td>
-  <td class="mono r c-blue">{r['generated'] or '-'}</td>
   <td class="mono r{'  c-red' if r['failed'] else ''}">{r['failed'] or '-'}</td>
+  <td class="mono r{'  c-yellow' if blocked else ''}">{blocked or '-'}</td>
   <td class="mono r c-muted">{r['pending']}</td>
   <td class="mono r {pct_cls}">{pct:.1f}%</td>
 </tr>"""

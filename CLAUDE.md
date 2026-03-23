@@ -1,1 +1,72 @@
-CLAUDE+.md
+# TTT Expert System — Interactive Mode
+
+This project contains an expert knowledge base for the TTT (Time Tracking Tool) application. Use it to answer questions, investigate issues, and generate test documentation.
+
+## Knowledge Base
+
+- **Obsidian vault** (`expert-system/vault/`, 191 notes, ~222K tokens) — search via `mcp__qmd-search__` tools or read directly via `mcp__obsidian__` tools
+- **SQLite analytics** (`expert-system/analytics.db`) — query via `mcp__sqlite-analytics__execute_sql`
+- **Generated test docs** (`test-docs/` — XLSX workbooks per module, UI-first test cases)
+- **Autotests** (`autotests/` — Playwright + TypeScript E2E framework, generated from XLSX test cases)
+
+## Available MCPs
+
+| MCP | Use for |
+|-----|---------|
+| **qmd-search** | Semantic/keyword search over vault notes — start here for any question |
+| **obsidian** | Read, write, search vault notes directly |
+| **sqlite-analytics** | Query module_health, exploration_findings, design_issues, test_case_tracking |
+| **playwright-vpn** | UI testing on TTT environments (use this, not the built-in plugin) |
+| **swagger-\*** | REST API calls to qa-1, timemachine, stage environments |
+| **postgres-\*** | Database queries on qa-1, timemachine, stage (read-only) |
+| **confluence** | TTT documentation wiki |
+| **figma** | Design mockups |
+| **qase** | Existing test suites (project: TIMEREPORT) |
+| **gitlab** | Use curl + PAT (MCP server non-functional on this CE instance) |
+
+## How to answer questions
+
+1. Search the vault first (`mcp__qmd-search__search` or `mcp__qmd-search__vector_search`)
+2. Read relevant notes (`mcp__obsidian__read_note`)
+3. If vault lacks detail, investigate live: code (`expert-system/repos/project/`), API, DB, or UI
+4. Reference vault note names when citing findings
+
+## Updating the knowledge base
+
+When you discover new information during a task — a bug, an undocumented behavior, a corrected understanding, or deeper detail about a feature — update the knowledge base:
+
+- **Existing note has relevant topic**: expand or correct it via `mcp__obsidian__patch_note` or `mcp__obsidian__write_note`
+- **New topic not covered**: create a new note in the appropriate vault directory (modules/, exploration/, investigations/, etc.) with YAML frontmatter and wikilinks to related notes
+- **Structured findings**: also log to SQLite (`exploration_findings`, `design_issues`, or `module_health` tables)
+- **After significant updates**: run `qmd embed` via bash to update semantic search index
+
+The knowledge base is a living resource — every interactive session that discovers something new should leave it richer.
+
+## Autotest generation
+
+Use the autotest skills to generate, run, and fix Playwright E2E tests from the XLSX test documentation:
+
+- **autotest-generator** — generate test code from XLSX test cases (enriched with vault knowledge)
+- **autotest-runner** — run generated tests and analyze results
+- **autotest-fixer** — diagnose and fix failing tests (uses playwright-vpn for live selector discovery)
+- **xlsx-parser** — parse XLSX workbooks into the JSON manifest
+- **autotest-progress** — view automation coverage and prioritize next tests
+- **page-discoverer** — explore TTT pages to discover selectors for page objects
+
+The autotest framework lives in `autotests/` and shares config with the expert system (`config/ttt/`).
+
+**Vault-first rule for autotest generation:** Before generating any test, search the vault for the relevant module's knowledge — selectors, validation rules, API behaviors, known bugs, and timing quirks. The vault contains hard-won knowledge from Phase A/B that makes generated tests more accurate and robust. Key locations:
+- `modules/<module>-*deep-dive*.md` — validation rules, API endpoints, business logic details
+- `exploration/ui-flows/` — page selectors, navigation patterns, dialog behaviors
+- `exploration/api-findings/` — tested API behaviors, error codes, response formats
+- SQLite `exploration_findings` and `design_issues` tables — structured findings with severity and impact
+
+When you discover new information during autotest generation (selectors, UI quirks, data patterns), write it back to the vault via `mcp__obsidian__write_note` with `mode: "append"`.
+
+## Key references
+
+- `CLAUDE+.md` — full autonomous system prompt (for reference, not loaded in interactive mode)
+- `expert-system/config.yaml` — environment configuration
+- `expert-system/MISSION_DIRECTIVE.md` — priority areas and information sources
+- `expert-system/vault/_KNOWLEDGE_COVERAGE.md` — what's been investigated
+- `expert-system/vault/_INDEX.md` — vault note index

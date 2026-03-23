@@ -7,7 +7,7 @@ phase:
   current: autotest_generation
   generation_allowed: true
   coverage_override: -1
-  scope: vacation                    # "all", module name, or comma list (e.g. "vacation, statistics")
+  scope: vacation
 thresholds:
   knowledge_coverage_target: 0.8
   note_quality_min_links: 2
@@ -31,7 +31,7 @@ autonomy:
   consecutive_failure_limit: 3
   auto_phase_transition: true
   log_dir: expert-system/logs
-  stop: false
+  stop: true
   model: opus
   effort: max
   allow_api_mutations: true
