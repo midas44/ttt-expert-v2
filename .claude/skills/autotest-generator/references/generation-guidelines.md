@@ -164,7 +164,7 @@ Generated test data must be **realistic and similar to existing data** in the sy
 |----------|-----------|
 | **UI tests** (default) | Browser login via `LoginFixture` — works for any employee |
 | **Test endpoints** (clock, sync, cleanup) | `API_SECRET_TOKEN` — these don't use `@CurrentUser` |
-| **API calls needing specific user** (rare) | JWT via `POST /api/ttt/v1/auth/token` — get a token for any employee |
+| **API calls needing specific user** (rare) | Not available — no endpoint for arbitrary user JWT. Use UI login or create data as token owner (pvaynmaster) |
 
 **Most tests should use browser login.** Only use API calls for test setup/teardown and data verification.
 

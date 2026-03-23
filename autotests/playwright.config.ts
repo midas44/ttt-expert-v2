@@ -57,6 +57,8 @@ function buildSharedUse(
   return {
     baseURL: globalConfig.appUrl,
     headless,
+    actionTimeout: globalConfig.stepTimeoutMs,
+    navigationTimeout: globalConfig.stepTimeoutMs,
     viewport: {
       width: globalConfig.windowWidth,
       height: globalConfig.windowHeight,

@@ -68,11 +68,9 @@ const headers = { API_SECRET_TOKEN: tttConfig.apiToken };
 const clockUrl = tttConfig.buildUrl("/api/ttt/test/v1/clock");
 await request.patch(clockUrl, { headers, data: { dateTime: "2026-04-01T10:00:00" } });
 
-// For API calls that need a specific user context, use JWT:
-// const jwtResponse = await request.post(tttConfig.buildUrl("/api/ttt/v1/auth/token"),
-//   { headers, data: { login: data.username } });
-// const jwt = (await jwtResponse.json()).token;
-// const userHeaders = { Authorization: `Bearer ${jwt}` };
+// NOTE: No endpoint exists to get JWT for arbitrary users.
+// API setup can only create data as the token owner (pvaynmaster).
+// For per-user scenarios, use UI login via LoginFixture.
 ```
 
 ## Data Class Pattern
@@ -86,7 +84,7 @@ import { loadSaved, saveToDisk } from "./savedDataStore";
 // Dynamic mode MUST implement the DB query from test case preconditions.
 // Never hardcode the same username across multiple data classes.
 // API_SECRET_TOKEN authenticates as its OWNER (pvaynmaster on qa-1) — NOT any user.
-// For UI tests, auth is via browser login (any employee). For API needing user context, use JWT.
+// For UI tests, auth is via browser login (any employee). API setup is limited to token owner (pvaynmaster).
 
 // Constructor args interface — used for saved mode serialization
 interface Tc001Args { username: string; startDate: string; endDate: string }
@@ -153,6 +151,24 @@ Saved data stored in `e2e/data/saved/<ClassName>.json`.
 5. XPath (last resort)
 
 Always use `exact: true` in `getByRole()` when name could be a substring.
+
+## Timeouts
+
+Three timeout levels are configured — use the right one for each situation:
+
+| Timeout | Config | Default | Scope |
+|---------|--------|---------|-------|
+| **Test timeout** | `playwright.config.ts` → `timeout` | 180s | Total time for entire test (setup + steps + cleanup) |
+| **Step timeout** | `global.yml` → `stepTimeoutMs` | 30s | Per action: `click()`, `fill()`, `goto()`, `waitFor()`. Exposed as `globalConfig.stepTimeoutMs` and wired to Playwright's `actionTimeout` + `navigationTimeout` |
+| **Expect timeout** | `playwright.config.ts` → `expect.timeout` | 10s | Per assertion: `expect(locator).toBeVisible()`, `expect(locator).toHaveText()` |
+
+**When to use `stepTimeoutMs` explicitly** — Playwright applies `actionTimeout` automatically to all built-in actions. Use `globalConfig.stepTimeoutMs` when you need an explicit timeout for custom waits:
+```typescript
+await page.waitForSelector(".some-element", { timeout: globalConfig.stepTimeoutMs });
+await pollForMatch(candidates, { timeout: globalConfig.stepTimeoutMs });
+```
+
+**Do NOT increase timeouts to fix broken selectors.** If a step times out at 30s, the selector is likely wrong — investigate with `page-discoverer` skill or playwright-vpn snapshot. Increasing the timeout just makes failures slower to detect.
 
 ## TTT UI Quirks
 

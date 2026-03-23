@@ -31,47 +31,23 @@ export class ApiVacationSetupFixture {
     };
   }
 
-  /** Get a JWT token for a specific user (needed for @CurrentUser endpoints). */
-  async getJwtForUser(login: string): Promise<string> {
-    const url = this.tttConfig.buildUrl("/api/ttt/v1/auth/full-jwt-token");
-    const resp = await this.request.post(url, {
-      headers: this.headers,
-      data: { login },
-    });
-    if (!resp.ok()) {
-      throw new Error(
-        `Failed to get JWT for ${login}: ${resp.status()} ${await resp.text()}`,
-      );
-    }
-    const json = await resp.json();
-    return json.token ?? json.access_token ?? json;
-  }
+  /**
+   * The login of the API_SECRET_TOKEN owner. All API vacation operations
+   * are performed as this user because @CurrentUser requires login == authenticated user,
+   * and there is no endpoint to get a JWT for arbitrary users.
+   */
+  readonly tokenOwner = "pvaynmaster";
 
-  /** Create a vacation via API. Returns the created vacation object. */
+  /** Create a vacation via API as the token owner. Returns the created vacation object. */
   async createVacation(
-    login: string,
     startDate: string,
     endDate: string,
     paymentType = "REGULAR",
   ): Promise<VacationApiResult> {
-    // @CurrentUser requires login == authenticated user.
-    // API_SECRET_TOKEN authenticates as pvaynmaster, so we need JWT for other users.
-    const tokenOwner = "pvaynmaster";
-    let headers: Record<string, string>;
-
-    if (login === tokenOwner) {
-      headers = this.headers;
-    } else {
-      const jwt = await this.getJwtForUser(login);
-      headers = {
-        Authorization: `Bearer ${jwt}`,
-        "Content-Type": "application/json",
-      };
-    }
-
+    const login = this.tokenOwner;
     const paymentMonth = `${startDate.slice(0, 8)}01`; // first of the month
     const resp = await this.request.post(this.baseUrl, {
-      headers,
+      headers: this.headers,
       data: {
         login,
         startDate,
@@ -95,13 +71,13 @@ export class ApiVacationSetupFixture {
     return {
       id: vacation.id,
       status: vacation.status,
-      login,
+      login: this.tokenOwner,
       startDate,
       endDate,
     };
   }
 
-  /** Approve a vacation via API. Uses API_SECRET_TOKEN (pvaynmaster is CPO). */
+  /** Approve a vacation via API. Uses API_SECRET_TOKEN (pvaynmaster is CPO, self-approves). */
   async approveVacation(vacationId: number): Promise<void> {
     const url = `${this.baseUrl}/${vacationId}/approve`;
     const resp = await this.request.post(url, { headers: this.headers });
@@ -113,20 +89,10 @@ export class ApiVacationSetupFixture {
     }
   }
 
-  /** Cancel a vacation via API. */
-  async cancelVacation(vacationId: number, login: string): Promise<void> {
+  /** Cancel a vacation via API. Uses API_SECRET_TOKEN (owner cancels own vacation). */
+  async cancelVacation(vacationId: number): Promise<void> {
     const url = `${this.baseUrl}/${vacationId}/cancel`;
-    let headers: Record<string, string>;
-    if (login === "pvaynmaster") {
-      headers = this.headers;
-    } else {
-      const jwt = await this.getJwtForUser(login);
-      headers = {
-        Authorization: `Bearer ${jwt}`,
-        "Content-Type": "application/json",
-      };
-    }
-    const resp = await this.request.put(url, { headers });
+    const resp = await this.request.put(url, { headers: this.headers });
     if (!resp.ok()) {
       const body = await resp.text();
       throw new Error(
@@ -148,37 +114,25 @@ export class ApiVacationSetupFixture {
     }
   }
 
-  /** Create → Approve a vacation. Returns the approved vacation. */
+  /** Create → Approve a vacation as token owner. Returns the approved vacation. */
   async createAndApprove(
-    login: string,
     startDate: string,
     endDate: string,
     paymentType = "REGULAR",
   ): Promise<VacationApiResult> {
-    const vacation = await this.createVacation(
-      login,
-      startDate,
-      endDate,
-      paymentType,
-    );
+    const vacation = await this.createVacation(startDate, endDate, paymentType);
     await this.approveVacation(vacation.id);
     return { ...vacation, status: "APPROVED" };
   }
 
-  /** Create → Cancel a vacation. Returns the canceled vacation. */
+  /** Create → Cancel a vacation as token owner. Returns the canceled vacation. */
   async createAndCancel(
-    login: string,
     startDate: string,
     endDate: string,
     paymentType = "REGULAR",
   ): Promise<VacationApiResult> {
-    const vacation = await this.createVacation(
-      login,
-      startDate,
-      endDate,
-      paymentType,
-    );
-    await this.cancelVacation(vacation.id, login);
+    const vacation = await this.createVacation(startDate, endDate, paymentType);
+    await this.cancelVacation(vacation.id);
     return { ...vacation, status: "CANCELED" };
   }
 

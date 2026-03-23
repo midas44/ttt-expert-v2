@@ -727,6 +727,7 @@ Playwright API
 5. Every verification step: `globalConfig.delay()` → assertion → screenshot capture
 6. Page objects use composition, not inheritance
 7. Tests needing specific state (APPROVED/CANCELED vacation, etc.) must create it via API setup (`ApiVacationSetupFixture`) in the data class — never rely on pre-existing DB state. Try DB query first (fast), fall back to API creation if not found. Data class `create()` accepts optional `request?: APIRequestContext` for this.
+8. **Three timeout levels**: test timeout (180s total), step timeout (`stepTimeoutMs` in `global.yml`, 30s — applied as Playwright `actionTimeout`/`navigationTimeout` to every click/fill/goto), expect timeout (10s per assertion). Use `globalConfig.stepTimeoutMs` for custom waits. Never increase timeouts to fix broken selectors — investigate the selector instead.
 
 ### Session Protocol for Phase C
 
@@ -812,7 +813,7 @@ c. **Generate artifacts (UI-first):**
    |----------|-----------|-----|
    | **UI business scenarios** (default) | Browser login | `LoginFixture` — types username/password into the login form, any employee works |
    | **Test endpoint calls** (clock, sync, notifications) | API_SECRET_TOKEN | `tttConfig.apiToken` — this token authenticates as its **owner** (pvaynmaster on qa-1). Use ONLY for test/admin endpoints that don't require `@CurrentUser` validation |
-   | **API calls needing user context** (rare — only when test step explicitly requires API) | JWT token | `POST /api/ttt/v1/auth/token` to get a JWT for any employee, then use as Bearer token |
+   | **API calls needing user context** (rare) | Not available via API — no endpoint to get JWT for arbitrary users. Use UI login instead, or create data as token owner (pvaynmaster) |
 
    **CRITICAL: `API_SECRET_TOKEN` is NOT an environment-wide service token.** It resolves to its owner (pvaynmaster on qa-1) via `DatabaseApiTokenResolver`. The `@CurrentUser` validator checks that `login` in the request body matches the authenticated principal. So API calls with `API_SECRET_TOKEN` + a different `login` will FAIL on `@CurrentUser` endpoints. This is why most tests must use **UI login** (which works for any employee) or **JWT auth** (for API calls needing a specific user).
 

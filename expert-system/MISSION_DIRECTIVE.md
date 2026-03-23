@@ -144,7 +144,7 @@ where envURL = https://ttt-[env].noveogroup.com (e.g. https://ttt-qa-1.noveogrou
 - Test code lives in `autotests/` directory, follows 5-layer architecture: test specs → fixtures → page objects → config+data → Playwright API
 - XLSX test cases are parsed into a JSON manifest (`autotests/manifest/test-cases.json`) via `autotests/scripts/parse_xlsx.py`
 - Each generated test must support three data modes: `static` (hardcoded defaults), `dynamic` (PostgreSQL queries for real data), `saved` (cached JSON for reproducibility)
-- **Authentication**: browser login for UI tests (any employee), `API_SECRET_TOKEN` for test endpoints only (it authenticates as the token owner, not any user), JWT for API calls needing specific user context
+- **Authentication**: browser login for UI tests (any employee), `API_SECRET_TOKEN` for test endpoints and API setup as token owner (pvaynmaster). No endpoint exists to get JWT for arbitrary users — use UI login for per-user scenarios.
 - Tests are verified against live test environments (configured via `autotest.target_env` in config.yaml)
 - Generation scope can be limited to a single module via `autotest.scope` in config.yaml
 - Priority order follows the same order as Phase B (Absences → Reports → Accounting → Administration)

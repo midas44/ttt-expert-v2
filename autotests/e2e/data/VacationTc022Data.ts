@@ -4,14 +4,8 @@ import type { APIRequestContext } from "@playwright/test";
 import type { TestDataMode } from "../config/configUtils";
 import type { TttConfig } from "../config/tttConfig";
 import { DbClient } from "../config/db/dbClient";
-import {
-  findEmployeeWithVacation,
-  findEmployeeWithVacationDays,
-} from "./queries/vacationQueries";
-import {
-  ApiVacationSetupFixture,
-  type VacationApiResult,
-} from "../fixtures/ApiVacationSetupFixture";
+import { findEmployeeWithVacation } from "./queries/vacationQueries";
+import { ApiVacationSetupFixture } from "../fixtures/ApiVacationSetupFixture";
 
 const MONTH_ABBREVS = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -52,15 +46,14 @@ export class VacationTc022Data {
         const end = VacationTc022Data.isoToDdMmYyyy(row.end_date);
         return new VacationTc022Data(row.login, start, end);
       } catch {
-        // None found — create one via API
+        // None found — create one via API as token owner (pvaynmaster)
         if (!request) throw new Error("No APPROVED vacation found and no API request context for setup");
-        const employee = await findEmployeeWithVacationDays(db, 5);
-        const dates = await ApiVacationSetupFixture.findAvailableWeek(tttConfig, employee);
         const setup = new ApiVacationSetupFixture(request, tttConfig);
-        const vacation = await setup.createAndApprove(employee, dates.startDate, dates.endDate);
+        const dates = await ApiVacationSetupFixture.findAvailableWeek(tttConfig, setup.tokenOwner);
+        const vacation = await setup.createAndApprove(dates.startDate, dates.endDate);
         const start = VacationTc022Data.isoToDdMmYyyy(dates.startDate);
         const end = VacationTc022Data.isoToDdMmYyyy(dates.endDate);
-        return new VacationTc022Data(employee, start, end, vacation.id);
+        return new VacationTc022Data(setup.tokenOwner, start, end, vacation.id);
       }
     } finally {
       await db.close();

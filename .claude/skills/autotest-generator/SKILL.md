@@ -121,6 +121,7 @@ WHERE test_id = '<TC-ID>';
 5. **Vault-first knowledge.** Search the vault before generating — it has selectors, validation rules, and quirks.
 6. **Three data modes.** Every data class must support static, dynamic, and saved.
 7. **API setup for preconditions.** When a test needs specific state (APPROVED/CANCELED vacation, etc.), create it via `ApiVacationSetupFixture` in the data class setup — don't rely on pre-existing DB state. Try DB query first, fall back to API creation. Accept `request?: APIRequestContext` in `create()` for this.
+8. **Step timeout.** Per-action timeout is `stepTimeoutMs` (30s) in `global.yml`, wired as Playwright `actionTimeout`. Use `globalConfig.stepTimeoutMs` for custom waits. Never increase timeouts to mask broken selectors.
 
 ## References
 
