@@ -35,7 +35,13 @@ export class VacationTc028Data {
 
     const db = new DbClient(tttConfig);
     try {
-      const username = await findEmployeeWithVacationDays(db, 15);
+      // Need employee with enough days for a 5-day vacation. Try 10 first, fall back to 5.
+      let username: string;
+      try {
+        username = await findEmployeeWithVacationDays(db, 10);
+      } catch {
+        username = await findEmployeeWithVacationDays(db, 5);
+      }
       const range = await VacationTc028Data.findAvailableRange(db, username);
       return new VacationTc028Data(username, range.start, range.end);
     } finally {

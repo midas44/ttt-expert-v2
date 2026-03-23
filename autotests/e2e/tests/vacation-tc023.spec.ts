@@ -12,12 +12,14 @@ import { MyVacationsPage } from "../pages/MainPage";
 
 test("TC-VAC-023 - Restore CANCELED vacation (re-open) @regress", async ({
   page,
+  request,
 }, testInfo) => {
   const tttConfig = new TttConfig();
   const globalConfig = new GlobalConfig(tttConfig);
   const data = await VacationTc023Data.create(
     globalConfig.testDataMode,
     tttConfig,
+    request,
   );
 
   await globalConfig.applyViewport(page);

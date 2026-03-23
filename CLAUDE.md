@@ -63,6 +63,8 @@ The autotest framework lives in `autotests/` and shares config with the expert s
 
 When you discover new information during autotest generation (selectors, UI quirks, data patterns), write it back to the vault via `mcp__obsidian__write_note` with `mode: "append"`.
 
+**Test step conventions:** Test documentation uses prefixed steps — `SETUP:` (API state creation), `CLEANUP:` (teardown), `DB-CHECK:` (data verification), unprefixed (main UI steps). When generating autotests, map these to `ApiVacationSetupFixture` for setup/cleanup and `DbClient` for DB checks.
+
 ## Key references
 
 - `CLAUDE+.md` — full autonomous system prompt (for reference, not loaded in interactive mode)

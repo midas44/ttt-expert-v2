@@ -71,13 +71,11 @@ export class MyVacationsPage {
 
   constructor(private readonly page: Page) {
     this.notificationCandidates = [
+      page.locator(".notification__theme--visible"),
+      page.locator("[class*='notification'][class*='visible']"),
       page.getByRole("status"),
       page.getByRole("alert"),
       page.locator("[class*='notification']"),
-      page.locator("[class*='message']"),
-      page.locator(".alert-success"),
-      page.locator(".toast-success"),
-      page.locator("[data-qa='notification']"),
       page.locator("[class*='toast']"),
     ];
   }
@@ -172,17 +170,18 @@ export class MyVacationsPage {
     return row.locator("td").nth(colIndex);
   }
 
-  /** Finds a notification element containing the given text. */
-  async findNotification(text: string): Promise<Locator> {
+  /**
+   * Finds a notification element containing the given text.
+   * Uses a race strategy: all candidates are checked in parallel every 300ms.
+   * Timeout is generous (15s) because the notification auto-hides after ~10s
+   * and we must catch it while visible.
+   */
+  async findNotification(text: string, timeout = 15_000): Promise<Locator> {
     const textPattern = new RegExp(escapeRegExp(text), "i");
     const candidates = this.notificationCandidates.map((loc) =>
       loc.filter({ hasText: textPattern }),
     );
-    // Add a general text-based fallback
-    candidates.push(
-      this.page.locator(`text=${text}`),
-    );
-    return pollForMatch(candidates, { timeout: 7000 });
+    return pollForMatch(candidates, { timeout, interval: 300 });
   }
 
   /** Opens the edit dialog by clicking the pencil icon on a vacation row. */

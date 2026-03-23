@@ -32,6 +32,7 @@ Playwright API
 | Test spec | `{module}-{test-id}.spec.ts` | `vacation-tc001.spec.ts` |
 | Data class | `{Module}{TestId}Data` | `VacationTc001Data` |
 | Fixture | `{Feature}Fixture` | `VacationCreationFixture` |
+| API setup fixture | `Api{Module}SetupFixture` | `ApiVacationSetupFixture` |
 | Page object | `{PageName}Page` / `{Dialog}Dialog` | `MyVacationsPage` |
 
 ## UI Test Boilerplate

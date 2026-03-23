@@ -581,17 +581,67 @@ WRONG:
 **When API/DB steps are appropriate (exceptions only):**
 - **Test endpoints** — clock manipulation (`PATCH /api/ttt/test/v1/clock`), employee sync, notification triggers — these have no UI equivalent
 - **Data verification** — checking DB state after a UI action (e.g., "Verify in DB: SELECT status FROM vacation WHERE id = <created_id>")
-- **Test data setup/teardown** — creating precondition data that would be impractical through UI (e.g., setting up multiple vacations for a conflict test)
+- **State setup** — creating precondition state that the test itself doesn't create (see Setup Steps below)
+- **Test data teardown** — cleanup after test (delete created entities)
 - **Explicitly API-only features** — endpoints exposed to integrated projects, webhooks, service-to-service communication
 
+### Setup Steps — Creating Precondition State (CRITICAL)
+
+Many tests require **specific application state** that the test itself doesn't create. For example, "Cancel an APPROVED vacation" needs an APPROVED vacation to exist before the test begins. **The test documentation must include explicit setup steps for creating this state.**
+
+**Rule: If a test's preconditions describe state that doesn't naturally exist in the DB (e.g., "Vacation in APPROVED status", "CANCELED vacation with future dates"), the Steps column MUST include SETUP steps that create that state.** Without these, the autotest generator has to guess how to create the state, leading to fragile tests.
+
+**SETUP steps use API calls** because they are faster and more reliable than UI for state creation. The test's main verification steps remain UI-focused.
+
+```
+CORRECT — Cancel APPROVED vacation:
+  Preconditions: Employee with sufficient vacation days and a manager
+  Steps:
+    SETUP: Via API — create a REGULAR vacation for the employee (POST /api/vacation/v1/vacations)
+    SETUP: Via API — approve the vacation as manager (POST /api/vacation/v1/vacations/{id}/approve)
+    1. Login as the employee
+    2. Navigate to My Vacations page
+    3. Find the APPROVED vacation in the table
+    4. Click the cancel button on the vacation row
+    5. Confirm cancellation in the dialog
+    6. Verify vacation status changes to "Canceled"
+    CLEANUP: Via API — delete the vacation (DELETE /api/vacation/v1/vacations/{id})
+
+WRONG — Cancel APPROVED vacation:
+  Preconditions: Existing APPROVED vacation (assumes one exists in DB)
+  Steps:
+    1. Login as employee
+    2. Find APPROVED vacation
+    3. Cancel it
+    → Fails when no APPROVED vacation exists in the test environment
+```
+
+**When to include SETUP steps:**
+- Test needs a vacation in a specific status (NEW, APPROVED, REJECTED, CANCELED, PAID)
+- Test needs multiple vacations for the same employee (overlap test, pagination)
+- Test needs specific employee-manager relationship verified
+- Test needs clock/time manipulation
+- Test needs data in a state that only exists after a multi-step workflow (create → approve → pay)
+
+**SETUP step format:**
+- Prefix: `SETUP:` — clearly separates preparation from the actual test
+- Include the API endpoint and key parameters
+- Include the purpose (e.g., "create APPROVED vacation for cancellation test")
+
+**CLEANUP step format:**
+- Prefix: `CLEANUP:` — separates teardown from the test
+- Delete or revert any state created by SETUP steps
+- Always include cleanup to prevent test pollution
+
 **Step writing guidelines:**
-1. Use the user's perspective: "Click", "Navigate to", "Fill in", "Select", "Verify on page"
+1. Use the user's perspective for main steps: "Click", "Navigate to", "Fill in", "Select", "Verify on page"
 2. Reference UI elements by their visible labels, not CSS selectors or API field names
 3. Include what the user should see after each significant action (notifications, status changes, table updates)
-4. For preconditions that need test environment manipulation, prefix with "SETUP:" (e.g., "SETUP: Set server clock to Jan 15 via test API")
-5. For data verification beyond what's visible in UI, prefix with "DB-CHECK:" (e.g., "DB-CHECK: Verify vacation_days.days decreased by 5")
-6. The Preconditions column should describe data requirements with SQL query hints for the automation layer (e.g., "Employee in AV=false office. Query: SELECT e.login FROM employee e JOIN office o ON e.office_id = o.id WHERE o.advance_vacation = false AND e.enabled = true")
-7. The Notes column can reference API endpoints and DB tables for the automation layer, but Steps must remain UI-focused
+4. Use `SETUP:` prefix for API/DB state creation before the main test flow
+5. Use `CLEANUP:` prefix for API/DB teardown after the main test flow
+6. Use `DB-CHECK:` prefix for data verification beyond what's visible in UI (e.g., "DB-CHECK: Verify vacation_days.days decreased by 5")
+7. The Preconditions column should describe data requirements with SQL query hints for the automation layer (e.g., "Employee in AV=false office. Query: SELECT e.login FROM employee e JOIN office o ON e.office_id = o.id WHERE o.advance_vacation = false AND e.enabled = true")
+8. The Notes column can reference API endpoints and DB tables for the automation layer, but main steps must remain UI-focused
 
 **Pure API test suites** — If a module has endpoints with no UI representation (service integration APIs, webhooks), create a separate suite prefixed `TS-<Area>-API` for those cases only. These are the exception, not the default.
 
@@ -676,6 +726,7 @@ Playwright API
 4. No hardcoded test data in specs — all dynamic data lives in dedicated `*Data` classes
 5. Every verification step: `globalConfig.delay()` → assertion → screenshot capture
 6. Page objects use composition, not inheritance
+7. Tests needing specific state (APPROVED/CANCELED vacation, etc.) must create it via API setup (`ApiVacationSetupFixture`) in the data class — never rely on pre-existing DB state. Try DB query first (fast), fall back to API creation if not found. Data class `create()` accepts optional `request?: APIRequestContext` for this.
 
 ### Session Protocol for Phase C
 

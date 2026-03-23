@@ -1,9 +1,16 @@
 declare const process: { env: Record<string, string | undefined> };
 
+import type { APIRequestContext } from "@playwright/test";
 import type { TestDataMode } from "../config/configUtils";
 import type { TttConfig } from "../config/tttConfig";
 import { DbClient } from "../config/db/dbClient";
-import { findEmployeeWithVacation } from "./queries/vacationQueries";
+import {
+  findEmployeeWithVacation,
+  findEmployeeWithVacationDays,
+} from "./queries/vacationQueries";
+import {
+  ApiVacationSetupFixture,
+} from "../fixtures/ApiVacationSetupFixture";
 
 const MONTH_ABBREVS = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -16,8 +23,8 @@ const MONTH_NAMES = [
 
 /**
  * TC-VAC-023: Restore CANCELED vacation (re-open).
- * Finds a CANCELED vacation with future start_date.
- * The employee will edit it to restore it from CANCELED → NEW.
+ * Tries to find a CANCELED vacation with future start_date.
+ * If none exists, creates one via API (create → cancel).
  */
 export class VacationTc023Data {
   readonly username: string;
@@ -28,16 +35,29 @@ export class VacationTc023Data {
   static async create(
     mode: TestDataMode,
     tttConfig: TttConfig,
+    request?: APIRequestContext,
   ): Promise<VacationTc023Data> {
     if (mode === "static") return new VacationTc023Data();
 
     const db = new DbClient(tttConfig);
     try {
-      // Find a CANCELED vacation with future start date
-      const row = await findEmployeeWithVacation(db, "CANCELED", true);
-      const start = VacationTc023Data.isoToDdMmYyyy(row.start_date);
-      const end = VacationTc023Data.isoToDdMmYyyy(row.end_date);
-      return new VacationTc023Data(row.login, start, end);
+      // Try to find an existing CANCELED future vacation
+      try {
+        const row = await findEmployeeWithVacation(db, "CANCELED", true);
+        const start = VacationTc023Data.isoToDdMmYyyy(row.start_date);
+        const end = VacationTc023Data.isoToDdMmYyyy(row.end_date);
+        return new VacationTc023Data(row.login, start, end);
+      } catch {
+        // None found — create and cancel one via API
+        if (!request) throw new Error("No CANCELED vacation found and no API request context for setup");
+        const employee = await findEmployeeWithVacationDays(db, 5);
+        const dates = await ApiVacationSetupFixture.findAvailableWeek(tttConfig, employee);
+        const setup = new ApiVacationSetupFixture(request, tttConfig);
+        const vacation = await setup.createAndCancel(employee, dates.startDate, dates.endDate);
+        const start = VacationTc023Data.isoToDdMmYyyy(dates.startDate);
+        const end = VacationTc023Data.isoToDdMmYyyy(dates.endDate);
+        return new VacationTc023Data(employee, start, end);
+      }
     } finally {
       await db.close();
     }

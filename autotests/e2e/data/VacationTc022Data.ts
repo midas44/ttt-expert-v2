@@ -1,9 +1,17 @@
 declare const process: { env: Record<string, string | undefined> };
 
+import type { APIRequestContext } from "@playwright/test";
 import type { TestDataMode } from "../config/configUtils";
 import type { TttConfig } from "../config/tttConfig";
 import { DbClient } from "../config/db/dbClient";
-import { findEmployeeWithVacation } from "./queries/vacationQueries";
+import {
+  findEmployeeWithVacation,
+  findEmployeeWithVacationDays,
+} from "./queries/vacationQueries";
+import {
+  ApiVacationSetupFixture,
+  type VacationApiResult,
+} from "../fixtures/ApiVacationSetupFixture";
 
 const MONTH_ABBREVS = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -16,7 +24,8 @@ const MONTH_NAMES = [
 
 /**
  * TC-VAC-022: Cancel APPROVED vacation.
- * Finds an existing APPROVED future vacation and cancels it.
+ * Tries to find an existing APPROVED future vacation. If none exists,
+ * creates one via API setup (create + approve).
  */
 export class VacationTc022Data {
   readonly username: string;
@@ -24,19 +33,35 @@ export class VacationTc022Data {
   readonly endDate: string;
   readonly periodPattern: RegExp;
   readonly expectedStatusAfterCancel = "Canceled";
+  /** If API-created, holds the vacation ID for cleanup. */
+  readonly setupVacationId?: number;
 
   static async create(
     mode: TestDataMode,
     tttConfig: TttConfig,
+    request?: APIRequestContext,
   ): Promise<VacationTc022Data> {
     if (mode === "static") return new VacationTc022Data();
 
     const db = new DbClient(tttConfig);
     try {
-      const row = await findEmployeeWithVacation(db, "APPROVED", true);
-      const start = VacationTc022Data.isoToDdMmYyyy(row.start_date);
-      const end = VacationTc022Data.isoToDdMmYyyy(row.end_date);
-      return new VacationTc022Data(row.login, start, end);
+      // Try to find an existing APPROVED future vacation
+      try {
+        const row = await findEmployeeWithVacation(db, "APPROVED", true);
+        const start = VacationTc022Data.isoToDdMmYyyy(row.start_date);
+        const end = VacationTc022Data.isoToDdMmYyyy(row.end_date);
+        return new VacationTc022Data(row.login, start, end);
+      } catch {
+        // None found — create one via API
+        if (!request) throw new Error("No APPROVED vacation found and no API request context for setup");
+        const employee = await findEmployeeWithVacationDays(db, 5);
+        const dates = await ApiVacationSetupFixture.findAvailableWeek(tttConfig, employee);
+        const setup = new ApiVacationSetupFixture(request, tttConfig);
+        const vacation = await setup.createAndApprove(employee, dates.startDate, dates.endDate);
+        const start = VacationTc022Data.isoToDdMmYyyy(dates.startDate);
+        const end = VacationTc022Data.isoToDdMmYyyy(dates.endDate);
+        return new VacationTc022Data(employee, start, end, vacation.id);
+      }
     } finally {
       await db.close();
     }
@@ -51,10 +76,12 @@ export class VacationTc022Data {
     username = process.env.VACATION_TC022_USERNAME ?? "ozarubina",
     startDate = process.env.VACATION_TC022_START_DATE ?? "29.06.2026",
     endDate = process.env.VACATION_TC022_END_DATE ?? "10.07.2026",
+    setupVacationId?: number,
   ) {
     this.username = username;
     this.startDate = startDate;
     this.endDate = endDate;
+    this.setupVacationId = setupVacationId;
     this.periodPattern = this.buildPeriodPattern();
   }
 

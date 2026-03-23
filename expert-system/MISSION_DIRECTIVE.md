@@ -131,7 +131,8 @@ where envURL = https://ttt-[env].noveogroup.com (e.g. https://ttt-qa-1.noveogrou
 ### Phase B — XLSX Test Documentation
 - Test plans as XLSX (one per major module/feature area)
 - Test cases as XLSX (detailed, executable)
-- **UI-first test steps** — steps describe user actions in the browser (login, navigate, click, fill, verify), NOT raw API calls. API steps only for: test endpoints (clock, sync), data verification (DB checks), or features with no UI
+- **UI-first test steps** — steps describe user actions in the browser (login, navigate, click, fill, verify), NOT raw API calls. API steps only for: test endpoints (clock, sync), data verification (DB checks), state setup, or features with no UI
+- **Explicit setup steps** — when a test needs specific state (APPROVED/CANCELED vacation, etc.), include `SETUP:` steps that create the state via API before the main UI flow. Include `CLEANUP:` steps for teardown. Never assume state exists in the DB.
 - Preconditions must include SQL query hints for dynamic test data generation (by database mining with criteria, random employee selection, timestamp computation, static values etc.)
 - Generation scope configurable via `phase.scope` in config.yaml (`"all"` or a specific module name)
 - Compatible with Google Sheets import

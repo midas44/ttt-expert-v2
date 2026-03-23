@@ -3,9 +3,10 @@
 ## Process
 
 1. **Read the test case** from `autotests/manifest/test-cases.json` or accept a TC-ID
-2. **Enrich from vault**: search QMD for module + feature → read vault notes for validation rules, selectors, edge cases
-3. **Check existing code**: scan `autotests/e2e/pages/` and `e2e/fixtures/` for reusable components
-4. **Generate artifacts** in order: data class → page objects (if needed) → fixtures (if needed) → test spec
+2. **Parse step prefixes**: identify `SETUP:` steps (API state creation), `CLEANUP:` steps (teardown), `DB-CHECK:` steps (data verification), and main UI steps (unprefixed)
+3. **Enrich from vault**: search QMD for module + feature → read vault notes for validation rules, selectors, edge cases
+4. **Check existing code**: scan `autotests/e2e/pages/` and `e2e/fixtures/` for reusable components
+5. **Generate artifacts** in order: data class → page objects (if needed) → fixtures (if needed) → test spec
 5. **Run and verify**: `npx playwright test <spec> --project=chrome-headless`
 6. **Track**: update SQLite `autotest_tracking` table
 
@@ -189,11 +190,51 @@ Generated test data must be **realistic and similar to existing data** in the sy
 - Always `exact: true` when name could be substring
 - Encapsulate selectors in page objects, never in specs
 
+## Step Prefixes from Test Documentation
+
+The XLSX test documentation uses prefixed steps to distinguish setup/teardown from the main test flow. Map these to code:
+
+| Prefix | Meaning | Code pattern |
+|--------|---------|-------------|
+| `SETUP:` | Create precondition state via API before UI test | `ApiVacationSetupFixture` in data class `create()` or test setup block |
+| `CLEANUP:` | Revert state after test | `finally` block with `ApiVacationSetupFixture.deleteVacation()` |
+| `DB-CHECK:` | Verify DB state beyond what UI shows | `DbClient` query + assertion |
+| _(no prefix)_ | Main UI step | Page objects + fixtures |
+
+**When generating code from steps with SETUP: prefix, use `ApiVacationSetupFixture`** rather than inventing setup logic. The test documentation specifies which API calls to make.
+
+## API Setup for Test Preconditions
+
+When a test has `SETUP:` steps or requires specific state that may not exist in the DB (e.g., an APPROVED or CANCELED vacation), **create that state via API in the test setup phase** rather than relying on pre-existing data:
+
+1. Use `ApiVacationSetupFixture` (in `e2e/fixtures/`) for vacation state setup
+2. The data class `create()` method should accept an optional `request: APIRequestContext` parameter
+3. Try DB query first (fast). If no matching data found, fall back to API creation
+4. Use JWT auth (`getJwtForUser()`) for endpoints with `@CurrentUser` validation
+5. Use `API_SECRET_TOKEN` for approve/admin operations (pvaynmaster is CPO)
+6. Record created IDs for cleanup
+
+**Pattern:**
+```typescript
+static async create(mode: TestDataMode, tttConfig: TttConfig, request?: APIRequestContext) {
+  const db = new DbClient(tttConfig);
+  try {
+    try {
+      return await findExistingData(db);  // Fast path
+    } catch {
+      if (!request) throw new Error("No data found and no request context for setup");
+      const setup = new ApiVacationSetupFixture(request, tttConfig);
+      return await setup.createAndApprove(employee, startDate, endDate);  // Setup path
+    }
+  } finally { await db.close(); }
+}
+```
+
 ## Cleanup Requirements
 
 - Tests that create data MUST clean up (delete vacation, remove task, etc.)
 - Use `logout.runViaDirectUrl()` + `page.close()` at test end
-- API tests with mutations: include DELETE/reset step
+- API-created setup data: use `ApiVacationSetupFixture.deleteVacation(id)` in finally block
 
 ## Vault Integration (Expert System Advantage)
 

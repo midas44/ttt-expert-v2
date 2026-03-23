@@ -31,6 +31,7 @@ Read the test case from the JSON manifest (`autotests/manifest/test-cases.json`)
 If the manifest is missing or outdated, invoke the `xlsx-parser` skill first.
 
 Extract: test case ID, module, title, preconditions, steps, expected results, priority.
+Parse step prefixes: `SETUP:` (API state creation before test), `CLEANUP:` (teardown after test), `DB-CHECK:` (data verification), unprefixed (main UI steps).
 
 ### 2. Enrich from Knowledge Base
 
@@ -119,6 +120,7 @@ WHERE test_id = '<TC-ID>';
 4. **Reuse before creating.** Check existing pages/ and fixtures/ first.
 5. **Vault-first knowledge.** Search the vault before generating — it has selectors, validation rules, and quirks.
 6. **Three data modes.** Every data class must support static, dynamic, and saved.
+7. **API setup for preconditions.** When a test needs specific state (APPROVED/CANCELED vacation, etc.), create it via `ApiVacationSetupFixture` in the data class setup — don't rely on pre-existing DB state. Try DB query first, fall back to API creation. Accept `request?: APIRequestContext` in `create()` for this.
 
 ## References
 

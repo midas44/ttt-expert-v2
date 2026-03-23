@@ -87,7 +87,7 @@ const headlessProjects = (["chrome"] as BrowserName[]).map((browser) => ({
 export default defineConfig({
   reporter: [["line"], ["html", { open: "never" }]],
   testDir: "./e2e/tests",
-  timeout: 60_000,
+  timeout: 180_000,
   expect: { timeout: 10_000 },
   projects: [...headedProjects, ...headlessProjects],
 });

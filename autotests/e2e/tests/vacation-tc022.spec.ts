@@ -11,13 +11,15 @@ import { MyVacationsPage } from "../pages/MainPage";
 
 test("TC-VAC-022 - Cancel APPROVED vacation @regress", async ({
   page,
+  request,
 }, testInfo) => {
-  // 1. Config and data
+  // 1. Config and data (request passed for API setup if no APPROVED vacation exists in DB)
   const tttConfig = new TttConfig();
   const globalConfig = new GlobalConfig(tttConfig);
   const data = await VacationTc022Data.create(
     globalConfig.testDataMode,
     tttConfig,
+    request,
   );
 
   // 2. Apply viewport
