@@ -414,7 +414,9 @@ Follow §11 (Phase B — Test Documentation Generation) session protocol:
 
 For the target module:
 a. Enrich knowledge first — explore the UI via Playwright, read vault notes, check code
-b. Write test steps as UI/browser actions (login, navigate, click, fill, verify) — NOT API calls
+b. Mine GitLab tickets: search related issues, read descriptions AND comments (comments contain bugs, edge cases, reproduction steps)
+c. Create test cases from bug reports — each confirmed bug = regression test case, tag with ticket number
+d. Write test steps as UI/browser actions (login, navigate, click, fill, verify) — NOT API calls
 c. API steps only for: test endpoints (clock), data verification (DB checks), features with no UI
 d. Include SQL query hints in Preconditions for dynamic test data generation
 e. Generate the Python script and XLSX workbook
@@ -471,6 +473,8 @@ Follow §9 Session Protocol:
 8. Pick top 2-3 items from _INVESTIGATION_AGENDA.md by priority
 
 Execute the INVESTIGATE → ANALYZE → SYNTHESIZE → STORE → CONNECT cycle for each item.
+
+IMPORTANT: Mine GitLab tickets for the module(s) in scope — search issues, read descriptions AND comments (comments contain the real bug details). See §10 "GitLab Ticket Mining".
 
 $(if (( session_num % 5 == 0 )); then echo "This is session ${session_num} (multiple of 5) — also run maintenance per §9.4: compress old investigations, detect stale notes, audit cross-references, clean SQLite, refine agenda."; fi)
 

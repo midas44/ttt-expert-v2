@@ -102,8 +102,10 @@ Use links to figma layers from GitLab tickets and Confluence pages
 
 ### Tickets
 - **GitLab tickets**: https://gitlab.noveogroup.com/noveo-internal-tools/ttt-spring/-/boards (see skill gitlab-access)
-  - Key labels: Sprint X, HotFix Sprint X, where X>=11 and X<=[current_sprint], ([current_sprint] number from config.yaml)
-  - Note: try to define tasks/tickets with latest implementations; but for some areas older tickets can be useful.
+  - Labels: Sprint X, HotFix Sprint X — but NOT all tickets have sprint labels
+  - **Search strategy**: search by module keyword in title/description, NOT only by sprint label. Use `updated_after`/`created_after` params + keyword search to find all relevant tickets regardless of sprint labeling
+  - **Scope**: start from current sprint (`current_sprint` in config.yaml) and work backwards through ALL history. Some features were introduced years ago — relevant tickets (bugs, edge cases) may be in Sprint 7 or earlier. Old tickets with bugs that were never fixed or have edge cases in comments are critical for test case generation
+  - **Always read ticket comments** — most bug details (reproduction steps, edge cases, root cause) are in comments, not descriptions
 
 ### Additional Documents
 - **Google Docs**: by links from Confluence pages and GitLab tickets (access by link, no mcp required)

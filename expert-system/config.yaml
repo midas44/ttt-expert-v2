@@ -4,10 +4,10 @@ session:
   offhours_utc: 15:00-03:00
   max_duration_minutes: 120
 phase:
-  current: autotest_generation
-  generation_allowed: true
+  current: knowledge_acquisition
+  generation_allowed: false
   coverage_override: -1
-  scope: vacation
+  scope: day-off                     # "all", module name, or comma list (e.g. "vacation, statistics")
 thresholds:
   knowledge_coverage_target: 0.8
   note_quality_min_links: 2
@@ -46,7 +46,7 @@ autotest:
   target_env: qa-1
   max_tests_per_session: 5
   auto_fix_attempts: 3
-  scope: vacation
+  scope: day-off
   priority_order:
   - vacation
   - sick-leave

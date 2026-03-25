@@ -483,6 +483,56 @@ Comprehensive tool runs per module, test suite analysis, security scanning, dead
 ### Business Logic (Sessions 16-25)
 Business workflows through code AND live app, requirements correlation, undocumented logic, edge cases from exploration, inferred ADRs, GitLab history, divergences (requirements vs. code vs. behavior).
 
+### GitLab Ticket Mining (CRITICAL — every phase)
+
+**GitLab tickets are the richest source of real-world bug knowledge.** Most TTT bug reports contain the critical details in **comments**, not in the issue description. The description is often a brief summary; the comments contain reproduction steps, root cause analysis, screenshots, edge cases discovered during investigation, workarounds, and related bugs found during fixing.
+
+**Mandatory for every module under investigation:**
+
+1. **Search GitLab for ALL tickets** related to the module — use MULTIPLE search strategies, not just sprint labels:
+   ```bash
+   # By keyword in title/description (primary — catches unlabeled tickets)
+   curl "https://gitlab.noveogroup.com/api/v4/projects/172/issues?search=<module_keyword>&per_page=100&order_by=updated_at&sort=desc" --noproxy gitlab.noveogroup.com
+
+   # By label (supplementary — not all tickets have sprint labels)
+   curl ".../issues?labels=<module>&per_page=100&order_by=updated_at&sort=desc"
+
+   # Paginate through ALL results — don't stop at page 1
+   # Some features were introduced in Sprint 7 or earlier; relevant bugs may be very old
+   ```
+   **Search the ENTIRE ticket history**, not just recent sprints. Start from `current_sprint` (config.yaml) and work backwards. Old tickets are often the most valuable — they contain bugs that were never fixed, edge cases discovered years ago, and foundational implementation details. Use `updated_at` and `created_at` to organize, but do NOT filter by date or sprint number.
+
+2. **Read BOTH description AND comments** for every relevant ticket: `curl ".../issues/<id>/notes"` — the valuable content is scattered across comments, not concentrated in descriptions. Scan ALL comments looking for patterns that indicate test-worthy information:
+
+   **Bug report patterns in comments** (identify and extract these):
+   - `* [ ]` or `- [ ]` checkbox lists — these are almost always bug reports or acceptance criteria
+   - **Expected** / **Actual** / **Env** in bold — structured bug report format
+   - "Steps to reproduce" or numbered reproduction steps
+   - Screenshots or screen recordings (note the attachment — download if needed)
+   - "Regression" or "broken after" — indicates a change that broke existing behavior
+   - Error messages or stack traces pasted from the app
+
+   **Design & architecture patterns in comments** (equally important):
+   - Comments titled or starting with "**Design Notes**" or "Design:" — contain implementation decisions, business rules, and edge case handling strategies
+   - "Note:" or "Important:" prefixed comments — often contain constraints or gotchas
+   - Long technical comments explaining WHY something works a certain way — reveals hidden business rules
+   - Comments from QA team members — often describe edge cases found during testing
+   - "While testing this, I also noticed..." — reveals related bugs and side effects
+
+   **Don't filter comments by length or author** — short comments like "also broken for disabled employees" are high-value edge cases. Let the content pattern guide extraction, not metadata.
+
+3. **Create test cases from bug reports** — each confirmed bug is a potential regression test case. In Phase B, generate specific test cases tagged with the ticket number (e.g., "TC-DO-045: Day-off approval race condition (#3127)")
+4. **Document corner cases from comments** — when a comment describes an edge case ("this also fails when the employee has no manager"), add it to the vault note AND create a test case for it
+5. **Check closed tickets too** — fixed bugs are the best source of regression test cases
+
+**Handling old vs. new information:** The project is old — some modules haven't changed in years. When mining tickets:
+- **Old bug reports are valuable** if the bug was never fixed or the fix introduced new edge cases — check the current code/behavior to verify
+- **Old feature descriptions** may be outdated — always verify against current code before including in vault
+- **Closed/fixed tickets** are the best source of regression test cases — the fix is in the code, the bug scenario is the test case
+- When ticket info conflicts with current code behavior, trust the code and note the discrepancy
+
+**Store ticket findings in vault:** Create `exploration/tickets/<module>-ticket-findings.md` with structured summaries of bugs, edge cases, and test-worthy scenarios discovered from tickets. Include ticket number, summary, current status (still reproducible?), and proposed test case.
+
 ### Coverage Assessment and Phase Transition
 Update `_KNOWLEDGE_COVERAGE.md` comprehensively, query module_health for gaps.
 
@@ -492,6 +542,12 @@ Update `_KNOWLEDGE_COVERAGE.md` comprehensively, query module_health for gaps.
 - **full mode** (with `auto_phase_transition: true`): When coverage >= `thresholds.knowledge_coverage_target` AND no coverage_override is active (value is -1 or field absent), automatically update `config.yaml` to set `phase.current: "generation"` and `phase.generation_allowed: true`. Log the transition decision to `_SESSION_BRIEFING.md`. **Reset vault control files** (see Phase Reset Protocol below). The next session will begin Phase B.
 
 **Important:** Coverage assessment must be based on **depth, not breadth**. A module is not "covered" until its vault notes contain concrete testable details — validation rules with code snippets, error paths, permission requirements per endpoint, boundary values, and state transitions. A 200-word overview note does not count toward coverage.
+
+**Minimum depth requirements before A→B transition (per module in scope):**
+- Module vault note is 1000+ words with code snippets and validation rules
+- GitLab tickets for the module have been searched, and bug findings documented in `exploration/tickets/`
+- At least 3 different investigation methods used (code reading, API testing, UI exploration, DB analysis, ticket mining)
+- Known bugs and edge cases documented with ticket references
 
 **Do NOT modify session timing parameters** (`delay_minutes`, `delay_minutes_offhours`, `max_duration_minutes`, `max_sessions`) in config.yaml — these are managed by the human operator.
 
@@ -679,8 +735,9 @@ Phase B is not just generation — it requires **deeper, more specific investiga
 1. **Re-investigate the module in depth** — read the actual code paths (validation logic, error handling, state machines, permission checks), trace edge cases through the codebase, verify behavior on the live app, check boundary conditions in the database
 2. **Rewrite or substantially expand existing vault notes** — replace abstract summaries with concrete details: exact field names, validation rules with code snippets, error codes and messages, API request/response examples, database constraints, permission matrices, state transition diagrams
 3. **Create new notes** for feature-specific findings (e.g., form validation rules, API error responses, edge case behaviors) that weren't captured in Phase A's broader sweep
-4. **Only generate test cases** after the knowledge base for that module has been enriched to the point where every test case can reference specific, concrete details — not abstract descriptions
-5. **Pause generation** if knowledge is insufficient — investigate first, update vault and SQLite, then resume with improved knowledge
+4. **Mine GitLab tickets for the module** — search for all related tickets, read descriptions AND comments (comments contain the real bug details, reproduction steps, edge cases). Create test cases for confirmed bugs (regression tests) and for corner cases discovered in ticket comments. See §10 "GitLab Ticket Mining" for the full protocol.
+5. **Only generate test cases** after the knowledge base for that module has been enriched to the point where every test case can reference specific, concrete details — not abstract descriptions
+6. **Pause generation** if knowledge is insufficient — investigate first, update vault and SQLite, then resume with improved knowledge
 
 **UI investigation is essential for Phase B.** Since test steps are now UI-focused, you must explore the actual UI via Playwright before writing test cases:
 - Navigate the pages related to the module, take snapshots, identify button labels and form fields
@@ -909,9 +966,19 @@ Compare against the manifest total for those modules. If covered >= manifest tot
 
 ### Phase Transition to Phase C
 
-When Phase B is complete for the modules in scope and `autotest.enabled` is `true`:
-- **hybrid mode**: Present Phase C readiness to human, wait for config update
-- **full mode** (with `auto_phase_transition: true`): When all modules in scope have XLSX in `test-docs/` and `autotest.enabled: true`, automatically update `phase.current: "autotest_generation"`. Log transition to `_SESSION_BRIEFING.md`. Copy `phase.scope` value to `autotest.scope` if set. **Reset vault control files** (see Phase Reset Protocol below).
+**Phase B→C transition is ALWAYS human-approved.** Premature transition produces shallow test documentation with fewer test cases and lower quality. Phase B needs enough sessions to:
+- Mine GitLab tickets thoroughly (descriptions AND comments for all related bugs)
+- Explore the full UI via Playwright (every page, every dialog, every form field)
+- Enrich vault notes to 1500+ words per module with code snippets and validation rules
+- Generate a comprehensive XLSX with 80+ test cases per major module (including regression tests from bugs)
+
+**When Phase B believes it is complete:**
+1. Log a "Phase B readiness report" to `_SESSION_BRIEFING.md` with: total test cases generated, suites covered, GitLab tickets mined, vault notes enriched
+2. **Do NOT auto-transition.** Set `autonomy.stop: true` and wait for human review
+3. The human will review the XLSX, check test case quality and coverage, then manually set `phase.current: "autotest_generation"` if satisfied
+4. If the human wants more depth, they will restart Phase B with `autonomy.stop: false`
+
+This applies regardless of `auto_phase_transition` setting. The A→B transition can still be automatic, but B→C requires human approval.
 
 ---
 
@@ -919,6 +986,8 @@ When Phase B is complete for the modules in scope and `autotest.enabled` is `tru
 
 ### GitLab — Code via local clone, tickets/MRs/pipelines via curl REST API
 The GitLab MCP server (`@modelcontextprotocol/server-gitlab`) is registered but **exposes no tools** on this self-hosted GitLab CE 16.11 instance. Always use **curl with the PAT** (Personal Access Token) stored in `.claude/.mcp.json` → `env.GITLAB_PERSONAL_ACCESS_TOKEN`. Add `--noproxy "gitlab.noveogroup.com"` to all curl calls. See the **gitlab-access** skill (`.claude/skills/gitlab-access/SKILL.md`) for full API reference, search patterns, attachment downloads, and pipeline operations.
+
+**CRITICAL: Always read ticket COMMENTS, not just descriptions.** Most TTT bug knowledge lives in comments — reproduction steps, root cause analysis, edge cases, screenshots. Use `GET /api/v4/projects/172/issues/:id/notes` to fetch all comments for a ticket. See §10 "GitLab Ticket Mining" for the full protocol.
 ### Confluence — Requirements via MCP. Assess accuracy against code and live behavior.
 ### Figma — Designs via MCP. Compare with implementation and live behavior.
 ### Qase — Always check existing tests before generating. Avoid duplication.
