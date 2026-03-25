@@ -1,13 +1,13 @@
 session:
-  delay_minutes: 15
-  delay_minutes_offhours: 15
+  delay_minutes: 10
+  delay_minutes_offhours: 10
   offhours_utc: 15:00-03:00
   max_duration_minutes: 120
 phase:
-  current: knowledge_acquisition
-  generation_allowed: false
-  coverage_override: 0
-  scope: day-off                     # "all", module name, or comma list (e.g. "vacation, statistics")
+  current: generation
+  generation_allowed: true
+  coverage_override: -1
+  scope: day-off
 thresholds:
   knowledge_coverage_target: 0.8
   note_quality_min_links: 2
@@ -27,11 +27,11 @@ testing_prod_envs:
 current_sprint: 15
 autonomy:
   mode: full
-  max_sessions: 200
+  max_sessions: 250
   consecutive_failure_limit: 3
   auto_phase_transition: true
   log_dir: expert-system/logs
-  stop: false
+  stop: true
   model: opus
   effort: max
   allow_api_mutations: true

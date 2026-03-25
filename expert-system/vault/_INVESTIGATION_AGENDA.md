@@ -15,46 +15,38 @@ scope: day-off
 - P2: Medium — within next 5 sessions
 - P3: Low — backlog
 
-## Phase B — Day-Off Test Documentation Generation (Active)
+## Phase B — Day-Off Test Documentation Generation (COMPLETE)
 
-**Scope**: day-off module only
-**Output**: `test-docs/day-off/day-off.xlsx` — unified workbook with Plan + TS- suites
+**Status**: COMPLETE — 121 test cases generated in `test-docs/day-off/day-off.xlsx`
 
-### P0 — Immediate (Next Session)
-- [ ] **Review vacation XLSX generator** — read `expert-system/generators/vacation/` for patterns, openpyxl conventions, formatting
-- [ ] **Design test suites** — define TS- tabs based on feature groupings (lifecycle, approval, calendar conflicts, search, validation, etc.)
-- [ ] **Enrich vault notes if gaps found** — deeper investigation for any area lacking concrete test step detail
+### Completed Items (Session 49 — Quality Review)
+- [x] **Gap analysis** — compared 99-case XLSX against all vault knowledge (14 notes, 35 bugs)
+- [x] **Optional approver voting** — added TC-DO-100–104 (voting + constraint validation)
+- [x] **Missing search types** — added TC-DO-105–108 (ON_PAID, DELEGATED_TO_ME, sorting, pagination)
+- [x] **Calendar edge cases** — added TC-DO-109–110 (half-day boundary, Path A orphan verification)
+- [x] **Validation gaps** — added TC-DO-111–113 (all-null, maxDate boundary, sick leave overlap)
+- [x] **Permission gap** — added TC-DO-118 (non-owner/non-approver security exception)
+- [x] **Notification events** — added TC-DO-114–117 (date change, approver change, optional approver, banner broadcast)
+- [x] **Regression gaps** — added TC-DO-119–121 (BUG-DO-15, BUG-DO-26, #3223 second regression)
+- [x] **Regenerated XLSX** — 121 cases, 8 suites, 14 risks
 
-### P1 — High Priority
-- [ ] **Build generator script** — `expert-system/generators/day-off/generate.py`
-- [ ] **Generate XLSX** — Plan Overview, Feature Matrix, Risk Assessment, all TS- tabs
-- [ ] **Write UI-first test steps** — all test cases use browser actions, SETUP/CLEANUP for state creation via API
-- [ ] **Include regression tests from bugs** — BUG-DO-1 through BUG-DO-35 (35 bugs → regression test cases)
-- [ ] **Track in SQLite** — insert all test cases into `test_case_tracking`
+### Completed Items (Session 48 — Initial Generation)
+- [x] **Build generator script** — `expert-system/generators/day-off/generate.py`
+- [x] **Generate XLSX** — initial 99 cases across 8 suites
+- [x] **Track in SQLite** — all cases in `test_case_tracking`
 
-### P2 — Quality & Completeness
-- [ ] **Cross-reference with Qase** — ensure no overlap with 12 existing tangential cases
-- [ ] **Review generated test cases** — verify traceability to vault notes and GitLab tickets
-- [ ] **Knowledge enrichment** — deeper investigation if test step writing reveals gaps
+## Pending — Human Decision Required
 
-### P3 — Backlog
-- [ ] **Figma comparison** — verify UI design alignment (nice-to-have)
+### Option A: Phase C Transition (Day-Off Autotests)
+- [ ] Human reviews XLSX quality and coverage (121 cases)
+- [ ] Set `phase.current: autotest_generation` in config.yaml
+- [ ] Parse XLSX into manifest
+- [ ] Begin Phase C autotest generation for day-off
 
-## Planned Test Suite Structure
-
-Based on vault knowledge (14 notes, 35 bugs, 6 investigation methods):
-
-| Suite | Focus | Est. Cases |
-|-------|-------|-----------|
-| TS-DayOff-Lifecycle | Create, edit, delete transfer request | 15-20 |
-| TS-DayOff-Approval | Manager approve, reject, redirect; optional approvers | 15-20 |
-| TS-DayOff-CalendarConflict | 4 conflict paths, cascade effects | 10-15 |
-| TS-DayOff-Search | 8 search types, filters, columns | 10-15 |
-| TS-DayOff-Validation | Form validation, boundary values, date constraints | 10-15 |
-| TS-DayOff-Permissions | Role-based access, EDIT_APPROVER unconditional | 8-10 |
-| TS-DayOff-Notifications | Email templates, overdue banner, auto-reject | 8-10 |
-| TS-DayOff-Regression | Bug-specific regression from BUG-DO-1 to BUG-DO-35 | 20-30 |
-| **Total** | | **~100-135** |
+### Option B: Phase B for Next Module
+- [ ] Choose next module (vacation, sick-leave, reports, etc.)
+- [ ] Update `phase.scope` in config.yaml
+- [ ] Run Phase A→B cycle for the new module
 
 <details>
 <summary>Phase A — Day-Off Knowledge Acquisition (Completed S47)</summary>
@@ -71,5 +63,5 @@ Based on vault knowledge (14 notes, 35 bugs, 6 investigation methods):
 - [x] API investigation — 7 bugs found (S9)
 - [x] DB analysis — data patterns, conflict analysis (S13-S15)
 
-**Final coverage: ~92%** | 14 vault notes | 35 bugs | 6 investigation methods
+**Final coverage: ~95%** | 14 vault notes | 35 bugs | 6 investigation methods
 </details>

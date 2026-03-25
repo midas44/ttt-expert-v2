@@ -216,11 +216,15 @@
 - [[debt/vacation-service-debt]] — 4 bugs, 2 security, schema debt
 - [[debt/planner-ordering-debt]] — Dual ordering, 9 issues
 
-## Phase B v2 — Generated Test Documentation (UI-First Restart)
+## Phase B v2 — Generated Test Documentation (UI-First)
 - **Vacation** (S30): `vacation/vacation.xlsx` (14 tabs, 109 cases) — 11 suites, UI-first test steps
   - TS-Vac-CRUD (20), TS-Vac-Lifecycle (10), TS-Vac-Approval (17), TS-Vac-Payment (8)
   - TS-Vac-DayCalc (8), TS-Vac-DayCorrection (5), TS-Vac-Chart (5), TS-Vac-Permissions (9)
   - TS-Vac-Validation (13), TS-Vac-Notifications (7), TS-Vac-Integration (7)
+- **Day-Off** (S48+S49): `day-off/day-off.xlsx` (11 tabs, 121 cases) — 8 suites, UI-first test steps
+  - TS-DayOff-Lifecycle (17), TS-DayOff-Approval (20), TS-DayOff-CalendarConflict (11)
+  - TS-DayOff-Search (12), TS-DayOff-Validation (12), TS-DayOff-Permissions (9)
+  - TS-DayOff-Notifications (11), TS-DayOff-Regression (29)
 
 ## Exploration — Tickets (GitLab Mining)
 - [[exploration/tickets/day-off-ticket-findings]] — **[S46]** 25+ tickets mined, 20+ bugs, 6 categories: calendar cascade, transfer bugs, UI display, availability chart, cross-feature, feature design

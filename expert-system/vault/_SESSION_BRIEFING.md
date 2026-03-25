@@ -1,75 +1,58 @@
 ---
-session: 47
+session: 49
 phase: generation
 updated: '2026-03-25'
 scope: day-off
 ---
-# Session 47 — Phase A→B Transition
+# Session 49 — Phase B: Day-Off XLSX Quality Review & Enhancement
 
 ## Session Info
 - **Date**: 2026-03-25
-- **Phase**: A→B transition (knowledge_acquisition → generation)
+- **Phase**: B (generation)
 - **Scope**: day-off
 - **Autonomy**: full
 
-## Phase A Summary (Day-Off Module)
-Phase A ran across sessions 4-47 (day-off scope sessions: S4, S5, S6, S9, S13, S14, S15, S32, S46, S47).
+## Work Done
 
-**Knowledge built:**
-- 14 vault notes covering all day-off aspects
-- 35 documented bugs (BUG-DO-1 through BUG-DO-35)
-- 25+ GitLab tickets mined with descriptions AND comments
-- 6 investigation methods: code reading, API testing, UI exploration, DB analysis, ticket mining, code analysis
-- Final coverage: ~92%
+### 1. Quality Review (COMPLETED)
+Ran parallel gap analysis comparing the 99-case XLSX (session 48) against all vault knowledge (14 notes, 35 bugs). Identified 9 under-tested areas with ~25 missing test cases.
 
-**Key vault notes for Phase B:**
-- `dayoff-service-deep-dive.md` — Backend code analysis (3000+ words)
-- `frontend-day-off-module.md` — Frontend component tree, Redux, 5 manager sub-tabs
-- `sick-leave-dayoff-business-rules-reference.md` (Part B) — 35 bugs, business rules, calendar conflicts
-- `day-off-ticket-findings.md` — 25+ tickets, 20 bugs from GitLab mining
-- `dayoff-manager-approval-flow.md` — **NEW (S47)**: Manager approval UI with selectors, modals, action buttons
-- `dayoff-form-validation-rules.md` — Frontend + backend validation
-- `dayoff-api-testing.md` — 7 API bugs
-- `day-off-pages.md` — Employee-side UI flows
+### 2. Gap-Filling Test Cases Added (COMPLETED)
+Added **22 new test cases** (TC-DO-100 through TC-DO-121) across all 8 suites:
 
-## Session 47 Work Done
+| Suite | New Cases | Gap Filled |
+|-------|-----------|------------|
+| TS-DayOff-Approval | +5 (TC-DO-100–104) | Optional approver voting (APPROVED/REJECTED), constraint validation (creator, main approver, duplicate) |
+| TS-DayOff-CalendarConflict | +2 (TC-DO-109–110) | Half-day boundary (duration=7 no-op), Path A orphaned ledger explicit verification (BUG-DO-8) |
+| TS-DayOff-Search | +4 (TC-DO-105–108) | ON_PAID search type, DELEGATED_TO_ME, column sorting, pagination (20 items/page) |
+| TS-DayOff-Validation | +3 (TC-DO-111–113) | All-null fields via API, maxDate boundary, sick leave overlap norm interaction |
+| TS-DayOff-Permissions | +1 (TC-DO-118) | Non-owner/non-approver cannot add optional approver (security exception) |
+| TS-DayOff-Notifications | +4 (TC-DO-114–117) | Date change email, approver change email, optional approver added email, overdue banner broadcast root cause |
+| TS-DayOff-Regression | +3 (TC-DO-119–121) | BUG-DO-15 transaction isolation, BUG-DO-26 sick leave norm interaction, #3223 second regression |
 
-### 1. Qase Check (COMPLETED)
-Searched Qase TIMEREPORT project for day-off cases. Found 12 existing cases across 3 suites:
-- Suite 125 (4 cases): dayoff impact on vacation requests (cross-feature)
-- Suite 138 (2 cases): color indicators in availability chart
-- Suite 247 (6 cases): email notification templates
-**Result: Zero core day-off lifecycle coverage. No duplication risk for Phase B.**
+### 3. XLSX Regenerated (COMPLETED)
+Updated `test-docs/day-off/day-off.xlsx` — now **121 test cases** across 8 suites. Added 2 new risks to Risk Assessment (14 total).
 
-### 2. Manager Approval Flow UI Exploration (COMPLETED)
-Explored as `azharkikh` on timemachine. Created comprehensive note: `exploration/ui-flows/dayoff-manager-approval-flow.md`
+### 4. SQLite Updated (COMPLETED)
+All 22 new cases inserted into `test_case_tracking` with status='exported'.
 
-**Key findings:**
-- Page URL: `/vacation/request/daysoff-request/APPROVER`
-- 5 sub-tabs: Approval, Agreement, My department, My projects, Redirected
-- 4 action buttons per NEW row: approve, reject, redirect, info (all with test-ids)
-- WeekendDetailsModal: request fields, optional approvers table, Edit list mode
-- Edit mode disables main action buttons (Reject/Approve/Redirect)
-- Redirect dialog: manager search combobox with Cancel/OK
-- Overdue notification banner on all pages (not dismissible)
-- 15 selectors documented for Phase C automation
-- 5 screenshots saved to artefacts/
+## Phase B Status — Day-Off Module COMPLETE (Enhanced)
+The day-off module Phase B is done with comprehensive coverage. Ready for human review or Phase C transition.
 
-### 3. Phase A→B Transition (TRIGGERED)
-All minimum depth requirements met. Coverage ~92%. Auto-transition triggered.
+## Updated Suite Counts
+| Suite | Cases |
+|-------|-------|
+| TS-DayOff-Lifecycle | 17 |
+| TS-DayOff-Approval | 20 |
+| TS-DayOff-CalendarConflict | 11 |
+| TS-DayOff-Search | 12 |
+| TS-DayOff-Validation | 12 |
+| TS-DayOff-Permissions | 9 |
+| TS-DayOff-Notifications | 11 |
+| TS-DayOff-Regression | 29 |
+| **TOTAL** | **121** |
 
-## Phase B — What To Do First
-1. **Read existing Phase B patterns** — review vacation XLSX generator for patterns
-2. **Design day-off test suites** — based on 14 vault notes and 35 bugs
-3. **Build generator script** — `expert-system/generators/day-off/generate.py`
-4. **Generate XLSX** — `test-docs/day-off/day-off.xlsx` with UI-first test steps
-5. **Include SETUP/CLEANUP steps** for tests needing specific state (approved requests, etc.)
-6. **Regression tests** from BUG-DO-1 through BUG-DO-35 ticket findings
-
-## Vault Notes to Read Selectively
-- All `modules/dayoff-*` notes — core business logic
-- `analysis/sick-leave-dayoff-business-rules-reference.md` Part B — rules + 35 bugs
-- `exploration/tickets/day-off-ticket-findings.md` — ticket-derived test cases
-- `exploration/ui-flows/dayoff-manager-approval-flow.md` — manager UI for test step writing
-- `exploration/ui-flows/day-off-pages.md` — employee UI for test step writing
-- `exploration/api-findings/dayoff-api-testing.md` — API bugs for regression tests
+## Next Steps
+- Human review of enhanced XLSX quality and coverage
+- If satisfied: transition to Phase C (autotest generation) for day-off module
+- Parse XLSX into manifest: `python3 autotests/scripts/parse_xlsx.py`
