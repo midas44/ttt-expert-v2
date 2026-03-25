@@ -538,16 +538,24 @@ Update `_KNOWLEDGE_COVERAGE.md` comprehensively, query module_health for gaps.
 
 **Coverage override:** If `phase.coverage_override` is set to 0-100 in config.yaml, use that value as the current coverage instead of computing it. This allows the human to force a coverage reset (e.g., `coverage_override: 0` to restart deep investigation). When the override is present and >= 0, do NOT auto-transition regardless of computed coverage — investigate until the notes genuinely reach the depth described below, then remove the override (set to -1) before allowing transition.
 
-- **hybrid mode**: Present coverage report to human with Phase B readiness recommendation. Human updates config.yaml to enable generation.
-- **full mode** (with `auto_phase_transition: true`): When coverage >= `thresholds.knowledge_coverage_target` AND no coverage_override is active (value is -1 or field absent), automatically update `config.yaml` to set `phase.current: "generation"` and `phase.generation_allowed: true`. Log the transition decision to `_SESSION_BRIEFING.md`. **Reset vault control files** (see Phase Reset Protocol below). The next session will begin Phase B.
+**ALL phase transitions are human-approved when `phase.scope` is set to a specific module (not `"all"`).** When scope targets a specific area, deeper investigation is needed than the global coverage metric can measure. The agent must NOT auto-transition — instead:
+1. Log a readiness report to `_SESSION_BRIEFING.md` with evidence of depth (word counts, tickets mined, methods used)
+2. Set `autonomy.stop: true` and wait for human review
+3. The human will review and manually update `phase.current` and `phase.generation_allowed` if satisfied
+
+When `phase.scope` is `"all"` (global sweep), the original auto-transition rules apply:
+- **hybrid mode**: Present coverage report to human with Phase B readiness recommendation.
+- **full mode** (with `auto_phase_transition: true`): When coverage >= `thresholds.knowledge_coverage_target` AND no coverage_override is active (value is -1 or field absent), automatically update `config.yaml` to set `phase.current: "generation"` and `phase.generation_allowed: true`. Log the transition decision to `_SESSION_BRIEFING.md`. **Reset vault control files** (see Phase Reset Protocol below).
 
 **Important:** Coverage assessment must be based on **depth, not breadth**. A module is not "covered" until its vault notes contain concrete testable details — validation rules with code snippets, error paths, permission requirements per endpoint, boundary values, and state transitions. A 200-word overview note does not count toward coverage.
 
 **Minimum depth requirements before A→B transition (per module in scope):**
 - Module vault note is 1000+ words with code snippets and validation rules
-- GitLab tickets for the module have been searched, and bug findings documented in `exploration/tickets/`
+- GitLab tickets for the module have been searched (ALL history, not just recent sprints), and bug findings documented in `exploration/tickets/`
 - At least 3 different investigation methods used (code reading, API testing, UI exploration, DB analysis, ticket mining)
 - Known bugs and edge cases documented with ticket references
+- UI flows explored via Playwright and documented in `exploration/ui-flows/`
+- **Minimum 5 Phase A sessions** before considering transition — 2 sessions is never enough
 
 **Do NOT modify session timing parameters** (`delay_minutes`, `delay_minutes_offhours`, `max_duration_minutes`, `max_sessions`) in config.yaml — these are managed by the human operator.
 
