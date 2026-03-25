@@ -1,68 +1,75 @@
 ---
-session: 46
-phase: knowledge_acquisition
+session: 47
+phase: generation
 updated: '2026-03-25'
 scope: day-off
 ---
-# Session 46 — Day-Off GitLab Ticket Mining
+# Session 47 — Phase A→B Transition
 
 ## Session Info
 - **Date**: 2026-03-25
-- **Phase**: A (knowledge_acquisition)
+- **Phase**: A→B transition (knowledge_acquisition → generation)
 - **Scope**: day-off
 - **Autonomy**: full
-- **Duration**: ~session completed
 
-## What Was Done
+## Phase A Summary (Day-Off Module)
+Phase A ran across sessions 4-47 (day-off scope sessions: S4, S5, S6, S9, S13, S14, S15, S32, S46, S47).
 
-### GitLab Ticket Mining (P0 — COMPLETED)
-Mined 25+ GitLab tickets related to day-off, calendar, and weekend transfer functionality using multiple search strategies (keywords: "day-off", "dayoff", "weekend", "production calendar"). Read BOTH descriptions AND comments for all critical tickets.
+**Knowledge built:**
+- 14 vault notes covering all day-off aspects
+- 35 documented bugs (BUG-DO-1 through BUG-DO-35)
+- 25+ GitLab tickets mined with descriptions AND comments
+- 6 investigation methods: code reading, API testing, UI exploration, DB analysis, ticket mining, code analysis
+- Final coverage: ~92%
 
-**Search approach**: 4 keyword searches + targeted individual ticket reads via 4 parallel agents. Coverage: Sprint 7 through Sprint 15, all states (open + closed).
+**Key vault notes for Phase B:**
+- `dayoff-service-deep-dive.md` — Backend code analysis (3000+ words)
+- `frontend-day-off-module.md` — Frontend component tree, Redux, 5 manager sub-tabs
+- `sick-leave-dayoff-business-rules-reference.md` (Part B) — 35 bugs, business rules, calendar conflicts
+- `day-off-ticket-findings.md` — 25+ tickets, 20 bugs from GitLab mining
+- `dayoff-manager-approval-flow.md` — **NEW (S47)**: Manager approval UI with selectors, modals, action buttons
+- `dayoff-form-validation-rules.md` — Frontend + backend validation
+- `dayoff-api-testing.md` — 7 API bugs
+- `day-off-pages.md` — Employee-side UI flows
 
-### Key Findings
+## Session 47 Work Done
 
-**6 categories of bugs identified:**
+### 1. Qase Check (COMPLETED)
+Searched Qase TIMEREPORT project for day-off cases. Found 12 existing cases across 3 suites:
+- Suite 125 (4 cases): dayoff impact on vacation requests (cross-feature)
+- Suite 138 (2 cases): color indicators in availability chart
+- Suite 247 (6 cases): email notification templates
+**Result: Zero core day-off lifecycle coverage. No duplication risk for Phase B.**
 
-1. **Calendar Cascade Bugs (HIGHEST RISK)** — 6 tickets: #3339 (balance zeroed), #3338 (wrong vacations converted), #3282 (double-transfer cleanup regression), #2971 (OPEN: confirmed transfer survives SO change), #3300 (calendar applied to wrong years), #3221 (cross-calendar deletion)
+### 2. Manager Approval Flow UI Exploration (COMPLETED)
+Explored as `azharkikh` on timemachine. Created comprehensive note: `exploration/ui-flows/dayoff-manager-approval-flow.md`
 
-2. **Transfer Bugs** — 5 tickets: #2962 (silent Access Denied), #2801 (500 on reused date), #2833 (vacation not recalculated), #2901 (norm not recalculated with sick leave), #2874 (backward transfer feature with 3 bugs)
+**Key findings:**
+- Page URL: `/vacation/request/daysoff-request/APPROVER`
+- 5 sub-tabs: Approval, Agreement, My department, My projects, Redirected
+- 4 action buttons per NEW row: approve, reject, redirect, info (all with test-ids)
+- WeekendDetailsModal: request fields, optional approvers table, Edit list mode
+- Edit mode disables main action buttons (Reject/Approve/Redirect)
+- Redirect dialog: manager search combobox with Cancel/OK
+- Overdue notification banner on all pages (not dismissible)
+- 15 selectors documented for Phase C automation
+- 5 screenshots saved to artefacts/
 
-3. **UI Display Bugs** — 3 tickets: #3094, #2815, #2818 (pending transfer shown with wrong colors/highlights)
+### 3. Phase A→B Transition (TRIGGERED)
+All minimum depth requirements met. Coverage ~92%. Auto-transition triggered.
 
-4. **Availability Chart Bugs** — 3 tickets: #3312, #3292, #3212 (calendar events missing, pre-2024 data, reinstatement)
+## Phase B — What To Do First
+1. **Read existing Phase B patterns** — review vacation XLSX generator for patterns
+2. **Design day-off test suites** — based on 14 vault notes and 35 bugs
+3. **Build generator script** — `expert-system/generators/day-off/generate.py`
+4. **Generate XLSX** — `test-docs/day-off/day-off.xlsx` with UI-first test steps
+5. **Include SETUP/CLEANUP steps** for tests needing specific state (approved requests, etc.)
+6. **Regression tests** from BUG-DO-1 through BUG-DO-35 ticket findings
 
-5. **Cross-Feature Interactions** — 3 tickets: #3223 (balance not updated on auto-deletion), #2736 (event feed with 3 bugs), #3179 (digest merging)
-
-6. **Feature/Design Tasks** — 3 tickets: #2621 (original analytical task), #2733, #2952
-
-**2 tickets still OPEN**: #2971 (confirmed transfer survives SO change), #2621 (analytical task)
-
-### Vault Updates
-- **Created**: `exploration/tickets/day-off-ticket-findings.md` — comprehensive ticket findings (25+ tickets, structured by category)
-- **Enriched**: `analysis/sick-leave-dayoff-business-rules-reference.md` — added sections B12 (edge cases), B13 (20 new bugs BUG-DO-16 through BUG-DO-35), B14 (cross-references)
-- **SQLite**: 1 analysis_run + 10 external_refs logged
-- **Index**: Updated with new ticket findings note
-
-## Knowledge State
-
-### Day-Off Module — Existing Notes (Pre-Session 46)
-- `dayoff-service-deep-dive.md` — ~3000 words, detailed code analysis ✓
-- `frontend-day-off-module.md` — ~800 words, component tree, UI flows ✓
-- `dayoff-form-validation-rules.md` — ~600 words, frontend+backend validation ✓
-- `dayoff-api-testing.md` — ~800 words, 7 bugs from API testing ✓
-- `day-off-pages.md` — ~1200 words, UI exploration with screenshots ✓
-- `sick-leave-dayoff-business-rules-reference.md` — ~3000 words Part B section ✓
-- 5 additional notes: conflict code analysis, conflict data analysis, conflict live test, rescheduling data patterns, rescheduling warning bug
-
-### Session 46 Additions
-- `day-off-ticket-findings.md` — ~3000 words, 25+ tickets, 20+ bugs documented
-- Business rules reference enriched with ~2500 words (B12-B14 sections)
-- Total new known bugs: BUG-DO-16 through BUG-DO-35 (20 additional bugs from tickets)
-- **Total known day-off bugs**: 35 (BUG-DO-1 through BUG-DO-35)
-
-## Next Steps (Session 47)
-1. **Assess Phase A→B transition readiness** — GitLab tickets now mined, vault notes are deep. Check remaining gaps.
-2. **UI exploration of manager approval flow** — WeekendDetailsModal, approve/reject/redirect in detail
-3. **Check Qase for existing day-off test cases** — avoid duplication in Phase B
-4. **Consider Phase A→B transition** — vault has 13+ notes, 35 bugs, deep code analysis, API testing, UI exploration, DB analysis, and now ticket mining. Coverage may be sufficient.
+## Vault Notes to Read Selectively
+- All `modules/dayoff-*` notes — core business logic
+- `analysis/sick-leave-dayoff-business-rules-reference.md` Part B — rules + 35 bugs
+- `exploration/tickets/day-off-ticket-findings.md` — ticket-derived test cases
+- `exploration/ui-flows/dayoff-manager-approval-flow.md` — manager UI for test step writing
+- `exploration/ui-flows/day-off-pages.md` — employee UI for test step writing
+- `exploration/api-findings/dayoff-api-testing.md` — API bugs for regression tests

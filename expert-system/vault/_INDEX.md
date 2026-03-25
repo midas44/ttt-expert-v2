@@ -135,6 +135,7 @@
 - [[exploration/ui-flows/statistics-ui-deep-exploration]] — Tab visibility, filters, exports
 - [[exploration/ui-flows/sick-leave-ui-verification]] — My Sick Leaves vs Accounting columns
 - [[exploration/ui-flows/sick-leave-crud-lifecycle]] — Full CRUD, validation, status transitions
+- [[exploration/ui-flows/dayoff-manager-approval-flow]] — **[S47]** Manager approval: 5 sub-tabs, 4 action buttons, WeekendDetailsModal, redirect dialog, optional approvers edit, 15 selectors
 
 ## Exploration — API Findings
 - [[exploration/api-findings/vacation-crud-api-testing]] — Full CRUD, 6 bugs (3 HIGH NPEs)

@@ -2,7 +2,7 @@
 type: investigation
 tags:
   - agenda
-  - phase-a
+  - phase-b
 updated: '2026-03-25'
 status: active
 scope: day-off
@@ -15,52 +15,61 @@ scope: day-off
 - P2: Medium — within next 5 sessions
 - P3: Low — backlog
 
-## Phase A — Day-Off Knowledge Acquisition (Active)
+## Phase B — Day-Off Test Documentation Generation (Active)
 
 **Scope**: day-off module only
-**Approach**: Deep investigation before any test documentation generation
+**Output**: `test-docs/day-off/day-off.xlsx` — unified workbook with Plan + TS- suites
 
-### P0 — Immediate
-- [x] **Review existing vault notes** — read `dayoff-service-deep-dive.md`, `calendar-service-deep-dive.md`, `day-off-service-implementation.md`, `frontend-day-off-module.md`. Assessed depth — all deep and detailed. (S46)
-- [x] **Mine GitLab tickets** — 25+ tickets mined across 4 keyword searches. Read descriptions AND comments. 20+ bugs documented. Created `exploration/tickets/day-off-ticket-findings.md`. (S46)
-- [x] **Read code paths** — DayOffService, CalendarService, validators, permission checks, state transitions (covered in S9-S15 deep dives)
+### P0 — Immediate (Next Session)
+- [ ] **Review vacation XLSX generator** — read `expert-system/generators/vacation/` for patterns, openpyxl conventions, formatting
+- [ ] **Design test suites** — define TS- tabs based on feature groupings (lifecycle, approval, calendar conflicts, search, validation, etc.)
+- [ ] **Enrich vault notes if gaps found** — deeper investigation for any area lacking concrete test step detail
 
-### P1 — High Priority (Next Session)
-- [x] **Enrich vault notes** — expanded business rules reference with B12-B14 sections, 20 new bugs (BUG-DO-16 through BUG-DO-35). (S46)
-- [ ] **Check Qase for existing day-off test cases** — verify no duplication before Phase B
-- [ ] **Assess Phase A→B transition readiness** — vault has 13+ notes, 35 bugs, 6 investigation methods used. Coverage likely sufficient.
-- [ ] **UI exploration: manager approval flow** — WeekendDetailsModal, approve/reject/redirect, optional approvers management in detail
+### P1 — High Priority
+- [ ] **Build generator script** — `expert-system/generators/day-off/generate.py`
+- [ ] **Generate XLSX** — Plan Overview, Feature Matrix, Risk Assessment, all TS- tabs
+- [ ] **Write UI-first test steps** — all test cases use browser actions, SETUP/CLEANUP for state creation via API
+- [ ] **Include regression tests from bugs** — BUG-DO-1 through BUG-DO-35 (35 bugs → regression test cases)
+- [ ] **Track in SQLite** — insert all test cases into `test_case_tracking`
 
-### P2 — Medium Priority
-- [x] **Explore UI flows** — day-off tab, reschedule modal documented in S4 and S32 (day-off-pages.md)
-- [x] **API investigation** — 7 bugs found in S9 (dayoff-api-testing.md)
-- [x] **DB analysis** — data patterns, conflict analysis, live test results (S13-S15)
-- [ ] **Cross-module dependencies** — how day-off interacts with vacation service (partially covered via ticket findings: #2833, #3223, #2736)
-- [ ] **Permission matrix** — who can create/approve/reject/delete day-offs (covered in dayoff-service-deep-dive.md §6)
-- [ ] **Edge cases from tickets** — compile regression test scenarios from ticket comments (done: ticket-findings.md)
+### P2 — Quality & Completeness
+- [ ] **Cross-reference with Qase** — ensure no overlap with 12 existing tangential cases
+- [ ] **Review generated test cases** — verify traceability to vault notes and GitLab tickets
+- [ ] **Knowledge enrichment** — deeper investigation if test step writing reveals gaps
 
 ### P3 — Backlog
-- [ ] **Figma comparison** — check design mockups vs actual implementation for day-off
-- [ ] Other modules (vacation done, sick-leave done, reports done, statistics done, admin done)
+- [ ] **Figma comparison** — verify UI design alignment (nice-to-have)
 
-## Phase A→B Transition Assessment
+## Planned Test Suite Structure
 
-**Minimum depth requirements check:**
-| Requirement | Status |
-|-------------|--------|
-| Module vault note 1000+ words with code snippets | ✓ dayoff-service-deep-dive (3000+ words) |
-| GitLab tickets searched, bug findings documented | ✓ 25+ tickets, 35 bugs total (S46) |
-| 3+ investigation methods used | ✓ Code reading, API testing, UI exploration, DB analysis, ticket mining, code analysis (6 methods) |
-| Known bugs and edge cases documented with ticket refs | ✓ BUG-DO-1 through BUG-DO-35 |
+Based on vault knowledge (14 notes, 35 bugs, 6 investigation methods):
 
-**Assessment**: Day-off module is likely ready for Phase A→B transition. Key remaining check: Qase existing test cases.
+| Suite | Focus | Est. Cases |
+|-------|-------|-----------|
+| TS-DayOff-Lifecycle | Create, edit, delete transfer request | 15-20 |
+| TS-DayOff-Approval | Manager approve, reject, redirect; optional approvers | 15-20 |
+| TS-DayOff-CalendarConflict | 4 conflict paths, cascade effects | 10-15 |
+| TS-DayOff-Search | 8 search types, filters, columns | 10-15 |
+| TS-DayOff-Validation | Form validation, boundary values, date constraints | 10-15 |
+| TS-DayOff-Permissions | Role-based access, EDIT_APPROVER unconditional | 8-10 |
+| TS-DayOff-Notifications | Email templates, overdue banner, auto-reject | 8-10 |
+| TS-DayOff-Regression | Bug-specific regression from BUG-DO-1 to BUG-DO-35 | 20-30 |
+| **Total** | | **~100-135** |
 
-## Completed Phases
 <details>
-<summary>Vacation module (Phases A → B → C) — completed 2026-03-23</summary>
+<summary>Phase A — Day-Off Knowledge Acquisition (Completed S47)</summary>
 
-- Phase A: 19 sessions knowledge acquisition
-- Phase B v2: 3 sessions, 109 UI-first test cases generated
-- Phase C v2: 12 sessions, 62 tests verified
-- Lessons learned: UI-first steps, text-first selectors, BEM banned, setup steps via API, ticket comments critical
+### Completed Items
+- [x] Review existing vault notes — all deep and detailed (S46)
+- [x] Mine GitLab tickets — 25+ tickets, 35 bugs documented (S46)
+- [x] Read code paths — DayOffService, CalendarService, validators (S9-S15)
+- [x] Enrich vault notes — business rules B12-B14 sections (S46)
+- [x] Check Qase — 12 tangential cases, no duplication risk (S47)
+- [x] Assess Phase A→B transition — all requirements met (S47)
+- [x] UI exploration: manager approval flow — comprehensive documentation (S47)
+- [x] Explore UI flows — day-off tab, reschedule modal (S4, S32)
+- [x] API investigation — 7 bugs found (S9)
+- [x] DB analysis — data patterns, conflict analysis (S13-S15)
+
+**Final coverage: ~92%** | 14 vault notes | 35 bugs | 6 investigation methods
 </details>
