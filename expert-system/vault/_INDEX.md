@@ -220,3 +220,6 @@
   - TS-Vac-CRUD (20), TS-Vac-Lifecycle (10), TS-Vac-Approval (17), TS-Vac-Payment (8)
   - TS-Vac-DayCalc (8), TS-Vac-DayCorrection (5), TS-Vac-Chart (5), TS-Vac-Permissions (9)
   - TS-Vac-Validation (13), TS-Vac-Notifications (7), TS-Vac-Integration (7)
+
+## Exploration — Tickets (GitLab Mining)
+- [[exploration/tickets/day-off-ticket-findings]] — **[S46]** 25+ tickets mined, 20+ bugs, 6 categories: calendar cascade, transfer bugs, UI display, availability chart, cross-feature, feature design

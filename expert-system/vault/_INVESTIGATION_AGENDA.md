@@ -3,7 +3,7 @@ type: investigation
 tags:
   - agenda
   - phase-a
-updated: '2026-03-23'
+updated: '2026-03-25'
 status: active
 scope: day-off
 ---
@@ -21,24 +21,39 @@ scope: day-off
 **Approach**: Deep investigation before any test documentation generation
 
 ### P0 — Immediate
-- [ ] **Review existing vault notes** — read `dayoff-service-deep-dive.md`, `calendar-service-deep-dive.md`, `day-off-service-implementation.md`, `frontend-day-off-module.md`. Assess depth and gaps.
-- [ ] **Mine GitLab tickets** — search all day-off/calendar related issues. Read descriptions AND comments. Document findings in `exploration/tickets/day-off-ticket-findings.md`
-- [ ] **Read code paths** — DayOffService, CalendarService, validators, permission checks, state transitions
+- [x] **Review existing vault notes** — read `dayoff-service-deep-dive.md`, `calendar-service-deep-dive.md`, `day-off-service-implementation.md`, `frontend-day-off-module.md`. Assessed depth — all deep and detailed. (S46)
+- [x] **Mine GitLab tickets** — 25+ tickets mined across 4 keyword searches. Read descriptions AND comments. 20+ bugs documented. Created `exploration/tickets/day-off-ticket-findings.md`. (S46)
+- [x] **Read code paths** — DayOffService, CalendarService, validators, permission checks, state transitions (covered in S9-S15 deep dives)
 
-### P1 — High Priority
-- [ ] **Explore UI flows** — My vacations and days off page (day-off tab), creation dialog, approval flow, admin views. Document in `exploration/ui-flows/day-off-pages.md`
-- [ ] **API investigation** — test day-off CRUD endpoints, error responses, validation rules
-- [ ] **DB analysis** — day-off tables, calendar tables, FK relationships, data distribution
-- [ ] **Enrich vault notes** — expand to 1500+ words per note with code snippets, validation rules, boundary values
+### P1 — High Priority (Next Session)
+- [x] **Enrich vault notes** — expanded business rules reference with B12-B14 sections, 20 new bugs (BUG-DO-16 through BUG-DO-35). (S46)
+- [ ] **Check Qase for existing day-off test cases** — verify no duplication before Phase B
+- [ ] **Assess Phase A→B transition readiness** — vault has 13+ notes, 35 bugs, 6 investigation methods used. Coverage likely sufficient.
+- [ ] **UI exploration: manager approval flow** — WeekendDetailsModal, approve/reject/redirect, optional approvers management in detail
 
 ### P2 — Medium Priority
-- [ ] **Cross-module dependencies** — how day-off interacts with vacation service, calendar, reporting
-- [ ] **Permission matrix** — who can create/approve/reject/delete day-offs
-- [ ] **Edge cases from tickets** — compile all corner cases from GitLab comments into test scenarios
-- [ ] **Figma comparison** — check design mockups vs actual implementation
+- [x] **Explore UI flows** — day-off tab, reschedule modal documented in S4 and S32 (day-off-pages.md)
+- [x] **API investigation** — 7 bugs found in S9 (dayoff-api-testing.md)
+- [x] **DB analysis** — data patterns, conflict analysis, live test results (S13-S15)
+- [ ] **Cross-module dependencies** — how day-off interacts with vacation service (partially covered via ticket findings: #2833, #3223, #2736)
+- [ ] **Permission matrix** — who can create/approve/reject/delete day-offs (covered in dayoff-service-deep-dive.md §6)
+- [ ] **Edge cases from tickets** — compile regression test scenarios from ticket comments (done: ticket-findings.md)
 
 ### P3 — Backlog
-- [ ] Other modules (vacation already done, sick-leave, reports, etc.)
+- [ ] **Figma comparison** — check design mockups vs actual implementation for day-off
+- [ ] Other modules (vacation done, sick-leave done, reports done, statistics done, admin done)
+
+## Phase A→B Transition Assessment
+
+**Minimum depth requirements check:**
+| Requirement | Status |
+|-------------|--------|
+| Module vault note 1000+ words with code snippets | ✓ dayoff-service-deep-dive (3000+ words) |
+| GitLab tickets searched, bug findings documented | ✓ 25+ tickets, 35 bugs total (S46) |
+| 3+ investigation methods used | ✓ Code reading, API testing, UI exploration, DB analysis, ticket mining, code analysis (6 methods) |
+| Known bugs and edge cases documented with ticket refs | ✓ BUG-DO-1 through BUG-DO-35 |
+
+**Assessment**: Day-off module is likely ready for Phase A→B transition. Key remaining check: Qase existing test cases.
 
 ## Completed Phases
 <details>

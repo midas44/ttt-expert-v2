@@ -422,3 +422,121 @@ Credit (2,853) > debit (2,454) → ~399 earned but unused day-off credits.
 - [[exploration/data-findings/dayoff-calendar-conflict-live-test]] — live test results
 - [[external/requirements/REQ-day-off]] — requirements (scattered)
 - [[analysis/absence-data-model]] — shared data model
+
+
+## B12. GitLab Ticket-Derived Edge Cases & Business Rules (Session 46)
+
+### Calendar Cascade Interactions (Highest Risk Area)
+
+**AV=False vacation conversion cascade** (#3338, #3339):
+- When a production calendar day-off is deleted or transferred, the system scans affected employee's vacations
+- **BUG (fixed)**: ALL vacations were converted to Administrative, not just the one containing the changed date
+- **BUG (fixed)**: After conversion, available/balance days showed as 0 instead of correct recalculated value (when accrued days go negative)
+- **Ordering algorithm**: After PC change, validate all requests with payment month >= affected vacation's. Sort by (1) payment month chronologically, (2) date within same payment month. First that fails accrued days check → converted to Administrative.
+- **AV=True vs AV=False separation**: AV=False uses accrued days as limit; AV=True uses balance days (can go negative). Different code paths.
+
+**Calendar isolation per salary office** (#3221):
+- Two calendars can have day-offs on the same date (e.g., Easter in both Cyprus and Georgia)
+- **BUG (fixed)**: Deleting from one calendar affected transfers from the other calendar. Root cause: deletion handler used only date, not salary_office_id
+- Employee notifications were incorrectly sent to wrong-calendar employees
+
+**Double-transfer back to original date** (#3282):
+- Transfer A→B, then B→A (exact original date), then admin deletes A from production calendar
+- **BUG (fixed, regressed once)**: Day-off NOT removed from personal calendar. Only reproduces when second transfer returns to EXACT original date.
+- Does NOT cover transfer to working Saturday (#2906 — separate bug)
+
+**SO calendar change timing** (#3300):
+- Admin sets new calendar for SO effective NEXT year → should only affect next year
+- **BUG (fixed)**: Applied immediately to ALL years (current + past)
+- Side effects: broken app state without DB migration, error notifications on login
+
+**Confirmed transfer survives SO change** (#2971 — STILL OPEN):
+- Create confirmed day-off transfer to next year → change SO production calendar
+- Unconfirmed transfers correctly deleted, but confirmed transfers from OLD calendar persist
+- No design specification exists for this case
+
+### Vacation-Day-Off Interaction Rules
+
+**Auto-deletion with balance restoration** (#3223):
+- Single-day vacation exists on a date → admin adds day-off on same date (or employee transfers day-off to that date + approval)
+- Vacation is auto-deleted (correct) but **balance was NOT updated** (permanent day loss)
+- **Regression from first fix**: Auto-deleted Regular vacations converted to Administrative with 0 days instead of being deleted
+- Required two fix attempts (MR !4592 for the second)
+
+**Vacation recalculation on transfer** (#2833):
+- Day-off transfer approved onto a date covered by existing vacation → vacation MUST be shortened/recalculated
+- **BUG (fixed, was on prod)**: Vacation was NOT recalculated. Production impact on real users.
+
+**Vacation event feed events** (#2736):
+- `VACATION_AUTO_DELETED_CALENDAR_UPDATE` — single-day vacation reduced to 0 days by PC change
+- `VACATION_DAYS_RECALCULATION_CALENDAR_UPDATE` — vacation duration changed but not to 0
+- `VACATION_EDITED_TYPE` — vacation converted from Regular to Administrative (AV=False only)
+- **Bugs during implementation**: Auto-delete event not generated; vacation left with 0 days in DB; accrued days not returned to balance on type conversion
+
+### Transfer Mechanics — Backward Transfer Rules (#2874)
+
+- Transfer date must be >= original RC date (production calendar) AND >= current date
+- Auto-rejection on month close covers BOTH source date month AND target date month
+- Approval list editing available when status = "Pending confirmation" (not month-based)
+- Default sort on "For Approval" tab: Pending > Confirmed > Rejected > Deleted from calendar
+- Rows become grey when: status != Pending AND both dates (original and transfer) are in past
+- **Bug found**: Re-transfer blocked after transfer to 7h shortened working day (originalDate/lastApprovedDate returned confirmed date, not RC original)
+- **Bug found**: Past dates still selectable in UI when original date passed into real past (current date constraint not enforced)
+
+### Norm Calculation (#2901)
+
+- Individual monthly norm must account for BOTH sick leave hours AND transferred day-off hours
+- **BUG (fixed)**: When sick leave overlapped a day-off and day-off was transferred outside sick leave period, norm only reduced by sick leave, not both
+
+### UI Display Bugs (Calendar Colors)
+
+**Pending transfer display** (#3094, #2815, #2818):
+- Unconfirmed transfer: original day-off should show as ORANGE (day-off), not grey (working)
+- Affects: "By employees", "By projects", "My tasks", "Confirmation" views
+- Target date should show as working day (correct behavior)
+- After confirmation: original becomes grey, target becomes orange
+
+### Availability Chart History (#3292, #3312)
+
+- Pre-2024 historical data: use the Payment office chronologically assigned first in DB (active as of 2024)
+- Before 2024, only one production calendar existed: Russia
+- **BUG (fixed)**: Unfiltered multi-employee query returned events only for current year
+- **BUG (fixed)**: No events shown for dates before 01.01.2024
+
+### Employee Reinstatement (#3212)
+
+- Regular SO change → new calendar from NEXT year
+- Reinstatement with SO change → new calendar effective IMMEDIATELY for current year
+- **BUG (fixed manually)**: Reinstatement path used regular change logic, showing old calendar
+
+## B13. Expanded Known Bugs (from Ticket Mining)
+
+| ID | Severity | Description | Ticket | Status |
+|----|----------|-------------|--------|--------|
+| BUG-DO-16 | HIGH | AV=False: balance zeroed after vacation conversion triggered by day-off deletion/transfer | #3339 | Fixed (Sprint 14) |
+| BUG-DO-17 | HIGH | AV=False: multiple vacations converted instead of only the one containing changed date | #3338 | Fixed (Sprint 14) |
+| BUG-DO-18 | HIGH | Double-transfer back to original → not removed on calendar deletion | #3282 | Fixed (regressed once) |
+| BUG-DO-19 | MEDIUM | Confirmed transfer survives SO calendar change for next year | #2971 | OPEN |
+| BUG-DO-20 | HIGH | Calendar change for next year applied immediately to all years | #3300 | Fixed (Sprint 13) |
+| BUG-DO-21 | HIGH | Calendar deletion affects transfers from different calendars (no SO filter) | #3221 | Fixed (Sprint 12) |
+| BUG-DO-22 | HIGH | Vacation balance not updated after auto-deletion by calendar event | #3223 | Fixed (2 attempts) |
+| BUG-DO-23 | HIGH | Vacation not recalculated when day-off transferred onto vacation date | #2833 | Fixed (prod HotFix) |
+| BUG-DO-24 | HIGH | Access Denied on day-off transfer creation (silent failure) | #2962 | Fixed (Sprint 9) |
+| BUG-DO-25 | HIGH | 500 DB constraint when editing transfer to reuse freed date | #2801 | Fixed (Sprint 8) |
+| BUG-DO-26 | MEDIUM | Individual norm not recalculated with sick leave + day-off transfer | #2901 | Fixed (HotFix S8) |
+| BUG-DO-27 | MEDIUM | Re-transfer blocked after transfer to 7h shortened day | #2874 | Fixed (Sprint 9) |
+| BUG-DO-28 | MEDIUM | Past dates selectable when original date in past (UI constraint miss) | #2874 | Fixed (Sprint 9) |
+| BUG-DO-29 | MEDIUM | Pending transfer: original date shown grey instead of orange in calendar views | #3094 | Fixed (Sprint 12) |
+| BUG-DO-30 | MEDIUM | Red highlight removed from My Tasks without transfer confirmation | #2815 | Fixed (HotFix S8) |
+| BUG-DO-31 | HIGH | Availability chart: events missing for unfiltered multi-employee query | #3312 | Fixed (HotFix S13) |
+| BUG-DO-32 | MEDIUM | No calendar events shown for dates before 2024 | #3292 | Fixed (Sprint 13) |
+| BUG-DO-33 | MEDIUM | Calendar not set after employee reinstatement with SO change | #3212 | Fixed (manual DB) |
+| BUG-DO-34 | HIGH | Vacation event feed: auto-delete event not generated, vacation left with 0 days | #2736 | Fixed (Sprint 14) |
+| BUG-DO-35 | HIGH | Accrued days not returned to balance on vacation type conversion | #2736 | Fixed (Sprint 14) |
+
+## B14. Ticket Cross-References
+
+- [[exploration/tickets/day-off-ticket-findings]] — full ticket mining details with reproduction steps
+- [[dayoff-calendar-conflict-code-analysis]] — code-level analysis of conflict paths
+- [[dayoff-calendar-conflict-live-test]] — live test results for conflict scenarios
+- [[dayoff-rescheduling-warning-bug]] — overdue warning broadcast to all users

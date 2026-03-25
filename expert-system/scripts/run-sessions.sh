@@ -770,7 +770,7 @@ print(sum(1 for x in s['sessions'] if x.get('phase') == 'autotest_generation'))
         fi
 
         # Check if Phase C scope is fully covered → auto-stop
-        check_phase_c_complete
+        check_phase_c_complete || true
 
         session_num=$((session_num + 1))
 
