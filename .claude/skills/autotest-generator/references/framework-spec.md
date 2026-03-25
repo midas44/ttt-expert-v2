@@ -142,15 +142,58 @@ export class VacationTc001Data {
 Set in `e2e/config/global.yml` → `testDataMode`. Read via `globalConfig.testDataMode`.
 Saved data stored in `e2e/data/saved/<ClassName>.json`.
 
-## Selector Priority
+## Selector Priority (CRITICAL — Read Before Writing Any Locator)
 
-1. Role-based: `getByRole("button", { name: "Create", exact: true })`
-2. Stable attributes: `getByTestId()`, `locator("[data-qa]")`, `locator("[aria-*]")`
-3. Scoped CSS under container
-4. Text-based: `getByText()` (only static EN text)
-5. XPath (last resort)
+The TTT app has minimal ARIA roles and no `data-testid` attributes. Text and visible labels are the most stable identifiers — they survive CSS refactors, build changes, and environment differences.
 
-Always use `exact: true` in `getByRole()` when name could be a substring.
+**Priority order:**
+
+1. **Text-based** — most stable for this app:
+   - `getByRole("button", { name: "Create a request", exact: true })` — combines role + text
+   - `getByRole("link", { name: "My vacations" })` — navigation links
+   - `getByText("Approved", { exact: true })` — status labels, filter tabs, menu items
+   - `page.locator("text=Calendar of absences")` — fallback text match
+
+2. **Role-based** (when element has semantic HTML):
+   - `getByRole("dialog", { name: /Creating vacation/i })` — dialogs
+   - `getByRole("heading", { name: "My vacations" })` — headings
+   - `getByRole("textbox")`, `getByRole("combobox")` — form fields
+
+3. **Structural** (tag + containment, scoped under a parent):
+   - `dialog.locator("button").filter({ hasText: "Save" })` — button inside known container
+   - `page.locator("table tbody tr")` — table rows (generic tag, no BEM classes)
+   - `row.locator("td").nth(2)` — column by position within a row
+
+4. **Partial attribute match** (when text and role unavailable):
+   - `locator("[class*='notification'][class*='visible']")` — partial class match
+   - `locator("[class*='dialog']")` — matches any dialog-like class
+   - `locator("input[placeholder*='Search']")` — placeholder text
+
+5. **XPath** (last resort)
+
+**Always use `exact: true`** in `getByRole()` / `getByText()` when the name could be a substring of another element.
+
+### BANNED Selectors — Never Use These
+
+**Exact BEM class names are BANNED.** They are build-specific, version-specific, and break across environments:
+
+```typescript
+// BANNED — these broke when switching from qa-1 to timemachine:
+page.locator(".navbar__list-item")           // BEM element
+page.locator(".navbar__list-drop-item")      // BEM element
+page.locator(".navbar__link")                // BEM element
+page.locator(".page-body__title")            // BEM element
+page.locator(".drop-down-menu__option")      // BEM element
+page.locator(".language-switcher")           // component class
+
+// CORRECT alternatives:
+page.getByText("Calendar of absences")       // text-based — stable
+page.getByRole("button", { name: "EN" })     // role + text
+page.locator("[class*='menu']").filter({ hasText: "My vacations" })  // partial + text
+page.locator("h1, h2, [class*='title']").filter({ hasText: "My vacations" })  // structural + text
+```
+
+**Why BEM breaks:** `.navbar__list-drop-item` is a CSS class from a specific SCSS build. Different environments, branches, or deploys can rename, restructure, or refactor these classes. Text labels ("Create a request", "My vacations") are defined in i18n files and change only with intentional product decisions.
 
 ## Timeouts
 

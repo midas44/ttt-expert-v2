@@ -436,13 +436,18 @@ Follow §12 (Phase C — Autotest Generation) session protocol:
 3. Read autotests/manifest/test-cases.json for test case inventory
 4. Query SQLite autotest_tracking for current progress
 4. Select next test cases to generate per autotest.priority_order × autotest.type_priority
-5. For each selected test case (up to autotest.max_tests_per_session):
+5. Read selector rules: .claude/skills/autotest-generator/references/framework-spec.md § Selector Priority
+6. For each selected test case (up to autotest.max_tests_per_session):
    a. Enrich from vault: search QMD for module knowledge, read relevant notes
    b. Check existing page objects and fixtures for reuse
    c. Generate: data class, page objects (if needed), fixtures (if needed), test spec
-   d. Verify: run the test via npx playwright test --project=chrome-headless
-   e. Fix failures (up to autotest.auto_fix_attempts): use playwright-vpn for selector discovery
-   f. Track: update SQLite autotest_tracking + manifest JSON
+      SELECTOR RULES: text-first (getByText, getByRole+name), then role, then structural (tag+containment), then partial class ([class*='...']).
+      BANNED: exact BEM classes (.navbar__*, .page-body__*, .drop-down-menu__*).
+      NEVER put page.locator() in spec files — add methods to page objects instead.
+   d. Selector audit: verify zero page.locator() in spec, zero BEM selectors
+   e. Verify: run the test via npx playwright test --project=chrome-headless
+   f. Fix failures (up to autotest.auto_fix_attempts): use playwright-vpn for selector discovery
+   g. Track: update SQLite autotest_tracking + manifest JSON
 
 $(if (( session_num % 5 == 0 )); then echo "This is session ${session_num} (multiple of 5) — also run maintenance per §9.4."; fi)
 

@@ -6,7 +6,7 @@ appName: "TTT (TimeTrackingTool aka TimeReportingTool)"
 appUrl: "https://ttt-***.noveogroup.com"
 
 # dev-new, preprod, timemachine, stage, qa-1, qa-2
-env: "qa-1"
+env: "timemachine"
 
 #en, ru
 #(ru supported for MainPage only for lang switcher test)

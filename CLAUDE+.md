@@ -722,10 +722,11 @@ Playwright API
 **Critical architectural rules:**
 1. Fixtures are plain classes instantiated in the test body — never use `test.extend()`
 2. Config is per-test — each spec creates `new TttConfig()` then `new GlobalConfig(tttConfig)`
-3. No raw locators in spec files — all interactions go through page objects or fixtures
+3. **NEVER put `page.locator()` in spec files** — all selectors must be in page objects. If a page object lacks a method, ADD it there. Inlining locators in specs is the most common violation.
 4. No hardcoded test data in specs — all dynamic data lives in dedicated `*Data` classes
 5. Every verification step: `globalConfig.delay()` → assertion → screenshot capture
 6. Page objects use composition, not inheritance
+9. **Selectors: text-first, BEM banned.** Priority: text (`getByText`, `getByRole+name`) → role → structural (tag+containment) → partial class (`[class*='...']`). **BANNED: exact BEM classes** (`.navbar__*`, `.page-body__*`, `.drop-down-menu__*`) — they break across environments.
 7. Tests needing specific state (APPROVED/CANCELED vacation, etc.) must create it via API setup (`ApiVacationSetupFixture`) in the data class — never rely on pre-existing DB state. Try DB query first (fast), fall back to API creation if not found. Data class `create()` accepts optional `request?: APIRequestContext` for this.
 8. **Three timeout levels**: test timeout (180s total), step timeout (`stepTimeoutMs` in `global.yml`, 30s — applied as Playwright `actionTimeout`/`navigationTimeout` to every click/fill/goto), expect timeout (10s per assertion). Use `globalConfig.stepTimeoutMs` for custom waits. Never increase timeouts to fix broken selectors — investigate the selector instead.
 
@@ -803,30 +804,50 @@ b. **Check existing code:**
    - If reusable: note which to import. If not: plan new page object or fixture.
 
 c. **Generate artifacts (UI-first):**
+
+   Before writing any code, read the selector and architecture rules in `references/framework-spec.md` § Selector Priority and § Timeouts. These rules are non-negotiable.
+
    - **Data class** (`e2e/data/{Module}{TestId}Data.ts`): The `create()` factory MUST implement dynamic mode by translating ALL test case preconditions into a compound DB query that satisfies them simultaneously. Think through the full test workflow — if the test creates→approves→pays a vacation, the employee must have a manager (for approval), sufficient days, correct office type, and the right role. Consult vault notes for implicit criteria not stated in preconditions (e.g., approval requires manager_id IS NOT NULL). Use `ORDER BY random() LIMIT 1` so different tests pick different employees. After fetching, validate the data satisfies all criteria. Constructor defaults are fallbacks for static mode only. Implement all three modes. Never hardcode the same username across multiple data classes. See `generation-guidelines.md` § "Smart Data Generation" for detailed patterns.
-   - **Page object** (`e2e/pages/*.ts`): only if interactions not covered by existing pages. Most tests WILL need page objects — this is the primary interaction layer.
+
+   - **Page object** (`e2e/pages/*.ts`): Most tests WILL need page objects. If an existing page object doesn't have the method you need, **ADD the method to the page object** — never inline a locator in the spec file.
+
    - **Fixture** (`e2e/fixtures/*.ts`): only if workflow not covered by existing fixtures
+
    - **Test spec** (`e2e/tests/{module}-{test-id}.spec.ts`): **UI-first** — uses `{ page }` from Playwright, logs in via browser, interacts through page objects, verifies visible results. Pattern: login → navigate → interact → verify → cleanup (logout + page.close())
 
-   **Authentication strategy for generated tests:**
-   | Scenario | Auth method | How |
-   |----------|-----------|-----|
-   | **UI business scenarios** (default) | Browser login | `LoginFixture` — types username/password into the login form, any employee works |
-   | **Test endpoint calls** (clock, sync, notifications) | API_SECRET_TOKEN | `tttConfig.apiToken` — this token authenticates as its **owner** (pvaynmaster on qa-1). Use ONLY for test/admin endpoints that don't require `@CurrentUser` validation |
-   | **API calls needing user context** (rare) | Not available via API — no endpoint to get JWT for arbitrary users. Use UI login instead, or create data as token owner (pvaynmaster) |
+   **Selector rules (inlined — these MUST be followed for every locator):**
+   1. **Text-first**: `getByText("Create a request")`, `getByRole("button", { name: "Save" })` — most stable
+   2. **Role-based**: `getByRole("dialog")`, `getByRole("heading")` — when semantic HTML exists
+   3. **Structural**: `table tbody tr`, `dialog.locator("button")` — tag + containment, no BEM
+   4. **Partial class**: `[class*='notification']`, `[class*='menu']` — when text/role unavailable
+   5. **BEM classes are BANNED**: never use `.navbar__*`, `.page-body__*`, `.drop-down-menu__*` — they break across environments
 
-   **CRITICAL: `API_SECRET_TOKEN` is NOT an environment-wide service token.** It resolves to its owner (pvaynmaster on qa-1) via `DatabaseApiTokenResolver`. The `@CurrentUser` validator checks that `login` in the request body matches the authenticated principal. So API calls with `API_SECRET_TOKEN` + a different `login` will FAIL on `@CurrentUser` endpoints. This is why most tests must use **UI login** (which works for any employee) or **JWT auth** (for API calls needing a specific user).
+   **NEVER use `page.locator()` directly in spec files.** All selectors must be encapsulated in page objects. If you need an interaction not covered by existing page objects, add a method to the page object — do not take a shortcut by inlining a locator in the spec. This is the most common architecture violation and it MUST NOT happen.
 
-d. **Verify:**
+   **Authentication strategy:**
+   | Scenario | Auth method |
+   |----------|-----------|
+   | **UI business scenarios** (default) | Browser login via `LoginFixture` — any employee |
+   | **Test endpoint calls** (clock, sync) | `API_SECRET_TOKEN` — authenticates as token owner only |
+   | **API calls needing user context** | Not available via API. Use UI login or create data as token owner (pvaynmaster) |
+
+d. **Selector audit** (mandatory before running):
+   Verify the generated code follows selector rules:
+   - Zero `page.locator()` calls in the spec file — all interactions via page objects or fixtures
+   - Zero exact BEM class selectors (`.navbar__*`, `.page-body__*`, `.drop-down-menu__*`)
+   - Text-based or role-based selectors used wherever possible
+   - If violations found, refactor into page objects before proceeding to run
+
+e. **Verify:**
    - Run: `cd autotests && npx playwright test e2e/tests/{spec} --project=chrome-headless`
    - If passes: mark as `verified` in tracking
    - If fails: analyze error, attempt fix (up to `autotest.auto_fix_attempts`)
      - Selector failure → use playwright-vpn MCP for live snapshot, search vault for patterns
-     - Timeout → check if page navigation is correct, adjust wait conditions
+     - Timeout at 30s → the selector is wrong, not the timeout. Investigate the element.
      - Data issue → verify test data against live DB
    - If still fails after max attempts: mark as `failed`, log error, move to next test
 
-e. **Track:**
+f. **Track:**
    - Update `autotest_tracking` table: automation_status, spec_file, data_class, vault_notes_used
    - Update manifest JSON: automation_status field
 

@@ -184,11 +184,13 @@ Generated test data must be **realistic and similar to existing data** in the sy
 
 ## Selector Rules
 
-- Prefer role-based (`getByRole`) for accessibility and stability
-- Stable attributes (`getByTestId`, `data-qa`, `aria-*`) when roles insufficient
-- Text-based only for static EN text
+- **Text-first**: use `getByText()`, `getByRole(_, { name: "visible text" })` — most stable for TTT
+- **Role-based**: `getByRole()` when element has semantic HTML (`button`, `dialog`, `heading`)
+- **Structural**: tag + containment (`table tbody tr`, `dialog.locator("button")`)
+- **Partial class match**: `[class*='menu']`, `[class*='notification']` — survives class renaming
+- **BEM class selectors are BANNED**: never use `.navbar__*`, `.page-body__*`, `.drop-down-menu__*` or any exact BEM class — they break across environments
 - Always `exact: true` when name could be substring
-- Encapsulate selectors in page objects, never in specs
+- **Encapsulate ALL selectors in page objects — NEVER in spec files** (see Architecture Rules)
 
 ## Step Prefixes from Test Documentation
 

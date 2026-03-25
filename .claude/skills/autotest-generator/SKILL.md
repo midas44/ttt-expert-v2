@@ -75,10 +75,13 @@ Follow the 5-layer architecture (tests -> fixtures -> pages -> config+data -> Pl
 - Implement all three modes: `static` (env vars + defaults), `dynamic` (compound DB queries), `saved` (loadSaved → dynamic → saveToDisk)
 - See `references/generation-guidelines.md` § "Smart Data Generation" for patterns
 
-**b) Page Object** (`e2e/pages/{PageName}Page.ts`) -- only if not already existing:
+**b) Page Object** (`e2e/pages/{PageName}Page.ts`) -- create or extend existing:
 - All locators as `private readonly` fields
 - Intent-driven methods, no raw locator wrappers
 - Composition, no inheritance
+- **Selector priority: text-first** (`getByText`, `getByRole(_, {name})`) → role → structural (tag+containment) → partial class (`[class*='...']`)
+- **BANNED: exact BEM class selectors** (`.navbar__*`, `.page-body__*`, `.drop-down-menu__*`) — they break across environments
+- If an existing page object lacks a method you need, **ADD the method** — never inline a locator in the spec file
 
 **c) Fixtures** (`e2e/fixtures/{Feature}Fixture.ts`) -- only if not already existing:
 - Plain classes instantiated in test body (NOT `test.extend()`)
@@ -114,7 +117,7 @@ WHERE test_id = '<TC-ID>';
 
 ## Architecture Rules
 
-1. **No raw locators in specs.** All interactions via page objects or fixtures.
+1. **NEVER put `page.locator()` or `page.getByText()` directly in spec files.** All selectors MUST be in page objects. If a page object lacks the method you need, ADD it to the page object — do NOT shortcut by inlining a locator in the spec. This is the most common violation.
 2. **No hardcoded data in specs.** All in `*Data` classes under `e2e/data/`.
 3. **Every verification: delay -> assert -> screenshot** via `VerificationFixture`.
 4. **Reuse before creating.** Check existing pages/ and fixtures/ first.
