@@ -65,6 +65,8 @@ When you discover new information during autotest generation (selectors, UI quir
 
 **Test step conventions:** Test documentation uses prefixed steps — `SETUP:` (API state creation), `CLEANUP:` (teardown), `DB-CHECK:` (data verification), unprefixed (main UI steps). When generating autotests, map these to `ApiVacationSetupFixture` for setup/cleanup and `DbClient` for DB checks.
 
+**Selector rules (text-first, BEM banned):** The TTT app has minimal ARIA roles. Use text-based selectors first (`getByText`, `getByRole+name`), then role-based, then structural (tag+containment), then partial class match (`[class*='...']`). **Exact BEM class selectors are BANNED** (`.navbar__*`, `.page-body__*`, `.drop-down-menu__*`) — they break across environments. **NEVER put `page.locator()` in spec files** — all selectors must be in page objects.
+
 ## Key references
 
 - `CLAUDE+.md` — full autonomous system prompt (for reference, not loaded in interactive mode)
