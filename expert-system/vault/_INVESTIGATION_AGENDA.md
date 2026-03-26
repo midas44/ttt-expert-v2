@@ -1,44 +1,48 @@
 ---
-type: meta
-tags: [agenda, phase-c]
-updated: 2026-03-26
-status: active
+type: session-control
+updated: '2026-03-26'
 ---
+# Investigation Agenda — Phase C (t3404)
 
-# Investigation Agenda
+## Current Phase: Autotest Generation for #3404
 
-**Last updated:** 2026-03-26T02:10:00Z
-**Phase:** C — Autotest Generation
-**Module scope:** calendar-dayoff
+### P0 — Completed
+- [x] TC-T3404-005: Edit icon visible PAST day-off open month ✅ verified
+- [x] TC-T3404-006: Edit icon HIDDEN closed month ✅ verified
+- [x] TC-T3404-016: Select earlier date same month ✅ verified
 
-## P0 — Next Session (56)
+### P1 — Completed
+- [x] TC-T3404-004: Edit icon visible future day-off ✅ verified
+- [x] TC-T3404-007: Boundary on approve period start ✅ verified
+- [x] TC-T3404-010: Closed month Jan all disabled (datepicker) ✅ verified
+- [x] TC-T3404-011: Closed month Feb all disabled (datepicker) ✅ verified
+- [x] TC-T3404-012: Open month Mar working days enabled (datepicker) ✅ verified
+- [x] TC-T3404-015: March 2 first working day enabled (datepicker) ✅ verified
+- [x] TC-T3404-017: First working day of month selectable (earlier date) ✅ verified
 
-- [ ] Continue with next 5 pending dayoff test cases from manifest
-- [ ] Prioritize TS-DayOff-Search or TS-DayOff-Validation suites (lower-complexity UI tests, higher throughput)
+### P1 — Remaining
+- [ ] TC-T3404-018: Feb dates NOT selectable (earlier date)
+- [ ] TC-T3404-020: E2E reschedule + approval (regression)
+- [ ] TC-T3404-021: Month-close auto-rejection (regression, hybrid)
+- [ ] TC-T3404-022: Vacation recalculation overlap (regression, hybrid)
 
-## P1 — Remaining Dayoff Tests
+### P2 — Pending
+- [ ] TC-T3404-001: EN tooltip text
+- [ ] TC-T3404-002: EN dialog title
+- [ ] TC-T3404-008: Edit icon hidden last day closed month
+- [ ] TC-T3404-009: Previous year all hidden
+- [ ] TC-T3404-013: Future month Apr enabled (datepicker)
+- [ ] TC-T3404-014: Boundary Feb 28 disabled (datepicker)
+- [ ] TC-T3404-019: Future holiday minDate ST-4 (earlier date)
+- [ ] TC-T3404-023: Max date Dec 31 unchanged (regression)
 
-- [ ] 93 pending test cases remain out of 121 total
-- [ ] Review TC-DO-028/029/030 blocked status — consider updating XLSX test documentation to note dayoff-specific limitations
-- [ ] Data cleanup: delete old test-created dayoff requests on qa-1 if date slots become exhausted
+### P3 — Pending
+- [ ] TC-T3404-003: RU tooltip text unchanged
+- [ ] TC-T3404-024: Global approve period diff offices
 
-## P2 — Cross-cutting Improvements
-
-- [ ] Update `findFreeHolidayForTransfer` callers — active calendar filter now applied (session 55)
-- [ ] Consider adding shared cleanup utility for old test dayoff requests
-- [ ] Sync `findEmployeeByActiveCalendar` pattern to other queries that join office_calendar
-
-<details>
-<summary>Completed (Sessions 54-55)</summary>
-
-- [x] TC-DO-025: Add optional approver — VERIFIED
-- [x] TC-DO-026: Remove optional approver — VERIFIED
-- [x] TC-DO-028: Blocked (dayoff approve only for NEW)
-- [x] TC-DO-029: Blocked (dayoff reject only for NEW)
-- [x] TC-DO-030: Blocked (CPO self-approval not reproducible)
-- [x] TC-DO-007: Verify holidays — Russia — VERIFIED (3 attempts)
-- [x] TC-DO-008: Verify holidays — Cyprus — VERIFIED (1st attempt)
-- [x] TC-DO-014: Transfer modal max date boundary — VERIFIED (7 attempts)
-- [x] Manifest/SQLite sync (17 entries reconciled)
-- [x] Session 55 maintenance: vault audit, SQLite health check
-</details>
+### Key Learnings
+- **Data source:** UI Days Off tab displays from production calendar (`calendar_days` via `office_calendar`), NOT from `employee_dayoff`. All queries must use `calendar_days`.
+- **Reusable page objects:** `DayOffPage` and `RescheduleDialog` cover all needed interactions.
+- **BUG-T3404-1:** Boundary test (TC-007) asserts current buggy behavior (edit icon hidden on exact period start) with known-bug annotation.
+- **Datepicker navigation:** react-datetime with minDate Feb 28 blocks backward navigation past February. TC-010 handles both scenarios (blocked or all-disabled).
+- **New RescheduleDialog methods:** `areAllCurrentMonthDaysDisabled()`, `getDayStates()`, `clickPrevMonth()` — added in session 60 for datepicker suite.

@@ -1,41 +1,29 @@
----
-type: analysis
-tags:
-  - coverage
-  - phase-b
-updated: '2026-03-25'
-status: active
----
 # Knowledge Coverage
 
-## Day-Off Module — ~95%
+## Phase C — Autotest Generation Progress
 
-### Phase A (Knowledge Acquisition) — Complete
-- **Vault notes**: 14 (deep-dive, frontend, API testing, UI flows, data patterns, ticket findings, validation rules, business rules, conflict analysis)
-- **GitLab tickets**: 25+ mined (descriptions + comments), 35 bugs documented (BUG-DO-1 through BUG-DO-35)
-- **Investigation methods**: 6 (code reading, API testing, UI exploration, DB analysis, ticket mining, code analysis)
-- **Sessions**: 9 (S4, S9, S13-S15, S32, S46-S47)
-
-### Phase B (Test Documentation) — Complete
-- **Test cases**: 121 (across 8 suites)
-- **Generator**: `expert-system/generators/day-off/generate.py`
-- **Output**: `test-docs/day-off/day-off.xlsx`
-- **Sessions**: S48 (initial 99 cases), S49 (quality review +22 cases)
-
-### Remaining Gaps (Minor)
-- Race condition between Path A and Path B (separate MQ queues) — hard to test deterministically
-- PAGE_SIZE=100 hard limit in Path D — requires employee with >100 day-offs/year
-- Entity state bug in `updateAll()` — Java internal, not externally testable
-- CANCELED status (dead code path) — no API to trigger
+### Ticket #3404: Days Off Earlier Date Transfer
+- **XLSX:** 24 test cases generated (test-docs/t3404/t3404.xlsx)
+- **Manifest:** Parsed, 24 cases in autotests/manifest/test-cases.json
+- **Autotest coverage:** 10/24 (42%)
+- **Target:** All 24 UI test cases automated
 
 ### Coverage by Feature
-| Feature | Cases | Coverage |
-|---------|-------|----------|
-| Lifecycle (CRUD, display) | 17 | High |
-| Approval (approve/reject/redirect/optional) | 20 | High |
-| Calendar conflicts (4 paths) | 11 | High |
-| Search & filter | 12 | High |
-| Validation (form + API) | 12 | High |
-| Permissions (roles, authorities) | 9 | Medium-High |
-| Notifications (email, banner) | 11 | High |
-| Regression (bug-specific) | 29 | High |
+| Feature | Cases | Automated | Status |
+|---------|-------|-----------|--------|
+| Tooltip fix | 3 | 1 | In Progress |
+| Edit icon visibility | 6 | 4 | In Progress |
+| Datepicker constraints | 6 | 4 | In Progress |
+| Earlier date selection | 4 | 2 | In Progress |
+| Regression/E2E | 5 | 0 | Pending |
+
+### Session History
+| Session | Tests | Cumulative | Notes |
+|---------|-------|------------|-------|
+| 59 | 5 (TC-004,005,006,007,016) | 5/24 (21%) | First batch — core P0/P1 |
+| 60 | 5 (TC-010,011,012,015,017) | 10/24 (42%) | Datepicker suite + maintenance |
+
+### Phase B Summary
+- 24 test cases across 5 suites
+- 3 P0 (core), 9 P1 (boundary/flow), 8 P2 (secondary), 2 P3 (low), 2 hybrid
+- Risk areas: ST-1, ST-4, ST-5, REG-1, REG-2

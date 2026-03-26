@@ -136,6 +136,48 @@ export class RescheduleDialog {
     await this.page.waitForTimeout(200);
   }
 
+  /** Clicks the previous month (‹) button in the calendar header row. */
+  async clickPrevMonth(): Promise<void> {
+    await this.calendarTable
+      .locator("thead tr")
+      .first()
+      .locator("th")
+      .first()
+      .click();
+    await this.page.waitForTimeout(200);
+  }
+
+  /** Returns whether ALL current-month day cells are disabled (or none exist). */
+  async areAllCurrentMonthDaysDisabled(): Promise<boolean> {
+    return this.calendarTable
+      .locator("td:not(.rdtOld):not(.rdtNew)")
+      .evaluateAll((cells: Element[]) =>
+        cells.length === 0 ||
+        cells.every((c) => c.classList.contains("rdtDisabled")),
+      );
+  }
+
+  /** Returns arrays of enabled and disabled day numbers for the currently displayed month. */
+  async getDayStates(): Promise<{ enabled: number[]; disabled: number[] }> {
+    return this.calendarTable
+      .locator("td:not(.rdtOld):not(.rdtNew)")
+      .evaluateAll((cells: Element[]) => {
+        const enabled: number[] = [];
+        const disabled: number[] = [];
+        for (const c of cells) {
+          const text = c.textContent?.trim();
+          if (!text || !/^\d{1,2}$/.test(text)) continue;
+          const day = parseInt(text, 10);
+          if (c.classList.contains("rdtDisabled")) {
+            disabled.push(day);
+          } else {
+            enabled.push(day);
+          }
+        }
+        return { enabled, disabled };
+      });
+  }
+
   /** Navigate to a specific month/year in the calendar (public wrapper). */
   async navigateToTargetMonth(
     targetMonth: number,
