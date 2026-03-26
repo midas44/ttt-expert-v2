@@ -1,9 +1,9 @@
 declare const process: { env: Record<string, string | undefined> };
 
-import { loadSaved, saveToDisk } from "./savedDataStore";
-import type { TestDataMode } from "../config/configUtils";
-import type { TttConfig } from "../config/tttConfig";
-import { DbClient } from "../config/db/dbClient";
+import { loadSaved, saveToDisk } from "../savedDataStore";
+import type { TestDataMode } from "../../config/configUtils";
+import type { TttConfig } from "../../config/tttConfig";
+import { DbClient } from "../../config/db/dbClient";
 import { createApprovedDayoffRequest } from "./queries/dayoffQueries";
 
 interface Tc029Args {

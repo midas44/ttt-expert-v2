@@ -1,12 +1,12 @@
 import { test, expect } from "@playwright/test";
-import { TttConfig } from "../config/tttConfig";
-import { GlobalConfig } from "../config/globalConfig";
-import { DayoffTc015Data } from "../data/DayoffTc015Data";
-import { LoginFixture } from "../fixtures/LoginFixture";
-import { VerificationFixture } from "../fixtures/VerificationFixture";
-import { LogoutFixture } from "../fixtures/LogoutFixture";
-import { DayOffPage } from "../pages/DayOffPage";
-import { RescheduleDialog } from "../pages/RescheduleDialog";
+import { TttConfig } from "../../config/tttConfig";
+import { GlobalConfig } from "../../config/globalConfig";
+import { DayoffTc015Data } from "../../data/day-off/DayoffTc015Data";
+import { LoginFixture } from "../../fixtures/LoginFixture";
+import { VerificationFixture } from "../../fixtures/VerificationFixture";
+import { LogoutFixture } from "../../fixtures/LogoutFixture";
+import { DayOffPage } from "../../pages/DayOffPage";
+import { RescheduleDialog } from "../../pages/RescheduleDialog";
 
 /**
  * TC-DO-015: Transfer calendar disables existing day-off dates.

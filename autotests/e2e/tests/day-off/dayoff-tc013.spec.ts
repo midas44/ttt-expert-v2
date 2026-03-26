@@ -1,12 +1,12 @@
 import { test, expect } from "@playwright/test";
-import { TttConfig } from "../config/tttConfig";
-import { GlobalConfig } from "../config/globalConfig";
-import { DayoffTc013Data } from "../data/DayoffTc013Data";
-import { LoginFixture } from "../fixtures/LoginFixture";
-import { VerificationFixture } from "../fixtures/VerificationFixture";
-import { LogoutFixture } from "../fixtures/LogoutFixture";
-import { DayOffPage } from "../pages/DayOffPage";
-import { RescheduleDialog } from "../pages/RescheduleDialog";
+import { TttConfig } from "../../config/tttConfig";
+import { GlobalConfig } from "../../config/globalConfig";
+import { DayoffTc013Data } from "../../data/day-off/DayoffTc013Data";
+import { LoginFixture } from "../../fixtures/LoginFixture";
+import { VerificationFixture } from "../../fixtures/VerificationFixture";
+import { LogoutFixture } from "../../fixtures/LogoutFixture";
+import { DayOffPage } from "../../pages/DayOffPage";
+import { RescheduleDialog } from "../../pages/RescheduleDialog";
 
 /**
  * TC-DO-013: Transfer modal date constraints — min boundary.

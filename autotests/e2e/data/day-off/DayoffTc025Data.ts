@@ -1,5 +1,5 @@
-import { TttConfig } from "../config/tttConfig";
-import { DbClient } from "../config/db/dbClient";
+import { TttConfig } from "../../config/tttConfig";
+import { DbClient } from "../../config/db/dbClient";
 import {
   findNewDayoffRequestWithManager,
   createNewDayoffRequest,

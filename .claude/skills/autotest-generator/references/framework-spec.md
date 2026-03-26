@@ -5,7 +5,7 @@
 5-layer Playwright + TypeScript with strict downward dependencies:
 
 ```
-Test Specs          autotests/e2e/tests/*.spec.ts       — scenario orchestration
+Test Specs          autotests/e2e/tests/<module>/*.spec.ts — scenario orchestration
     ↓
 Fixtures            autotests/e2e/fixtures/*.ts          — reusable workflows (plain classes)
     ↓
@@ -29,8 +29,9 @@ Playwright API
 
 | Artifact | Pattern | Example |
 |----------|---------|---------|
-| Test spec | `{module}-{test-id}.spec.ts` | `vacation-tc001.spec.ts` |
-| Data class | `{Module}{TestId}Data` | `VacationTc001Data` |
+| Test spec | `<module>/{module}-{test-id}.spec.ts` | `vacation/vacation-tc001.spec.ts` |
+| Data class | `<module>/{Module}{TestId}Data` | `vacation/VacationTc001Data` |
+| Query file | `<module>/queries/{module}Queries.ts` | `vacation/queries/vacationQueries.ts` |
 | Fixture | `{Feature}Fixture` | `VacationCreationFixture` |
 | API setup fixture | `Api{Module}SetupFixture` | `ApiVacationSetupFixture` |
 | Page object | `{PageName}Page` / `{Dialog}Dialog` | `MyVacationsPage` |
@@ -78,7 +79,7 @@ await request.patch(clockUrl, { headers, data: { dateTime: "2026-04-01T10:00:00"
 ```typescript
 declare const process: { env: Record<string, string | undefined> };
 
-import { loadSaved, saveToDisk } from "./savedDataStore";
+import { loadSaved, saveToDisk } from "../savedDataStore";
 
 // IMPORTANT: Constructor defaults are static-mode fallbacks only.
 // Dynamic mode MUST implement the DB query from test case preconditions.
@@ -225,6 +226,6 @@ await pollForMatch(candidates, { timeout: globalConfig.stepTimeoutMs });
 
 ```bash
 cd autotests
-npx playwright test e2e/tests/<spec> --project=chrome-headless   # autonomous
-npx playwright test e2e/tests/<spec> --project=chrome-debug       # manual headed
+npx playwright test e2e/tests/<module>/<spec> --project=chrome-headless   # autonomous
+npx playwright test e2e/tests/<module>/<spec> --project=chrome-debug       # manual headed
 ```

@@ -1,11 +1,11 @@
 import { test, expect } from "@playwright/test";
-import { TttConfig } from "../config/tttConfig";
-import { GlobalConfig } from "../config/globalConfig";
-import { DayoffTc002Data } from "../data/DayoffTc002Data";
-import { LoginFixture } from "../fixtures/LoginFixture";
-import { VerificationFixture } from "../fixtures/VerificationFixture";
-import { LogoutFixture } from "../fixtures/LogoutFixture";
-import { DayOffPage } from "../pages/DayOffPage";
+import { TttConfig } from "../../config/tttConfig";
+import { GlobalConfig } from "../../config/globalConfig";
+import { DayoffTc002Data } from "../../data/day-off/DayoffTc002Data";
+import { LoginFixture } from "../../fixtures/LoginFixture";
+import { VerificationFixture } from "../../fixtures/VerificationFixture";
+import { LogoutFixture } from "../../fixtures/LogoutFixture";
+import { DayOffPage } from "../../pages/DayOffPage";
 
 /**
  * TC-DO-002: Navigate to Days off tab from Vacations tab.

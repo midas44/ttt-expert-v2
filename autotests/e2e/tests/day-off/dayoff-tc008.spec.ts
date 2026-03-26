@@ -1,11 +1,11 @@
 import { test, expect } from "@playwright/test";
-import { TttConfig } from "../config/tttConfig";
-import { GlobalConfig } from "../config/globalConfig";
-import { DayoffTc008Data } from "../data/DayoffTc008Data";
-import { LoginFixture } from "../fixtures/LoginFixture";
-import { VerificationFixture } from "../fixtures/VerificationFixture";
-import { LogoutFixture } from "../fixtures/LogoutFixture";
-import { DayOffPage } from "../pages/DayOffPage";
+import { TttConfig } from "../../config/tttConfig";
+import { GlobalConfig } from "../../config/globalConfig";
+import { DayoffTc008Data } from "../../data/day-off/DayoffTc008Data";
+import { LoginFixture } from "../../fixtures/LoginFixture";
+import { VerificationFixture } from "../../fixtures/VerificationFixture";
+import { LogoutFixture } from "../../fixtures/LogoutFixture";
+import { DayOffPage } from "../../pages/DayOffPage";
 
 /**
  * TC-DO-008: Verify holidays per salary office — Cyprus.

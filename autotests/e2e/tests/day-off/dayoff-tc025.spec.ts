@@ -1,12 +1,12 @@
 import { test, expect } from "@playwright/test";
-import { TttConfig } from "../config/tttConfig";
-import { GlobalConfig } from "../config/globalConfig";
-import { DayoffTc025Data } from "../data/DayoffTc025Data";
-import { LoginFixture } from "../fixtures/LoginFixture";
-import { VerificationFixture } from "../fixtures/VerificationFixture";
-import { LogoutFixture } from "../fixtures/LogoutFixture";
-import { DayOffRequestPage } from "../pages/DayOffRequestPage";
-import { WeekendDetailsModal } from "../pages/WeekendDetailsModal";
+import { TttConfig } from "../../config/tttConfig";
+import { GlobalConfig } from "../../config/globalConfig";
+import { DayoffTc025Data } from "../../data/day-off/DayoffTc025Data";
+import { LoginFixture } from "../../fixtures/LoginFixture";
+import { VerificationFixture } from "../../fixtures/VerificationFixture";
+import { LogoutFixture } from "../../fixtures/LogoutFixture";
+import { DayOffRequestPage } from "../../pages/DayOffRequestPage";
+import { WeekendDetailsModal } from "../../pages/WeekendDetailsModal";
 
 /**
  * TC-DO-025: Add optional approver via Edit list mode.

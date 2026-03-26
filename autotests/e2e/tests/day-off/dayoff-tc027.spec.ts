@@ -1,12 +1,12 @@
 import { test, expect } from "@playwright/test";
-import { TttConfig } from "../config/tttConfig";
-import { GlobalConfig } from "../config/globalConfig";
-import { DayoffTc027Data } from "../data/DayoffTc027Data";
-import { LoginFixture } from "../fixtures/LoginFixture";
-import { VerificationFixture } from "../fixtures/VerificationFixture";
-import { LogoutFixture } from "../fixtures/LogoutFixture";
-import { DayOffRequestPage } from "../pages/DayOffRequestPage";
-import { WeekendDetailsModal } from "../pages/WeekendDetailsModal";
+import { TttConfig } from "../../config/tttConfig";
+import { GlobalConfig } from "../../config/globalConfig";
+import { DayoffTc027Data } from "../../data/day-off/DayoffTc027Data";
+import { LoginFixture } from "../../fixtures/LoginFixture";
+import { VerificationFixture } from "../../fixtures/VerificationFixture";
+import { LogoutFixture } from "../../fixtures/LogoutFixture";
+import { DayOffRequestPage } from "../../pages/DayOffRequestPage";
+import { WeekendDetailsModal } from "../../pages/WeekendDetailsModal";
 
 /**
  * TC-DO-027: Main action buttons disabled during Edit list mode.

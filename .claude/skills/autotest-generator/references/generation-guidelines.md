@@ -15,7 +15,7 @@
 - All dynamic data in the dedicated `*Data` class
 - Constructor params read from `process.env` with documented defaults
 - Standard timestamp format: `ddmmyy_HHmm`
-- If DB queries needed, create query file in `e2e/data/queries/`
+- If DB queries needed, create query file in `e2e/data/<module>/queries/`
 
 ### Three Test Data Modes
 
@@ -27,7 +27,7 @@ Every data class MUST implement `static async create(mode: TestDataMode, tttConf
 
 3. **`saved`** — reads constructor args from `e2e/data/saved/<ClassName>.json`. If the file doesn't exist, falls back to `dynamic` mode, then saves the result for future runs. Enables reproducible runs without DB. Use `savedDataStore.ts` utilities:
    ```typescript
-   import { loadSaved, saveToDisk } from "./savedDataStore";
+   import { loadSaved, saveToDisk } from "../savedDataStore";
 
    static async create(mode: TestDataMode, tttConfig: TttConfig): Promise<MyData> {
      if (mode === "static") return new MyData();

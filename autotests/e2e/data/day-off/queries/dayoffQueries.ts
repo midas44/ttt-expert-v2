@@ -1,4 +1,4 @@
-import { DbClient } from "../../config/db/dbClient";
+import { DbClient } from "../../../config/db/dbClient";
 
 interface EmployeeRow {
   login: string;

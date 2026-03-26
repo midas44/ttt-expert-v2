@@ -1,7 +1,7 @@
 import type { APIRequestContext } from "@playwright/test";
 import type { TttConfig } from "../config/tttConfig";
 import { DbClient } from "../config/db/dbClient";
-import { hasVacationConflict } from "../data/queries/vacationQueries";
+import { hasVacationConflict } from "../data/vacation/queries/vacationQueries";
 
 /**
  * Creates vacation precondition states via API for tests that need specific

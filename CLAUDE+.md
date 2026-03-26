@@ -156,10 +156,10 @@ All paths are relative to the project root `/home/v/Dev/ttt-expert-v2/`.
 │   ├── reference/                     #   Prototype tests (patterns, not executed)
 │   └── e2e/
 │       ├── config/                    #   Config reads from shared config/ttt/
-│       ├── data/                      #   Test data classes + queries/
+│       ├── data/                      #   Test data classes (module subdirs + queries/)
 │       ├── fixtures/                  #   Reusable workflow fixtures
 │       ├── pages/                     #   Page object classes
-│       ├── tests/                     #   Generated test specs
+│       ├── tests/                     #   Generated test specs (module subdirs)
 │       └── utils/                     #   Utilities (locatorResolver, colorAnalysis)
 ```
 
@@ -773,7 +773,7 @@ Phase C begins after Phase B is complete for the modules in scope. Verify:
 Generated tests follow a 5-layer Playwright + TypeScript architecture:
 
 ```
-Test Specs          autotests/e2e/tests/*.spec.ts       — scenario orchestration, tagged @regress/@smoke/@debug
+Test Specs          autotests/e2e/tests/<module>/*.spec.ts — scenario orchestration, tagged @regress/@smoke/@debug
     ↓
 Fixtures            autotests/e2e/fixtures/*.ts          — reusable multi-step workflows (plain classes, NOT test.extend)
     ↓
@@ -872,13 +872,13 @@ c. **Generate artifacts (UI-first):**
 
    Before writing any code, read the selector and architecture rules in `references/framework-spec.md` § Selector Priority and § Timeouts. These rules are non-negotiable.
 
-   - **Data class** (`e2e/data/{Module}{TestId}Data.ts`): The `create()` factory MUST implement dynamic mode by translating ALL test case preconditions into a compound DB query that satisfies them simultaneously. Think through the full test workflow — if the test creates→approves→pays a vacation, the employee must have a manager (for approval), sufficient days, correct office type, and the right role. Consult vault notes for implicit criteria not stated in preconditions (e.g., approval requires manager_id IS NOT NULL). Use `ORDER BY random() LIMIT 1` so different tests pick different employees. After fetching, validate the data satisfies all criteria. Constructor defaults are fallbacks for static mode only. Implement all three modes. Never hardcode the same username across multiple data classes. See `generation-guidelines.md` § "Smart Data Generation" for detailed patterns.
+   - **Data class** (`e2e/data/<module>/{Module}{TestId}Data.ts`): The `create()` factory MUST implement dynamic mode by translating ALL test case preconditions into a compound DB query that satisfies them simultaneously. Think through the full test workflow — if the test creates→approves→pays a vacation, the employee must have a manager (for approval), sufficient days, correct office type, and the right role. Consult vault notes for implicit criteria not stated in preconditions (e.g., approval requires manager_id IS NOT NULL). Use `ORDER BY random() LIMIT 1` so different tests pick different employees. After fetching, validate the data satisfies all criteria. Constructor defaults are fallbacks for static mode only. Implement all three modes. Never hardcode the same username across multiple data classes. See `generation-guidelines.md` § "Smart Data Generation" for detailed patterns.
 
    - **Page object** (`e2e/pages/*.ts`): Most tests WILL need page objects. If an existing page object doesn't have the method you need, **ADD the method to the page object** — never inline a locator in the spec file.
 
    - **Fixture** (`e2e/fixtures/*.ts`): only if workflow not covered by existing fixtures
 
-   - **Test spec** (`e2e/tests/{module}-{test-id}.spec.ts`): **UI-first** — uses `{ page }` from Playwright, logs in via browser, interacts through page objects, verifies visible results. Pattern: login → navigate → interact → verify → cleanup (logout + page.close())
+   - **Test spec** (`e2e/tests/<module>/{module}-{test-id}.spec.ts`): **UI-first** — uses `{ page }` from Playwright, logs in via browser, interacts through page objects, verifies visible results. Pattern: login → navigate → interact → verify → cleanup (logout + page.close())
 
    **Selector rules (inlined — these MUST be followed for every locator):**
    1. **Text-first**: `getByText("Create a request")`, `getByRole("button", { name: "Save" })` — most stable
@@ -904,7 +904,7 @@ d. **Selector audit** (mandatory before running):
    - If violations found, refactor into page objects before proceeding to run
 
 e. **Verify:**
-   - Run: `cd autotests && npx playwright test e2e/tests/{spec} --project=chrome-headless`
+   - Run: `cd autotests && npx playwright test e2e/tests/<module>/{spec} --project=chrome-headless`
    - If passes: mark as `verified` in tracking
    - If fails: analyze error, attempt fix (up to `autotest.auto_fix_attempts`)
      - Selector failure → use playwright-vpn MCP for live snapshot, search vault for patterns
