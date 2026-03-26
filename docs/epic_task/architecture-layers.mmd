@@ -1,29 +1,72 @@
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#4A90D9', 'primaryTextColor': '#fff', 'lineColor': '#5C6BC0', 'background': '#FAFAFA'}, 'flowchart': {'rankSpacing': 50}}}%%
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryColor': '#E8EDF2',
+    'primaryTextColor': '#37474F',
+    'primaryBorderColor': '#90A4AE',
+    'lineColor': '#607D8B',
+    'background': '#FFFFFF',
+    'mainBkg': '#E8EDF2',
+    'nodeBorder': '#90A4AE',
+    'clusterBkg': '#F5F7FA',
+    'clusterBorder': '#B0BEC5',
+    'titleColor': '#37474F',
+    'edgeLabelBackground': '#FFFFFF',
+    'fontSize': '14px'
+  },
+  'flowchart': {
+    'curve': 'basis',
+    'diagramPadding': 20,
+    'rankSpacing': 40,
+    'nodeSpacing': 15
+  }
+}}%%
 
-graph TD
-    PROMPT["System Prompt + 17 Skills + config.yaml"] --> MCP_LAYER
-
-    subgraph MCP_LAYER["MCP Integration Layer — 39 Servers"]
-        direction LR
-        OBS["Obsidian"] ~~~ QMD["QMD Search"] ~~~ SQLT["SQLite"]
-        PG["PostgreSQL ×3"] ~~~ SW["Swagger ×21"] ~~~ PW["Playwright"]
-        CONFL["Confluence"] ~~~ FIGMA["Figma"] ~~~ QASE_S["Qase"] ~~~ GITLAB["GitLab"]
+graph LR
+    subgraph AGENT["Agent"]
+        direction TB
+        A1["System Prompt"]
+        A2["17 Skills"]
+        A3["config.yaml"]
     end
 
-    MCP_LAYER --> VAULT_OUT["Knowledge Base<br/>200+ vault notes"]
-    MCP_LAYER --> XLSX_OUT["Test Documentation<br/>XLSX per module/ticket"]
-    MCP_LAYER --> AUTO_OUT["E2E Autotests<br/>Playwright + TypeScript"]
-    MCP_LAYER --> DASH_OUT["Analytics Dashboard"]
-    AUTO_OUT -.->|"findings write-back"| OBS
+    subgraph MCP["MCP Layer — 39 Servers"]
+        direction TB
+        subgraph MCP_K["Knowledge"]
+            K1["Obsidian"]
+            K2["QMD Search"]
+            K3["SQLite"]
+        end
+        subgraph MCP_L["Live Envs"]
+            L1["PostgreSQL x3"]
+            L2["Swagger x21"]
+            L3["Playwright"]
+        end
+        subgraph MCP_E["External"]
+            E1["Confluence"]
+            E2["Figma"]
+            E3["Qase"]
+            E4["GitLab"]
+        end
+    end
 
-    classDef agent fill:#4A90D9,stroke:#2D6CB4,color:#fff
-    classDef know fill:#FFF9C4,stroke:#F9A825,color:#795548
-    classDef source fill:#E3F2FD,stroke:#1976D2,color:#1565C0
-    classDef doc fill:#FCE4EC,stroke:#C62828,color:#B71C1C
-    classDef output fill:#26A69A,stroke:#00897B,color:#fff
+    subgraph ARTIFACTS["Output"]
+        direction TB
+        O1["Knowledge Base"]
+        O2["XLSX Test Docs"]
+        O3["E2E Test Suite"]
+        O4["Dashboard"]
+    end
 
-    class PROMPT agent
-    class OBS,QMD,SQLT know
-    class PG,SW,PW source
-    class CONFL,FIGMA,QASE_S,GITLAB doc
-    class VAULT_OUT,XLSX_OUT,AUTO_OUT,DASH_OUT output
+    AGENT ==> MCP ==> ARTIFACTS
+    O3 -.->|"write-back"| K1
+
+    classDef agentNode fill:#DAE3ED,stroke:#78909C,color:#263238,stroke-width:2px
+    classDef mcpNode fill:#E8EDF2,stroke:#90A4AE,color:#37474F,stroke-width:1.5px
+    classDef outNode fill:#E0E8E5,stroke:#81A594,color:#263238,stroke-width:2px
+
+    class A1,A2,A3 agentNode
+    class K1,K2,K3,L1,L2,L3,E1,E2,E3,E4 mcpNode
+    class O1,O2,O3,O4 outNode
+
+    linkStyle default stroke:#607D8B,stroke-width:2.5px

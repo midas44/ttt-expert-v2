@@ -1,78 +1,81 @@
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#4A90D9', 'primaryTextColor': '#fff', 'primaryBorderColor': '#2D6CB4', 'lineColor': '#5C6BC0', 'secondaryColor': '#7E57C2', 'tertiaryColor': '#26A69A', 'background': '#FAFAFA', 'mainBkg': '#4A90D9', 'nodeBorder': '#2D6CB4', 'clusterBkg': '#F5F5F5', 'clusterBorder': '#E0E0E0', 'titleColor': '#333', 'edgeLabelBackground': '#fff'}}}%%
+%%{init: {
+  'theme': 'base',
+  'themeVariables': {
+    'primaryColor': '#E8EDF2',
+    'primaryTextColor': '#37474F',
+    'primaryBorderColor': '#90A4AE',
+    'lineColor': '#607D8B',
+    'secondaryColor': '#F0F2F5',
+    'background': '#FFFFFF',
+    'mainBkg': '#E8EDF2',
+    'nodeBorder': '#90A4AE',
+    'clusterBkg': '#F5F7FA',
+    'clusterBorder': '#B0BEC5',
+    'titleColor': '#37474F',
+    'edgeLabelBackground': '#FFFFFF',
+    'fontSize': '15px'
+  },
+  'flowchart': {
+    'curve': 'basis',
+    'diagramPadding': 30,
+    'rankSpacing': 55,
+    'nodeSpacing': 25
+  }
+}}%%
 
-graph TB
-    subgraph INPUTS["Information Sources"]
-        direction TB
-        GL["GitLab<br/>Issues, MRs, Comments"]
-        CODE["Codebase<br/>Java/Spring + React/TS"]
-        CONF["Confluence<br/>Requirements & Specs"]
-        FIG["Figma<br/>Design Mockups"]
-        QASE["Qase<br/>Existing Test Suites"]
-        DB["PostgreSQL<br/>3 Environments"]
-        API["REST API<br/>366 Endpoints"]
-        UI["Live UI<br/>Playwright Browser"]
-    end
+graph TD
+    SOURCES["<b>Information Sources</b><br/>GitLab Issues &bull; Codebase (Java/Spring + React/TS)<br/>Confluence &bull; Figma &bull; Qase &bull; PostgreSQL<br/>REST API (366 endpoints) &bull; Live UI (Playwright)"]
 
-    subgraph PHASE_A["Phase A — Knowledge Acquisition"]
-        direction TB
-        INV["Autonomous Investigation<br/>Code Analysis + API Testing<br/>+ UI Exploration + Ticket Mining"]
-        VAULT["Obsidian Vault<br/>200+ Knowledge Notes"]
-        SQLITE["SQLite Analytics<br/>Findings, Health, Issues"]
-    end
-
-    subgraph PHASE_B["Phase B — Test Documentation"]
-        direction TB
-        ENRICH["Deep Knowledge Enrichment<br/>Per-Module Investigation"]
-        GEN["XLSX Generation<br/>Python + openpyxl"]
-        XLSX["Test Documentation<br/>Plans + Cases per Module"]
-    end
-
-    subgraph PHASE_C["Phase C — Autotest Generation"]
-        direction TB
-        PARSE["XLSX Parser<br/>→ JSON Manifest"]
-        CODEGEN["Test Code Generation<br/>Vault-Enriched"]
-        VERIFY["Verify & Auto-Fix<br/>Run on Live Env"]
-        TESTS["Playwright E2E Suite<br/>Specs + Pages + Data"]
-    end
-
-    subgraph RUNNER["Session Orchestrator"]
+    subgraph PA["Phase A — Knowledge Acquisition"]
         direction LR
-        CFG["config.yaml"]
-        SCRIPT["run-sessions.sh"]
-        DASH["Dashboard"]
+        INV["Autonomous<br/>Investigation"]
+        VAULT["Obsidian Vault<br/>200+ Notes"]
+        SQLITE["SQLite Analytics<br/>Findings &bull; Health"]
+        INV --> VAULT
+        INV --> SQLITE
     end
 
-    GL & CODE & CONF & FIG & QASE & DB & API & UI --> INV
-    INV --> VAULT
-    INV --> SQLITE
-    VAULT --> ENRICH
-    SQLITE --> ENRICH
-    ENRICH --> GEN
-    GEN --> XLSX
-    XLSX --> PARSE
-    VAULT --> CODEGEN
-    PARSE --> CODEGEN
-    CODEGEN --> VERIFY
-    VERIFY --> TESTS
-    VERIFY -->|"New Findings"| VAULT
+    subgraph PB["Phase B — Test Documentation"]
+        direction LR
+        ENRICH["Knowledge<br/>Enrichment"]
+        GEN["XLSX Generator<br/>Python + openpyxl"]
+        XLSX["Test Documentation<br/>Plans + Cases"]
+        ENRICH --> GEN --> XLSX
+    end
 
-    CFG --> SCRIPT
-    SCRIPT -->|"Orchestrates"| PHASE_A
-    SCRIPT -->|"Orchestrates"| PHASE_B
-    SCRIPT -->|"Orchestrates"| PHASE_C
-    SCRIPT --> DASH
+    subgraph PC["Phase C — Autotest Generation"]
+        direction LR
+        PARSE["XLSX Parser<br/>JSON Manifest"]
+        CODEGEN["Code Generation<br/>Vault-Enriched"]
+        VERIFY["Verify &<br/>Auto-Fix"]
+        TESTS["Playwright E2E<br/>Specs + Pages + Data"]
+        PARSE --> CODEGEN --> VERIFY --> TESTS
+    end
 
-    classDef inputNode fill:#E3F2FD,stroke:#1976D2,color:#1565C0
-    classDef phaseA fill:#E8F5E9,stroke:#388E3C,color:#2E7D32
-    classDef phaseB fill:#FFF3E0,stroke:#F57C00,color:#E65100
-    classDef phaseC fill:#F3E5F5,stroke:#7B1FA2,color:#6A1B9A
-    classDef runner fill:#ECEFF1,stroke:#546E7A,color:#37474F
-    classDef storage fill:#FFFDE7,stroke:#F9A825,color:#F57F17
+    ORCH["<b>Session Orchestrator</b><br/>run-sessions.sh &bull; config.yaml &bull; Dashboard"]
 
-    class GL,CODE,CONF,FIG,QASE,DB,API,UI inputNode
-    class INV phaseA
-    class ENRICH,GEN phaseB
-    class PARSE,CODEGEN,VERIFY phaseC
-    class VAULT,SQLITE storage
-    class XLSX,TESTS storage
-    class CFG,SCRIPT,DASH runner
+    SOURCES ==> INV
+    VAULT ==> ENRICH
+    SQLITE ==> ENRICH
+    XLSX ==> PARSE
+    VAULT ==> CODEGEN
+    TESTS -.->|"write-back"| VAULT
+    ORCH -.->|"orchestrates all phases"| PA
+
+    classDef sourceBox fill:#E3EBF3,stroke:#78909C,color:#263238,stroke-width:2px
+    classDef phaseANode fill:#E0EAF0,stroke:#78909C,color:#37474F,stroke-width:1.5px
+    classDef phaseBNode fill:#EDE8E2,stroke:#A1887F,color:#37474F,stroke-width:1.5px
+    classDef phaseCNode fill:#E3E0EB,stroke:#9E9E9E,color:#37474F,stroke-width:1.5px
+    classDef storageNode fill:#F5F0E0,stroke:#BCAA8C,color:#37474F,stroke-width:1.5px
+    classDef orchNode fill:#ECEFF1,stroke:#90A4AE,color:#37474F,stroke-width:1.5px
+
+    class SOURCES sourceBox
+    class INV phaseANode
+    class VAULT,SQLITE storageNode
+    class ENRICH,GEN phaseBNode
+    class XLSX storageNode
+    class PARSE,CODEGEN,VERIFY phaseCNode
+    class TESTS storageNode
+    class ORCH orchNode
+
+    linkStyle default stroke:#607D8B,stroke-width:2px
