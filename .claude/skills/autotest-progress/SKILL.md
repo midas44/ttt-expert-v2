@@ -26,7 +26,7 @@ prioritize which tests to automate next based on module health, priority, and ef
 
 ### 1. Check Scope
 
-Read `autotest.scope` from `expert-system/config.yaml`. If not `"all"`, filter all queries to that module only. Valid values: `all`, `vacation`, `sick-leave`, `day-off`, `reports`, `statistics`, `accounting`, `admin`, `planner`, `security`, `cross-service`.
+Read `autotest.scope` from `expert-system/config.yaml`. If not `"all"`, filter all queries to that scope only. Valid values: `all`, module names (`vacation`, `sick-leave`, `day-off`, `reports`, `statistics`, `accounting`, `admin`, `planner`, `security`, `cross-service`), or GitLab ticket numbers (pure digits, normalized to `t<number>` internally — e.g., `scope: "3404"` → filter by `WHERE module = 't3404'`).
 
 ### 2. Gather Data
 

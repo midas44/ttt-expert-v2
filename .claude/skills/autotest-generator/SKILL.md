@@ -53,7 +53,9 @@ Before creating new files, always check what already exists:
 autotests/e2e/pages/       -- Page Object classes (reuse existing ones)
 autotests/e2e/fixtures/    -- Test fixtures (reuse existing workflows)
 autotests/e2e/tests/<module>/  -- Existing test specs per module (avoid duplication, follow conventions)
+autotests/e2e/tests/t<number>/  -- Ticket-scoped test specs (when scope is a GitLab ticket number)
 autotests/e2e/data/<module>/   -- Data classes per module, queries/, saved/
+autotests/e2e/data/t<number>/  -- Ticket-scoped data classes (when scope is a GitLab ticket number)
 autotests/e2e/config/      -- Environment config (reads shared config/ttt/)
 autotests/reference/       -- Prototype tests from ttt-autom-v2 (patterns, not executed)
 ```
@@ -64,7 +66,7 @@ Read 2-3 existing files in `e2e/pages/` and `e2e/fixtures/` to match conventions
 
 Follow the 5-layer architecture (tests -> fixtures -> pages -> config+data -> Playwright API):
 
-**a) Data class** (`e2e/data/<module>/{Module}{TestId}Data.ts`, e.g. `e2e/data/vacation/VacationTc001Data.ts`):
+**a) Data class** (`e2e/data/<module>/{Module}{TestId}Data.ts`, e.g. `e2e/data/vacation/VacationTc001Data.ts`; for ticket scope: `e2e/data/t<number>/T<number>Tc<seq>Data.ts`, e.g. `e2e/data/t3404/T3404Tc001Data.ts`):
 - Read the test case `preconditions` and `notes` from the manifest — extract ALL data requirements
 - Build a **compound DB query** satisfying all preconditions simultaneously (office type AND sufficient days AND has manager AND correct role — not just one criterion)
 - Consult vault for **implicit criteria** not in preconditions — e.g., approval needs `manager_id IS NOT NULL`, payment needs APPROVED+EXACT, CPO self-approval needs ROLE_DEPARTMENT_MANAGER

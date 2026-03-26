@@ -4,10 +4,10 @@ session:
   offhours_utc: 15:00-03:00
   max_duration_minutes: 120
 phase:
-  current: autotest_generation
+  current: knowledge_acquisition
   generation_allowed: true
   coverage_override: -1
-  scope: day-off
+  scope: 3404
 thresholds:
   knowledge_coverage_target: 0.8
   note_quality_min_links: 2
@@ -31,7 +31,7 @@ autonomy:
   consecutive_failure_limit: 30
   auto_phase_transition: true
   log_dir: expert-system/logs
-  stop: true
+  stop: false
   model: opus
   effort: max
   allow_api_mutations: true
@@ -46,7 +46,7 @@ autotest:
   target_env: qa-1
   max_tests_per_session: 5
   auto_fix_attempts: 3
-  scope: day-off
+  scope: 3404
   priority_order:
   - vacation
   - sick-leave

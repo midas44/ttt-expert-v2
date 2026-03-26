@@ -15,7 +15,7 @@
 - All dynamic data in the dedicated `*Data` class
 - Constructor params read from `process.env` with documented defaults
 - Standard timestamp format: `ddmmyy_HHmm`
-- If DB queries needed, create query file in `e2e/data/<module>/queries/`
+- If DB queries needed, create query file in `e2e/data/<module>/queries/` (or `e2e/data/t<number>/queries/` for ticket scope). Reuse existing query functions from parent module when possible.
 
 ### Three Test Data Modes
 

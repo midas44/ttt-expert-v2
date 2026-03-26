@@ -46,7 +46,7 @@ phase:
   current: "knowledge_acquisition"   # "knowledge_acquisition", "generation", or "autotest_generation"
   generation_allowed: false          # Set automatically when auto_phase_transition is true
   coverage_override: 0              # Force coverage to this value (0-100). Set -1 or remove to use computed value.
-  scope: "all"                       # "all", a module name, or a list — restricts Phase A/B to these areas
+  scope: "all"                       # "all", module name(s), or GitLab ticket number(s) (pure digits → t-prefixed internally)
 
 thresholds:
   knowledge_coverage_target: 0.8
@@ -84,8 +84,15 @@ autonomy:
 - If `phase.coverage_override` is set to 0-100, use that as current coverage and do NOT auto-transition. Investigate until notes reach genuine depth, then set `coverage_override: -1` before allowing transition.
 - If `phase.current` is `"knowledge_acquisition"`, focus on knowledge building. When coverage target is met, `auto_phase_transition` is `true`, and no coverage_override is active, update config.yaml to transition to Phase B automatically
 - If `phase.current` is `"generation"` and `phase.generation_allowed` is `true`, execute Phase B (test documentation generation with knowledge enrichment)
-- If `phase.current` is `"autotest_generation"` and `autotest.enabled` is `true`, execute Phase C (autotest generation). Read `autotest.*` fields for target environment, test limits, scope (`"all"` or a specific module name), and priority ordering.
-- **Scope filter (Phase A/B/C):** If `phase.scope` is not `"all"`, restrict ALL phase work to the specified module(s). Scope can be a single module name (`"vacation"`) or a comma-separated list (`"vacation, statistics"`). Phase A: only investigate those modules. Phase B: only generate XLSX for those modules. Phase C uses `autotest.scope` independently (same format: `"all"`, single name, or comma-separated list). When scope is set, skip all modules not in the list.
+- If `phase.current` is `"autotest_generation"` and `autotest.enabled` is `true`, execute Phase C (autotest generation). Read `autotest.*` fields for target environment, test limits, scope, and priority ordering.
+- **Scope filter (Phase A/B/C):** If `phase.scope` is not `"all"`, restrict ALL phase work to the specified items. Scope accepts:
+  - `"all"` — all modules (global sweep)
+  - A module name: `"vacation"` — single module
+  - A comma-separated list: `"vacation, statistics"` — multiple modules
+  - A GitLab ticket number: `"3404"` — single ticket (pure digits = ticket)
+  - Mixed: `"vacation, 3404, 3405"` — modules and tickets together
+  Phase A: only investigate those modules/tickets. Phase B: only generate XLSX for those. Phase C uses `autotest.scope` independently (same format). When scope is set, skip all items not in the list.
+- **Ticket scope normalization:** Any scope entry that is pure digits is a GitLab ticket number. It is normalized to `t<number>` internally (e.g., `3404` → `t3404`). All derived artifacts use the `t<number>` prefix: test IDs `TC-T3404-001`, directories `t3404/`, manifest keys `t3404`. See §10.1 for the full ticket protocol.
 - Check `session.delay_minutes` — if previous session briefing timestamp is less than this many minutes ago:
   - **hybrid mode**: notify human and wait for confirmation
   - **full mode**: log timing warning to session briefing and proceed (the external runner script enforces inter-session delay)
@@ -538,10 +545,12 @@ Update `_KNOWLEDGE_COVERAGE.md` comprehensively, query module_health for gaps.
 
 **Coverage override:** If `phase.coverage_override` is set to 0-100 in config.yaml, use that value as the current coverage instead of computing it. This allows the human to force a coverage reset (e.g., `coverage_override: 0` to restart deep investigation). When the override is present and >= 0, do NOT auto-transition regardless of computed coverage — investigate until the notes genuinely reach the depth described below, then remove the override (set to -1) before allowing transition.
 
-**ALL phase transitions are human-approved when `phase.scope` is set to a specific module (not `"all"`).** When scope targets a specific area, deeper investigation is needed than the global coverage metric can measure. The agent must NOT auto-transition — instead:
+**Phase transitions when scope is a specific module (not `"all"`):** When scope targets a module name, all transitions are human-approved. The agent must NOT auto-transition — instead:
 1. Log a readiness report to `_SESSION_BRIEFING.md` with evidence of depth (word counts, tickets mined, methods used)
 2. Set `autonomy.stop: true` and wait for human review
 3. The human will review and manually update `phase.current` and `phase.generation_allowed` if satisfied
+
+**Exception — ticket scope auto-transitions:** When scope is a GitLab ticket number (pure digits → `t<number>`), auto-transitions ARE allowed if `auto_phase_transition: true`. Ticket scope is inherently narrow (a single issue), so phases are shorter and auto-transition is safe. The agent should still log readiness reports but proceed automatically: A→B when ticket is fully investigated, B→C when XLSX is generated and covers the ticket.
 
 When `phase.scope` is `"all"` (global sweep), the original auto-transition rules apply:
 - **hybrid mode**: Present coverage report to human with Phase B readiness recommendation.
@@ -555,9 +564,56 @@ When `phase.scope` is `"all"` (global sweep), the original auto-transition rules
 - At least 3 different investigation methods used (code reading, API testing, UI exploration, DB analysis, ticket mining)
 - Known bugs and edge cases documented with ticket references
 - UI flows explored via Playwright and documented in `exploration/ui-flows/`
-- **Minimum 5 Phase A sessions** before considering transition — 2 sessions is never enough
+- **Minimum 5 Phase A sessions** before considering transition — 2 sessions is never enough (exception: ticket scope `t<number>` may transition after 1-2 sessions since the scope is a single issue)
 
 **Do NOT modify session timing parameters** (`delay_minutes`, `delay_minutes_offhours`, `max_duration_minutes`, `max_sessions`) in config.yaml — these are managed by the human operator.
+
+### 10.1 Ticket-Scoped Investigation Protocol
+
+When `phase.scope` or `autotest.scope` contains a GitLab ticket number (pure digits in config, normalized to `t<number>` internally by the runner script):
+
+**Scope detection:** Any scope entry that is pure digits is a GitLab ticket number. Examples: `scope: "3404"` → normalized to `t3404`; `scope: "vacation, 3404, 3405"` → `vacation, t3404, t3405`.
+
+**Phase A — Knowledge Acquisition for tickets:**
+1. Fetch the GitLab ticket: `GET /api/v4/projects/172/issues/<number>` (use `gitlab-access` skill)
+2. Fetch ALL comments: `GET /api/v4/projects/172/issues/<number>/notes`
+3. Identify the **parent module** from ticket labels, title, and content (e.g., if ticket is about vacation approval → parent module is `vacation`)
+4. Read existing vault notes for the parent module
+5. Investigate the specific area deeply — the bug, feature, or requirement described
+6. Write findings to `exploration/tickets/t<number>-investigation.md` (new vault note)
+7. Also enrich the parent module's vault notes with relevant discoveries
+
+**Phase B — Test Documentation for tickets:**
+1. Generate XLSX at `test-docs/t<number>/t<number>.xlsx`
+2. Test case IDs: `TC-T<number>-001`, `TC-T<number>-002`, etc.
+3. Suite name: `TS-T<number>-Regression` (primary) or `TS-T<number>-<Feature>`
+4. Focus on: regression test for the reported bug, edge cases from ticket comments, related happy-path and negative tests
+5. Tag each test case with the GitLab ticket number in the `requirement_ref` column
+6. Cross-reference parent module knowledge from the vault
+
+**Phase C — Autotest Generation for tickets:**
+1. Spec files: `e2e/tests/t<number>/t<number>-tc<NNN>.spec.ts`
+2. Data classes: `e2e/data/t<number>/T<number>Tc<NNN>Data.ts`
+3. Queries: `e2e/data/t<number>/queries/t<number>Queries.ts`
+4. Reuse existing page objects from the parent module's `e2e/pages/` directory
+5. Module value in `autotest_tracking`: `t<number>`
+6. Parent module's vault knowledge drives data generation and selector choices
+7. Create directories if they don't exist (`mkdir -p`)
+
+**Naming reference for ticket scope:**
+
+| Artifact | Pattern | Example (ticket 3404) |
+|----------|---------|----------------------|
+| Test ID | `TC-T<num>-<seq>` | `TC-T3404-001` |
+| XLSX | `test-docs/t<num>/t<num>.xlsx` | `test-docs/t3404/t3404.xlsx` |
+| Spec | `tests/t<num>/t<num>-tc<seq>.spec.ts` | `tests/t3404/t3404-tc001.spec.ts` |
+| Data class | `T<num>Tc<seq>Data` | `T3404Tc001Data` |
+| Data file | `data/t<num>/T<num>Tc<seq>Data.ts` | `data/t3404/T3404Tc001Data.ts` |
+| Queries | `data/t<num>/queries/t<num>Queries.ts` | `data/t3404/queries/t3404Queries.ts` |
+| Suite | `TS-T<num>-<Name>` | `TS-T3404-Regression` |
+| Vault note | `exploration/tickets/t<num>-investigation.md` | `exploration/tickets/t3404-investigation.md` |
+| Manifest key | `modules.t<num>` | `modules.t3404` |
+| SQLite module | `t<num>` | `WHERE module = 't3404'` |
 
 ---
 
@@ -720,7 +776,7 @@ Generate documentation in priority order defined in `MISSION_DIRECTIVE.md` § Pr
 
 Within each priority group, generate the most complex/bug-prone area first (e.g., vacation before day-off, since vacation has more bugs and approval workflows).
 
-**Scope restriction:** If `phase.scope` specifies module(s) (not `"all"`), generate XLSX only for those modules regardless of priority order.
+**Scope restriction:** If `phase.scope` specifies module(s) (not `"all"`), generate XLSX only for those modules regardless of priority order. For ticket-scoped entries (pure digits in config, normalized to `t<number>`), generate XLSX at `test-docs/t<number>/t<number>.xlsx` with test IDs `TC-T<number>-NNN`. See §10.1 for full ticket naming conventions.
 
 ### Generation Workflow
 
@@ -879,6 +935,7 @@ c. **Generate artifacts (UI-first):**
    - **Fixture** (`e2e/fixtures/*.ts`): only if workflow not covered by existing fixtures
 
    - **Test spec** (`e2e/tests/<module>/{module}-{test-id}.spec.ts`): **UI-first** — uses `{ page }` from Playwright, logs in via browser, interacts through page objects, verifies visible results. Pattern: login → navigate → interact → verify → cleanup (logout + page.close())
+     For ticket-scoped tests: `e2e/tests/t<number>/t<number>-tc<seq>.spec.ts`, data class `e2e/data/t<number>/T<number>Tc<seq>Data.ts`. See §10.1 for full naming table.
 
    **Selector rules (inlined — these MUST be followed for every locator):**
    1. **Text-first**: `getByText("Create a request")`, `getByRole("button", { name: "Save" })` — most stable
@@ -974,19 +1031,19 @@ Compare against the manifest total for those modules. If covered >= manifest tot
 
 ### Phase Transition to Phase C
 
-**Phase B→C transition is ALWAYS human-approved.** Premature transition produces shallow test documentation with fewer test cases and lower quality. Phase B needs enough sessions to:
+**Phase B→C transition is human-approved for module scope.** Premature transition produces shallow test documentation with fewer test cases and lower quality. Phase B needs enough sessions to:
 - Mine GitLab tickets thoroughly (descriptions AND comments for all related bugs)
 - Explore the full UI via Playwright (every page, every dialog, every form field)
 - Enrich vault notes to 1500+ words per module with code snippets and validation rules
 - Generate a comprehensive XLSX with 80+ test cases per major module (including regression tests from bugs)
 
-**When Phase B believes it is complete:**
+**When Phase B believes it is complete (module scope):**
 1. Log a "Phase B readiness report" to `_SESSION_BRIEFING.md` with: total test cases generated, suites covered, GitLab tickets mined, vault notes enriched
 2. **Do NOT auto-transition.** Set `autonomy.stop: true` and wait for human review
 3. The human will review the XLSX, check test case quality and coverage, then manually set `phase.current: "autotest_generation"` if satisfied
 4. If the human wants more depth, they will restart Phase B with `autonomy.stop: false`
 
-This applies regardless of `auto_phase_transition` setting. The A→B transition can still be automatic, but B→C requires human approval.
+**Exception — ticket scope:** When scope is a ticket number (`t<number>`), B→C auto-transition is allowed if `auto_phase_transition: true`. Ticket scope produces a small focused XLSX (typically 5-20 test cases), so human review is less critical. The agent should auto-transition to Phase C after generating the XLSX and populating the manifest.
 
 ---
 

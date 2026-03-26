@@ -30,8 +30,11 @@ Playwright API
 | Artifact | Pattern | Example |
 |----------|---------|---------|
 | Test spec | `<module>/{module}-{test-id}.spec.ts` | `vacation/vacation-tc001.spec.ts` |
+| Test spec (ticket) | `t<ticket>/t<ticket>-tc{seq}.spec.ts` | `t3404/t3404-tc001.spec.ts` |
 | Data class | `<module>/{Module}{TestId}Data` | `vacation/VacationTc001Data` |
+| Data class (ticket) | `t<ticket>/T<ticket>Tc{seq}Data` | `t3404/T3404Tc001Data` |
 | Query file | `<module>/queries/{module}Queries.ts` | `vacation/queries/vacationQueries.ts` |
+| Query file (ticket) | `t<ticket>/queries/t<ticket>Queries.ts` | `t3404/queries/t3404Queries.ts` |
 | Fixture | `{Feature}Fixture` | `VacationCreationFixture` |
 | API setup fixture | `Api{Module}SetupFixture` | `ApiVacationSetupFixture` |
 | Page object | `{PageName}Page` / `{Dialog}Dialog` | `MyVacationsPage` |

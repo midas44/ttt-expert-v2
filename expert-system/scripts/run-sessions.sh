@@ -127,6 +127,28 @@ preflight() {
     log "Preflight OK"
 }
 
+# ── Scope normalization ───────────────────────────────────────────────────────
+# Pure-digit entries are GitLab ticket numbers → prefix with 't'
+# "all" → "all", "vacation" → "vacation", "3404" → "t3404", "vacation, 3404" → "vacation, t3404"
+normalize_scope() {
+    local raw="$1"
+    [[ "$raw" == "all" ]] && { echo "all"; return; }
+    local result="" part
+    IFS=',' read -ra parts <<< "$raw"
+    for part in "${parts[@]}"; do
+        part=$(echo "$part" | xargs)  # trim whitespace
+        [[ "$part" =~ ^[0-9]+$ ]] && part="t${part}"
+        result="${result:+${result}, }${part}"
+    done
+    echo "$result"
+}
+
+# Extract raw ticket numbers from normalized scope (e.g., "t3404, vacation, t3405" → "3404 3405")
+extract_ticket_numbers() {
+    local scope="$1"
+    echo "$scope" | tr ',' '\n' | sed 's/^ *//;s/ *$//' | grep '^t[0-9]*$' | sed 's/^t//' | tr '\n' ' '
+}
+
 # ── Config parsing ────────────────────────────────────────────────────────────
 parse_config() {
     MAX_SESSIONS=$(read_yaml "autonomy.max_sessions")
@@ -140,8 +162,8 @@ parse_config() {
     OFFHOURS_UTC=$(read_yaml "session.offhours_utc")
     MAX_DURATION_MINUTES=$(read_yaml "session.max_duration_minutes")
     PHASE=$(read_yaml "phase.current")
-    PHASE_SCOPE=$(read_yaml "phase.scope" 2>/dev/null || echo "all")
-    AUTOTEST_SCOPE=$(read_yaml "autotest.scope" 2>/dev/null || echo "all")
+    PHASE_SCOPE=$(normalize_scope "$(read_yaml 'phase.scope' 2>/dev/null || echo 'all')")
+    AUTOTEST_SCOPE=$(normalize_scope "$(read_yaml 'autotest.scope' 2>/dev/null || echo 'all')")
 
     # Promo peak hours config
     PROMO_ENABLED=$(read_yaml "promo.enabled" 2>/dev/null || echo "false")
@@ -424,6 +446,24 @@ f. Track cases in test_case_tracking table
 
 CRITICAL: Test steps MUST describe what a user does in the browser. See §11 "Test Step Writing Rules" for correct vs wrong examples.
 
+$(
+TICKET_NUMS=$(extract_ticket_numbers "$PHASE_SCOPE")
+if [[ -n "$TICKET_NUMS" ]]; then
+    cat <<TICKET_BLOCK
+
+TICKET SCOPE ACTIVE — this scope includes GitLab ticket(s): ${TICKET_NUMS}
+For each ticket number, follow §10.1 Ticket-Scoped Investigation Protocol (Phase B):
+- Generate XLSX at test-docs/t<number>/t<number>.xlsx
+- Use test case IDs: TC-T<number>-001, TC-T<number>-002, ...
+- Suite name: TS-T<number>-Regression (or TS-T<number>-<Feature>)
+- Focus test cases on the ticket's requirements, bug scenario, and edge cases from comments
+- Include regression tests for the reported bug
+- Tag each test case with the GitLab ticket number in requirement_ref column
+- Cross-reference parent module knowledge for context
+TICKET_BLOCK
+fi
+)
+
 $(if (( session_num % 5 == 0 )); then echo "This is session ${session_num} (multiple of 5) — also run maintenance per §9.4."; fi)
 
 At session end, follow §9.3 (update all underscore-prefixed files).
@@ -451,6 +491,23 @@ Follow §12 (Phase C — Autotest Generation) session protocol:
    f. Fix failures (up to autotest.auto_fix_attempts): use playwright-vpn for selector discovery
    g. Track: update SQLite autotest_tracking + manifest JSON
 
+$(
+TICKET_NUMS=$(extract_ticket_numbers "$AUTOTEST_SCOPE")
+if [[ -n "$TICKET_NUMS" ]]; then
+    cat <<TICKET_BLOCK
+
+TICKET SCOPE ACTIVE — this scope includes GitLab ticket(s): ${TICKET_NUMS}
+For each ticket number, follow §10.1 Ticket-Scoped Investigation Protocol (Phase C):
+- Spec files: tests/t<number>/t<number>-tc<NNN>.spec.ts
+- Data classes: data/t<number>/T<number>Tc<NNN>Data.ts
+- Queries: data/t<number>/queries/t<number>Queries.ts
+- Module value in autotest_tracking: "t<number>"
+- Reuse page objects from the parent module when possible
+- Create directories if they don't exist (mkdir -p)
+TICKET_BLOCK
+fi
+)
+
 $(if (( session_num % 5 == 0 )); then echo "This is session ${session_num} (multiple of 5) — also run maintenance per §9.4."; fi)
 
 At session end:
@@ -475,6 +532,24 @@ Follow §9 Session Protocol:
 Execute the INVESTIGATE → ANALYZE → SYNTHESIZE → STORE → CONNECT cycle for each item.
 
 IMPORTANT: Mine GitLab tickets for the module(s) in scope — search issues, read descriptions AND comments (comments contain the real bug details). See §10 "GitLab Ticket Mining".
+
+$(
+TICKET_NUMS=$(extract_ticket_numbers "$PHASE_SCOPE")
+if [[ -n "$TICKET_NUMS" ]]; then
+    cat <<TICKET_BLOCK
+
+TICKET SCOPE ACTIVE — this scope includes GitLab ticket(s): ${TICKET_NUMS}
+For each ticket number, follow §10.1 Ticket-Scoped Investigation Protocol:
+1. Fetch the ticket: GET /api/v4/projects/172/issues/<number>
+2. Fetch ALL comments: GET /api/v4/projects/172/issues/<number>/notes
+3. Identify the parent module from ticket labels, title, and content
+4. Read existing vault notes for that parent module
+5. Investigate the specific area deeply — the bug, feature, or requirement described in the ticket
+6. Write findings to exploration/tickets/t<number>-investigation.md
+7. Also enrich the parent module's vault notes with relevant discoveries
+TICKET_BLOCK
+fi
+)
 
 $(if (( session_num % 5 == 0 )); then echo "This is session ${session_num} (multiple of 5) — also run maintenance per §9.4: compress old investigations, detect stale notes, audit cross-references, clean SQLite, refine agenda."; fi)
 
