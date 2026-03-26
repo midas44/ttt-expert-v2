@@ -1,4 +1,4 @@
-# AI-Driven Expert System for TTT Legacy Application Investigation and Test Documentation Generation
+# AI-Driven QA Automation Expert System for TTT
 
 ## Summary
 
