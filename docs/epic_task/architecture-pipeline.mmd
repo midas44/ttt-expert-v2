@@ -1,0 +1,78 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#4A90D9', 'primaryTextColor': '#fff', 'primaryBorderColor': '#2D6CB4', 'lineColor': '#5C6BC0', 'secondaryColor': '#7E57C2', 'tertiaryColor': '#26A69A', 'background': '#FAFAFA', 'mainBkg': '#4A90D9', 'nodeBorder': '#2D6CB4', 'clusterBkg': '#F5F5F5', 'clusterBorder': '#E0E0E0', 'titleColor': '#333', 'edgeLabelBackground': '#fff'}}}%%
+
+graph TB
+    subgraph INPUTS["Information Sources"]
+        direction TB
+        GL["GitLab<br/>Issues, MRs, Comments"]
+        CODE["Codebase<br/>Java/Spring + React/TS"]
+        CONF["Confluence<br/>Requirements & Specs"]
+        FIG["Figma<br/>Design Mockups"]
+        QASE["Qase<br/>Existing Test Suites"]
+        DB["PostgreSQL<br/>3 Environments"]
+        API["REST API<br/>366 Endpoints"]
+        UI["Live UI<br/>Playwright Browser"]
+    end
+
+    subgraph PHASE_A["Phase A — Knowledge Acquisition"]
+        direction TB
+        INV["Autonomous Investigation<br/>Code Analysis + API Testing<br/>+ UI Exploration + Ticket Mining"]
+        VAULT["Obsidian Vault<br/>200+ Knowledge Notes"]
+        SQLITE["SQLite Analytics<br/>Findings, Health, Issues"]
+    end
+
+    subgraph PHASE_B["Phase B — Test Documentation"]
+        direction TB
+        ENRICH["Deep Knowledge Enrichment<br/>Per-Module Investigation"]
+        GEN["XLSX Generation<br/>Python + openpyxl"]
+        XLSX["Test Documentation<br/>Plans + Cases per Module"]
+    end
+
+    subgraph PHASE_C["Phase C — Autotest Generation"]
+        direction TB
+        PARSE["XLSX Parser<br/>→ JSON Manifest"]
+        CODEGEN["Test Code Generation<br/>Vault-Enriched"]
+        VERIFY["Verify & Auto-Fix<br/>Run on Live Env"]
+        TESTS["Playwright E2E Suite<br/>Specs + Pages + Data"]
+    end
+
+    subgraph RUNNER["Session Orchestrator"]
+        direction LR
+        CFG["config.yaml"]
+        SCRIPT["run-sessions.sh"]
+        DASH["Dashboard"]
+    end
+
+    GL & CODE & CONF & FIG & QASE & DB & API & UI --> INV
+    INV --> VAULT
+    INV --> SQLITE
+    VAULT --> ENRICH
+    SQLITE --> ENRICH
+    ENRICH --> GEN
+    GEN --> XLSX
+    XLSX --> PARSE
+    VAULT --> CODEGEN
+    PARSE --> CODEGEN
+    CODEGEN --> VERIFY
+    VERIFY --> TESTS
+    VERIFY -->|"New Findings"| VAULT
+
+    CFG --> SCRIPT
+    SCRIPT -->|"Orchestrates"| PHASE_A
+    SCRIPT -->|"Orchestrates"| PHASE_B
+    SCRIPT -->|"Orchestrates"| PHASE_C
+    SCRIPT --> DASH
+
+    classDef inputNode fill:#E3F2FD,stroke:#1976D2,color:#1565C0
+    classDef phaseA fill:#E8F5E9,stroke:#388E3C,color:#2E7D32
+    classDef phaseB fill:#FFF3E0,stroke:#F57C00,color:#E65100
+    classDef phaseC fill:#F3E5F5,stroke:#7B1FA2,color:#6A1B9A
+    classDef runner fill:#ECEFF1,stroke:#546E7A,color:#37474F
+    classDef storage fill:#FFFDE7,stroke:#F9A825,color:#F57F17
+
+    class GL,CODE,CONF,FIG,QASE,DB,API,UI inputNode
+    class INV phaseA
+    class ENRICH,GEN phaseB
+    class PARSE,CODEGEN,VERIFY phaseC
+    class VAULT,SQLITE storage
+    class XLSX,TESTS storage
+    class CFG,SCRIPT,DASH runner
