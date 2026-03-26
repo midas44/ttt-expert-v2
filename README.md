@@ -7,6 +7,7 @@ An autonomous AI expert system that systematically investigates a complex legacy
 The system operates as a prompt-engineered autonomous agent (Claude Code + Claude Opus) with a three-phase pipeline:
 
 ![Three-Phase Pipeline](docs/epic_task/architecture-pipeline.png)
+*Fig. 1 — Three-phase pipeline: Sources → Knowledge Acquisition → Test Documentation → Autotest Generation*
 
 ### Phase A — Knowledge Acquisition
 
@@ -22,9 +23,8 @@ Test cases from XLSX are parsed into a JSON manifest and enriched with vault kno
 
 Sessions are orchestrated by a shell-based runner (`run-sessions.sh`) that manages phase transitions, inter-session delays, auto-stop conditions, vault versioning, and dashboard generation.
 
-## System Architecture
-
 ![Integration Layers](docs/epic_task/architecture-layers.png)
+*Fig. 2 — System layers: Agent → MCP Integration (39 servers) → Generated Artifacts*
 
 ### MCP Integration Layer
 
