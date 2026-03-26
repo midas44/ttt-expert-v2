@@ -837,6 +837,152 @@ export async function findEmployeeByActiveCalendar(
 }
 
 /**
+ * Finds an employee with at least 2 future free holidays (duration=0, no active transfer).
+ * Returns the first two available holidays sorted by date.
+ * Used for TC-DO-015/TC-DO-050 (need one holiday for setup transfer, another for dialog).
+ */
+export async function findEmployeeWithTwoFreeHolidays(
+  db: DbClient,
+): Promise<{ login: string; holiday1: string; holiday2: string }> {
+  return db.queryOne<{ login: string; holiday1: string; holiday2: string }>(
+    `WITH free AS (
+       SELECT e.login, e.id AS eid, cd.calendar_date,
+              ROW_NUMBER() OVER (PARTITION BY e.id ORDER BY cd.calendar_date) AS rn
+       FROM ttt_vacation.employee e
+       JOIN ttt_calendar.office_calendar oc ON oc.office_id = e.office_id
+       JOIN ttt_calendar.calendar_days cd ON cd.calendar_id = oc.calendar_id
+       WHERE e.enabled = true
+         AND cd.duration = 0
+         AND cd.calendar_date > CURRENT_DATE
+         AND oc.since_year <= EXTRACT(YEAR FROM CURRENT_DATE)
+         AND NOT EXISTS (
+           SELECT 1 FROM ttt_calendar.office_calendar oc2
+           WHERE oc2.office_id = oc.office_id
+             AND oc2.since_year > oc.since_year
+             AND oc2.since_year <= EXTRACT(YEAR FROM CURRENT_DATE)
+         )
+         AND NOT EXISTS (
+           SELECT 1 FROM ttt_vacation.employee_dayoff_request edr
+           WHERE edr.employee = e.id
+             AND edr.original_date = cd.calendar_date
+             AND edr.status NOT IN ('DELETED','DELETED_FROM_CALENDAR','CANCELED')
+         )
+     )
+     SELECT f1.login,
+            f1.calendar_date::text AS holiday1,
+            f2.calendar_date::text AS holiday2
+     FROM free f1
+     JOIN free f2 ON f1.eid = f2.eid AND f2.rn = 2
+     WHERE f1.rn = 1
+     ORDER BY random()
+     LIMIT 1`,
+  );
+}
+
+/**
+ * Finds an employee whose office has a working weekend (Sat/Sun with duration > 0
+ * in calendar_days) and a future free holiday. Working weekend must be reachable
+ * from the holiday's reschedule dialog (same year, on or after the holiday).
+ */
+export async function findEmployeeWithWorkingWeekend(
+  db: DbClient,
+): Promise<{
+  login: string;
+  holidayDate: string;
+  workingWeekendDate: string;
+  workingWeekendDow: number;
+}> {
+  return db.queryOne<{
+    login: string;
+    holidayDate: string;
+    workingWeekendDate: string;
+    workingWeekendDow: number;
+  }>(
+    `SELECT e.login,
+            cd_h.calendar_date::text AS "holidayDate",
+            cd_ww.calendar_date::text AS "workingWeekendDate",
+            EXTRACT(DOW FROM cd_ww.calendar_date)::int AS "workingWeekendDow"
+     FROM ttt_vacation.employee e
+     JOIN ttt_calendar.office_calendar oc ON oc.office_id = e.office_id
+     JOIN ttt_calendar.calendar_days cd_h ON cd_h.calendar_id = oc.calendar_id
+     JOIN ttt_calendar.calendar_days cd_ww ON cd_ww.calendar_id = oc.calendar_id
+     WHERE e.enabled = true
+       AND cd_h.duration = 0
+       AND cd_h.calendar_date > CURRENT_DATE
+       AND cd_ww.duration > 0
+       AND EXTRACT(DOW FROM cd_ww.calendar_date) IN (0, 6)
+       AND cd_ww.calendar_date >= cd_h.calendar_date
+       AND EXTRACT(YEAR FROM cd_ww.calendar_date) = EXTRACT(YEAR FROM cd_h.calendar_date)
+       AND oc.since_year <= EXTRACT(YEAR FROM CURRENT_DATE)
+       AND NOT EXISTS (
+         SELECT 1 FROM ttt_calendar.office_calendar oc2
+         WHERE oc2.office_id = oc.office_id
+           AND oc2.since_year > oc.since_year
+           AND oc2.since_year <= EXTRACT(YEAR FROM CURRENT_DATE)
+       )
+       AND NOT EXISTS (
+         SELECT 1 FROM ttt_vacation.employee_dayoff_request edr
+         WHERE edr.employee = e.id
+           AND edr.original_date = cd_h.calendar_date
+           AND edr.status NOT IN ('DELETED','DELETED_FROM_CALENDAR','CANCELED')
+       )
+     ORDER BY random()
+     LIMIT 1`,
+  );
+}
+
+/**
+ * Creates a transfer request for a specific employee and holiday via DB INSERT.
+ * Returns the request ID and the chosen personalDate (a future working day).
+ */
+export async function createTransferForEmployee(
+  db: DbClient,
+  login: string,
+  publicDate: string,
+): Promise<{ requestId: number; personalDate: string }> {
+  const emp = await db.queryOne<{ id: number; managerId: number | null }>(
+    `SELECT e.id, e.manager AS "managerId"
+     FROM ttt_vacation.employee e WHERE e.login = $1`,
+    [login],
+  );
+  const personalDate = await findFutureWorkingDay(db, login, publicDate);
+  const approverId = emp.managerId ?? emp.id;
+  const inserted = await db.queryOne<{ id: number }>(
+    `INSERT INTO ttt_vacation.employee_dayoff_request
+       (employee, approver, original_date, personal_date, duration, status, creation_date)
+     VALUES ($1, $2, $3::date, $4::date, 0, 'NEW', NOW())
+     RETURNING id`,
+    [emp.id, approverId, publicDate, personalDate],
+  );
+  await insertTimelineEvent(
+    db, emp.id, approverId, inserted.id,
+    "EMPLOYEE_DAY_OFF_CREATED", publicDate, personalDate,
+  );
+  return { requestId: inserted.id, personalDate };
+}
+
+/**
+ * Deletes a transfer request and its related records (timeline, approvals).
+ */
+export async function deleteTransferRequest(
+  db: DbClient,
+  requestId: number,
+): Promise<void> {
+  await db.query(
+    `DELETE FROM ttt_vacation.timeline WHERE day_off = $1`,
+    [requestId],
+  );
+  await db.query(
+    `DELETE FROM ttt_vacation.employee_dayoff_approval WHERE dayoff = $1`,
+    [requestId],
+  );
+  await db.query(
+    `DELETE FROM ttt_vacation.employee_dayoff_request WHERE id = $1`,
+    [requestId],
+  );
+}
+
+/**
  * Returns an employee with dayoff entries spanning multiple years.
  */
 export async function findEmployeeWithMultiYearDayoffs(

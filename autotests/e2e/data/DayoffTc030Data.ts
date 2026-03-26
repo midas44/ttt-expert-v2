@@ -4,41 +4,39 @@ import { loadSaved, saveToDisk } from "./savedDataStore";
 import type { TestDataMode } from "../config/configUtils";
 import type { TttConfig } from "../config/tttConfig";
 import { DbClient } from "../config/db/dbClient";
-import { createCpoSelfAssignedRequest } from "./queries/dayoffQueries";
+import { findCpoWithFreeHoliday } from "./queries/dayoffQueries";
 
 interface Tc030Args {
   cpoLogin: string;
   cpoName: string;
   originalDate: string;
   personalDate: string;
-  requestId: number;
 }
 
 /**
  * TC-DO-030: CPO self-approval (PROJECT role).
  *
- * Creates a day-off request for a CPO/department manager with approver=self.
- * The CPO then self-approves via the Approval tab.
+ * Finds a CPO/department manager with a free holiday slot.
+ * The test creates the transfer request via UI (so the system auto-assigns
+ * the CPO as their own approver), then navigates to the Approval page
+ * to self-approve.
  */
 export class DayoffTc030Data {
   readonly cpoLogin: string;
   readonly cpoName: string;
   readonly originalDate: string;
   readonly personalDate: string;
-  readonly requestId: number;
 
   constructor(
-    cpoLogin = process.env.DAYOFF_TC030_CPO ?? "pvaynmaster",
-    cpoName = process.env.DAYOFF_TC030_CPO_NAME ?? "Вейнмастер Полина",
+    cpoLogin = process.env.DAYOFF_TC030_CPO ?? "amalcev",
+    cpoName = process.env.DAYOFF_TC030_CPO_NAME ?? "Мальцев Александр",
     originalDate = process.env.DAYOFF_TC030_ORIG ?? "2026-05-01",
     personalDate = process.env.DAYOFF_TC030_PERS ?? "2026-07-07",
-    requestId = Number(process.env.DAYOFF_TC030_REQ_ID ?? "3420"),
   ) {
     this.cpoLogin = cpoLogin;
     this.cpoName = cpoName;
     this.originalDate = originalDate;
     this.personalDate = personalDate;
-    this.requestId = requestId;
   }
 
   static async create(
@@ -55,20 +53,18 @@ export class DayoffTc030Data {
           cached.cpoName,
           cached.originalDate,
           cached.personalDate,
-          cached.requestId,
         );
     }
 
     const db = new DbClient(tttConfig);
     try {
-      const row = await createCpoSelfAssignedRequest(db);
+      const row = await findCpoWithFreeHoliday(db);
 
       const instance = new DayoffTc030Data(
         row.cpoLogin,
         row.cpoName,
         row.originalDate,
         row.personalDate,
-        row.requestId,
       );
 
       if (mode === "saved")
@@ -77,7 +73,6 @@ export class DayoffTc030Data {
           cpoName: row.cpoName,
           originalDate: row.originalDate,
           personalDate: row.personalDate,
-          requestId: row.requestId,
         });
       return instance;
     } finally {
@@ -85,6 +80,19 @@ export class DayoffTc030Data {
     }
   }
 
+  /** Original date in display format DD.MM.YYYY for matching table rows. */
+  get originalDateDisplay(): string {
+    const [y, m, d] = this.originalDate.split("-");
+    return `${d}.${m}.${y}`;
+  }
+
+  /** Personal date parsed for calendar picker selection. */
+  get personalDateParts(): { day: number; month: number; year: number } {
+    const [y, m, d] = this.personalDate.split("-").map(Number);
+    return { day: d, month: m - 1, year: y };
+  }
+
+  /** Pattern to match CPO's last name in the approval table. */
   get employeePattern(): RegExp {
     const lastName = this.cpoName.split(" ")[0];
     return new RegExp(lastName, "i");
