@@ -16,51 +16,51 @@
   },
   'flowchart': {
     'curve': 'basis',
-    'diagramPadding': 15,
-    'rankSpacing': 50,
-    'nodeSpacing': 12,
-    'padding': 10
+    'diagramPadding': 25,
+    'rankSpacing': 55,
+    'nodeSpacing': 18,
+    'padding': 20
   }
 }}%%
 
 graph LR
-    subgraph AGENT["Agent"]
+    subgraph AGENT["&ensp; Agent &ensp;"]
         direction TB
-        A1["<b>System Prompt</b><br/>CLAUDE+.md / CLAUDE.md"]
-        A2["<b>17 Skills</b><br/>GitLab &bull; Swagger<br/>Playwright &bull; Autotest<br/>Gen/Run/Fix &bull; ..."]
-        A3["<b>config.yaml</b><br/>Phase &bull; Scope<br/>Autonomy"]
+        A1["<b>System Prompt</b><br/>CLAUDE+.md"]
+        A2["<b>17 Skills</b><br/>GitLab &bull; Swagger<br/>Playwright &bull; ..."]
+        A3["<b>config.yaml</b><br/>Phase &bull; Scope"]
     end
 
-    subgraph MCP["MCP Integration Layer — 39 Servers"]
+    subgraph MCP["&ensp; MCP Integration Layer — 39 Servers &ensp;"]
         direction TB
-        subgraph MCP_K["Knowledge"]
-            K1["<b>Obsidian</b><br/>Vault CRUD"]
-            K2["<b>QMD</b><br/>Semantic Search"]
-            K3["<b>SQLite</b><br/>Analytics DB"]
+        subgraph MCP_K["&ensp; Knowledge Base &ensp;"]
+            K1["Obsidian"]
+            K2["QMD Search"]
+            K3["SQLite"]
         end
-        subgraph MCP_L["Live Environments"]
-            L1["<b>PostgreSQL</b><br/>3 environments"]
-            L2["<b>Swagger API</b><br/>21 instances"]
-            L3["<b>Playwright</b><br/>Browser"]
+        subgraph MCP_L["&ensp; Live Environments &ensp;"]
+            L1["PostgreSQL x3"]
+            L2["Swagger x21"]
+            L3["Playwright"]
         end
-        subgraph MCP_E["External Sources"]
-            E1["<b>Confluence</b><br/>Requirements"]
-            E2["<b>Figma</b><br/>Designs"]
-            E3["<b>Qase</b><br/>Test Suites"]
-            E4["<b>GitLab</b><br/>Issues &bull; Code"]
+        subgraph MCP_E["&ensp; External Sources &ensp;"]
+            E1["Confluence"]
+            E2["Figma"]
+            E3["Qase"]
+            E4["GitLab"]
         end
     end
 
-    subgraph OUT["Generated Artifacts"]
+    subgraph OUT["&ensp; Generated Artifacts &ensp;"]
         direction TB
-        O1["<b>Knowledge Base</b><br/>Obsidian Vault<br/>200+ Notes"]
-        O2["<b>Test Documentation</b><br/>XLSX Workbooks<br/>per Module / Ticket"]
-        O3["<b>E2E Test Suite</b><br/>Playwright + TypeScript<br/>Specs + Pages + Data"]
-        O4["<b>Analytics Dashboard</b><br/>Coverage &bull; Health<br/>Progress Metrics"]
+        O1["<b>Knowledge Base</b><br/>Obsidian Vault"]
+        O2["<b>Test Docs</b><br/>XLSX Workbooks"]
+        O3["<b>E2E Tests</b><br/>Playwright + TS"]
+        O4["<b>Dashboard</b>"]
     end
 
     AGENT ==> MCP ==> OUT
-    O3 -.->|"findings write-back"| K1
+    O3 -.->|"write-back"| K1
 
     classDef agentNode fill:#DAE3ED,stroke:#78909C,color:#263238,stroke-width:2px
     classDef mcpNode fill:#E8EDF2,stroke:#90A4AE,color:#37474F,stroke-width:1.5px

@@ -15,6 +15,7 @@ TTT is a large legacy application (4 microservices, 366 API endpoints, 86 databa
 An AI agent (Claude Code + Claude Opus) that autonomously executes a three-phase pipeline:
 
 ![Three-Phase Pipeline](architecture-pipeline.png)
+*Fig. 1 — Three-phase pipeline: Sources → Knowledge Acquisition → Test Documentation → Autotest Generation*
 
 ### Phase A — Knowledge Acquisition
 
@@ -31,6 +32,7 @@ Test cases from XLSX are parsed into a JSON manifest and enriched with vault kno
 ## Architecture
 
 ![System Architecture](architecture-layers.png)
+*Fig. 2 — System layers: Agent → MCP Integration (39 servers) → Generated Artifacts*
 
 The system is built on Claude Code CLI with full autonomy mode, orchestrated by a bash session runner. It integrates with the target application through 39 MCP (Model Context Protocol) servers providing access to:
 

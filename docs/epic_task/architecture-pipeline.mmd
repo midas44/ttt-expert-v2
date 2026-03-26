@@ -5,7 +5,6 @@
     'primaryTextColor': '#37474F',
     'primaryBorderColor': '#90A4AE',
     'lineColor': '#607D8B',
-    'secondaryColor': '#F0F2F5',
     'background': '#FFFFFF',
     'mainBkg': '#E8EDF2',
     'nodeBorder': '#90A4AE',
@@ -13,74 +12,67 @@
     'clusterBorder': '#B0BEC5',
     'titleColor': '#37474F',
     'edgeLabelBackground': '#FFFFFF',
-    'fontSize': '15px'
+    'fontSize': '16px'
   },
   'flowchart': {
     'curve': 'basis',
-    'diagramPadding': 30,
+    'diagramPadding': 25,
     'rankSpacing': 55,
-    'nodeSpacing': 30
+    'nodeSpacing': 25
   }
 }}%%
 
-graph TD
-    SOURCES["<b>Information Sources</b><br/>GitLab Issues &bull; Codebase (Java/Spring + React/TS)<br/>Confluence &bull; Figma &bull; Qase &bull; PostgreSQL<br/>REST API (366 endpoints) &bull; Live UI (Playwright)"]
+graph LR
+    SOURCES["<b>Information<br/>Sources</b><br/>GitLab &bull; Codebase<br/>Confluence &bull; Figma<br/>Qase &bull; PostgreSQL<br/>REST API<br/>Playwright"]
 
-    PA_LABEL["<b>Phase A</b> — Knowledge Acquisition"]
-    INV["Autonomous<br/>Investigation"]
-    VAULT["Obsidian Vault<br/>200+ Notes"]
-    SQLITE["SQLite Analytics<br/>Findings &bull; Health"]
+    SOURCES ==> INV
 
-    PB_LABEL["<b>Phase B</b> — Test Documentation"]
-    ENRICH["Knowledge<br/>Enrichment"]
-    GEN["XLSX Generator<br/>Python + openpyxl"]
-    XLSX["Test Documentation<br/>Plans + Cases"]
+    subgraph PA["Phase A — Knowledge Acquisition"]
+        direction TB
+        INV["Autonomous<br/>Investigation"]
+        VAULT["Obsidian Vault<br/>200+ Notes"]
+        SQLITE["SQLite<br/>Analytics"]
+        INV --> VAULT
+        INV --> SQLITE
+    end
 
-    PC_LABEL["<b>Phase C</b> — Autotest Generation"]
-    PARSE["XLSX Parser<br/>JSON Manifest"]
-    CODEGEN["Code Generation<br/>Vault-Enriched"]
-    VERIFY["Verify &<br/>Auto-Fix"]
-    TESTS["Playwright E2E<br/>Specs + Pages + Data"]
+    VAULT ==> ENRICH
+    SQLITE ==> ENRICH
 
-    ORCH["<b>Session Orchestrator</b><br/>run-sessions.sh &bull; config.yaml &bull; Dashboard"]
+    subgraph PB["Phase B — Test Documentation"]
+        direction TB
+        ENRICH["Knowledge<br/>Enrichment"]
+        GEN["XLSX<br/>Generator"]
+        XLSX["Test Docs<br/>Plans + Cases"]
+        ENRICH --> GEN --> XLSX
+    end
 
-    SOURCES ==> PA_LABEL
-    PA_LABEL --> INV
-    INV --> VAULT
-    INV --> SQLITE
-
-    VAULT ==> PB_LABEL
-    SQLITE ==> PB_LABEL
-    PB_LABEL --> ENRICH
-    ENRICH --> GEN
-    GEN --> XLSX
-
-    XLSX ==> PC_LABEL
+    XLSX ==> PARSE
     VAULT ==> CODEGEN
-    PC_LABEL --> PARSE
-    PARSE --> CODEGEN
-    CODEGEN --> VERIFY
-    VERIFY --> TESTS
+
+    subgraph PC["Phase C — Autotest Generation"]
+        direction TB
+        PARSE["XLSX Parser"]
+        CODEGEN["Code Gen<br/>Vault-Enriched"]
+        VERIFY["Verify &<br/>Auto-Fix"]
+        TESTS["Playwright<br/>E2E Suite"]
+        PARSE --> CODEGEN --> VERIFY --> TESTS
+    end
 
     TESTS -.->|"write-back"| VAULT
-    ORCH -.->|"orchestrates"| PA_LABEL
 
     classDef sourceBox fill:#E3EBF3,stroke:#78909C,color:#263238,stroke-width:2px
-    classDef labelNode fill:#D6DEE8,stroke:#78909C,color:#263238,stroke-width:2px
     classDef phaseANode fill:#E0EAF0,stroke:#78909C,color:#37474F,stroke-width:1.5px
     classDef phaseBNode fill:#EDE8E2,stroke:#A1887F,color:#37474F,stroke-width:1.5px
     classDef phaseCNode fill:#E3E0EB,stroke:#9E9E9E,color:#37474F,stroke-width:1.5px
     classDef storageNode fill:#F5F0E0,stroke:#BCAA8C,color:#37474F,stroke-width:1.5px
-    classDef orchNode fill:#ECEFF1,stroke:#90A4AE,color:#37474F,stroke-width:1.5px
 
     class SOURCES sourceBox
-    class PA_LABEL,PB_LABEL,PC_LABEL labelNode
     class INV phaseANode
     class VAULT,SQLITE storageNode
     class ENRICH,GEN phaseBNode
     class XLSX storageNode
     class PARSE,CODEGEN,VERIFY phaseCNode
     class TESTS storageNode
-    class ORCH orchNode
 
-    linkStyle default stroke:#607D8B,stroke-width:2px
+    linkStyle default stroke:#607D8B,stroke-width:2.5px
