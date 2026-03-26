@@ -106,6 +106,12 @@ This preserves the status of already-automated test cases while adding new ones.
 }
 ```
 
+## Ticket Scope
+
+Ticket-scoped test docs live at `test-docs/t<number>/t<number>.xlsx` (e.g., `test-docs/t3404/t3404.xlsx`)
+and are parsed into `modules.t<number>` in the manifest. The parser handles them identically to
+module directories — no special configuration needed.
+
 ## Important Rules
 
 - Never overwrite the manifest without checking for regressions in test case count

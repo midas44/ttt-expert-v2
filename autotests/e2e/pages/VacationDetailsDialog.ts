@@ -20,6 +20,17 @@ export class VacationDetailsDialog {
     return this.dialog;
   }
 
+  /** Closes the details dialog. Tries Close button, then Escape key. */
+  async close(): Promise<void> {
+    const closeBtn = this.dialog.getByRole("button", { name: /close/i });
+    if ((await closeBtn.count()) > 0) {
+      await closeBtn.click();
+    } else {
+      await this.page.keyboard.press("Escape");
+    }
+    await this.dialog.waitFor({ state: "detached" });
+  }
+
   /**
    * Deletes the vacation request:
    * 1. Clicks Delete button in the details dialog

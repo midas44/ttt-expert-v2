@@ -1,46 +1,47 @@
-# Investigation Agenda
+---
+type: agenda
+updated: 2026-03-26
+phase: C
+scope: t3404
+---
 
-## Priority Legend
-- P0: Critical — must complete this session
-- P1: High — target for next 1-2 sessions
-- P2: Medium — within next 5 sessions
-- P3: Low — backlog
+# Investigation Agenda — Ticket #3404
 
-## Completed (Sessions 1-83)
+## Status: PHASE C COMPLETE
+
+All 24 test cases have been processed (21 verified, 3 blocked).
+No further investigation or generation work needed for this scope.
+
 <details>
-<summary>Sessions 1-83 completed items (click to expand)</summary>
+<summary>Completed Items (Sessions 55-60)</summary>
 
-### Sessions 1-82
-See session 82 agenda for full history. Summary:
-- 82 sessions of knowledge acquisition and Phase B generation
-- 191 vault notes, 170 analysis runs, 146 design issues, 207 exploration findings
-- Phase B: 1090 test cases generated across 10 modules (all unified format)
-- Complete coverage across all areas + supplementary suites + Test Data tabs
+### Phase A (Session 55)
+- [x] Read ticket #3404 with all comments
+- [x] Analyze MR !5333 code changes (4 frontend files)
+- [x] Map approve period → edit icon visibility logic
+- [x] Document BUG-T3404-1 (> vs >= boundary)
+- [x] Create vault notes for day-off module
 
-### Session 83 (Monitoring)
-- [x] GitLab activity check: no new feature MRs since March 16
-- [x] !5306 auto-merge confirmed MERGED (March 16 05:28 UTC) — conflicts resolved
-- [x] Build versions unchanged: TM 290209 (Mar 11), QA-1 290485 (Mar 13), Vacation 287654 (Feb 10), Stage TTT 289618 (Mar 2)
-- [x] Sprint 16: 5 tickets, all open, 0 new MRs, stalled
+### Phase B (Session 55)
+- [x] Generate t3404.xlsx with 24 test cases across 5 suites
+- [x] Parse XLSX to manifest JSON
+
+### Phase C (Sessions 56-60)
+- [x] P0: TC-016 core earlier date selection
+- [x] P0: TC-001 EN tooltip, TC-002 EN dialog title
+- [x] P1: TC-004/005 edit icon open period, TC-006/008 closed period
+- [x] P1: TC-007 boundary approve period start
+- [x] P1: TC-009 previous year all hidden
+- [x] P1: TC-010/011 closed months disabled, TC-012 open month enabled
+- [x] P1: TC-013 future month enabled, TC-015 March 2 boundary
+- [x] P1: TC-016/017 earlier date + first working day
+- [x] P1: TC-018 February all disabled
+- [x] P2: TC-003 RU tooltip, TC-014 Feb 28 boundary
+- [x] P2: TC-019 future minDate uses original date (ST-4)
+- [x] P2: TC-023 max date Dec 31 unchanged
+- [x] P1: TC-020 E2E reschedule + approval flow
+- [x] Blocked: TC-021 (env admin), TC-022 (cross-service), TC-024 (data limitation)
+- [x] Fixed data source: calendar_days + LATEST_CAL CTE (not employee_dayoff)
+- [x] Fixed two-user CAS SSO logout flow
 
 </details>
-
-## Phase B — 10 WORKBOOKS, 1090 TOTAL TEST CASES, 132 TABS
-
-**Total: 1090 test cases across 10 XLSX workbooks (82 test suites + 10 Test Data tabs = 132 tabs)**
-
-## Active Items
-
-### P2 — Medium Priority
-- [ ] Monitor #2724 for PATCH gateway routing fix — timemachine still on build 290209
-- [ ] Verify close-by-tag frontend deployment on timemachine after next build
-- [ ] Recommend closing !5114 as stale/duplicate of !5116 (has merge conflicts)
-- [ ] Recommend closing !5284 as unnecessary (0 diff — already merged via !5273+!5277)
-
-### P3 — Backlog (not blocking, depend on future implementation or low priority)
-- [ ] #2842 — Contractor termination: open, stalled 2+ months, assigned to Irina M. Architecture note created (S77).
-- [ ] #2954 — Sick leave working days: open, stalled 5+ months, assigned to Irina M.
-- [ ] #3378 — Tracker script relocation: open, assigned to Aleksandr M., no dev activity.
-- [ ] #2876 — Vacation event feed: open, analytical task, assigned to Irina M.
-- [ ] #3026 — CS office settings implementation: open, 3 unimplemented fields, assigned to Irina M.
-- [ ] Frontend architecture deep analysis (useful for future maintenance, not required for test documentation)

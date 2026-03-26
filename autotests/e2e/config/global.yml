@@ -1,4 +1,5 @@
 globalTimeout: 10000
+stepTimeoutMs: 30000
 windowPositionX: 0
 windowPositionY: 0
 fixtureDelayMs: 500

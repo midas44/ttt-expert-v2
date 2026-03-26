@@ -427,3 +427,322 @@ This means sending malformed JSON gets no error details — just `ResponseEntity
 - [[exploration/api-findings/payment-flow-live-testing]] — payment bug findings
 - [[analysis/role-permission-matrix]] — cross-module permission matrix
 - [[patterns/error-handling-agreement]] — error handling patterns
+
+
+## Autotest Notes (Phase C Discoveries)
+
+### minimalVacationDuration = 1 (not 5)
+**Discovered**: Session 85, TC-VAC-006 initial failure.
+The `vacationProperties.getMinimalVacationDuration()` is configured as **1** in `application.yml` (`vacation.minimal-vacation-duration: 1`). No per-environment overrides exist — all environments use 1. The Javadoc comment says "5" but the actual config is "1". The duration check compares **working days** (not calendar days) via `VacationDaysCalculatorImpl.calculateDays()` against this minimum. A Mon-Wed (3 working day) REGULAR vacation passes; only vacations with 0 working days (e.g., Sat-Sun) trigger `validation.vacation.duration`.
+
+### Update endpoint requires `id` in request body
+**Discovered**: Session 85, TC-VAC-044 initial failure.
+`PUT /v1/vacations/{vacationId}` requires the vacation `id` field in the JSON request body in addition to the URL path parameter. Without it: `IllegalArgumentException: The given id must not be null!` (JPA `findById` called with null from DTO).
+
+### Cancel endpoint: PUT /cancel/{id}
+Confirmed working. Returns updated vacation with status=CANCELED. No request body needed.
+
+### Delete endpoint: DELETE /{id}
+Confirmed working. Soft delete — record persists with status=DELETED. GET still returns the record.
+
+
+## Autotest Notes (Session 86)
+
+### pvaynmaster Office Discovery
+- pvaynmaster is in **Персей** office (office_id=20, advance_vacation=true)
+- Annual norm: 24 days for 2026 and 2027
+- Prior sessions labeled TC-001 as "AV=false" — incorrect. pvaynmaster was always AV=true.
+
+### Crossing Check Includes DELETED Records
+- The `exception.validation.vacation.dates.crossing` validation counts ALL vacation records regardless of status, including DELETED and CANCELED.
+- Soft-deleted vacations create permanent "ghost" conflicts that block future creates at those dates.
+- This is a design issue: DELETED should be excluded from crossing validation.
+- Impact on testing: every test run that creates+deletes a vacation permanently blocks that date range.
+
+### ADMINISTRATIVE Vacation Behavior
+- paymentType=ADMINISTRATIVE creates an unpaid vacation
+- Min duration check applies same as REGULAR (minimalVacationDuration=1 working day)
+- No available days validation — ADMINISTRATIVE can be created regardless of balance
+- Approver is still auto-assigned (same as REGULAR)
+
+### AV=true Day Calculation
+- GET /api/vacation/v1/vacationdays/available returns `availablePaidDays` for AV=true employees
+- In March 2026, pvaynmaster shows availablePaidDays significantly above monthly prorated (3/12 * 24 = 6)
+- Confirms full year balance available from Jan 1, not monthly accrual
+
+### Batch Run Deadlocks
+- Running multiple vacation create/approve/cancel tests back-to-back causes PostgreSQL deadlocks
+- Root: `employee_vacation` table row contention during VacationRecalculationServiceImpl
+- Each vacation create/cancel triggers FIFO redistribution which locks employee_vacation rows
+- Error: `org.springframework.dao.CannotAcquireLockException: deadlock detected`
+- Mitigation: run tests individually or with 2+ second gaps between them
+
+
+## Autotest Notes (Session 88)
+
+### Create/Update Response: regularDays/administrativeDays (not days)
+**Discovered**: Session 88, TC-VAC-007/008 initial failure.
+The vacation create/update API response does NOT include a `days` field. Instead it returns:
+- `regularDays` (integer) — working days counted as paid leave
+- `administrativeDays` (integer) — working days counted as unpaid leave
+For a REGULAR vacation Mon-Fri: `regularDays: 5, administrativeDays: 0`
+For an ADMINISTRATIVE 1-day: `regularDays: 0, administrativeDays: 1`
+The internal `vacation.days` field (used in DB `vacation.days` column) is calculated server-side as `regularDays + administrativeDays` but is NOT exposed in the API response.
+
+### pvaynmaster optionalApprovers Auto-Assignment
+When pvaynmaster (CPO, self-approver) creates a vacation, the system automatically adds their manager `ilnitsky` as an optional approver with status=ASKED. This is the CPO auto-approver path from `VacationServiceImpl.createVacation()`.
+
+### Week Offsets Used (2027-2028)
+Previous (2027): 45, 48, 51, 54, 57, 60, 63
+New (2027-2028): 66 (TC-026 original), 69 (TC-026 updated), 72 (TC-007), 75 (TC-008)
+
+### Update Response for NEW Status
+PUT update on a NEW vacation returns the same response format as create. Status remains "NEW", dates and regularDays are recalculated. No status reset occurs (already NEW).
+
+### PAID Vacation Immutability Confirmed
+PUT update on a PAID vacation returns HTTP 400. PAID is terminal — `NON_EDITABLE_STATUSES` set blocks all edits. Permission service returns empty set for PAID vacations. Even the vacation owner cannot modify.
+
+### Null paymentMonth → HTTP 500 Confirmed
+POST with paymentMonth omitted reliably returns HTTP 500 (NPE). The error response body varies — sometimes includes `exception: "java.lang.NullPointerException"`, sometimes a generic 500 with minimal detail. Bug still present on qa-1.
+
+
+## Autotest Notes (Session 91)
+
+### API_SECRET_TOKEN bypasses hasAccess() ownership checks
+- Sending `login=otherUser` in PUT update body does NOT cause a 400.
+- The API_SECRET_TOKEN authenticates as a privileged system user. `employeeService.getCurrent()` returns this system user, not the user from the `login` field.
+- The system user passes `hasAccess()` for all vacations — likely has admin/system roles.
+- **Impact:** Permission tests (TC-031 update by non-owner, TC-053 non-approver approve) cannot be automated via API_SECRET_TOKEN. Need CAS per-user authentication.
+- The `login` field in create/update DTOs is purely data — it tells the server whose vacation to create/update, not who is performing the action.
+
+### Crossing validation error format (update endpoint)
+- `errorCode`: `exception.validation.fail` (generic, NOT the specific crossing code)
+- `message`: `exception.validation.vacation.dates.crossing` (specific code is here)
+- `errors[0].code`: `exception.validation.fail`
+- `errors[0].message`: `exception.validation.vacation.dates.crossing`
+- Pattern for assertions: always check both `errorCode` and `message`/`errors[].message`.
+
+### Approve endpoint confirmed: PUT /approve/{id}
+- All status transition endpoints follow `PUT /{action}/{vacationId}` pattern.
+- Approve: `PUT /approve/{id}` (not POST, not `/{id}/approve`)
+- Reject: `PUT /reject/{id}`
+- Cancel: `PUT /cancel/{id}`
+- Pay: `PUT /pay/{id}`
+
+### notifyAlso field behavior
+- Valid logins accepted (200), records stored in `vacation_notify_also` table.
+- Invalid login rejected (400) by `@EmployeeLoginCollectionExists` DTO validator.
+- GET /vacations/{id} response does NOT include notifyAlso — data is only in the DB table.
+- Colleague logins can be found via: `SELECT login FROM ttt_backend.employee WHERE enabled=true AND login != ownerLogin`.
+
+
+## Autotest Notes (Session 92)
+
+### vacation_payment Table Schema (DB-Level Payment Verification)
+**Discovered**: Session 92, TC-VAC-088 initial failures.
+- `ttt_vacation.vacation_payment` columns: `id` (bigint PK), `regular_days` (int), `administrative_days` (int), `payed_at` (date)
+- The FK is on the vacation table: `vacation.vacation_payment_id → vacation_payment.id`
+- vacation_payment.id is auto-generated (values in 1.4M range), NOT equal to vacation.id (51K range)
+- NOT a shared-PK pattern. The vacation table holds the FK, not vacation_payment.
+- Correct query: `SELECT vp.regular_days, vp.administrative_days, vp.payed_at FROM ttt_vacation.vacation v JOIN ttt_vacation.vacation_payment vp ON v.vacation_payment_id = vp.id WHERE v.id = $1`
+
+### Pay Endpoint Detailed Behavior
+- PUT /v1/vacations/pay/{id} — body: `{regularDaysPayed: N, administrativeDaysPayed: M}`
+- Validation: N + M must equal vacation.days (regularDays + administrativeDays)
+- Wrong sum → 400, errorCode: `exception.vacation.pay.days.not.equal`
+- Wrong status (not APPROVED) → 400 (PayVacationServiceImpl.checkForPayment validates APPROVED + EXACT)
+- Success response wraps payment info: `{vacation: {..., status: "PAID"}, paymentDTO: {payedAt, regularDaysPayed, administrativeDaysPayed}}`
+- ADMINISTRATIVE pay: regularDaysPayed=0, administrativeDaysPayed=N (no balance impact)
+
+### PAID Terminal State Confirmed
+- Cancel PAID → HTTP 400 (checkVacation → hasAccess returns false for PAID vacations)
+- Delete PAID+EXACT → blocked by ServiceException("exception.vacation.delete.notAllowed")
+- PAID vacations with EXACT periodType are permanent records in test environments
+- Week offsets 144-160 used for payment tests (permanent PAID records at those dates)
+
+
+## Autotest Notes (Session 98)
+
+### API_SECRET_TOKEN Cannot Access Sick Leave Endpoint
+**Discovered**: Session 98, TC-VAC-126 failure (403).
+POST `/api/vacation/v1/sick-leaves` returns **403 Forbidden** with `AccessDeniedException` when authenticated via `API_SECRET_TOKEN`. The sick leave controller uses `@PreAuthorize("hasAuthority('AUTHENTICATED_USER')")` — the API_SECRET_TOKEN user lacks this authority. The vacation controller uses `hasAuthority('AUTHENTICATED_USER') || hasAuthority('VACATIONS_CREATE')` — the `||` allows the token through via `VACATIONS_CREATE`.
+
+**Impact**: All tests requiring sick leave creation/modification via API are blocked with `API_SECRET_TOKEN`. This includes:
+- TC-VAC-126 (sick leave crossing vacation — 409 CONFLICT)
+- Any future cross-module tests involving sick leave + vacation interaction
+- Needs per-user CAS JWT authentication to test sick leave endpoints.
+
+### TS-Vac-APIErrors Suite Patterns Confirmed
+Session 98 verified 5 error handling patterns:
+- **HttpMessageNotReadableException** → HTTP 400 with completely **empty body** (no JSON, no error details)
+- **MethodArgumentTypeMismatchException** → HTTP 400, errorCode: `exception.type.mismatch`, message includes expected type ("Long")
+- **MethodArgumentNotValidException** → HTTP 400, errors[] array with per-field `{field, code, message}` objects, code contains "NotNull"
+- **ServiceException** (past dates) → HTTP 400, `exception` field leaks full Java class name (`com.noveogroup.ttt.common.exception.ServiceException`)
+- **Exception class leakage** is universal — every error response includes `exception` field with dotted package path
+
+### Error Response Fields Confirmed
+All error responses (except HttpMessageNotReadableException) include these standard fields:
+- `error` (HTTP reason phrase, e.g., "Bad Request")
+- `status` (HTTP code as integer)
+- `exception` (full Java class name — security issue)
+- `path` (request path)
+- `timestamp` (ISO datetime)
+- `errorCode` (application-specific error code)
+- `message` (human-readable or error code string)
+- `errors[]` (only for validation exceptions — per-field violations)
+
+
+## Autotest Notes (Phase C discoveries)
+
+### vacation_approval table schema
+- Columns: `id`, `vacation`, `employee`, `status` — NO `required` column, NO `approver` column
+- FK `employee` references the optional approver's employee ID (not named `approver`)
+- Status values observed: `ASKED` (initial), presumably `APPROVED`/`REJECTED`
+- The `required` attribute from `vacation_notify_also` does NOT exist here
+
+### vacation-test API paths
+- Test API paths follow `/v1/test/vacations/<action>` pattern (NOT `/test/<action>`)
+- Example: `POST /api/vacation/v1/test/vacations/pay-expired-approved` (not `/api/vacation/test/pay-expired-approved`)
+- Auth: same `API_SECRET_TOKEN` header as main API
+
+### employee table: first_date (not first_day)
+- Column is `first_date` (date type), not `first_day`
+- Used by DaysLimitationService for 3-month employment restriction check
+
+### pass endpoint still NPE (session 102, 2026-03-21)
+- `PUT /v1/vacations/pass/{vacationId}` still returns 500 on qa-1
+- Caffeine cache BoundedLocalCache.computeIfAbsent NPE persists
+- Blocks TC-067 (change approver) and TC-068 (notification on approver change)
+
+
+## Autotest Notes (Session 103)
+
+### @CurrentUser DTO Validator Blocks Multi-User API Tests
+**Discovered**: Session 103, TC-VAC-019 failure (400, `validation.notcurrentuser`).
+`VacationCreateRequestDTO.login` has `@CurrentUser(groups=CreateGroup.class)` annotation. This validates that `request.getLogin()` matches `employeeService.getCurrent().getLogin()` at the DTO validation layer — BEFORE service logic runs. API_SECRET_TOKEN maps to pvaynmaster's identity, so only `login: "pvaynmaster"` passes this check.
+
+**Impact on all "different user" tests:**
+- TC-VAC-019 (regular employee auto-approver) — BLOCKED
+- TC-VAC-017 (create as readOnly user) — BLOCKED  
+- Any test requiring vacation creation for a non-pvaynmaster employee via API — BLOCKED
+- The `@CurrentUser` annotation fires for `CreateGroup` only — update DTO uses `UpdateGroup` which may not have this check (unverified)
+- This is a different blocker than `hasAccess()` bypass (session 91). `hasAccess()` is service-level; `@CurrentUser` is DTO-level.
+
+**Resolution**: Per-user CAS authentication needed. The API_SECRET_TOKEN can only create/update vacations for the user it authenticates as (pvaynmaster).
+
+### Week Offsets Used (Session 103)
+- TC-169: offset 251
+- TC-173: offset 257
+- TC-137: offset 260
+- TC-161: cross-year 2037-12-22 → 2038-01-09
+
+### Cross-Year Vacation Dates Used
+- TC-161: 2037-12-22 → 2038-01-09 (Dec→Jan cross-year)
+
+
+## Autotest Notes (Session 23)
+
+### employee_vacation Table (Correct Schema for Available Days)
+- Table: `ttt_vacation.employee_vacation` (NOT `vacation_days`)
+- Columns: `id` (PK), `employee` (FK bigint), `available_vacation_days` (numeric), `year` (int)
+- FK column is `employee`, not `employee_id`
+- Query for total available: `SELECT SUM(ev.available_vacation_days) FROM ttt_vacation.employee_vacation ev JOIN ttt_vacation.employee e ON e.id = ev.employee WHERE e.login = $1`
+
+### Holiday Impact on Working Days Count
+- Mon-Fri (5 calendar days) may yield 4 regularDays if one day is a public holiday in the office calendar
+- The `VacationDaysCalculatorImpl.calculateDays()` uses the office-specific production calendar
+- Assertions on regularDays for Mon-Fri windows should use `>= 4` not `== 5`
+
+### Duration Validation: Real Minimum is 1, Not 5
+- minimalVacationDuration=1 confirmed across all environments (qa-1, timemachine, stage)
+- Test doc TC-VAC-006 says "< 5 days" but the actual trigger is 0 working days
+- Only Sat-Sun (or holiday-only) ranges produce 0 working days → `validation.vacation.duration`
+- A 3-day Mon-Wed vacation (3 working days) passes fine since 3 >= 1
+
+### Insufficient Days Validation Order
+- DTO-level `VacationCreateValidator` fires BEFORE service-level `findCrossingVacations`
+- So `validation.vacation.duration` (insufficient balance) returns even if the dates would also conflict with ghost records
+- This makes negative tests for insufficient days reliable regardless of date conflicts
+
+
+## Autotest Notes (Session 24)
+
+### Response wrapper structure
+Create endpoint (`POST /api/vacation/v1/vacations`) returns a wrapper object:
+```json
+{
+  "vacation": { "id": 51589, "employee": {...}, "approver": {...}, "status": "NEW", ... },
+  "vacationDays": { "availableDays": 24, "reservedDays": 14, ... }
+}
+```
+Access vacation ID via `response.vacation.id`, approver via `response.vacation.approver`.
+
+### Error field inconsistency
+- **Crossing validation**: `{code: "exception.validation.fail", message: "exception.validation.vacation.dates.crossing", field: "startDate"}` — actual error in `message`, not `code`
+- **Other validators** (login, duration): error code directly in `code` field
+- When matching errors in tests, always check BOTH `code` and `message` fields
+
+### NPE bugs still active (qa-1, 2026-03-21)
+- **paymentMonth null** → HTTP 500 (TC-014 confirmed)
+- **optionalApprovers null on CPO path** → HTTP 500 (TC-015 confirmed)
+
+### pvaynmaster identity (qa-1)
+- Login: pvaynmaster, csId: 249
+- Office: Персей (id: 20, AV=true)
+- Role: ROLE_DEPARTMENT_MANAGER (CPO)
+- Manager: ilnitsky (csId: 65)
+- Self-approval: confirmed (approver = self, manager as optional with ASKED status)
+
+
+## Autotest Notes (Session 26)
+
+- **PUT update requires `id` in body** — `PUT /v1/vacations/{id}` expects `id` field in the JSON request body in addition to the URL path parameter. Omitting it causes `IllegalArgumentException: The given id must not be null!` (400). Full update body: `{id, login, startDate, endDate, paymentType, paymentMonth, optionalApprovers, notifyAlso}`.
+- **Pay body format confirmed** — `PUT /v1/vacations/pay/{id}` body: `{"regularDaysPayed": N, "administrativeDaysPayed": N}`. Sum must equal vacation's total working days. For REGULAR 5-day: `{"regularDaysPayed": 5, "administrativeDaysPayed": 0}`. The `days` field in the vacation response object provides the correct total.
+- **REJECTED→APPROVED confirmed** — `VacationStatusManager` allows direct re-approval from REJECTED without requiring an edit. Transition map: `REJECTED → [APPROVED]`.
+- **APPROVED→REJECTED confirmed** — Approver can reject an already-approved vacation. Days returned to pool, FIFO redistribution triggered.
+- **APPROVED→NEW on date edit confirmed** — Editing dates via PUT resets status from APPROVED to NEW. Optional approvals also reset to ASKED.
+- **APPROVED→CANCELED confirmed** — `canBeCancelled` guard passes for future vacations where paymentDate is after the office report period.
+- **APPROVED→PAID confirmed** — Terminal state. PAID+EXACT cannot be canceled, rejected, or deleted via normal API. Cleanup requires test API endpoint or accepting persistence.
+
+
+## Autotest Notes (Session 27)
+
+### Timeline Table Schema (DB-Level Event Verification)
+- Table: `ttt_vacation.timeline`
+- Key columns: `id` (PK bigint), `employee` (FK), `event_time` (timestamptz), `event_type` (text), `vacation` (FK to vacation.id), `previous_status` (text nullable)
+- Event types observed: `VACATION_CREATED`, `VACATION_APPROVED`, `VACATION_REJECTED`, `VACATION_CANCELED`, `VACATION_DELETED`, `VACATION_PAID`
+- `previous_status` is only populated for reject (previous_status='APPROVED'), cancel (previous_status='APPROVED'), and delete (previous_status='CANCELED'/'REJECTED'). It is NULL for create, approve, and pay events.
+- Events are reliably created on every status transition — suitable for integration test assertions.
+
+### vacation_notify_also Table Schema
+- Table: `ttt_vacation.vacation_notify_also`
+- Columns: `id` (PK bigint), `vacation` (FK to vacation.id), `approver` (FK to employee.id — misleading name, actually the notified colleague), `required` (boolean, defaults false)
+- Unique index on `(vacation, approver)` — can't notify same person twice
+- `required=false` for informational notify-also; `required` may be `true` for other use cases
+- GET /vacations/{id} response does NOT include notifyAlso data — verification must be via DB query
+
+### DB Bigint Type Handling
+- PostgreSQL `bigint` columns return as JavaScript strings via the `pg` driver (not numbers)
+- When comparing DB FK values with API-returned numeric IDs, always use `Number(row.column)` for equality checks
+- Affects: vacation FK in vacation_notify_also, vacation_approval, timeline tables
+
+### CANCELED → NEW Transition Confirmed
+- PUT /v1/vacations/{id} with full update body (including `id` field) changes CANCELED → NEW
+- The transition works because `isNextStateAvailable(CANCELED, NEW)` finds the explicit entry in the transition map, even though CANCELED is in FINAL_STATUSES
+- Days are recalculated on re-open (regularDays and administrativeDays recomputed)
+- Status resets to NEW, same as a fresh vacation
+
+### Invalid NEW → PAID Confirmed
+- PUT /v1/vacations/pay/{id} on a NEW vacation returns HTTP 400
+- PayVacationServiceImpl.checkForPayment validates status must be APPROVED + periodType EXACT
+- The status check prevents any non-APPROVED vacation from being paid
+- Vacation status remains unchanged after the failed pay attempt
+
+### TC-046 (canBeCancelled) Deferred
+- Cannot set up paymentDate < reportPeriod scenario without clock manipulation or period advancement
+- Creating future vacations always sets paymentDate in the future → canBeCancelled returns true
+- Needs timemachine environment with clock set to a date after the vacation's paymentMonth
+
+### TC-056 (crossing on approve) Deferred
+- Cannot create two overlapping vacations for the same user — crossing check runs on both POST create and PUT update
+- Would need: (a) multi-user support to create overlapping vacations for different users, or (b) direct DB manipulation to insert an overlapping record, or (c) timing exploit between create and crossing check

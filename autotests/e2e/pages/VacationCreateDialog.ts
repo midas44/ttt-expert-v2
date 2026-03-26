@@ -16,7 +16,7 @@ const MONTH_MAP: Record<string, number> = {
 
 export class VacationCreateDialog {
   private readonly dialog = this.page.getByRole("dialog", {
-    name: /Creating vacation request/i,
+    name: /(Creating|Editing) vacation request/i,
   });
   private readonly unpaidCheckbox = this.dialog.locator(
     "input[type='checkbox']",
@@ -269,6 +269,146 @@ export class VacationCreateDialog {
     ];
     this.cachedNotifyInput = await resolveFirstVisible(candidates);
     return this.cachedNotifyInput;
+  }
+
+  /** Reads the "Number of days" value from the dialog.
+   *  DOM structure: `<div><strong>Number of days:</strong> 5</div>` — value is a text node. */
+  async getNumberOfDays(): Promise<string> {
+    return this.dialog.evaluate((el) => {
+      // Strategy 1: find the container with "Number of days:" label and extract trailing number
+      for (const node of el.querySelectorAll("strong, b, label, span")) {
+        if (/number of days/i.test(node.textContent ?? "")) {
+          const parent = node.parentElement;
+          if (parent) {
+            // The number is a text node after the <strong> — get full textContent and extract
+            const full = parent.textContent?.trim() ?? "";
+            const match = full.match(/number of days[:\s]*(\d+)/i);
+            if (match) return match[1];
+          }
+        }
+      }
+      // Strategy 2: look for the pattern in the entire dialog text
+      const allText = el.textContent ?? "";
+      const match = allText.match(/number of days[:\s]*(\d+)/i);
+      if (match) return match[1];
+      return "";
+    });
+  }
+
+  /** Reads the "Approved by" field text from the dialog.
+   *  DOM structure: `<dt>Approved by</dt><dd><a>Name</a></dd>` */
+  async getApprovedByText(): Promise<string> {
+    return this.dialog.evaluate((el) => {
+      // Strategy 1: find <dt> with "Approved by" and read its sibling <dd>
+      for (const dt of el.querySelectorAll("dt")) {
+        if (/approved by/i.test(dt.textContent ?? "")) {
+          const dd = dt.nextElementSibling;
+          if (dd) return dd.textContent?.trim() ?? "";
+        }
+      }
+      // Strategy 2: find any element with "approved by" label and look for a link in parent
+      for (const node of el.querySelectorAll("*")) {
+        const text = node.textContent?.trim() ?? "";
+        if (/approved by/i.test(text) && text.length < 200) {
+          const parent = node.parentElement;
+          if (parent) {
+            const links = parent.querySelectorAll("a");
+            if (links.length > 0) return links[0].textContent?.trim() ?? "";
+          }
+        }
+      }
+      return "";
+    });
+  }
+
+  /** Reads the "Agreed by" / optional approver field text from the dialog.
+   *  DOM structure: `<dt>Agreed by</dt><dd><a>Name</a></dd>` */
+  async getAgreedByText(): Promise<string> {
+    return this.dialog.evaluate((el) => {
+      // Strategy 1: find <dt> with "Agreed by" and read its sibling <dd>
+      for (const dt of el.querySelectorAll("dt")) {
+        if (/agreed by/i.test(dt.textContent ?? "")) {
+          const dd = dt.nextElementSibling;
+          if (dd) return dd.textContent?.trim() ?? "";
+        }
+      }
+      // Strategy 2: fallback
+      for (const node of el.querySelectorAll("*")) {
+        const text = node.textContent?.trim() ?? "";
+        if (/agreed by/i.test(text) && text.length < 200) {
+          const parent = node.parentElement;
+          if (parent) {
+            const links = parent.querySelectorAll("a");
+            if (links.length > 0) return links[0].textContent?.trim() ?? "";
+          }
+        }
+      }
+      return "";
+    });
+  }
+
+  /** Reads the payment month field value from the dialog. */
+  async getPaymentMonthText(): Promise<string> {
+    // Wait for payment dates API response
+    await this.page.waitForResponse(
+      (resp) => resp.url().includes("/paymentdates") && resp.status() === 200,
+      { timeout: 5000 },
+    ).catch(() => {});
+
+    // The payment month is the 3rd date-picker input (after start and end)
+    const count = await this.datePickerInputs.count();
+    if (count >= 3) {
+      return (await this.datePickerInputs.nth(2).inputValue())?.trim() ?? "";
+    }
+
+    // Fallback: read text from the payment month label area
+    const label = this.dialog.locator("text=/salary for/i").first();
+    if ((await label.count()) > 0) {
+      const parent = label.locator("..");
+      const text = (await parent.textContent()) ?? "";
+      const match = text.match(
+        /(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\w*\s+\d{4}/i,
+      );
+      return match ? match[0].trim() : "";
+    }
+    return "";
+  }
+
+  /** Closes the dialog without saving (Escape key). */
+  async cancel(): Promise<void> {
+    await this.page.keyboard.press("Escape");
+    await this.dialog.waitFor({ state: "detached" }).catch(() => {});
+  }
+
+  /** Checks if the dialog is still open. */
+  async isOpen(): Promise<boolean> {
+    return this.dialog.isVisible();
+  }
+
+  /**
+   * Returns visible error/validation text from the dialog or page notifications.
+   * Matches red-colored text in the dialog and toast notifications containing
+   * "error", "validation", "exception", or raw i18n keys.
+   */
+  async getErrorText(): Promise<string> {
+    // Strategy 1: red text inside dialog
+    const redEntries = await this.getRedTextEntries();
+    if (redEntries.length > 0) {
+      return redEntries.map((e) => e.text).join(" | ");
+    }
+    // Strategy 2: notification/alert/toast with error-like content
+    const errorNotification = this.page.locator(
+      '[role="alert"], [class*="notification"], [class*="toast"], [class*="error"]',
+    ).filter({ hasText: /error|validation|exception|crossing|past/i });
+    if ((await errorNotification.count()) > 0) {
+      return (await errorNotification.first().textContent())?.trim() ?? "";
+    }
+    // Strategy 3: raw i18n keys displayed as text (known bug)
+    const rawKey = this.page.locator('text=/validation\\.|exception\\./');
+    if ((await rawKey.count()) > 0) {
+      return (await rawKey.first().textContent())?.trim() ?? "";
+    }
+    return "";
   }
 
   /** Returns all text entries in the dialog that have red-dominant color. */

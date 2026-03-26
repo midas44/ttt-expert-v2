@@ -7,6 +7,8 @@ const GLOBAL_YML = path.resolve(__dirname, "global.yml");
 
 export class GlobalConfig {
   readonly globalTimeout: number;
+  /** Per-action timeout (click, fill, waitFor, etc.) in milliseconds. */
+  readonly stepTimeoutMs: number;
   readonly windowPositionX: number;
   readonly windowPositionY: number;
   readonly fixtureDelayMs: number;
@@ -24,6 +26,7 @@ export class GlobalConfig {
     const data = readYaml(GLOBAL_YML);
 
     this.globalTimeout = readNumber(data["globalTimeout"], 15000, "globalTimeout");
+    this.stepTimeoutMs = readNumber(data["stepTimeoutMs"], 30000, "stepTimeoutMs");
     this.windowPositionX = readNumber(data["windowPositionX"], 300, "windowPositionX");
     this.windowPositionY = readNumber(data["windowPositionY"], 80, "windowPositionY");
     this.fixtureDelayMs = readNumber(data["fixtureDelayMs"], 500, "fixtureDelayMs");

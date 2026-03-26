@@ -43,9 +43,10 @@ session:
   max_duration_minutes: 240      # Soft limit — begin wrap-up when approaching
 
 phase:
-  current: "knowledge_acquisition"   # "knowledge_acquisition" or "generation"
+  current: "knowledge_acquisition"   # "knowledge_acquisition", "generation", or "autotest_generation"
   generation_allowed: false          # Set automatically when auto_phase_transition is true
   coverage_override: 0              # Force coverage to this value (0-100). Set -1 or remove to use computed value.
+  scope: "all"                       # "all", module name(s), or GitLab ticket number(s) (pure digits → t-prefixed internally)
 
 thresholds:
   knowledge_coverage_target: 0.8
@@ -83,7 +84,15 @@ autonomy:
 - If `phase.coverage_override` is set to 0-100, use that as current coverage and do NOT auto-transition. Investigate until notes reach genuine depth, then set `coverage_override: -1` before allowing transition.
 - If `phase.current` is `"knowledge_acquisition"`, focus on knowledge building. When coverage target is met, `auto_phase_transition` is `true`, and no coverage_override is active, update config.yaml to transition to Phase B automatically
 - If `phase.current` is `"generation"` and `phase.generation_allowed` is `true`, execute Phase B (test documentation generation with knowledge enrichment)
-- If `phase.current` is `"autotest_generation"` and `autotest.enabled` is `true`, execute Phase C (autotest generation). Read `autotest.*` fields for target environment, test limits, scope (`"all"` or a specific module name), and priority ordering.
+- If `phase.current` is `"autotest_generation"` and `autotest.enabled` is `true`, execute Phase C (autotest generation). Read `autotest.*` fields for target environment, test limits, scope, and priority ordering.
+- **Scope filter (Phase A/B/C):** If `phase.scope` is not `"all"`, restrict ALL phase work to the specified items. Scope accepts:
+  - `"all"` — all modules (global sweep)
+  - A module name: `"vacation"` — single module
+  - A comma-separated list: `"vacation, statistics"` — multiple modules
+  - A GitLab ticket number: `"3404"` — single ticket (pure digits = ticket)
+  - Mixed: `"vacation, 3404, 3405"` — modules and tickets together
+  Phase A: only investigate those modules/tickets. Phase B: only generate XLSX for those. Phase C uses `autotest.scope` independently (same format). When scope is set, skip all items not in the list.
+- **Ticket scope normalization:** Any scope entry that is pure digits is a GitLab ticket number. It is normalized to `t<number>` internally (e.g., `3404` → `t3404`). All derived artifacts use the `t<number>` prefix: test IDs `TC-T3404-001`, directories `t3404/`, manifest keys `t3404`. See §10.1 for the full ticket protocol.
 - Check `session.delay_minutes` — if previous session briefing timestamp is less than this many minutes ago:
   - **hybrid mode**: notify human and wait for confirmation
   - **full mode**: log timing warning to session briefing and proceed (the external runner script enforces inter-session delay)
@@ -151,14 +160,13 @@ All paths are relative to the project root `/home/v/Dev/ttt-expert-v2/`.
 │   ├── tsconfig.json
 │   ├── scripts/parse_xlsx.py          #   XLSX → JSON manifest parser
 │   ├── manifest/test-cases.json       #   Parsed test cases + automation status
-│   ├── docs/                          #   Generated per-test documentation
 │   ├── reference/                     #   Prototype tests (patterns, not executed)
 │   └── e2e/
 │       ├── config/                    #   Config reads from shared config/ttt/
-│       ├── data/                      #   Test data classes + queries/
+│       ├── data/                      #   Test data classes (module subdirs + queries/)
 │       ├── fixtures/                  #   Reusable workflow fixtures
 │       ├── pages/                     #   Page object classes
-│       ├── tests/                     #   Generated test specs
+│       ├── tests/                     #   Generated test specs (module subdirs)
 │       └── utils/                     #   Utilities (locatorResolver, colorAnalysis)
 ```
 
@@ -441,6 +449,29 @@ INVESTIGATE → ANALYZE → SYNTHESIZE → STORE → CONNECT
 ### 9.4 Maintenance (every 5-10 sessions)
 Compress old investigations, detect stale notes, audit cross-references, clean SQLite, refine agenda.
 
+### 9.5 Phase Reset Protocol
+
+**Every phase transition (A→B, B→C, or any restart of a phase) MUST reset the vault control files** to prevent stale context from the previous phase leaking into the new one. This is critical because `_SESSION_BRIEFING.md` and `_INVESTIGATION_AGENDA.md` accumulate phase-specific knowledge (constraints, blockers, patterns) that may be misleading in a different phase.
+
+**On phase transition, perform these steps:**
+
+1. **`_SESSION_BRIEFING.md`** — overwrite with a clean Phase N start message:
+   - State which phase is starting and why (transition or restart)
+   - Summarize what the previous phase accomplished (brief — 2-3 lines)
+   - List what the new phase needs to do first
+   - Note any vault content from previous phases that should be read selectively (e.g., "Autotest Notes sections in deep-dive notes are Phase C-specific — read for business logic, ignore automation constraints")
+
+2. **`_INVESTIGATION_AGENDA.md`** — overwrite with new phase priorities:
+   - Move completed items from previous phase into a `<details>` collapsed section
+   - Set P0/P1/P2 items appropriate for the new phase
+   - Clear any phase-specific constraints (e.g., API token limitations from Phase C don't apply to Phase B)
+
+3. **`_KNOWLEDGE_COVERAGE.md`** — update to reflect new phase's coverage goals (e.g., Phase B measures XLSX generation progress, Phase C measures autotest coverage)
+
+4. **SQLite tracking tables** — if restarting a phase (not continuing), truncate the relevant tracking table (`test_case_tracking` for Phase B, `autotest_tracking` for Phase C)
+
+**Do NOT delete or modify vault knowledge notes** (modules/, exploration/, etc.) — only the control/coordination files above. The accumulated knowledge is valuable across all phases; only the operational context needs resetting.
+
 ---
 
 ## 10. Phase A — Global Knowledge Acquisition
@@ -459,23 +490,138 @@ Comprehensive tool runs per module, test suite analysis, security scanning, dead
 ### Business Logic (Sessions 16-25)
 Business workflows through code AND live app, requirements correlation, undocumented logic, edge cases from exploration, inferred ADRs, GitLab history, divergences (requirements vs. code vs. behavior).
 
+### GitLab Ticket Mining (CRITICAL — every phase)
+
+**GitLab tickets are the richest source of real-world bug knowledge.** Most TTT bug reports contain the critical details in **comments**, not in the issue description. The description is often a brief summary; the comments contain reproduction steps, root cause analysis, screenshots, edge cases discovered during investigation, workarounds, and related bugs found during fixing.
+
+**Mandatory for every module under investigation:**
+
+1. **Search GitLab for ALL tickets** related to the module — use MULTIPLE search strategies, not just sprint labels:
+   ```bash
+   # By keyword in title/description (primary — catches unlabeled tickets)
+   curl "https://gitlab.noveogroup.com/api/v4/projects/172/issues?search=<module_keyword>&per_page=100&order_by=updated_at&sort=desc" --noproxy gitlab.noveogroup.com
+
+   # By label (supplementary — not all tickets have sprint labels)
+   curl ".../issues?labels=<module>&per_page=100&order_by=updated_at&sort=desc"
+
+   # Paginate through ALL results — don't stop at page 1
+   # Some features were introduced in Sprint 7 or earlier; relevant bugs may be very old
+   ```
+   **Search the ENTIRE ticket history**, not just recent sprints. Start from `current_sprint` (config.yaml) and work backwards. Old tickets are often the most valuable — they contain bugs that were never fixed, edge cases discovered years ago, and foundational implementation details. Use `updated_at` and `created_at` to organize, but do NOT filter by date or sprint number.
+
+2. **Read BOTH description AND comments** for every relevant ticket: `curl ".../issues/<id>/notes"` — the valuable content is scattered across comments, not concentrated in descriptions. Scan ALL comments looking for patterns that indicate test-worthy information:
+
+   **Bug report patterns in comments** (identify and extract these):
+   - `* [ ]` or `- [ ]` checkbox lists — these are almost always bug reports or acceptance criteria
+   - **Expected** / **Actual** / **Env** in bold — structured bug report format
+   - "Steps to reproduce" or numbered reproduction steps
+   - Screenshots or screen recordings (note the attachment — download if needed)
+   - "Regression" or "broken after" — indicates a change that broke existing behavior
+   - Error messages or stack traces pasted from the app
+
+   **Design & architecture patterns in comments** (equally important):
+   - Comments titled or starting with "**Design Notes**" or "Design:" — contain implementation decisions, business rules, and edge case handling strategies
+   - "Note:" or "Important:" prefixed comments — often contain constraints or gotchas
+   - Long technical comments explaining WHY something works a certain way — reveals hidden business rules
+   - Comments from QA team members — often describe edge cases found during testing
+   - "While testing this, I also noticed..." — reveals related bugs and side effects
+
+   **Don't filter comments by length or author** — short comments like "also broken for disabled employees" are high-value edge cases. Let the content pattern guide extraction, not metadata.
+
+3. **Create test cases from bug reports** — each confirmed bug is a potential regression test case. In Phase B, generate specific test cases tagged with the ticket number (e.g., "TC-DO-045: Day-off approval race condition (#3127)")
+4. **Document corner cases from comments** — when a comment describes an edge case ("this also fails when the employee has no manager"), add it to the vault note AND create a test case for it
+5. **Check closed tickets too** — fixed bugs are the best source of regression test cases
+
+**Handling old vs. new information:** The project is old — some modules haven't changed in years. When mining tickets:
+- **Old bug reports are valuable** if the bug was never fixed or the fix introduced new edge cases — check the current code/behavior to verify
+- **Old feature descriptions** may be outdated — always verify against current code before including in vault
+- **Closed/fixed tickets** are the best source of regression test cases — the fix is in the code, the bug scenario is the test case
+- When ticket info conflicts with current code behavior, trust the code and note the discrepancy
+
+**Store ticket findings in vault:** Create `exploration/tickets/<module>-ticket-findings.md` with structured summaries of bugs, edge cases, and test-worthy scenarios discovered from tickets. Include ticket number, summary, current status (still reproducible?), and proposed test case.
+
 ### Coverage Assessment and Phase Transition
 Update `_KNOWLEDGE_COVERAGE.md` comprehensively, query module_health for gaps.
 
 **Coverage override:** If `phase.coverage_override` is set to 0-100 in config.yaml, use that value as the current coverage instead of computing it. This allows the human to force a coverage reset (e.g., `coverage_override: 0` to restart deep investigation). When the override is present and >= 0, do NOT auto-transition regardless of computed coverage — investigate until the notes genuinely reach the depth described below, then remove the override (set to -1) before allowing transition.
 
-- **hybrid mode**: Present coverage report to human with Phase B readiness recommendation. Human updates config.yaml to enable generation.
-- **full mode** (with `auto_phase_transition: true`): When coverage >= `thresholds.knowledge_coverage_target` AND no coverage_override is active (value is -1 or field absent), automatically update `config.yaml` to set `phase.current: "generation"` and `phase.generation_allowed: true`. Log the transition decision to `_SESSION_BRIEFING.md`. The next session will begin Phase B.
+**Phase transitions when scope is a specific module (not `"all"`):** When scope targets a module name, all transitions are human-approved. The agent must NOT auto-transition — instead:
+1. Log a readiness report to `_SESSION_BRIEFING.md` with evidence of depth (word counts, tickets mined, methods used)
+2. Set `autonomy.stop: true` and wait for human review
+3. The human will review and manually update `phase.current` and `phase.generation_allowed` if satisfied
+
+**Exception — ticket scope auto-transitions:** When scope is a GitLab ticket number (pure digits → `t<number>`), auto-transitions ARE allowed if `auto_phase_transition: true`. Ticket scope is inherently narrow (a single issue), so phases are shorter and auto-transition is safe. The agent should still log readiness reports but proceed automatically: A→B when ticket is fully investigated, B→C when XLSX is generated and covers the ticket.
+
+When `phase.scope` is `"all"` (global sweep), the original auto-transition rules apply:
+- **hybrid mode**: Present coverage report to human with Phase B readiness recommendation.
+- **full mode** (with `auto_phase_transition: true`): When coverage >= `thresholds.knowledge_coverage_target` AND no coverage_override is active (value is -1 or field absent), automatically update `config.yaml` to set `phase.current: "generation"` and `phase.generation_allowed: true`. Log the transition decision to `_SESSION_BRIEFING.md`. **Reset vault control files** (see Phase Reset Protocol below).
 
 **Important:** Coverage assessment must be based on **depth, not breadth**. A module is not "covered" until its vault notes contain concrete testable details — validation rules with code snippets, error paths, permission requirements per endpoint, boundary values, and state transitions. A 200-word overview note does not count toward coverage.
 
+**Minimum depth requirements before A→B transition (per module in scope):**
+- Module vault note is 1000+ words with code snippets and validation rules
+- GitLab tickets for the module have been searched (ALL history, not just recent sprints), and bug findings documented in `exploration/tickets/`
+- At least 3 different investigation methods used (code reading, API testing, UI exploration, DB analysis, ticket mining)
+- Known bugs and edge cases documented with ticket references
+- UI flows explored via Playwright and documented in `exploration/ui-flows/`
+- **Minimum 5 Phase A sessions** before considering transition — 2 sessions is never enough (exception: ticket scope `t<number>` may transition after 1-2 sessions since the scope is a single issue)
+
 **Do NOT modify session timing parameters** (`delay_minutes`, `delay_minutes_offhours`, `max_duration_minutes`, `max_sessions`) in config.yaml — these are managed by the human operator.
+
+### 10.1 Ticket-Scoped Investigation Protocol
+
+When `phase.scope` or `autotest.scope` contains a GitLab ticket number (pure digits in config, normalized to `t<number>` internally by the runner script):
+
+**Scope detection:** Any scope entry that is pure digits is a GitLab ticket number. Examples: `scope: "3404"` → normalized to `t3404`; `scope: "vacation, 3404, 3405"` → `vacation, t3404, t3405`.
+
+**Phase A — Knowledge Acquisition for tickets:**
+1. Fetch the GitLab ticket: `GET /api/v4/projects/172/issues/<number>` (use `gitlab-access` skill)
+2. Fetch ALL comments: `GET /api/v4/projects/172/issues/<number>/notes`
+3. Identify the **parent module** from ticket labels, title, and content (e.g., if ticket is about vacation approval → parent module is `vacation`)
+4. Read existing vault notes for the parent module
+5. Investigate the specific area deeply — the bug, feature, or requirement described
+6. Write findings to `exploration/tickets/t<number>-investigation.md` (new vault note)
+7. Also enrich the parent module's vault notes with relevant discoveries
+
+**Phase B — Test Documentation for tickets:**
+1. Generate XLSX at `test-docs/t<number>/t<number>.xlsx`
+2. Test case IDs: `TC-T<number>-001`, `TC-T<number>-002`, etc.
+3. Suite name: `TS-T<number>-Regression` (primary) or `TS-T<number>-<Feature>`
+4. Focus on: regression test for the reported bug, edge cases from ticket comments, related happy-path and negative tests
+5. Tag each test case with the GitLab ticket number in the `requirement_ref` column
+6. Cross-reference parent module knowledge from the vault
+
+**Phase C — Autotest Generation for tickets:**
+1. Spec files: `e2e/tests/t<number>/t<number>-tc<NNN>.spec.ts`
+2. Data classes: `e2e/data/t<number>/T<number>Tc<NNN>Data.ts`
+3. Queries: `e2e/data/t<number>/queries/t<number>Queries.ts`
+4. Reuse existing page objects from the parent module's `e2e/pages/` directory
+5. Module value in `autotest_tracking`: `t<number>`
+6. Parent module's vault knowledge drives data generation and selector choices
+7. Create directories if they don't exist (`mkdir -p`)
+
+**Naming reference for ticket scope:**
+
+| Artifact | Pattern | Example (ticket 3404) |
+|----------|---------|----------------------|
+| Test ID | `TC-T<num>-<seq>` | `TC-T3404-001` |
+| XLSX | `test-docs/t<num>/t<num>.xlsx` | `test-docs/t3404/t3404.xlsx` |
+| Spec | `tests/t<num>/t<num>-tc<seq>.spec.ts` | `tests/t3404/t3404-tc001.spec.ts` |
+| Data class | `T<num>Tc<seq>Data` | `T3404Tc001Data` |
+| Data file | `data/t<num>/T<num>Tc<seq>Data.ts` | `data/t3404/T3404Tc001Data.ts` |
+| Queries | `data/t<num>/queries/t<num>Queries.ts` | `data/t3404/queries/t3404Queries.ts` |
+| Suite | `TS-T<num>-<Name>` | `TS-T3404-Regression` |
+| Vault note | `exploration/tickets/t<num>-investigation.md` | `exploration/tickets/t3404-investigation.md` |
+| Manifest key | `modules.t<num>` | `modules.t3404` |
+| SQLite module | `t<num>` | `WHERE module = 't3404'` |
 
 ---
 
 ## 11. Phase B — Test Documentation Generation
 
 Only when config.yaml has `phase.current: "generation"` and `phase.generation_allowed: true`.
+
+**Scope:** If `phase.scope` is not `"all"`, generate XLSX only for the specified module(s). Accepts a single name (`"vacation"`) or comma-separated list (`"vacation, statistics"`). Skip all modules not in scope.
 
 ### XLSX Format
 
@@ -515,7 +661,7 @@ test-docs/
 | **TS-\<Suite2\>** | Test cases for second test suite (e.g., TS-Vacation-Approval) |
 | ... | One TS- tab per test suite within the functional area |
 
-**Test suite naming:** `TS-<Area>-<Focus>` — e.g., `TS-Vacation-CRUD`, `TS-Vacation-Approval`, `TS-SickLeave-Lifecycle`, `TS-Reports-API`. Choose suites that group logically related test cases (typically 10-30 cases per suite).
+**Test suite naming:** `TS-<Area>-<Focus>` — e.g., `TS-Vacation-CRUD`, `TS-Vacation-Approval`, `TS-SickLeave-Lifecycle`, `TS-Reports-Submission`. Choose suites that group logically related test cases (typically 10-30 cases per suite).
 
 **Test case columns** (all TS- tabs):
 - Test ID (TC-AREA-NNN), Title, Preconditions, Steps, Expected Result, Priority, Type, Requirement Ref, Module/Component, Notes
@@ -530,6 +676,95 @@ test-docs/
 - Hyperlinks styled as blue underlined text
 - Tab colors: green for plan tabs, blue for TS- tabs
 
+### Test Step Writing Rules — UI-First (CRITICAL)
+
+Test steps describe **what a user does in the browser**, not API calls. This is the most important rule for Phase B.
+
+**Default: UI/frontend steps.** Every test case that represents a user-facing scenario MUST have steps written as browser actions:
+```
+CORRECT:
+1. Login as employee with sufficient vacation days
+2. Navigate to My Vacations page
+3. Click "Create a request" button
+4. In the creation dialog, select type "Regular", set start date to next Monday, end date to next Friday
+5. Set payment month to the first day of the vacation month
+6. Click "Send" button
+7. Verify success notification appears
+8. Verify new vacation row in the table with status "New"
+
+WRONG:
+1. POST /api/vacation/v1/vacations
+2. Body: {login, startDate, endDate, paymentType: REGULAR, ...}
+3. Verify response status 200
+```
+
+**When API/DB steps are appropriate (exceptions only):**
+- **Test endpoints** — clock manipulation (`PATCH /api/ttt/test/v1/clock`), employee sync, notification triggers — these have no UI equivalent
+- **Data verification** — checking DB state after a UI action (e.g., "Verify in DB: SELECT status FROM vacation WHERE id = <created_id>")
+- **State setup** — creating precondition state that the test itself doesn't create (see Setup Steps below)
+- **Test data teardown** — cleanup after test (delete created entities)
+- **Explicitly API-only features** — endpoints exposed to integrated projects, webhooks, service-to-service communication
+
+### Setup Steps — Creating Precondition State (CRITICAL)
+
+Many tests require **specific application state** that the test itself doesn't create. For example, "Cancel an APPROVED vacation" needs an APPROVED vacation to exist before the test begins. **The test documentation must include explicit setup steps for creating this state.**
+
+**Rule: If a test's preconditions describe state that doesn't naturally exist in the DB (e.g., "Vacation in APPROVED status", "CANCELED vacation with future dates"), the Steps column MUST include SETUP steps that create that state.** Without these, the autotest generator has to guess how to create the state, leading to fragile tests.
+
+**SETUP steps use API calls** because they are faster and more reliable than UI for state creation. The test's main verification steps remain UI-focused.
+
+```
+CORRECT — Cancel APPROVED vacation:
+  Preconditions: Employee with sufficient vacation days and a manager
+  Steps:
+    SETUP: Via API — create a REGULAR vacation for the employee (POST /api/vacation/v1/vacations)
+    SETUP: Via API — approve the vacation as manager (POST /api/vacation/v1/vacations/{id}/approve)
+    1. Login as the employee
+    2. Navigate to My Vacations page
+    3. Find the APPROVED vacation in the table
+    4. Click the cancel button on the vacation row
+    5. Confirm cancellation in the dialog
+    6. Verify vacation status changes to "Canceled"
+    CLEANUP: Via API — delete the vacation (DELETE /api/vacation/v1/vacations/{id})
+
+WRONG — Cancel APPROVED vacation:
+  Preconditions: Existing APPROVED vacation (assumes one exists in DB)
+  Steps:
+    1. Login as employee
+    2. Find APPROVED vacation
+    3. Cancel it
+    → Fails when no APPROVED vacation exists in the test environment
+```
+
+**When to include SETUP steps:**
+- Test needs a vacation in a specific status (NEW, APPROVED, REJECTED, CANCELED, PAID)
+- Test needs multiple vacations for the same employee (overlap test, pagination)
+- Test needs specific employee-manager relationship verified
+- Test needs clock/time manipulation
+- Test needs data in a state that only exists after a multi-step workflow (create → approve → pay)
+
+**SETUP step format:**
+- Prefix: `SETUP:` — clearly separates preparation from the actual test
+- Include the API endpoint and key parameters
+- Include the purpose (e.g., "create APPROVED vacation for cancellation test")
+
+**CLEANUP step format:**
+- Prefix: `CLEANUP:` — separates teardown from the test
+- Delete or revert any state created by SETUP steps
+- Always include cleanup to prevent test pollution
+
+**Step writing guidelines:**
+1. Use the user's perspective for main steps: "Click", "Navigate to", "Fill in", "Select", "Verify on page"
+2. Reference UI elements by their visible labels, not CSS selectors or API field names
+3. Include what the user should see after each significant action (notifications, status changes, table updates)
+4. Use `SETUP:` prefix for API/DB state creation before the main test flow
+5. Use `CLEANUP:` prefix for API/DB teardown after the main test flow
+6. Use `DB-CHECK:` prefix for data verification beyond what's visible in UI (e.g., "DB-CHECK: Verify vacation_days.days decreased by 5")
+7. The Preconditions column should describe data requirements with SQL query hints for the automation layer (e.g., "Employee in AV=false office. Query: SELECT e.login FROM employee e JOIN office o ON e.office_id = o.id WHERE o.advance_vacation = false AND e.enabled = true")
+8. The Notes column can reference API endpoints and DB tables for the automation layer, but main steps must remain UI-focused
+
+**Pure API test suites** — If a module has endpoints with no UI representation (service integration APIs, webhooks), create a separate suite prefixed `TS-<Area>-API` for those cases only. These are the exception, not the default.
+
 ### Generation Order
 
 Generate documentation in priority order defined in `MISSION_DIRECTIVE.md` § Priority Areas:
@@ -541,9 +776,11 @@ Generate documentation in priority order defined in `MISSION_DIRECTIVE.md` § Pr
 
 Within each priority group, generate the most complex/bug-prone area first (e.g., vacation before day-off, since vacation has more bugs and approval workflows).
 
+**Scope restriction:** If `phase.scope` specifies module(s) (not `"all"`), generate XLSX only for those modules regardless of priority order. For ticket-scoped entries (pure digits in config, normalized to `t<number>`), generate XLSX at `test-docs/t<number>/t<number>.xlsx` with test IDs `TC-T<number>-NNN`. See §10.1 for full ticket naming conventions.
+
 ### Generation Workflow
 
-Per functional area (in priority order above):
+Per functional area (in priority order above, or single module if scope is set):
 1. Focused knowledge check via QMD + vault notes + SQLite
 2. Identify gaps — if insufficient, investigate deeper first (see Knowledge Updates below)
 3. Check Qase for existing coverage — never duplicate
@@ -562,8 +799,15 @@ Phase B is not just generation — it requires **deeper, more specific investiga
 1. **Re-investigate the module in depth** — read the actual code paths (validation logic, error handling, state machines, permission checks), trace edge cases through the codebase, verify behavior on the live app, check boundary conditions in the database
 2. **Rewrite or substantially expand existing vault notes** — replace abstract summaries with concrete details: exact field names, validation rules with code snippets, error codes and messages, API request/response examples, database constraints, permission matrices, state transition diagrams
 3. **Create new notes** for feature-specific findings (e.g., form validation rules, API error responses, edge case behaviors) that weren't captured in Phase A's broader sweep
-4. **Only generate test cases** after the knowledge base for that module has been enriched to the point where every test case can reference specific, concrete details — not abstract descriptions
-5. **Pause generation** if knowledge is insufficient — investigate first, update vault and SQLite, then resume with improved knowledge
+4. **Mine GitLab tickets for the module** — search for all related tickets, read descriptions AND comments (comments contain the real bug details, reproduction steps, edge cases). Create test cases for confirmed bugs (regression tests) and for corner cases discovered in ticket comments. See §10 "GitLab Ticket Mining" for the full protocol.
+5. **Only generate test cases** after the knowledge base for that module has been enriched to the point where every test case can reference specific, concrete details — not abstract descriptions
+6. **Pause generation** if knowledge is insufficient — investigate first, update vault and SQLite, then resume with improved knowledge
+
+**UI investigation is essential for Phase B.** Since test steps are now UI-focused, you must explore the actual UI via Playwright before writing test cases:
+- Navigate the pages related to the module, take snapshots, identify button labels and form fields
+- Document the exact user workflow: which page, which button, which dialog, which fields
+- Note UI-specific behaviors: loading spinners, confirmation dialogs, error messages displayed to the user
+- Write discoveries to vault (`exploration/ui-flows/`) so they inform both Phase B step writing and Phase C automation
 
 The knowledge base should grow substantially during Phase B. A module note that was 300 words in Phase A should become 1500-3000 words after Phase B enrichment, with code snippets, validation rules, boundary values, and concrete behavioral details.
 
@@ -575,8 +819,8 @@ Only when config.yaml has `phase.current: "autotest_generation"` and `autotest.e
 
 ### Entry Conditions
 
-Phase C begins after Phase B is complete (all priority XLSX workbooks exist in `test-docs/`). Verify:
-1. All modules in `autotest.priority_order` have corresponding XLSX files in `test-docs/<module>/`
+Phase C begins after Phase B is complete for the modules in scope. Verify:
+1. The module(s) in `autotest.scope` (or all in `autotest.priority_order` if scope is `"all"`) have corresponding XLSX files in `test-docs/<module>/`
 2. The manifest exists at `autotests/manifest/test-cases.json` (if not, run `python3 autotests/scripts/parse_xlsx.py`)
 3. Dependencies installed (`autotests/node_modules/` exists, if not run `cd autotests && npm install`)
 
@@ -585,7 +829,7 @@ Phase C begins after Phase B is complete (all priority XLSX workbooks exist in `
 Generated tests follow a 5-layer Playwright + TypeScript architecture:
 
 ```
-Test Specs          autotests/e2e/tests/*.spec.ts       — scenario orchestration, tagged @regress/@smoke/@debug
+Test Specs          autotests/e2e/tests/<module>/*.spec.ts — scenario orchestration, tagged @regress/@smoke/@debug
     ↓
 Fixtures            autotests/e2e/fixtures/*.ts          — reusable multi-step workflows (plain classes, NOT test.extend)
     ↓
@@ -599,10 +843,13 @@ Playwright API
 **Critical architectural rules:**
 1. Fixtures are plain classes instantiated in the test body — never use `test.extend()`
 2. Config is per-test — each spec creates `new TttConfig()` then `new GlobalConfig(tttConfig)`
-3. No raw locators in spec files — all interactions go through page objects or fixtures
+3. **NEVER put `page.locator()` in spec files** — all selectors must be in page objects. If a page object lacks a method, ADD it there. Inlining locators in specs is the most common violation.
 4. No hardcoded test data in specs — all dynamic data lives in dedicated `*Data` classes
 5. Every verification step: `globalConfig.delay()` → assertion → screenshot capture
 6. Page objects use composition, not inheritance
+9. **Selectors: text-first, BEM banned.** Priority: text (`getByText`, `getByRole+name`) → role → structural (tag+containment) → partial class (`[class*='...']`). **BANNED: exact BEM classes** (`.navbar__*`, `.page-body__*`, `.drop-down-menu__*`) — they break across environments.
+7. Tests needing specific state (APPROVED/CANCELED vacation, etc.) must create it via API setup (`ApiVacationSetupFixture`) in the data class — never rely on pre-existing DB state. Try DB query first (fast), fall back to API creation if not found. Data class `create()` accepts optional `request?: APIRequestContext` for this.
+8. **Three timeout levels**: test timeout (180s total), step timeout (`stepTimeoutMs` in `global.yml`, 30s — applied as Playwright `actionTimeout`/`navigationTimeout` to every click/fill/goto), expect timeout (10s per assertion). Use `globalConfig.stepTimeoutMs` for custom waits. Never increase timeouts to fix broken selectors — investigate the selector instead.
 
 ### Session Protocol for Phase C
 
@@ -613,8 +860,8 @@ Playwright API
 - Determine next test cases to generate
 
 **2. Test Case Selection:**
-- **Scope filter:** If `autotest.scope` is not `"all"`, restrict to that single module only (e.g., `scope: vacation` → only generate tests from the vacation workbook). When set to `"all"`, iterate through modules in `autotest.priority_order`.
-- Follow `autotest.priority_order` (modules) × `autotest.type_priority` (UI/API/hybrid)
+- **Scope filter:** If `autotest.scope` is not `"all"`, restrict to the specified module(s) only. Accepts a single name (`"vacation"`) or comma-separated list (`"vacation, statistics"`). When set to `"all"`, iterate through modules in `autotest.priority_order`.
+- Follow `autotest.priority_order` (modules) × `autotest.type_priority` (UI first, then hybrid)
 - Skip test cases where `automation_status` is not `pending`
 - Skip test IDs matching `autotest.skip_patterns`
 - Select up to `autotest.max_tests_per_session` test cases
@@ -625,12 +872,12 @@ a. **Enrich from vault** (mandatory before writing any code):
 
    Search the knowledge base for information specific to the test case's module and feature. What you find directly shapes the generated code — selectors, assertions, data choices, and edge case handling.
 
-   **Search by test type:**
+   **Search targets:**
 
-   | Test type | Vault search targets | SQLite queries |
-   |-----------|---------------------|----------------|
-   | **UI test** | `modules/<module>.md` for page structure; `exploration/ui-flows/` for navigation paths, dialog names, known load behaviors; vault notes mentioning selectors, CSS classes, `getByRole` patterns | `exploration_findings WHERE method IN ('playwright','ui+database') AND target LIKE '%<module>%'` |
-   | **API test** | `modules/<module>-*deep-dive*.md` for endpoint paths, validation rules, error codes, request/response formats; `exploration/api-findings/` for live-tested API behaviors | `exploration_findings WHERE method IN ('api','api+database') AND target LIKE '%<module>%'` |
+   | Area | Vault search targets | SQLite queries |
+   |------|---------------------|----------------|
+   | **UI interactions** | `modules/<module>.md` for page structure; `exploration/ui-flows/` for navigation paths, dialog names, button labels, form fields, known load behaviors; vault notes mentioning selectors, `getByRole` patterns | `exploration_findings WHERE method IN ('playwright','ui+database') AND target LIKE '%<module>%'` |
+   | **Business logic** | `modules/<module>-*deep-dive*.md` for validation rules, error codes, state machines, permission checks | `exploration_findings WHERE target LIKE '%<module>%'` |
    | **Data setup** | `exploration/data-findings/` for schema knowledge, valid FK relationships; module notes for user role requirements, precondition states | `design_issues WHERE related_modules LIKE '%<module>%'` for known data constraints |
 
    **Concrete search steps:**
@@ -657,6 +904,14 @@ a. **Enrich from vault** (mandatory before writing any code):
    - Design issues flag data constraints → inform test data class construction (which users, which dates, which states are safe)
    - Module health notes mention timing quirks → add appropriate waits in fixtures
 
+   **Read the test case preconditions from the manifest.** The `preconditions` and `notes` fields contain the data generation contract — explicit SQL queries, employee criteria, and state requirements. These are **requirements, not suggestions**:
+   - Parse ALL preconditions and build a compound DB query that satisfies them simultaneously (e.g., AV=false office AND sufficient days AND has manager AND no conflicts — all in one query)
+   - Consult the vault for **implicit criteria** not stated in preconditions — e.g., approval flow requires `manager_id IS NOT NULL`, payment requires APPROVED+EXACT status, CPO self-approval needs ROLE_DEPARTMENT_MANAGER
+   - Consider the full test workflow: if the test creates→approves→pays, the employee must have a manager who can approve, sufficient days, and the office type must support the payment flow
+   - Use `ORDER BY random() LIMIT 1` so different tests select different employees — prevents calendar contention
+   - After fetching data, validate it satisfies all criteria before returning
+   - **Keep data realistic:** vacations max 1–1.5 years ahead (not 2030+), use enabled employees with normal balances, respect open accounting periods. Unrealistic data breaks app workflows. Compute dates from `new Date()` + week offset, not hardcoded far-future years.
+
    **When vault knowledge is insufficient:**
    If the vault lacks critical information for a test case (e.g., no selector patterns for a page, no API endpoint details, no data schema knowledge):
    1. Use `page-discoverer` skill logic: navigate via playwright-vpn, take snapshot, identify selectors
@@ -669,23 +924,52 @@ b. **Check existing code:**
    - Scan `autotests/e2e/fixtures/` — can existing fixtures cover the workflow?
    - If reusable: note which to import. If not: plan new page object or fixture.
 
-c. **Generate artifacts:**
-   - **Data class** (`e2e/data/{Module}{TestId}Data.ts`): constructor with env defaults, `create()` factory supporting all three modes (`static`/`dynamic`/`saved`), DB queries if needed. Use `savedDataStore.ts` for `saved` mode persistence. See `autotest-generator` skill references for the pattern.
-   - **Page object** (`e2e/pages/*.ts`): only if interactions not covered by existing pages
-   - **Fixture** (`e2e/fixtures/*.ts`): only if workflow not covered by existing fixtures
-   - **Test spec** (`e2e/tests/{module}-{test-id}.spec.ts`): follows the standard pattern with login → workflow → verification → cleanup
-   - **Doc file** (`docs/{module}_{test_id}.md`): Title + Detailed description with Steps and Data
+c. **Generate artifacts (UI-first):**
 
-d. **Verify:**
-   - Run: `cd autotests && npx playwright test e2e/tests/{spec} --project=chrome-headless`
+   Before writing any code, read the selector and architecture rules in `references/framework-spec.md` § Selector Priority and § Timeouts. These rules are non-negotiable.
+
+   - **Data class** (`e2e/data/<module>/{Module}{TestId}Data.ts`): The `create()` factory MUST implement dynamic mode by translating ALL test case preconditions into a compound DB query that satisfies them simultaneously. Think through the full test workflow — if the test creates→approves→pays a vacation, the employee must have a manager (for approval), sufficient days, correct office type, and the right role. Consult vault notes for implicit criteria not stated in preconditions (e.g., approval requires manager_id IS NOT NULL). Use `ORDER BY random() LIMIT 1` so different tests pick different employees. After fetching, validate the data satisfies all criteria. Constructor defaults are fallbacks for static mode only. Implement all three modes. Never hardcode the same username across multiple data classes. See `generation-guidelines.md` § "Smart Data Generation" for detailed patterns.
+
+   - **Page object** (`e2e/pages/*.ts`): Most tests WILL need page objects. If an existing page object doesn't have the method you need, **ADD the method to the page object** — never inline a locator in the spec file.
+
+   - **Fixture** (`e2e/fixtures/*.ts`): only if workflow not covered by existing fixtures
+
+   - **Test spec** (`e2e/tests/<module>/{module}-{test-id}.spec.ts`): **UI-first** — uses `{ page }` from Playwright, logs in via browser, interacts through page objects, verifies visible results. Pattern: login → navigate → interact → verify → cleanup (logout + page.close())
+     For ticket-scoped tests: `e2e/tests/t<number>/t<number>-tc<seq>.spec.ts`, data class `e2e/data/t<number>/T<number>Tc<seq>Data.ts`. See §10.1 for full naming table.
+
+   **Selector rules (inlined — these MUST be followed for every locator):**
+   1. **Text-first**: `getByText("Create a request")`, `getByRole("button", { name: "Save" })` — most stable
+   2. **Role-based**: `getByRole("dialog")`, `getByRole("heading")` — when semantic HTML exists
+   3. **Structural**: `table tbody tr`, `dialog.locator("button")` — tag + containment, no BEM
+   4. **Partial class**: `[class*='notification']`, `[class*='menu']` — when text/role unavailable
+   5. **BEM classes are BANNED**: never use `.navbar__*`, `.page-body__*`, `.drop-down-menu__*` — they break across environments
+
+   **NEVER use `page.locator()` directly in spec files.** All selectors must be encapsulated in page objects. If you need an interaction not covered by existing page objects, add a method to the page object — do not take a shortcut by inlining a locator in the spec. This is the most common architecture violation and it MUST NOT happen.
+
+   **Authentication strategy:**
+   | Scenario | Auth method |
+   |----------|-----------|
+   | **UI business scenarios** (default) | Browser login via `LoginFixture` — any employee |
+   | **Test endpoint calls** (clock, sync) | `API_SECRET_TOKEN` — authenticates as token owner only |
+   | **API calls needing user context** | Not available via API. Use UI login or create data as token owner (pvaynmaster) |
+
+d. **Selector audit** (mandatory before running):
+   Verify the generated code follows selector rules:
+   - Zero `page.locator()` calls in the spec file — all interactions via page objects or fixtures
+   - Zero exact BEM class selectors (`.navbar__*`, `.page-body__*`, `.drop-down-menu__*`)
+   - Text-based or role-based selectors used wherever possible
+   - If violations found, refactor into page objects before proceeding to run
+
+e. **Verify:**
+   - Run: `cd autotests && npx playwright test e2e/tests/<module>/{spec} --project=chrome-headless`
    - If passes: mark as `verified` in tracking
    - If fails: analyze error, attempt fix (up to `autotest.auto_fix_attempts`)
      - Selector failure → use playwright-vpn MCP for live snapshot, search vault for patterns
-     - Timeout → check if page navigation is correct, adjust wait conditions
+     - Timeout at 30s → the selector is wrong, not the timeout. Investigate the element.
      - Data issue → verify test data against live DB
    - If still fails after max attempts: mark as `failed`, log error, move to next test
 
-e. **Track:**
+f. **Track:**
    - Update `autotest_tracking` table: automation_status, spec_file, data_class, vault_notes_used
    - Update manifest JSON: automation_status field
 
@@ -719,6 +1003,14 @@ mcp__sqlite-analytics__execute_sql(sql: "INSERT INTO exploration_findings (env, 
 - Run `qmd embed` if vault notes were created or substantially updated
 - Commit generated code
 
+**6. Auto-stop when scope is fully covered:**
+After each session, check if all test cases in scope are covered. Compare the number of tracked (non-pending) entries against the manifest total:
+```sql
+-- Covered count (verified + failed + blocked)
+SELECT COUNT(*) FROM autotest_tracking WHERE automation_status != 'pending' AND module IN (<scope_modules>)
+```
+Compare against the manifest total for those modules. If covered >= manifest total, the scope is fully covered. Set `autonomy.stop: true` in config.yaml and log "Phase C complete — all test cases in scope covered" to `_SESSION_BRIEFING.md`. The runner also checks this independently after each session as a safety net.
+
 ### Naming Conventions
 
 | Artifact | Pattern | Example |
@@ -727,7 +1019,7 @@ mcp__sqlite-analytics__execute_sql(sql: "INSERT INTO exploration_findings (env, 
 | Data class | `{Module}{TestId}Data` | `VacationTc001Data` |
 | Fixture | `{Feature}Fixture` | `VacationCreationFixture` |
 | Page object | `{PageName}Page` or `{Dialog}Dialog` | `MyVacationsPage` |
-| Doc file | `docs/{module}_{test_id}.md` | `docs/vacation_tc001.md` |
+
 
 ### Safety Rules
 
@@ -739,9 +1031,19 @@ mcp__sqlite-analytics__execute_sql(sql: "INSERT INTO exploration_findings (env, 
 
 ### Phase Transition to Phase C
 
-When Phase B is complete and `autotest.enabled` is `true`:
-- **hybrid mode**: Present Phase C readiness to human, wait for config update
-- **full mode** (with `auto_phase_transition: true`): When all priority modules have XLSX in `test-docs/` and `autotest.enabled: true`, automatically update `phase.current: "autotest_generation"`. Log transition to `_SESSION_BRIEFING.md`.
+**Phase B→C transition is human-approved for module scope.** Premature transition produces shallow test documentation with fewer test cases and lower quality. Phase B needs enough sessions to:
+- Mine GitLab tickets thoroughly (descriptions AND comments for all related bugs)
+- Explore the full UI via Playwright (every page, every dialog, every form field)
+- Enrich vault notes to 1500+ words per module with code snippets and validation rules
+- Generate a comprehensive XLSX with 80+ test cases per major module (including regression tests from bugs)
+
+**When Phase B believes it is complete (module scope):**
+1. Log a "Phase B readiness report" to `_SESSION_BRIEFING.md` with: total test cases generated, suites covered, GitLab tickets mined, vault notes enriched
+2. **Do NOT auto-transition.** Set `autonomy.stop: true` and wait for human review
+3. The human will review the XLSX, check test case quality and coverage, then manually set `phase.current: "autotest_generation"` if satisfied
+4. If the human wants more depth, they will restart Phase B with `autonomy.stop: false`
+
+**Exception — ticket scope:** When scope is a ticket number (`t<number>`), B→C auto-transition is allowed if `auto_phase_transition: true`. Ticket scope produces a small focused XLSX (typically 5-20 test cases), so human review is less critical. The agent should auto-transition to Phase C after generating the XLSX and populating the manifest.
 
 ---
 
@@ -749,6 +1051,8 @@ When Phase B is complete and `autotest.enabled` is `true`:
 
 ### GitLab — Code via local clone, tickets/MRs/pipelines via curl REST API
 The GitLab MCP server (`@modelcontextprotocol/server-gitlab`) is registered but **exposes no tools** on this self-hosted GitLab CE 16.11 instance. Always use **curl with the PAT** (Personal Access Token) stored in `.claude/.mcp.json` → `env.GITLAB_PERSONAL_ACCESS_TOKEN`. Add `--noproxy "gitlab.noveogroup.com"` to all curl calls. See the **gitlab-access** skill (`.claude/skills/gitlab-access/SKILL.md`) for full API reference, search patterns, attachment downloads, and pipeline operations.
+
+**CRITICAL: Always read ticket COMMENTS, not just descriptions.** Most TTT bug knowledge lives in comments — reproduction steps, root cause analysis, edge cases, screenshots. Use `GET /api/v4/projects/172/issues/:id/notes` to fetch all comments for a ticket. See §10 "GitLab Ticket Mining" for the full protocol.
 ### Confluence — Requirements via MCP. Assess accuracy against code and live behavior.
 ### Figma — Designs via MCP. Compare with implementation and live behavior.
 ### Qase — Always check existing tests before generating. Avoid duplication.

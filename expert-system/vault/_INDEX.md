@@ -45,6 +45,7 @@
 - [[modules/companystaff-integration]] — CS sync across 3 services, V2 Feign client, 9 post-processors, 7 bugs
 - [[modules/auto-reject-report-flow]] — Auto-reject: trigger, UI on My Tasks, BO leak, no data on any env
 - [[modules/admin-panel-deep-dive]] — **[S55]** Code-level: ProjectController, EmployeeController (missing @PreAuthorize), PmToolSync, 10 design issues
+- [[modules/contractor-lifecycle-architecture]] — **[S77]** Contractor subsystem: dual sync, no vacation sync, CS statuses, manager hierarchy
 
 ## Modules — Frontend
 - [[modules/frontend-app]] — React SPA, 500+ source files
@@ -74,7 +75,7 @@
 - [[analysis/accounting-form-validation-rules]] — Period, payment, correction validators
 - [[analysis/admin-calendar-form-validation-rules]] — Calendar CRUD, events, tracker config
 - [[analysis/frontend-backend-validation-gaps]] — **[S56]** Cross-module: 25 gaps, day-off/accounting zero frontend validation
-- [[analysis/cross-service-integration]] — **[S57]** RabbitMQ (8 exchanges, 11 events), CS sync (3 services, 9 post-processors), Calendar-Vacation interaction, WebSocket (5 topics), 10 design issues
+- [[analysis/cross-service-integration]] — **[S57]** RabbitMQ, CS sync, Calendar-Vacation, WebSocket, 10 design issues
 
 ## Patterns
 - [[patterns/vacation-day-calculation]] — Regular vs Advance strategies, formulas
@@ -103,23 +104,20 @@
 - [[investigations/cs-office-settings-unimplemented]] — **[S67]** #3026: 3 CS fields unused
 - [[investigations/maternity-leave-lifecycle]] — **[S67]** Complete event-driven lifecycle
 - [[investigations/office-calendar-mapping-2024]] — **[S67]** 11 offices migrated calendars
-- [[investigations/statistics-effective-bounds-norm]] — **[S72]** effectiveBounds(), 3 sync paths, budget norm, normForDate, 10 test gaps
-- [[investigations/planner-close-by-tag-implementation]] — **[S73+S74]** #2724: CRUD API, 2-path closing, substring matching, permissions, frontend modal, 10+2 design issues, **PATCH 500 bug**, XSS concern, deployment gap (live-tested S74)
-- [[investigations/pm-tool-ratelimit-implementation]] — **[S73]** #3401: Guava RateLimiter, 50 RPM, shared singleton, blocking acquire
-- [[investigations/vacation-av-true-multiYear-balance-3361]] — **[S75]** #3361: AV=true currentYear→availablePaidDays fix, daysLimitation reducer, 3 sub-bugs
-- [[investigations/statistics-caffeine-caching-performance-3337]] — **[S75]** #3337: Materialized view pattern, 8 MRs, RabbitMQ events, event type discrimination, 3 QA bugs
-- [[investigations/confirmation-notification-bug-3368]] — **[S76]** #3368: 4 MRs, By Employee missing stats, norm fallback, approve period fix, officeId resolution
-- [[investigations/planner-copy-table-closed-filter-3386]] — **[S76]** #3386: 2 MRs, closed parameter filter, copy table fix, auto-refresh
-- [[investigations/vacation-past-date-validation-3369]] — **[S77]** #3369: VacationCreateValidator past-date check, boundary, missing i18n, #3360 balance fix
-- [[investigations/innovationlab-banner-3392]] — **[S78]** #3392: InnovationLab banner, 28 reqs, 3 states, compiled ES module, TTT overrides, role bypass, i18n
-- [[investigations/ci-build-number-3036]] — **[S78]** #3036: CI build number in footer, actuator-based, CI always-rebuild, frontend reverted
-
-## Modules (continued)
-- [[modules/contractor-lifecycle-architecture]] — **[S77]** Contractor subsystem: dual sync, no vacation sync, CS statuses, manager hierarchy, Sprint 16 prep
+- [[investigations/statistics-effective-bounds-norm]] — **[S72]** effectiveBounds(), 3 sync paths, budget norm
+- [[investigations/planner-close-by-tag-implementation]] — **[S73+S74]** #2724: CRUD API, 2-path closing, permissions
+- [[investigations/pm-tool-ratelimit-implementation]] — **[S73]** #3401: Guava RateLimiter, 50 RPM
+- [[investigations/vacation-av-true-multiYear-balance-3361]] — **[S75]** #3361: AV=true balance fix
+- [[investigations/statistics-caffeine-caching-performance-3337]] — **[S75]** #3337: Materialized view pattern
+- [[investigations/confirmation-notification-bug-3368]] — **[S76]** #3368: 4 MRs, By Employee missing stats
+- [[investigations/planner-copy-table-closed-filter-3386]] — **[S76]** #3386: copy table fix
+- [[investigations/vacation-past-date-validation-3369]] — **[S77]** #3369: past-date check
+- [[investigations/innovationlab-banner-3392]] — **[S78]** #3392: InnovationLab banner
+- [[investigations/ci-build-number-3036]] — **[S78]** #3036: CI build number in footer
 
 ## Exploration — UI Flows
 - [[exploration/ui-flows/app-navigation]] — Navigation structure, 7 top-level items
-- [[exploration/ui-flows/vacation-pages]] — Vacation creation form, day-off tab, chart
+- [[exploration/ui-flows/vacation-pages]] — **[S30]** Vacation pages: login, navigation, My Vacations, creation dialog, request details, Employee Requests, chart, vacation days
 - [[exploration/ui-flows/day-off-pages]] — Day-off UI pages and interactions
 - [[exploration/ui-flows/reporting-and-other-pages]] — My Tasks, Planner, Confirmation, Statistics
 - [[exploration/ui-flows/sick-leave-pages]] — 3 views: employee, manager, accounting
@@ -137,6 +135,7 @@
 - [[exploration/ui-flows/statistics-ui-deep-exploration]] — Tab visibility, filters, exports
 - [[exploration/ui-flows/sick-leave-ui-verification]] — My Sick Leaves vs Accounting columns
 - [[exploration/ui-flows/sick-leave-crud-lifecycle]] — Full CRUD, validation, status transitions
+- [[exploration/ui-flows/dayoff-manager-approval-flow]] — **[S47]** Manager approval: 5 sub-tabs, 4 action buttons, WeekendDetailsModal, redirect dialog, optional approvers edit, 15 selectors
 
 ## Exploration — API Findings
 - [[exploration/api-findings/vacation-crud-api-testing]] — Full CRUD, 6 bugs (3 HIGH NPEs)
@@ -217,14 +216,16 @@
 - [[debt/vacation-service-debt]] — 4 bugs, 2 security, schema debt
 - [[debt/planner-ordering-debt]] — Dual ordering, 9 issues
 
-## Phase B — Generated Test Documentation (10 WORKBOOKS, 1090 CASES, 132 TABS)
-- **Vacation** (S58–S77): `vacation/vacation.xlsx` (18 tabs, 173 cases) — 14 suites + Test Data
-- **Sick Leave** (S59–S72): `sick-leave/sick-leave.xlsx` (10 tabs, 120 cases) — 6 suites + Test Data
-- **Day-Off** (S59–S71): `day-off/day-off.xlsx` (10 tabs, 108 cases) — 6 suites + Test Data
-- **Reports** (S60–S76): `reports/reports.xlsx` (12 tabs, 115 cases) — 8 suites + Test Data
-- **Accounting** (S61–S71): `accounting/accounting.xlsx` (10 tabs, 92 cases) — 6 suites + Test Data
-- **Admin** (S62–S76): `admin/admin.xlsx` (12 tabs, 92 cases) — 8 suites + Test Data
-- **Statistics** (S63–S75): `statistics/statistics.xlsx` (13 tabs, 138 cases) — 9 suites + Test Data
-- **Security** (S64–S71): `security/security.xlsx` (12 tabs, 92 cases) — 8 suites + Test Data
-- **Cross-Service** (S66–**S78**): `cross-service/cross-service.xlsx` (**10 tabs, 52 cases**) — **6 suites** + Test Data
-- **Planner** (S68–S76): `planner/planner.xlsx` (15 tabs, 108 cases) — 11 suites + Test Data
+## Phase B v2 — Generated Test Documentation (UI-First)
+- **Vacation** (S30): `vacation/vacation.xlsx` (14 tabs, 109 cases) — 11 suites, UI-first test steps
+  - TS-Vac-CRUD (20), TS-Vac-Lifecycle (10), TS-Vac-Approval (17), TS-Vac-Payment (8)
+  - TS-Vac-DayCalc (8), TS-Vac-DayCorrection (5), TS-Vac-Chart (5), TS-Vac-Permissions (9)
+  - TS-Vac-Validation (13), TS-Vac-Notifications (7), TS-Vac-Integration (7)
+- **Day-Off** (S48+S49): `day-off/day-off.xlsx` (11 tabs, 121 cases) — 8 suites, UI-first test steps
+  - TS-DayOff-Lifecycle (17), TS-DayOff-Approval (20), TS-DayOff-CalendarConflict (11)
+  - TS-DayOff-Search (12), TS-DayOff-Validation (12), TS-DayOff-Permissions (9)
+  - TS-DayOff-Notifications (11), TS-DayOff-Regression (29)
+
+## Exploration — Tickets (GitLab Mining)
+- [[exploration/tickets/day-off-ticket-findings]] — **[S46]** 25+ tickets mined, 20+ bugs, 6 categories: calendar cascade, transfer bugs, UI display, availability chart, cross-feature, feature design
+- [[exploration/tickets/t3404-investigation]] — **[S59]** #3404: Day-off transfer approve period changes, 2 bugs (ST-1 boundary, ST-3 incomplete)

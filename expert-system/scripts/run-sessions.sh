@@ -127,6 +127,28 @@ preflight() {
     log "Preflight OK"
 }
 
+# ── Scope normalization ───────────────────────────────────────────────────────
+# Pure-digit entries are GitLab ticket numbers → prefix with 't'
+# "all" → "all", "vacation" → "vacation", "3404" → "t3404", "vacation, 3404" → "vacation, t3404"
+normalize_scope() {
+    local raw="$1"
+    [[ "$raw" == "all" ]] && { echo "all"; return; }
+    local result="" part
+    IFS=',' read -ra parts <<< "$raw"
+    for part in "${parts[@]}"; do
+        part=$(echo "$part" | xargs)  # trim whitespace
+        [[ "$part" =~ ^[0-9]+$ ]] && part="t${part}"
+        result="${result:+${result}, }${part}"
+    done
+    echo "$result"
+}
+
+# Extract raw ticket numbers from normalized scope (e.g., "t3404, vacation, t3405" → "3404 3405")
+extract_ticket_numbers() {
+    local scope="$1"
+    echo "$scope" | tr ',' '\n' | sed 's/^ *//;s/ *$//' | grep '^t[0-9]*$' | sed 's/^t//' | tr '\n' ' '
+}
+
 # ── Config parsing ────────────────────────────────────────────────────────────
 parse_config() {
     MAX_SESSIONS=$(read_yaml "autonomy.max_sessions")
@@ -140,6 +162,15 @@ parse_config() {
     OFFHOURS_UTC=$(read_yaml "session.offhours_utc")
     MAX_DURATION_MINUTES=$(read_yaml "session.max_duration_minutes")
     PHASE=$(read_yaml "phase.current")
+    PHASE_SCOPE=$(normalize_scope "$(read_yaml 'phase.scope' 2>/dev/null || echo 'all')")
+    AUTOTEST_SCOPE=$(normalize_scope "$(read_yaml 'autotest.scope' 2>/dev/null || echo 'all')")
+
+    # Promo peak hours config
+    PROMO_ENABLED=$(read_yaml "promo.enabled" 2>/dev/null || echo "false")
+    PROMO_PEAK_HOURS=$(read_yaml "promo.peak_hours_utc" 2>/dev/null || echo "")
+    PROMO_WEEKDAYS_ONLY=$(read_yaml "promo.weekdays_only" 2>/dev/null || echo "true")
+    PROMO_EXPIRES=$(read_yaml "promo.expires" 2>/dev/null || echo "")
+    PROMO_BUFFER=$(read_yaml "promo.buffer_minutes" 2>/dev/null || echo "40")
 
     STATE_FILE="$LOG_DIR/runner-state.json"
 
@@ -177,6 +208,106 @@ get_current_delay() {
         fi
     fi
     echo "$DELAY_MINUTES"
+}
+
+# ── Promo peak hours ────────────────────────────────────────────────────────
+
+is_promo_active() {
+    # Check if promo feature is enabled and not expired
+    [[ "$PROMO_ENABLED" != "True" && "$PROMO_ENABLED" != "true" ]] && return 1
+    [[ -z "$PROMO_PEAK_HOURS" ]] && return 1
+
+    if [[ -n "$PROMO_EXPIRES" ]]; then
+        local today
+        today=$(date -u +%Y-%m-%d)
+        [[ "$today" > "$PROMO_EXPIRES" ]] && return 1
+    fi
+
+    # Weekdays only check
+    if [[ "$PROMO_WEEKDAYS_ONLY" == "True" || "$PROMO_WEEKDAYS_ONLY" == "true" ]]; then
+        local dow
+        dow=$(date -u +%u)  # 1=Mon ... 7=Sun
+        (( dow > 5 )) && return 1
+    fi
+
+    return 0
+}
+
+is_promo_peak() {
+    # Returns 0 if currently inside promo peak hours
+    is_promo_active || return 1
+
+    local hour start end_part end
+    hour=$(date -u +%-H)
+    start="${PROMO_PEAK_HOURS%%:*}"
+    start="${start%%:*}"  # handle "12:00" -> "12"
+    end_part="${PROMO_PEAK_HOURS##*-}"
+    end="${end_part%%:*}"
+    start=$((10#$start)); end=$((10#$end)); hour=$((10#$hour))
+
+    if (( start <= end )); then
+        (( hour >= start && hour < end )) && return 0
+    else
+        (( hour >= start || hour < end )) && return 0
+    fi
+    return 1
+}
+
+is_promo_buffer() {
+    # Returns 0 if starting a session now would likely overlap into peak hours
+    is_promo_active || return 1
+    is_promo_peak && return 1  # already in peak — handled separately
+
+    local now_minutes start peak_start_minutes minutes_until_peak
+    now_minutes=$(( $(date -u +%-H) * 60 + $(date -u +%-M) ))
+    start="${PROMO_PEAK_HOURS%%:*}"
+    start="${start%%:*}"
+    peak_start_minutes=$(( 10#$start * 60 ))
+
+    if (( peak_start_minutes > now_minutes )); then
+        minutes_until_peak=$(( peak_start_minutes - now_minutes ))
+    else
+        minutes_until_peak=$(( 1440 - now_minutes + peak_start_minutes ))
+    fi
+
+    (( minutes_until_peak <= PROMO_BUFFER && minutes_until_peak > 0 )) && return 0
+    return 1
+}
+
+wait_for_offpeak() {
+    # If in promo peak or buffer zone, sleep until peak ends
+    parse_config  # re-read (promo may have been toggled)
+
+    local end_part end_hour now_minutes end_minutes wait_minutes
+
+    if is_promo_peak; then
+        end_part="${PROMO_PEAK_HOURS##*-}"
+        end_hour="${end_part%%:*}"
+        now_minutes=$(( $(date -u +%-H) * 60 + $(date -u +%-M) ))
+        end_minutes=$(( 10#$end_hour * 60 ))
+        if (( end_minutes > now_minutes )); then
+            wait_minutes=$(( end_minutes - now_minutes ))
+        else
+            wait_minutes=$(( 1440 - now_minutes + end_minutes ))
+        fi
+        log "PROMO: Peak hours active (${PROMO_PEAK_HOURS} UTC). Waiting ${wait_minutes} minutes until off-peak."
+        sleep $(( wait_minutes * 60 ))
+        return
+    fi
+
+    if is_promo_buffer; then
+        end_part="${PROMO_PEAK_HOURS##*-}"
+        end_hour="${end_part%%:*}"
+        now_minutes=$(( $(date -u +%-H) * 60 + $(date -u +%-M) ))
+        end_minutes=$(( 10#$end_hour * 60 ))
+        if (( end_minutes > now_minutes )); then
+            wait_minutes=$(( end_minutes - now_minutes ))
+        else
+            wait_minutes=$(( 1440 - now_minutes + end_minutes ))
+        fi
+        log "PROMO: Buffer zone — session would overlap peak hours. Waiting ${wait_minutes} minutes until off-peak."
+        sleep $(( wait_minutes * 60 ))
+    fi
 }
 
 # ── State management ─────────────────────────────────────────────────────────
@@ -292,22 +423,90 @@ After bootstrap, begin Orientation (§10 Sessions 1-3):
 
 At session end, follow §9.3 (update all underscore-prefixed files).
 PROMPT
+    elif [[ "$phase" == "generation" ]]; then
+        cat <<PROMPT
+This is session ${session_num}. Phase: generation (Phase B). autonomy.mode is "full" — do not wait for human approval.
+
+Follow §11 (Phase B — Test Documentation Generation) session protocol:
+1. Read config.yaml — check phase.scope for module restriction
+2. Read _SESSION_BRIEFING.md — if it references a different phase, execute Phase Reset Protocol (§9.5) first
+3. Read _INVESTIGATION_AGENDA.md, MISSION_DIRECTIVE.md
+4. Query SQLite for recent activity and test_case_tracking progress
+5. If scope restricts to a specific module, work ONLY on that module
+
+For the target module:
+a. Enrich knowledge first — explore the UI via Playwright, read vault notes, check code
+b. Mine GitLab tickets: search related issues, read descriptions AND comments (comments contain bugs, edge cases, reproduction steps)
+c. Create test cases from bug reports — each confirmed bug = regression test case, tag with ticket number
+d. Write test steps as UI/browser actions (login, navigate, click, fill, verify) — NOT API calls
+c. API steps only for: test endpoints (clock), data verification (DB checks), features with no UI
+d. Include SQL query hints in Preconditions for dynamic test data generation
+e. Generate the Python script and XLSX workbook
+f. Track cases in test_case_tracking table
+
+CRITICAL: Test steps MUST describe what a user does in the browser. See §11 "Test Step Writing Rules" for correct vs wrong examples.
+
+$(
+TICKET_NUMS=$(extract_ticket_numbers "$PHASE_SCOPE")
+if [[ -n "$TICKET_NUMS" ]]; then
+    cat <<TICKET_BLOCK
+
+TICKET SCOPE ACTIVE — this scope includes GitLab ticket(s): ${TICKET_NUMS}
+For each ticket number, follow §10.1 Ticket-Scoped Investigation Protocol (Phase B):
+- Generate XLSX at test-docs/t<number>/t<number>.xlsx
+- Use test case IDs: TC-T<number>-001, TC-T<number>-002, ...
+- Suite name: TS-T<number>-Regression (or TS-T<number>-<Feature>)
+- Focus test cases on the ticket's requirements, bug scenario, and edge cases from comments
+- Include regression tests for the reported bug
+- Tag each test case with the GitLab ticket number in requirement_ref column
+- Cross-reference parent module knowledge for context
+TICKET_BLOCK
+fi
+)
+
+$(if (( session_num % 5 == 0 )); then echo "This is session ${session_num} (multiple of 5) — also run maintenance per §9.4."; fi)
+
+At session end, follow §9.3 (update all underscore-prefixed files).
+PROMPT
     elif [[ "$phase" == "autotest_generation" ]]; then
         cat <<PROMPT
 This is session ${session_num}. Phase: autotest_generation (Phase C). autonomy.mode is "full" — do not wait for human approval.
 
 Follow §12 (Phase C — Autotest Generation) session protocol:
 1. Read config.yaml (check autotest.* settings)
-2. Read autotests/manifest/test-cases.json for test case inventory
-3. Query SQLite autotest_tracking for current progress
+2. Read _SESSION_BRIEFING.md — if it references a different phase, execute Phase Reset Protocol (§9.5) first
+3. Read autotests/manifest/test-cases.json for test case inventory
+4. Query SQLite autotest_tracking for current progress
 4. Select next test cases to generate per autotest.priority_order × autotest.type_priority
-5. For each selected test case (up to autotest.max_tests_per_session):
+5. Read selector rules: .claude/skills/autotest-generator/references/framework-spec.md § Selector Priority
+6. For each selected test case (up to autotest.max_tests_per_session):
    a. Enrich from vault: search QMD for module knowledge, read relevant notes
    b. Check existing page objects and fixtures for reuse
    c. Generate: data class, page objects (if needed), fixtures (if needed), test spec
-   d. Verify: run the test via npx playwright test --project=chrome-headless
-   e. Fix failures (up to autotest.auto_fix_attempts): use playwright-vpn for selector discovery
-   f. Track: update SQLite autotest_tracking + manifest JSON
+      SELECTOR RULES: text-first (getByText, getByRole+name), then role, then structural (tag+containment), then partial class ([class*='...']).
+      BANNED: exact BEM classes (.navbar__*, .page-body__*, .drop-down-menu__*).
+      NEVER put page.locator() in spec files — add methods to page objects instead.
+   d. Selector audit: verify zero page.locator() in spec, zero BEM selectors
+   e. Verify: run the test via npx playwright test --project=chrome-headless
+   f. Fix failures (up to autotest.auto_fix_attempts): use playwright-vpn for selector discovery
+   g. Track: update SQLite autotest_tracking + manifest JSON
+
+$(
+TICKET_NUMS=$(extract_ticket_numbers "$AUTOTEST_SCOPE")
+if [[ -n "$TICKET_NUMS" ]]; then
+    cat <<TICKET_BLOCK
+
+TICKET SCOPE ACTIVE — this scope includes GitLab ticket(s): ${TICKET_NUMS}
+For each ticket number, follow §10.1 Ticket-Scoped Investigation Protocol (Phase C):
+- Spec files: tests/t<number>/t<number>-tc<NNN>.spec.ts
+- Data classes: data/t<number>/T<number>Tc<NNN>Data.ts
+- Queries: data/t<number>/queries/t<number>Queries.ts
+- Module value in autotest_tracking: "t<number>"
+- Reuse page objects from the parent module when possible
+- Create directories if they don't exist (mkdir -p)
+TICKET_BLOCK
+fi
+)
 
 $(if (( session_num % 5 == 0 )); then echo "This is session ${session_num} (multiple of 5) — also run maintenance per §9.4."; fi)
 
@@ -331,6 +530,26 @@ Follow §9 Session Protocol:
 8. Pick top 2-3 items from _INVESTIGATION_AGENDA.md by priority
 
 Execute the INVESTIGATE → ANALYZE → SYNTHESIZE → STORE → CONNECT cycle for each item.
+
+IMPORTANT: Mine GitLab tickets for the module(s) in scope — search issues, read descriptions AND comments (comments contain the real bug details). See §10 "GitLab Ticket Mining".
+
+$(
+TICKET_NUMS=$(extract_ticket_numbers "$PHASE_SCOPE")
+if [[ -n "$TICKET_NUMS" ]]; then
+    cat <<TICKET_BLOCK
+
+TICKET SCOPE ACTIVE — this scope includes GitLab ticket(s): ${TICKET_NUMS}
+For each ticket number, follow §10.1 Ticket-Scoped Investigation Protocol:
+1. Fetch the ticket: GET /api/v4/projects/172/issues/<number>
+2. Fetch ALL comments: GET /api/v4/projects/172/issues/<number>/notes
+3. Identify the parent module from ticket labels, title, and content
+4. Read existing vault notes for that parent module
+5. Investigate the specific area deeply — the bug, feature, or requirement described in the ticket
+6. Write findings to exploration/tickets/t<number>-investigation.md
+7. Also enrich the parent module's vault notes with relevant discoveries
+TICKET_BLOCK
+fi
+)
 
 $(if (( session_num % 5 == 0 )); then echo "This is session ${session_num} (multiple of 5) — also run maintenance per §9.4: compress old investigations, detect stale notes, audit cross-references, clean SQLite, refine agenda."; fi)
 
@@ -369,6 +588,56 @@ check_stop_conditions() {
     fi
 
     return 0
+}
+
+# ── Phase C auto-stop (all test cases in scope covered) ─────────────────────
+check_phase_c_complete() {
+    [[ "$PHASE" != "autotest_generation" ]] && return 1
+
+    local db="$PROJECT_ROOT/expert-system/analytics.db"
+    local manifest="$PROJECT_ROOT/autotests/manifest/test-cases.json"
+    [[ ! -f "$db" ]] && return 1
+    [[ ! -f "$manifest" ]] && return 1
+
+    # Build scope filter: "all" → no filter, single/comma-separated → IN clause
+    local scope="$AUTOTEST_SCOPE"
+    local where_clause=""
+    if [[ "$scope" != "all" ]]; then
+        local modules
+        modules=$(echo "$scope" | tr ',' '\n' | sed 's/^ *//;s/ *$//' | sed "s/.*/'&'/" | paste -sd,)
+        where_clause="AND module IN ($modules)"
+    fi
+
+    # Count manifest total (source of truth for how many tests exist)
+    local manifest_total
+    manifest_total=$(python3 -c "
+import json, sys
+with open('$manifest') as f:
+    data = json.load(f)
+scope = '$scope'
+if scope == 'all':
+    mods = list(data.get('modules', {}).keys())
+else:
+    mods = [m.strip() for m in scope.split(',')]
+total = 0
+for mod in mods:
+    mod_data = data.get('modules', {}).get(mod, {})
+    for suite in mod_data.get('suites', {}).values():
+        total += len(suite.get('test_cases', []))
+print(total)
+" 2>/dev/null || echo "0")
+
+    # Count tracked (non-pending) in SQLite
+    local covered
+    covered=$(sqlite3 "$db" "SELECT COUNT(*) FROM autotest_tracking WHERE automation_status != 'pending' $where_clause;" 2>/dev/null || echo "0")
+
+    if [[ "$manifest_total" -gt 0 && "$covered" -ge "$manifest_total" ]]; then
+        log "Phase C complete: $covered/$manifest_total test cases covered in scope ($scope)"
+        sed -i 's/^  stop: false/  stop: true/' "$PROJECT_ROOT/expert-system/config.yaml"
+        STOP="True"
+        return 0
+    fi
+    return 1
 }
 
 # ── Vault versioning ─────────────────────────────────────────────────────────
@@ -499,12 +768,26 @@ print(sum(1 for x in s['sessions'] if x.get('phase') == 'autotest_generation'))
     log "Stop flag: $STOP"
     log "Session timeout: $((MAX_DURATION_MINUTES + 30)) minutes"
     log "Session delay: ${DELAY_MINUTES}min (working) / ${DELAY_MINUTES_OFFHOURS}min (off-hours: ${OFFHOURS_UTC} UTC)"
+    if [[ "$PROMO_ENABLED" == "True" || "$PROMO_ENABLED" == "true" ]]; then
+        log "Promo: pause during peak ${PROMO_PEAK_HOURS} UTC (weekdays only: ${PROMO_WEEKDAYS_ONLY}), buffer: ${PROMO_BUFFER}min, expires: ${PROMO_EXPIRES}"
+    fi
 
     local stop_reason="unknown"
+
+    local prev_phase="$PHASE"
 
     while check_stop_conditions "$session_num"; do
         # Re-read config each iteration (phase may have changed)
         parse_config
+
+        # Detect phase change — log it (vault reset is handled by the agent per §9.5)
+        if [[ "$PHASE" != "$prev_phase" ]]; then
+            log "Phase changed: $prev_phase → $PHASE (agent will execute Phase Reset Protocol §9.5)"
+            prev_phase="$PHASE"
+        fi
+
+        # Pause during promo peak hours (waits until off-peak, then re-reads config)
+        wait_for_offpeak
 
         local prompt
         prompt=$(build_prompt "$session_num" "$PHASE")
@@ -561,6 +844,9 @@ print(sum(1 for x in s['sessions'] if x.get('phase') == 'autotest_generation'))
             log "Session $session_num FAILED with exit code $exit_code (${duration}s)"
         fi
 
+        # Check if Phase C scope is fully covered → auto-stop
+        check_phase_c_complete || true
+
         session_num=$((session_num + 1))
 
         # Inter-session delay (skip if this was the last session)
@@ -573,6 +859,9 @@ print(sum(1 for x in s['sessions'] if x.get('phase') == 'autotest_generation'))
             sleep $(( current_delay * 60 ))
         fi
     done
+
+    # Re-read config for final state
+    parse_config
 
     # Determine stop reason
     if [[ "$STOP" == "True" ]]; then

@@ -5,7 +5,7 @@
 5-layer Playwright + TypeScript with strict downward dependencies:
 
 ```
-Test Specs          autotests/e2e/tests/*.spec.ts       — scenario orchestration
+Test Specs          autotests/e2e/tests/<module>/*.spec.ts — scenario orchestration
     ↓
 Fixtures            autotests/e2e/fixtures/*.ts          — reusable workflows (plain classes)
     ↓
@@ -29,9 +29,14 @@ Playwright API
 
 | Artifact | Pattern | Example |
 |----------|---------|---------|
-| Test spec | `{module}-{test-id}.spec.ts` | `vacation-tc001.spec.ts` |
-| Data class | `{Module}{TestId}Data` | `VacationTc001Data` |
+| Test spec | `<module>/{module}-{test-id}.spec.ts` | `vacation/vacation-tc001.spec.ts` |
+| Test spec (ticket) | `t<ticket>/t<ticket>-tc{seq}.spec.ts` | `t3404/t3404-tc001.spec.ts` |
+| Data class | `<module>/{Module}{TestId}Data` | `vacation/VacationTc001Data` |
+| Data class (ticket) | `t<ticket>/T<ticket>Tc{seq}Data` | `t3404/T3404Tc001Data` |
+| Query file | `<module>/queries/{module}Queries.ts` | `vacation/queries/vacationQueries.ts` |
+| Query file (ticket) | `t<ticket>/queries/t<ticket>Queries.ts` | `t3404/queries/t3404Queries.ts` |
 | Fixture | `{Feature}Fixture` | `VacationCreationFixture` |
+| API setup fixture | `Api{Module}SetupFixture` | `ApiVacationSetupFixture` |
 | Page object | `{PageName}Page` / `{Dialog}Dialog` | `MyVacationsPage` |
 
 ## UI Test Boilerplate
@@ -56,27 +61,20 @@ test("test_name @regress", async ({ page }, testInfo) => {
 });
 ```
 
-## API Test Boilerplate
+## API Call Boilerplate (for test endpoints and setup only)
+
+API calls should ONLY be used in tests for: test endpoints (clock manipulation, sync, cleanup), data verification, or rare cases where a test step explicitly requires API interaction. Most tests should use the UI Test Boilerplate above.
 
 ```typescript
-import { test, expect } from "@playwright/test";
-import { writeFile } from "node:fs/promises";
+// Use API_SECRET_TOKEN ONLY for test/admin endpoints (no @CurrentUser validation)
+// This token authenticates as its owner (pvaynmaster on qa-1) — NOT any user
+const headers = { API_SECRET_TOKEN: tttConfig.apiToken };
+const clockUrl = tttConfig.buildUrl("/api/ttt/test/v1/clock");
+await request.patch(clockUrl, { headers, data: { dateTime: "2026-04-01T10:00:00" } });
 
-test("api_test_name @regress", async ({ request }, testInfo) => {
-  const tttConfig = new TttConfig();
-  const data = new ApiTestData();
-  expect(tttConfig.apiToken, "apiToken required").toBeTruthy();
-
-  const url = tttConfig.buildUrl("/api/ttt/v1/...");
-  const headers = { API_SECRET_TOKEN: tttConfig.apiToken };
-
-  const response = await request.get(url, { headers });
-  expect(response.status()).toBe(200);
-
-  const filePath = testInfo.outputPath("response.json");
-  await writeFile(filePath, JSON.stringify(await response.json(), null, 2), "utf-8");
-  await testInfo.attach("response", { path: filePath, contentType: "application/json" });
-});
+// NOTE: No endpoint exists to get JWT for arbitrary users.
+// API setup can only create data as the token owner (pvaynmaster).
+// For per-user scenarios, use UI login via LoginFixture.
 ```
 
 ## Data Class Pattern
@@ -84,7 +82,13 @@ test("api_test_name @regress", async ({ request }, testInfo) => {
 ```typescript
 declare const process: { env: Record<string, string | undefined> };
 
-import { loadSaved, saveToDisk } from "./savedDataStore";
+import { loadSaved, saveToDisk } from "../savedDataStore";
+
+// IMPORTANT: Constructor defaults are static-mode fallbacks only.
+// Dynamic mode MUST implement the DB query from test case preconditions.
+// Never hardcode the same username across multiple data classes.
+// API_SECRET_TOKEN authenticates as its OWNER (pvaynmaster on qa-1) — NOT any user.
+// For UI tests, auth is via browser login (any employee). API setup is limited to token owner (pvaynmaster).
 
 // Constructor args interface — used for saved mode serialization
 interface Tc001Args { username: string; startDate: string; endDate: string }
@@ -95,6 +99,7 @@ export class VacationTc001Data {
   readonly endDate: string;
 
   constructor(
+    // Static-mode fallbacks only — dynamic mode queries DB for a suitable employee
     username = process.env.VAC_TC001_USER ?? "pvaynmaster",
     startDate = process.env.VAC_TC001_START ?? "01.04.2026",
     endDate = process.env.VAC_TC001_END ?? "05.04.2026",
@@ -141,15 +146,76 @@ export class VacationTc001Data {
 Set in `e2e/config/global.yml` → `testDataMode`. Read via `globalConfig.testDataMode`.
 Saved data stored in `e2e/data/saved/<ClassName>.json`.
 
-## Selector Priority
+## Selector Priority (CRITICAL — Read Before Writing Any Locator)
 
-1. Role-based: `getByRole("button", { name: "Create", exact: true })`
-2. Stable attributes: `getByTestId()`, `locator("[data-qa]")`, `locator("[aria-*]")`
-3. Scoped CSS under container
-4. Text-based: `getByText()` (only static EN text)
-5. XPath (last resort)
+The TTT app has minimal ARIA roles and no `data-testid` attributes. Text and visible labels are the most stable identifiers — they survive CSS refactors, build changes, and environment differences.
 
-Always use `exact: true` in `getByRole()` when name could be a substring.
+**Priority order:**
+
+1. **Text-based** — most stable for this app:
+   - `getByRole("button", { name: "Create a request", exact: true })` — combines role + text
+   - `getByRole("link", { name: "My vacations" })` — navigation links
+   - `getByText("Approved", { exact: true })` — status labels, filter tabs, menu items
+   - `page.locator("text=Calendar of absences")` — fallback text match
+
+2. **Role-based** (when element has semantic HTML):
+   - `getByRole("dialog", { name: /Creating vacation/i })` — dialogs
+   - `getByRole("heading", { name: "My vacations" })` — headings
+   - `getByRole("textbox")`, `getByRole("combobox")` — form fields
+
+3. **Structural** (tag + containment, scoped under a parent):
+   - `dialog.locator("button").filter({ hasText: "Save" })` — button inside known container
+   - `page.locator("table tbody tr")` — table rows (generic tag, no BEM classes)
+   - `row.locator("td").nth(2)` — column by position within a row
+
+4. **Partial attribute match** (when text and role unavailable):
+   - `locator("[class*='notification'][class*='visible']")` — partial class match
+   - `locator("[class*='dialog']")` — matches any dialog-like class
+   - `locator("input[placeholder*='Search']")` — placeholder text
+
+5. **XPath** (last resort)
+
+**Always use `exact: true`** in `getByRole()` / `getByText()` when the name could be a substring of another element.
+
+### BANNED Selectors — Never Use These
+
+**Exact BEM class names are BANNED.** They are build-specific, version-specific, and break across environments:
+
+```typescript
+// BANNED — these broke when switching from qa-1 to timemachine:
+page.locator(".navbar__list-item")           // BEM element
+page.locator(".navbar__list-drop-item")      // BEM element
+page.locator(".navbar__link")                // BEM element
+page.locator(".page-body__title")            // BEM element
+page.locator(".drop-down-menu__option")      // BEM element
+page.locator(".language-switcher")           // component class
+
+// CORRECT alternatives:
+page.getByText("Calendar of absences")       // text-based — stable
+page.getByRole("button", { name: "EN" })     // role + text
+page.locator("[class*='menu']").filter({ hasText: "My vacations" })  // partial + text
+page.locator("h1, h2, [class*='title']").filter({ hasText: "My vacations" })  // structural + text
+```
+
+**Why BEM breaks:** `.navbar__list-drop-item` is a CSS class from a specific SCSS build. Different environments, branches, or deploys can rename, restructure, or refactor these classes. Text labels ("Create a request", "My vacations") are defined in i18n files and change only with intentional product decisions.
+
+## Timeouts
+
+Three timeout levels are configured — use the right one for each situation:
+
+| Timeout | Config | Default | Scope |
+|---------|--------|---------|-------|
+| **Test timeout** | `playwright.config.ts` → `timeout` | 180s | Total time for entire test (setup + steps + cleanup) |
+| **Step timeout** | `global.yml` → `stepTimeoutMs` | 30s | Per action: `click()`, `fill()`, `goto()`, `waitFor()`. Exposed as `globalConfig.stepTimeoutMs` and wired to Playwright's `actionTimeout` + `navigationTimeout` |
+| **Expect timeout** | `playwright.config.ts` → `expect.timeout` | 10s | Per assertion: `expect(locator).toBeVisible()`, `expect(locator).toHaveText()` |
+
+**When to use `stepTimeoutMs` explicitly** — Playwright applies `actionTimeout` automatically to all built-in actions. Use `globalConfig.stepTimeoutMs` when you need an explicit timeout for custom waits:
+```typescript
+await page.waitForSelector(".some-element", { timeout: globalConfig.stepTimeoutMs });
+await pollForMatch(candidates, { timeout: globalConfig.stepTimeoutMs });
+```
+
+**Do NOT increase timeouts to fix broken selectors.** If a step times out at 30s, the selector is likely wrong — investigate with `page-discoverer` skill or playwright-vpn snapshot. Increasing the timeout just makes failures slower to detect.
 
 ## TTT UI Quirks
 
@@ -163,6 +229,6 @@ Always use `exact: true` in `getByRole()` when name could be a substring.
 
 ```bash
 cd autotests
-npx playwright test e2e/tests/<spec> --project=chrome-headless   # autonomous
-npx playwright test e2e/tests/<spec> --project=chrome-debug       # manual headed
+npx playwright test e2e/tests/<module>/<spec> --project=chrome-headless   # autonomous
+npx playwright test e2e/tests/<module>/<spec> --project=chrome-debug       # manual headed
 ```

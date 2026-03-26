@@ -102,8 +102,10 @@ Use links to figma layers from GitLab tickets and Confluence pages
 
 ### Tickets
 - **GitLab tickets**: https://gitlab.noveogroup.com/noveo-internal-tools/ttt-spring/-/boards (see skill gitlab-access)
-  - Key labels: Sprint X, HotFix Sprint X, where X>=11 and X<=[current_sprint], ([current_sprint] number from config.yaml)
-  - Note: try to define tasks/tickets with latest implementations; but for some areas older tickets can be useful.
+  - Labels: Sprint X, HotFix Sprint X — but NOT all tickets have sprint labels
+  - **Search strategy**: search by module keyword in title/description, NOT only by sprint label. Use `updated_after`/`created_after` params + keyword search to find all relevant tickets regardless of sprint labeling
+  - **Scope**: start from current sprint (`current_sprint` in config.yaml) and work backwards through ALL history. Some features were introduced years ago — relevant tickets (bugs, edge cases) may be in Sprint 7 or earlier. Old tickets with bugs that were never fixed or have edge cases in comments are critical for test case generation
+  - **Always read ticket comments** — most bug details (reproduction steps, edge cases, root cause) are in comments, not descriptions
 
 ### Additional Documents
 - **Google Docs**: by links from Confluence pages and GitLab tickets (access by link, no mcp required)
@@ -131,20 +133,25 @@ where envURL = https://ttt-[env].noveogroup.com (e.g. https://ttt-qa-1.noveogrou
 ### Phase B — XLSX Test Documentation
 - Test plans as XLSX (one per major module/feature area)
 - Test cases as XLSX (detailed, executable)
-- Must include description how to generate input test data (by database mining with criteria, random generation in given range, timestamp addition, static values etc.)
-- Can include UI, API and DB actions
+- **UI-first test steps** — steps describe user actions in the browser (login, navigate, click, fill, verify), NOT raw API calls. API steps only for: test endpoints (clock, sync), data verification (DB checks), state setup, or features with no UI
+- **Explicit setup steps** — when a test needs specific state (APPROVED/CANCELED vacation, etc.), include `SETUP:` steps that create the state via API before the main UI flow. Include `CLEANUP:` steps for teardown. Never assume state exists in the DB.
+- Preconditions must include SQL query hints for dynamic test data generation (by database mining with criteria, random employee selection, timestamp computation, static values etc.)
+- Generation scope configurable via `phase.scope` in config.yaml (`"all"` or a specific module name)
 - Compatible with Google Sheets import
 - English only
 
 ### Phase C — Autotest Generation
 - Executable Playwright + TypeScript E2E tests generated from XLSX test documentation
+- **UI-first**: tests use browser login and page interactions by default. API calls only for test endpoints, data setup/teardown, or explicit API-only steps
 - Test code lives in `autotests/` directory, follows 5-layer architecture: test specs → fixtures → page objects → config+data → Playwright API
 - XLSX test cases are parsed into a JSON manifest (`autotests/manifest/test-cases.json`) via `autotests/scripts/parse_xlsx.py`
 - Each generated test must support three data modes: `static` (hardcoded defaults), `dynamic` (PostgreSQL queries for real data), `saved` (cached JSON for reproducibility)
+- **Authentication**: browser login for UI tests (any employee), `API_SECRET_TOKEN` for test endpoints and API setup as token owner (pvaynmaster). No endpoint exists to get JWT for arbitrary users — use UI login for per-user scenarios.
 - Tests are verified against live test environments (configured via `autotest.target_env` in config.yaml)
 - Generation scope can be limited to a single module via `autotest.scope` in config.yaml
 - Priority order follows the same order as Phase B (Absences → Reports → Accounting → Administration)
 - Knowledge base (vault) must be consulted before generating each test — for selectors, validation rules, known UI quirks, and edge cases
 - Use existing page objects and fixtures when possible; create new ones only when needed
+- Data classes MUST implement the data generation strategy described in XLSX preconditions — if preconditions contain SQL queries or employee criteria, the dynamic mode must query the DB accordingly, not hardcode values. Never hardcode the same username across multiple data classes.
 - Track progress in SQLite `autotest_tracking` table
 - Skills: autotest-generator, autotest-runner, autotest-fixer, xlsx-parser, autotest-progress, page-discoverer

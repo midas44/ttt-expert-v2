@@ -1,12 +1,13 @@
 session:
-  delay_minutes: 30
-  delay_minutes_offhours: 30
+  delay_minutes: 5
+  delay_minutes_offhours: 5
   offhours_utc: 15:00-03:00
   max_duration_minutes: 120
 phase:
   current: autotest_generation
   generation_allowed: true
   coverage_override: -1
+  scope: 3404
 thresholds:
   knowledge_coverage_target: 0.8
   note_quality_min_links: 2
@@ -26,20 +27,26 @@ testing_prod_envs:
 current_sprint: 15
 autonomy:
   mode: full
-  max_sessions: 200
-  consecutive_failure_limit: 3
+  max_sessions: 250
+  consecutive_failure_limit: 30
   auto_phase_transition: true
   log_dir: expert-system/logs
   stop: true
   model: opus
   effort: max
   allow_api_mutations: true
+promo:
+  enabled: true
+  peak_hours_utc: 12:00-18:00
+  weekdays_only: true
+  expires: '2026-03-29'
+  buffer_minutes: 40
 autotest:
   enabled: true
   target_env: qa-1
   max_tests_per_session: 5
   auto_fix_attempts: 3
-  scope: vacation                   # "all" or a module name from test-docs/ (vacation, sick-leave, etc.)
+  scope: 3404
   priority_order:
   - vacation
   - sick-leave
@@ -53,6 +60,5 @@ autotest:
   - cross-service
   type_priority:
   - UI
-  - API
   - hybrid
   skip_patterns: []

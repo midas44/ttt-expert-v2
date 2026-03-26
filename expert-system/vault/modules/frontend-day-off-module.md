@@ -89,3 +89,36 @@ DayOffTooltip renders day-off blocks with date range. EventSquareWithTooltip map
 8. **WeekendTab filtering hides working-weekend entries**: may confuse users expecting full calendar view
 
 Links: [[day-off-service-implementation]], [[frontend-vacation-module]], [[frontend-app]], [[absence-data-model]]
+
+
+## Approve Period Integration (#3404, Sprint 15)
+
+**New behavior (release/2.1):** Day-off transfer availability and datepicker constraints now use the office approve period instead of the current date.
+
+### Edit Action Visibility (useWeekendTableHeaders.tsx)
+```tsx
+const approvePeriod = useSelector(selectApprovePeriod);
+const isDayOffAfterCurrentDate =
+  lastApprovedDate > moment(approvePeriod).format('YYYY-MM-DD') ||
+  lastApprovedDate === moment().format('YYYY-MM-DD');
+```
+- **Before:** `lastApprovedDate > moment().format('YYYY-MM-DD')` — only today/future day-offs
+- **After:** `lastApprovedDate > moment(approvePeriod).format('YYYY-MM-DD')` — any day-off in open approve period
+- Approve period fetched from `GET /api/ttt/v1/offices/periods/approve/min` (minimum across all offices)
+- **Risk ST-1:** Uses `>` not `>=` — day-off exactly on approve period start date excluded
+
+### Datepicker minDate (TransferDaysoffModal.tsx)
+```tsx
+minDate={isMinCurrentDay ? moment(approvePeriod).subtract(1, 'd') : moment(originalDate)}
+```
+- **Before:** `moment().subtract(1, 'd')` (yesterday)
+- **After:** `moment(approvePeriod).subtract(1, 'd')` (day before approve period start)
+- **Risk ST-3:** Should be `moment(originalDate).startOf('month')` per requirement wording
+
+### Data Fetching (myVacation/sagas.js)
+Added `yield put(getApprovePeriod())` to weekends table saga — ensures approve period is in Redux before rendering.
+
+### Translation Fix
+EN: "Reschedule an event" → "Reschedule event" (i18n key `vacation.weekends.rescheduleAnEvent`)
+
+See [[exploration/tickets/t3404-investigation]] for full analysis.

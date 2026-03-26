@@ -1,0 +1,29 @@
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#4A90D9', 'primaryTextColor': '#fff', 'lineColor': '#5C6BC0', 'background': '#FAFAFA'}, 'flowchart': {'rankSpacing': 50}}}%%
+
+graph TD
+    PROMPT["System Prompt + 17 Skills + config.yaml"] --> MCP_LAYER
+
+    subgraph MCP_LAYER["MCP Integration Layer — 39 Servers"]
+        direction LR
+        OBS["Obsidian"] ~~~ QMD["QMD Search"] ~~~ SQLT["SQLite"]
+        PG["PostgreSQL ×3"] ~~~ SW["Swagger ×21"] ~~~ PW["Playwright"]
+        CONFL["Confluence"] ~~~ FIGMA["Figma"] ~~~ QASE_S["Qase"] ~~~ GITLAB["GitLab"]
+    end
+
+    MCP_LAYER --> VAULT_OUT["Knowledge Base<br/>200+ vault notes"]
+    MCP_LAYER --> XLSX_OUT["Test Documentation<br/>XLSX per module/ticket"]
+    MCP_LAYER --> AUTO_OUT["E2E Autotests<br/>Playwright + TypeScript"]
+    MCP_LAYER --> DASH_OUT["Analytics Dashboard"]
+    AUTO_OUT -.->|"findings write-back"| OBS
+
+    classDef agent fill:#4A90D9,stroke:#2D6CB4,color:#fff
+    classDef know fill:#FFF9C4,stroke:#F9A825,color:#795548
+    classDef source fill:#E3F2FD,stroke:#1976D2,color:#1565C0
+    classDef doc fill:#FCE4EC,stroke:#C62828,color:#B71C1C
+    classDef output fill:#26A69A,stroke:#00897B,color:#fff
+
+    class PROMPT agent
+    class OBS,QMD,SQLT know
+    class PG,SW,PW source
+    class CONFL,FIGMA,QASE_S,GITLAB doc
+    class VAULT_OUT,XLSX_OUT,AUTO_OUT,DASH_OUT output

@@ -31,11 +31,12 @@ Ask the user or infer what to run:
 | Scope | Command |
 |-------|---------|
 | All tests | `npx playwright test` |
-| Single spec | `npx playwright test e2e/tests/reports-tc042.spec.ts` |
+| Single spec | `npx playwright test e2e/tests/reports/reports-tc042.spec.ts` |
 | Module (by tag) | `npx playwright test --grep @reports` |
 | Priority (by tag) | `npx playwright test --grep @critical` |
 | Project (browser) | `npx playwright test --project=chromium` |
 | Failed only (rerun) | `npx playwright test --last-failed` |
+| Ticket scope | `npx playwright test e2e/tests/t3404/` |
 
 ### 2. Execute Tests
 

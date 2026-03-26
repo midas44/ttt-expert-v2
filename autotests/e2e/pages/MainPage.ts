@@ -71,13 +71,11 @@ export class MyVacationsPage {
 
   constructor(private readonly page: Page) {
     this.notificationCandidates = [
+      page.locator(".notification__theme--visible"),
+      page.locator("[class*='notification'][class*='visible']"),
       page.getByRole("status"),
       page.getByRole("alert"),
       page.locator("[class*='notification']"),
-      page.locator("[class*='message']"),
-      page.locator(".alert-success"),
-      page.locator(".toast-success"),
-      page.locator("[data-qa='notification']"),
       page.locator("[class*='toast']"),
     ];
   }
@@ -172,17 +170,172 @@ export class MyVacationsPage {
     return row.locator("td").nth(colIndex);
   }
 
-  /** Finds a notification element containing the given text. */
-  async findNotification(text: string): Promise<Locator> {
+  /**
+   * Finds a notification element containing the given text.
+   * Uses a race strategy: all candidates are checked in parallel every 300ms.
+   * Timeout is generous (15s) because the notification auto-hides after ~10s
+   * and we must catch it while visible.
+   */
+  async findNotification(text: string, timeout = 15_000): Promise<Locator> {
     const textPattern = new RegExp(escapeRegExp(text), "i");
     const candidates = this.notificationCandidates.map((loc) =>
       loc.filter({ hasText: textPattern }),
     );
-    // Add a general text-based fallback
-    candidates.push(
-      this.page.locator(`text=${text}`),
+    return pollForMatch(candidates, { timeout, interval: 300 });
+  }
+
+  /** Opens the edit dialog by clicking the pencil icon on a vacation row. */
+  async openEditDialog(period: string | RegExp): Promise<VacationCreateDialog> {
+    const row = this.vacationRow(period).first();
+    const actionsCell = row.locator("td").last();
+    await actionsCell.locator("button").first().click();
+    const dialog = new VacationCreateDialog(this.page);
+    await dialog.waitForOpen();
+    return dialog;
+  }
+
+  /** Clicks the "Closed" filter tab. */
+  async clickClosedTab(): Promise<void> {
+    await this.page.getByRole("button", { name: /^Closed$/i }).click();
+    await this.page.waitForLoadState("networkidle");
+  }
+
+  /** Clicks the "Open" filter tab. */
+  async clickOpenTab(): Promise<void> {
+    await this.page.getByRole("button", { name: /^Open$/i }).click();
+    await this.page.waitForLoadState("networkidle");
+  }
+
+  /** Reads the available vacation days count from the page header. */
+  async getAvailableDays(): Promise<number> {
+    // "Available vacation days:" label and count (e.g. "30 in 2026") are in
+    // separate sibling containers. Use evaluate to find the count span directly.
+    const text = await this.page.evaluate(() => {
+      for (const span of document.querySelectorAll("span")) {
+        const t = span.textContent?.trim() ?? "";
+        if (/^\d+[\s\u00a0]+in[\s\u00a0]+\d{4}$/.test(t)) return t;
+      }
+      return "";
+    });
+    const match = text.match(/(\d+)/);
+    return match ? parseInt(match[1], 10) : 0;
+  }
+
+  /** Clicks the "All" filter tab. */
+  async clickAllTab(): Promise<void> {
+    await this.page.getByRole("button", { name: /^All$/i }).click();
+    await this.page.waitForLoadState("networkidle");
+  }
+
+  /** Returns the count of visible vacation rows. */
+  async getRowCount(): Promise<number> {
+    return this.tableRows.count();
+  }
+
+  /** Clicks a column header button to toggle sort. */
+  async clickColumnSort(columnLabel: string): Promise<void> {
+    const header = this.page.locator("table thead th").filter({ hasText: columnLabel });
+    const sortButton = header.getByRole("button", { name: columnLabel });
+    await sortButton.click();
+    await this.page.waitForLoadState("networkidle");
+  }
+
+  /** Returns text values for a specific column across all visible data rows. */
+  async getColumnTexts(columnLabel: string): Promise<string[]> {
+    const headerCells = this.page.locator("table thead th");
+    const colIndex = await headerCells.evaluateAll(
+      (headers: Element[], label: string) => {
+        for (let i = 0; i < headers.length; i++) {
+          if (headers[i].textContent?.trim().toLowerCase().includes(label.toLowerCase())) return i;
+        }
+        return -1;
+      },
+      columnLabel,
     );
-    return pollForMatch(candidates, { timeout: 7000 });
+    if (colIndex === -1) throw new Error(`Column "${columnLabel}" not found`);
+    // Use evaluateAll to read all rows at once — avoids timeout on hidden/filtered rows
+    // Filter out "No data" rows (single merged cell) by checking cell count > colIndex
+    return this.page.locator("table tbody").first().locator("tr").evaluateAll(
+      (rows: Element[], idx: number) =>
+        rows
+          .filter((r) => (r as HTMLElement).offsetParent !== null)
+          .filter((r) => r.querySelectorAll("td").length > idx)
+          .map((r) => r.querySelectorAll("td")[idx]?.textContent?.trim() ?? ""),
+      colIndex,
+    );
+  }
+
+  /** Opens the filter dropdown for a filterable column (Vacation type, Status). */
+  async openColumnFilter(columnLabel: string): Promise<void> {
+    const header = this.page.locator("table thead th").filter({
+      hasText: new RegExp(columnLabel, "i"),
+    });
+    // The filter icon is the last button (after the sort text button)
+    const buttons = header.locator("button");
+    const count = await buttons.count();
+    await buttons.nth(count - 1).click();
+  }
+
+  /** Toggles a filter checkbox in an open filter dropdown. */
+  async toggleFilterCheckbox(optionLabel: string): Promise<void> {
+    await this.page.getByRole("checkbox", { name: optionLabel }).click();
+  }
+
+  /** Returns the full "Available vacation days" text (e.g., "22" or "4 in 2026"). */
+  async getAvailableDaysFullText(): Promise<string> {
+    await this.page.waitForLoadState("networkidle");
+    // DOM: div.vacationDaysRowContainer > span "N\u00a0in\u00a0YYYY"
+    // The value span is a sibling container of the "Available vacation days:" label,
+    // inside a parent with class "m-b-20". Uses &nbsp; between tokens.
+    return this.page.evaluate(() => {
+      // Strategy 1: find spans with "N in YYYY" pattern (handles &nbsp;)
+      for (const span of document.querySelectorAll("span")) {
+        const t = span.textContent?.trim() ?? "";
+        if (/^\d+[\s\u00a0]+in[\s\u00a0]+\d{4}$/.test(t)) return t;
+      }
+      // Strategy 2: find a standalone number near the label
+      const container = document.querySelector(".m-b-20, [class*='userVacationInfo']");
+      if (container) {
+        for (const el of container.querySelectorAll("span, div")) {
+          const t = el.textContent?.trim() ?? "";
+          if (/^\d+$/.test(t) && el.childElementCount === 0 && !el.closest("table")) return t;
+        }
+      }
+      return "";
+    });
+  }
+
+  /** Clicks the expand/collapse button next to available days for yearly breakdown. */
+  async toggleYearlyBreakdown(): Promise<void> {
+    // The yearly breakdown button has class "VacationDaysTooltip_numberOfDaysInfo"
+    // (unique to the available-days tooltip, not reused in table row tooltips).
+    const btn = this.page.locator('button[class*="VacationDaysTooltip_numberOfDaysInfo"]');
+    await btn.click();
+  }
+
+  /** Returns yearly breakdown entries from the open popup as {year, days} pairs. */
+  async getYearlyBreakdownEntries(): Promise<{ year: string; days: string }[]> {
+    // DOM: div[class*="UserVacationsPage_vacationDaysTooltip"] contains
+    //   div[class*="tooltipItemContainer"] children, each with:
+    //     div[class*="titleOfTooltip"] = year, div[class*="contentOfTooltip"] = days
+    const tooltip = this.page.locator('[class*="UserVacationsPage_vacationDaysTooltip"]').first();
+    await tooltip.waitFor({ state: "visible", timeout: 5000 });
+    return tooltip.evaluate((el) => {
+      const entries: { year: string; days: string }[] = [];
+      const items = el.querySelectorAll('div[class*="tooltipItemContainer"]');
+      for (const item of items) {
+        const title = item.querySelector('div[class*="titleOfTooltip"]');
+        const content = item.querySelector('div[class*="contentOfTooltip"]');
+        if (title && content) {
+          const y = title.textContent?.trim() ?? "";
+          const d = content.textContent?.trim() ?? "";
+          if (/^\d{4}$/.test(y) && /^\d+$/.test(d)) {
+            entries.push({ year: y, days: d });
+          }
+        }
+      }
+      return entries;
+    });
   }
 }
 
