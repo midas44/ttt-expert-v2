@@ -1,10 +1,10 @@
 session:
-  delay_minutes: 10
-  delay_minutes_offhours: 10
+  delay_minutes: 5
+  delay_minutes_offhours: 5
   offhours_utc: 15:00-03:00
   max_duration_minutes: 120
 phase:
-  current: generation
+  current: autotest_generation
   generation_allowed: true
   coverage_override: -1
   scope: day-off
@@ -31,7 +31,7 @@ autonomy:
   consecutive_failure_limit: 3
   auto_phase_transition: true
   log_dir: expert-system/logs
-  stop: true
+  stop: false
   model: opus
   effort: max
   allow_api_mutations: true

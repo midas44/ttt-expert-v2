@@ -1,58 +1,33 @@
----
-session: 49
-phase: generation
-updated: '2026-03-25'
-scope: day-off
----
-# Session 49 — Phase B: Day-Off XLSX Quality Review & Enhancement
+# Session Briefing
 
-## Session Info
-- **Date**: 2026-03-25
-- **Phase**: B (generation)
-- **Scope**: day-off
-- **Autonomy**: full
+**Last updated:** 2026-03-26T01:05:00Z
+**Session:** 54 (continued — context recovery)
+**Phase:** C — Autotest Generation
+**Module in scope:** calendar-dayoff
 
-## Work Done
+## Session 54 Results
 
-### 1. Quality Review (COMPLETED)
-Ran parallel gap analysis comparing the 99-case XLSX (session 48) against all vault knowledge (14 notes, 35 bugs). Identified 9 under-tested areas with ~25 missing test cases.
+### Completed
+- **TC-DO-025** (Add optional approver): VERIFIED — stable, passing consistently
+- **TC-DO-026** (Remove optional approver): VERIFIED — stable after major rework
+  - **Key discovery**: DB-inserted optional approvers (`employee_dayoff_approval`) do NOT surface in the frontend. The OptionalApprovers component reads from `weekend.optionalApprovers` which comes from the API response, not raw DB. Direct DB inserts are invisible to the UI.
+  - **Fix**: Restructured TC-026 to add approver via UI first (reusing TC-025 flow), then delete it. This bypasses the data setup issue entirely.
+  - **getApproverCount() fix**: The "Нет данных" (No data) placeholder row was being counted as a real row. Fixed with `:not(:has(td[colspan]))` filter.
+  - **Data exhaustion fix**: All future dayoff date slots were consumed by test runs. Switched from `createNewDayoffRequest` to `findNewDayoffRequestWithManager` to reuse existing requests.
+- **TC-DO-028** (Reject then re-approve): BLOCKED — dayoff modal only shows Approve/Reject for NEW status
+- **TC-DO-029** (Approve then reject approved): BLOCKED — same reason as TC-DO-028
 
-### 2. Gap-Filling Test Cases Added (COMPLETED)
-Added **22 new test cases** (TC-DO-100 through TC-DO-121) across all 8 suites:
+### Not Started This Session
+- **TC-DO-030** (CPO self-approval): Deferred — previous context showed APPROVER page `waitForReady()` timeout. Needs investigation next session.
 
-| Suite | New Cases | Gap Filled |
-|-------|-----------|------------|
-| TS-DayOff-Approval | +5 (TC-DO-100–104) | Optional approver voting (APPROVED/REJECTED), constraint validation (creator, main approver, duplicate) |
-| TS-DayOff-CalendarConflict | +2 (TC-DO-109–110) | Half-day boundary (duration=7 no-op), Path A orphaned ledger explicit verification (BUG-DO-8) |
-| TS-DayOff-Search | +4 (TC-DO-105–108) | ON_PAID search type, DELEGATED_TO_ME, column sorting, pagination (20 items/page) |
-| TS-DayOff-Validation | +3 (TC-DO-111–113) | All-null fields via API, maxDate boundary, sick leave overlap norm interaction |
-| TS-DayOff-Permissions | +1 (TC-DO-118) | Non-owner/non-approver cannot add optional approver (security exception) |
-| TS-DayOff-Notifications | +4 (TC-DO-114–117) | Date change email, approver change email, optional approver added email, overdue banner broadcast root cause |
-| TS-DayOff-Regression | +3 (TC-DO-119–121) | BUG-DO-15 transaction isolation, BUG-DO-26 sick leave norm interaction, #3223 second regression |
+### Key Findings Written to Vault
+- Day-off vs vacation button visibility difference documented in `exploration/ui-flows/dayoff-manager-approval-flow.md`
+- Optional approvers DOM structure: `vacation__optional-approvers-table` class, `tbody` uses `display: flex; flex-direction: column-reverse`, ButtonIcon renders with `uikit-button` class
 
-### 3. XLSX Regenerated (COMPLETED)
-Updated `test-docs/day-off/day-off.xlsx` — now **121 test cases** across 8 suites. Added 2 new risks to Risk Assessment (14 total).
+### Data Exhaustion Warning
+All future (employee, date) combinations for dayoff requests are consumed on qa-1. Tests creating new requests via `createNewDayoffRequest` will fail. All data classes should use `findNewDayoffRequestWithManager` to reuse existing NEW requests first. Consider cleaning up old test-created dayoff requests in a future session.
 
-### 4. SQLite Updated (COMPLETED)
-All 22 new cases inserted into `test_case_tracking` with status='exported'.
-
-## Phase B Status — Day-Off Module COMPLETE (Enhanced)
-The day-off module Phase B is done with comprehensive coverage. Ready for human review or Phase C transition.
-
-## Updated Suite Counts
-| Suite | Cases |
-|-------|-------|
-| TS-DayOff-Lifecycle | 17 |
-| TS-DayOff-Approval | 20 |
-| TS-DayOff-CalendarConflict | 11 |
-| TS-DayOff-Search | 12 |
-| TS-DayOff-Validation | 12 |
-| TS-DayOff-Permissions | 9 |
-| TS-DayOff-Notifications | 11 |
-| TS-DayOff-Regression | 29 |
-| **TOTAL** | **121** |
-
-## Next Steps
-- Human review of enhanced XLSX quality and coverage
-- If satisfied: transition to Phase C (autotest generation) for day-off module
-- Parse XLSX into manifest: `python3 autotests/scripts/parse_xlsx.py`
+## Next Session Priorities
+1. **TC-DO-030**: Investigate CPO self-approval page — APPROVER tab table visibility issue
+2. **Data cleanup**: Consider deleting old test-created dayoff requests to free up date slots
+3. Continue with remaining dayoff test cases from manifest

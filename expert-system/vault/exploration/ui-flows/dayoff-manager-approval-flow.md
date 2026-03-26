@@ -172,3 +172,93 @@ getByRole('link', { name: 'day off rescheduling requests' })
 - `artefacts/dayoff-edit-optional-approvers.png` — Edit mode for optional approvers
 - `artefacts/dayoff-add-optional-approver.png` — Adding a new optional approver
 - `artefacts/dayoff-redirect-dialog.png` — Redirect confirmation dialog
+
+
+## 9. Selectors Confirmed (Phase C — Session 53)
+
+**WeekendDetailsModal bilingual selectors (verified on qa-1):**
+```typescript
+// Modal dialog
+getByRole('dialog') // title varies: EN "Request details" / RU "Подробнее о заявке"
+
+// Action buttons (bilingual — app is typically in Russian)
+getByRole('button', { name: /^(Approve|Подтвердить)$/i })
+getByRole('button', { name: /^(Reject|Отклонить)$/i })
+getByRole('button', { name: /^(Redirect|Перенаправить)$/i })
+
+// Optional approvers edit mode
+getByRole('button', { name: /Edit list|Редактировать список/i })
+getByRole('button', { name: /^(Save|Сохранить)$/i })
+getByRole('button', { name: /^(Cancel|Отмена|Отменить)$/i })
+
+// Close modal — use Escape key (most reliable, X button name varies)
+page.keyboard.press('Escape')
+```
+
+**Key behaviors confirmed:**
+- Modal dates displayed in ISO format (YYYY-MM-DD), not DD.MM.YYYY
+- "Edit list" mode disables Approve/Reject/Redirect buttons; Cancel re-enables them
+- Modal approve triggers API call to `dayOff` endpoint; must `waitForResponse` before verifying page state
+- My department tab: 20 items/page, sorted by initial date DESC. Fresh requests with future dates appear on page 1.
+
+
+## Dayoff vs Vacation Button Visibility (Phase C Discovery)
+
+**Critical difference** between dayoff and vacation modal button rendering:
+
+| Action | Vacation (TableButtonsContainer) | Day-off (WeekendDetailsModalContainer) |
+|--------|----------------------------------|----------------------------------------|
+| Approve | `[NEW, REJECTED]` | `[NEW]` only |
+| Reject | `[NEW, APPROVED]` | `[NEW]` only |
+| Redirect | NEW + isCurrentUserApprover | NEW + isCurrentUserApprover + isApproveTab |
+
+**Source files:**
+- Dayoff modal: `frontend-js/src/modules/vacation/containers/weekendDetails/WeekendDetailsModalContainer.tsx` (lines 65-87)
+- Dayoff table actions: `frontend-js/src/modules/vacation/containers/requestVacations/WeekendTable/WeekendTableActions.tsx` (lines 53-54)
+- Vacation table: `frontend-js/src/modules/vacation/containers/requestVacations/table/tableTiles/TableButtonsContainer.js` (lines 53-54)
+
+**Impact on test cases:**
+- TC-DO-028 (reject then re-approve) — BLOCKED: cannot re-approve a REJECTED dayoff
+- TC-DO-029 (approve then reject approved) — BLOCKED: cannot reject an APPROVED dayoff
+- These test cases were written assuming dayoff approval flow matches vacation flow, but it doesn't
+- The dayoff approval flow is simpler: once approved or rejected, the status is final (no state transitions back)
+## Optional Approvers — DOM & Data Findings (Session 54)
+
+### DB Inserts Don't Surface in Frontend
+Direct `INSERT INTO ttt_vacation.employee_dayoff_approval` does NOT make the approver visible in the UI. The frontend reads `weekend.optionalApprovers` from the API response, which requires the proper service layer to populate. For test setup, use the UI flow (Edit list → Add → Save) or the REST API (`POST /v1/employee-dayOff-approvers` with `{dayOffId, login}`).
+
+### Table DOM Structure in Edit Mode
+```html
+<table class="uikit-table-without-divider table__loading vacation__optional-approvers-table">
+  <thead>
+    <tr>
+      <th>Одобряющий</th>
+      <th>Статус</th>
+      <th><!-- ButtonIcon "+" (IconAdd) --></th>
+    </tr>
+  </thead>
+  <tbody style="display:flex; flex-direction:column-reverse;">
+    <!-- Data rows or "Нет данных" placeholder -->
+    <tr>
+      <td><!-- CompanyStaffLink (existing) or Selectbox (new) --></td>
+      <td><!-- Status span --></td>
+      <td><!-- ButtonIcon delete (IconDelete) for ASKED/no-status --></td>
+    </tr>
+  </tbody>
+</table>
+```
+
+### Delete Button Selector
+The delete ButtonIcon renders as `<button class="uikit-button uikit-button--theme-default uikit-button--size-sm-md uikit-button--style-flat uikit-button__icon ...">`. Working locator chain:
+```typescript
+const approversArea = this.dialog.locator("[class*='optional-approvers']");
+const row = approversArea.locator("tbody tr").nth(index);
+await row.locator("button.uikit-button").click();
+```
+This works ONLY when the row has actual data (not the "Нет данных" placeholder). Scope to `[class*='optional-approvers']` to avoid matching outer dialog table.
+
+### "No Data" Row Trap
+When `optionalApprovers` is empty, the table renders a single `<tr><td colspan="3">Нет данных</td></tr>`. This counts as 1 row in `tbody tr.count()`. Use `:not(:has(td[colspan]))` to exclude it:
+```typescript
+this.approversTable.locator("tbody tr:not(:has(td[colspan]))").count();
+```

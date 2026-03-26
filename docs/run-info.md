@@ -6,7 +6,7 @@
 
   or
 
-  ./run.sh
+  ./start.sh
   tail -f expert-system/logs/runner.log
 
   ## Important Claude Code sessions: ##

@@ -82,6 +82,18 @@ export class VerificationFixture {
   }
 
   /**
+   * Captures a full-page screenshot at a named checkpoint and attaches it to the report.
+   * Use for explicit verification steps where no assertion is needed — just visual evidence.
+   */
+  async captureStep(
+    testInfo: TestInfo,
+    description: string,
+  ): Promise<string> {
+    await this.globalConfig.delay();
+    return this.captureScreenshot(testInfo, description);
+  }
+
+  /**
    * Captures a full-page screenshot and attaches it to the Playwright report.
    * Returns the screenshot file path.
    */
