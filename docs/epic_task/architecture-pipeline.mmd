@@ -19,50 +19,54 @@
     'curve': 'basis',
     'diagramPadding': 30,
     'rankSpacing': 55,
-    'nodeSpacing': 25
+    'nodeSpacing': 30
   }
 }}%%
 
 graph TD
     SOURCES["<b>Information Sources</b><br/>GitLab Issues &bull; Codebase (Java/Spring + React/TS)<br/>Confluence &bull; Figma &bull; Qase &bull; PostgreSQL<br/>REST API (366 endpoints) &bull; Live UI (Playwright)"]
 
-    subgraph PA["Phase A — Knowledge Acquisition"]
-        direction LR
-        INV["Autonomous<br/>Investigation"]
-        VAULT["Obsidian Vault<br/>200+ Notes"]
-        SQLITE["SQLite Analytics<br/>Findings &bull; Health"]
-        INV --> VAULT
-        INV --> SQLITE
-    end
+    PA_LABEL["<b>Phase A</b> — Knowledge Acquisition"]
+    INV["Autonomous<br/>Investigation"]
+    VAULT["Obsidian Vault<br/>200+ Notes"]
+    SQLITE["SQLite Analytics<br/>Findings &bull; Health"]
 
-    subgraph PB["Phase B — Test Documentation"]
-        direction LR
-        ENRICH["Knowledge<br/>Enrichment"]
-        GEN["XLSX Generator<br/>Python + openpyxl"]
-        XLSX["Test Documentation<br/>Plans + Cases"]
-        ENRICH --> GEN --> XLSX
-    end
+    PB_LABEL["<b>Phase B</b> — Test Documentation"]
+    ENRICH["Knowledge<br/>Enrichment"]
+    GEN["XLSX Generator<br/>Python + openpyxl"]
+    XLSX["Test Documentation<br/>Plans + Cases"]
 
-    subgraph PC["Phase C — Autotest Generation"]
-        direction LR
-        PARSE["XLSX Parser<br/>JSON Manifest"]
-        CODEGEN["Code Generation<br/>Vault-Enriched"]
-        VERIFY["Verify &<br/>Auto-Fix"]
-        TESTS["Playwright E2E<br/>Specs + Pages + Data"]
-        PARSE --> CODEGEN --> VERIFY --> TESTS
-    end
+    PC_LABEL["<b>Phase C</b> — Autotest Generation"]
+    PARSE["XLSX Parser<br/>JSON Manifest"]
+    CODEGEN["Code Generation<br/>Vault-Enriched"]
+    VERIFY["Verify &<br/>Auto-Fix"]
+    TESTS["Playwright E2E<br/>Specs + Pages + Data"]
 
     ORCH["<b>Session Orchestrator</b><br/>run-sessions.sh &bull; config.yaml &bull; Dashboard"]
 
-    SOURCES ==> INV
-    VAULT ==> ENRICH
-    SQLITE ==> ENRICH
-    XLSX ==> PARSE
+    SOURCES ==> PA_LABEL
+    PA_LABEL --> INV
+    INV --> VAULT
+    INV --> SQLITE
+
+    VAULT ==> PB_LABEL
+    SQLITE ==> PB_LABEL
+    PB_LABEL --> ENRICH
+    ENRICH --> GEN
+    GEN --> XLSX
+
+    XLSX ==> PC_LABEL
     VAULT ==> CODEGEN
+    PC_LABEL --> PARSE
+    PARSE --> CODEGEN
+    CODEGEN --> VERIFY
+    VERIFY --> TESTS
+
     TESTS -.->|"write-back"| VAULT
-    ORCH -.->|"orchestrates all phases"| PA
+    ORCH -.->|"orchestrates"| PA_LABEL
 
     classDef sourceBox fill:#E3EBF3,stroke:#78909C,color:#263238,stroke-width:2px
+    classDef labelNode fill:#D6DEE8,stroke:#78909C,color:#263238,stroke-width:2px
     classDef phaseANode fill:#E0EAF0,stroke:#78909C,color:#37474F,stroke-width:1.5px
     classDef phaseBNode fill:#EDE8E2,stroke:#A1887F,color:#37474F,stroke-width:1.5px
     classDef phaseCNode fill:#E3E0EB,stroke:#9E9E9E,color:#37474F,stroke-width:1.5px
@@ -70,6 +74,7 @@ graph TD
     classDef orchNode fill:#ECEFF1,stroke:#90A4AE,color:#37474F,stroke-width:1.5px
 
     class SOURCES sourceBox
+    class PA_LABEL,PB_LABEL,PC_LABEL labelNode
     class INV phaseANode
     class VAULT,SQLITE storageNode
     class ENRICH,GEN phaseBNode

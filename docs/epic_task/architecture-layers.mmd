@@ -12,54 +12,55 @@
     'clusterBorder': '#B0BEC5',
     'titleColor': '#37474F',
     'edgeLabelBackground': '#FFFFFF',
-    'fontSize': '14px'
+    'fontSize': '16px'
   },
   'flowchart': {
     'curve': 'basis',
-    'diagramPadding': 20,
-    'rankSpacing': 40,
-    'nodeSpacing': 15
+    'diagramPadding': 15,
+    'rankSpacing': 50,
+    'nodeSpacing': 12,
+    'padding': 10
   }
 }}%%
 
 graph LR
     subgraph AGENT["Agent"]
         direction TB
-        A1["System Prompt"]
-        A2["17 Skills"]
-        A3["config.yaml"]
+        A1["<b>System Prompt</b><br/>CLAUDE+.md / CLAUDE.md"]
+        A2["<b>17 Skills</b><br/>GitLab &bull; Swagger<br/>Playwright &bull; Autotest<br/>Gen/Run/Fix &bull; ..."]
+        A3["<b>config.yaml</b><br/>Phase &bull; Scope<br/>Autonomy"]
     end
 
-    subgraph MCP["MCP Layer — 39 Servers"]
+    subgraph MCP["MCP Integration Layer — 39 Servers"]
         direction TB
         subgraph MCP_K["Knowledge"]
-            K1["Obsidian"]
-            K2["QMD Search"]
-            K3["SQLite"]
+            K1["<b>Obsidian</b><br/>Vault CRUD"]
+            K2["<b>QMD</b><br/>Semantic Search"]
+            K3["<b>SQLite</b><br/>Analytics DB"]
         end
-        subgraph MCP_L["Live Envs"]
-            L1["PostgreSQL x3"]
-            L2["Swagger x21"]
-            L3["Playwright"]
+        subgraph MCP_L["Live Environments"]
+            L1["<b>PostgreSQL</b><br/>3 environments"]
+            L2["<b>Swagger API</b><br/>21 instances"]
+            L3["<b>Playwright</b><br/>Browser"]
         end
-        subgraph MCP_E["External"]
-            E1["Confluence"]
-            E2["Figma"]
-            E3["Qase"]
-            E4["GitLab"]
+        subgraph MCP_E["External Sources"]
+            E1["<b>Confluence</b><br/>Requirements"]
+            E2["<b>Figma</b><br/>Designs"]
+            E3["<b>Qase</b><br/>Test Suites"]
+            E4["<b>GitLab</b><br/>Issues &bull; Code"]
         end
     end
 
-    subgraph ARTIFACTS["Output"]
+    subgraph OUT["Generated Artifacts"]
         direction TB
-        O1["Knowledge Base"]
-        O2["XLSX Test Docs"]
-        O3["E2E Test Suite"]
-        O4["Dashboard"]
+        O1["<b>Knowledge Base</b><br/>Obsidian Vault<br/>200+ Notes"]
+        O2["<b>Test Documentation</b><br/>XLSX Workbooks<br/>per Module / Ticket"]
+        O3["<b>E2E Test Suite</b><br/>Playwright + TypeScript<br/>Specs + Pages + Data"]
+        O4["<b>Analytics Dashboard</b><br/>Coverage &bull; Health<br/>Progress Metrics"]
     end
 
-    AGENT ==> MCP ==> ARTIFACTS
-    O3 -.->|"write-back"| K1
+    AGENT ==> MCP ==> OUT
+    O3 -.->|"findings write-back"| K1
 
     classDef agentNode fill:#DAE3ED,stroke:#78909C,color:#263238,stroke-width:2px
     classDef mcpNode fill:#E8EDF2,stroke:#90A4AE,color:#37474F,stroke-width:1.5px
