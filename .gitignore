@@ -24,10 +24,16 @@ __pycache__/
 # Playwright MCP logs
 .playwright-mcp/
 
+# MCP tools cache (swagger specs)
+.claude/mcp-tools/cache/
+
 # Exploration artefacts (screenshots, PDFs, downloads)
 expert-system/artefacts/
+
+# Node modules (root and autotests)
+node_modules/
+autotests/node_modules/
 
 # Autotest execution results (reports, screenshots, traces, videos)
 autotests/playwright-report/
 autotests/test-results/
-autotests/node_modules/
