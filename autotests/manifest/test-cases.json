@@ -20,7 +20,7 @@
               "module_component": "day-off/employee-view",
               "notes": "Duration: 0 = day-off (debit), 8 = worked holiday (credit), 7 = half-day",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-DO-002",
@@ -34,7 +34,7 @@
               "module_component": "day-off/navigation",
               "notes": "Known navigation bug: Days off tab sometimes redirects to /sick-leave/my. Verify this does NOT happen.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-DO-003",
@@ -48,7 +48,7 @@
               "module_component": "day-off/lifecycle",
               "notes": "TransferDaysoffModal: minDate=originalDate for future dates. maxDate=end of next year.",
               "classified_type": "hybrid",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-DO-004",
@@ -62,7 +62,7 @@
               "module_component": "day-off/lifecycle",
               "notes": "Only personalDate is changeable via PATCH. Optional approvers stay ASKED after edit.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-DO-005",
@@ -76,7 +76,7 @@
               "module_component": "day-off/lifecycle",
               "notes": "UI uses DELETE endpoint, not PUT /cancel. Cancel X only visible on NEW status rows.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-DO-006",
@@ -90,7 +90,7 @@
               "module_component": "day-off/employee-view",
               "notes": "BUG-DO-32: No calendar events before 2024 reported. Verify this is fixed.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-DO-007",
@@ -104,7 +104,7 @@
               "module_component": "day-off/employee-view",
               "notes": "Russia typically has the most holidays. Exact count depends on year and working-weekend transfers.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-DO-008",
@@ -118,7 +118,7 @@
               "module_component": "day-off/employee-view",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-DO-009",
@@ -132,7 +132,7 @@
               "module_component": "day-off/display",
               "notes": "Date format: DD.MM.YYYY (abbreviated weekday), e.g., '01.05.2026 (fr)'",
               "classified_type": "hybrid",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-DO-010",
@@ -146,7 +146,7 @@
               "module_component": "day-off/display",
               "notes": "",
               "classified_type": "hybrid",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-DO-011",
@@ -160,7 +160,7 @@
               "module_component": "day-off/lifecycle",
               "notes": "Edit button logic: NOT weekend AND duration=0 AND lastApprovedDate >= today",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-DO-012",
@@ -174,7 +174,7 @@
               "module_component": "day-off/lifecycle",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-DO-013",
@@ -188,7 +188,7 @@
               "module_component": "day-off/validation",
               "notes": "Frontend: minDate = moment(originalDate) when original date is in the future",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-DO-014",
@@ -202,7 +202,7 @@
               "module_component": "day-off/validation",
               "notes": "Frontend: maxDate = moment(originalDate).add(1, 'year').endOf('year')",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-DO-015",
@@ -244,7 +244,7 @@
               "module_component": "day-off/validation",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             }
           ]
         },
@@ -262,7 +262,7 @@
               "module_component": "day-off/approval",
               "notes": "Inline button: getByTestId('daysoff-request-action-approve')",
               "classified_type": "hybrid",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-DO-019",
@@ -290,7 +290,7 @@
               "module_component": "day-off/approval",
               "notes": "BUG-DO-6: Ledger is NOT reverted on rejection. Orphaned entries accumulate.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-DO-021",
@@ -304,7 +304,7 @@
               "module_component": "day-off/approval",
               "notes": "Dialog: getByRole('dialog', { name: 'Redirect the rescheduling request' })",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-DO-022",
@@ -360,7 +360,7 @@
               "module_component": "day-off/approval",
               "notes": "Edit mode disables Reject/Approve/Redirect buttons. This is a key UX safety mechanism.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-DO-026",
@@ -374,7 +374,7 @@
               "module_component": "day-off/approval",
               "notes": "",
               "classified_type": "hybrid",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-DO-027",
@@ -402,7 +402,7 @@
               "module_component": "day-off/approval",
               "notes": "Approvable statuses: NEW, REJECTED. BUG-DO-6: Ledger not reverted on reject — test verifies this accumulation.",
               "classified_type": "hybrid",
-              "automation_status": "pending"
+              "automation_status": "blocked"
             },
             {
               "test_id": "TC-DO-029",
@@ -416,7 +416,7 @@
               "module_component": "day-off/approval",
               "notes": "Rejectable statuses: NEW, APPROVED (when personalDate >= report period start)",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "blocked"
             },
             {
               "test_id": "TC-DO-030",
@@ -430,7 +430,7 @@
               "module_component": "day-off/approval",
               "notes": "CPO self-approval bypasses normal approval chain",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "blocked"
             },
             {
               "test_id": "TC-DO-031",

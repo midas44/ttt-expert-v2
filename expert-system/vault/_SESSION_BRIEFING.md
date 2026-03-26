@@ -1,33 +1,53 @@
+---
+type: meta
+tags: [session, briefing, phase-c]
+updated: 2026-03-26
+status: active
+---
+
 # Session Briefing
 
-**Last updated:** 2026-03-26T01:05:00Z
-**Session:** 54 (continued — context recovery)
-**Phase:** C — Autotest Generation
-**Module in scope:** calendar-dayoff
-
-## Session 54 Results
+## Last Session: 55 (2026-03-26)
+**Phase:** C — Autotest Generation (day-off module)
+**Duration:** ~45 min
+**Mode:** Full autonomy
 
 ### Completed
-- **TC-DO-025** (Add optional approver): VERIFIED — stable, passing consistently
-- **TC-DO-026** (Remove optional approver): VERIFIED — stable after major rework
-  - **Key discovery**: DB-inserted optional approvers (`employee_dayoff_approval`) do NOT surface in the frontend. The OptionalApprovers component reads from `weekend.optionalApprovers` which comes from the API response, not raw DB. Direct DB inserts are invisible to the UI.
-  - **Fix**: Restructured TC-026 to add approver via UI first (reusing TC-025 flow), then delete it. This bypasses the data setup issue entirely.
-  - **getApproverCount() fix**: The "Нет данных" (No data) placeholder row was being counted as a real row. Fixed with `:not(:has(td[colspan]))` filter.
-  - **Data exhaustion fix**: All future dayoff date slots were consumed by test runs. Switched from `createNewDayoffRequest` to `findNewDayoffRequestWithManager` to reuse existing requests.
-- **TC-DO-028** (Reject then re-approve): BLOCKED — dayoff modal only shows Approve/Reject for NEW status
-- **TC-DO-029** (Approve then reject approved): BLOCKED — same reason as TC-DO-028
+1. **TC-DO-007** (Verify holidays — Russia) — VERIFIED (3 attempts)
+   - Fixed calendar resolution logic (since_year active calendar filter)
+   - Fixed bilingual header handling (Russian "Причина" vs English "Reason")
+   - UI shows ALL calendar_days entries (18 for Russia including shortened days), not just duration=0
 
-### Not Started This Session
-- **TC-DO-030** (CPO self-approval): Deferred — previous context showed APPROVER page `waitForReady()` timeout. Needs investigation next session.
+2. **TC-DO-008** (Verify holidays — Cyprus) — VERIFIED (1st attempt)
+   - Reused `findEmployeeByActiveCalendar` query from TC-DO-007
+   - Cyprus: 12 holidays, all duration=0
 
-### Key Findings Written to Vault
-- Day-off vs vacation button visibility difference documented in `exploration/ui-flows/dayoff-manager-approval-flow.md`
-- Optional approvers DOM structure: `vacation__optional-approvers-table` class, `tbody` uses `display: flex; flex-direction: column-reverse`, ButtonIcon renders with `uikit-button` class
+3. **TC-DO-014** (Transfer modal max date boundary) — VERIFIED (7 attempts)
+   - **Key discovery:** Frontend maxDate = Dec 31 of SAME year (not next year)
+   - Formula: `moment(originalDate.format('YYYY')).add(1,'y').subtract(1,'d')`
+   - Fixed `findFreeHolidayForTransfer` to filter active calendars only
+   - Added `hasAvailableDays()` method to RescheduleDialog
+   - Fixed calendar picker navigation selectors (must target first thead row)
 
-### Data Exhaustion Warning
-All future (employee, date) combinations for dayoff requests are consumed on qa-1. Tests creating new requests via `createNewDayoffRequest` will fail. All data classes should use `findNewDayoffRequestWithManager` to reuse existing NEW requests first. Consider cleaning up old test-created dayoff requests in a future session.
+4. **Session 55 Maintenance (§9.4)**
+   - Synced manifest with SQLite (17 entries were out of sync)
+   - No duplicate autotest_tracking entries
+   - 4 orphaned exploration_findings (minor, general)
+   - Wrote maxDate discovery back to vault
 
-## Next Session Priorities
-1. **TC-DO-030**: Investigate CPO self-approval page — APPROVER tab table visibility issue
-2. **Data cleanup**: Consider deleting old test-created dayoff requests to free up date slots
-3. Continue with remaining dayoff test cases from manifest
+### Current Coverage
+- **SQLite:** 25 verified + 3 blocked = 28/121 (23%)
+- **Manifest:** Synced to match SQLite
+- **Blocked:** TC-DO-028, TC-DO-029 (approve/reject flow impossible for dayoff), TC-DO-030 (CPO self-approval not reproducible)
+
+### Key Discoveries This Session
+- `office_calendar.since_year` resolution: latest `since_year <= current_year` wins
+- Russia 2026 calendar: 18 entries (14 holidays + 4 shortened "Предпраздничный день")
+- Cyprus 2026 calendar: 12 entries (all holidays)
+- `findFreeHolidayForTransfer` was returning holidays from inactive calendars — fixed
+- Transfer dialog `renderDay` disables weekends, holidays, personal dayoffs; enables working weekends
+
+### Next Session (56) — Priorities
+1. Continue day-off Phase C: pick next 5 test cases from pending pool
+2. Focus on TS-DayOff-Search or TS-DayOff-Validation suites (lower-complexity UI tests)
+3. 93 pending test cases remain

@@ -88,6 +88,15 @@ export class RescheduleDialog {
     return cls?.includes("rdtDisabled") ?? false;
   }
 
+  /** Returns true if the current calendar month has at least one non-disabled day. */
+  async hasAvailableDays(): Promise<boolean> {
+    const available = this.calendarTable.locator(
+      "td:not(.rdtOld):not(.rdtNew):not(.rdtDisabled)",
+    );
+    const count = await available.count();
+    return count > 0;
+  }
+
   /**
    * Selects the first available (non-disabled, non-old, non-new) day
    * in the currently displayed calendar month.
@@ -107,6 +116,24 @@ export class RescheduleDialog {
       }
     }
     return null;
+  }
+
+  /** Returns the currently displayed month (0-indexed) and year from the calendar header. */
+  async getCurrentMonthYear(): Promise<{ month: number; year: number }> {
+    const headerCell = this.calendarTable.locator("th").nth(1);
+    const headerText = (await headerCell.textContent())?.trim() ?? "";
+    return this.parseCalendarHeader(headerText);
+  }
+
+  /** Clicks the next month (›) button in the calendar header row. */
+  async clickNextMonth(): Promise<void> {
+    await this.calendarTable
+      .locator("thead tr")
+      .first()
+      .locator("th")
+      .last()
+      .click();
+    await this.page.waitForTimeout(200);
   }
 
   /** Navigate to a specific month/year in the calendar (public wrapper). */
@@ -136,18 +163,15 @@ export class RescheduleDialog {
       const currentTotal = currentYear * 12 + currentMonth;
       const targetTotal = targetYear * 12 + targetMonth;
 
+      const headerRow = this.calendarTable
+        .locator("thead tr")
+        .first();
       if (targetTotal > currentTotal) {
-        // Click next (›) — last header cell
-        await this.calendarTable
-          .locator("th")
-          .last()
-          .click();
+        // Click next (›) — last th in first header row
+        await headerRow.locator("th").last().click();
       } else {
-        // Click prev (‹) — first header cell
-        await this.calendarTable
-          .locator("th")
-          .first()
-          .click();
+        // Click prev (‹) — first th in first header row
+        await headerRow.locator("th").first().click();
       }
       await this.page.waitForTimeout(200);
     }

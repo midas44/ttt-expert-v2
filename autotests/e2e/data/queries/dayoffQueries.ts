@@ -56,6 +56,13 @@ export async function findFreeHolidayForTransfer(
        AND cd.duration = 0
        AND cd.calendar_date > CURRENT_DATE
        AND NOT EXISTS (
+         SELECT 1 FROM ttt_calendar.office_calendar oc2
+         WHERE oc2.office_id = oc.office_id
+           AND oc2.since_year > oc.since_year
+           AND oc2.since_year <= EXTRACT(YEAR FROM CURRENT_DATE)
+       )
+       AND oc.since_year <= EXTRACT(YEAR FROM CURRENT_DATE)
+       AND NOT EXISTS (
          SELECT 1 FROM ttt_vacation.employee_dayoff_request edr
          WHERE edr.employee = e.id
            AND edr.original_date = cd.calendar_date
@@ -672,6 +679,99 @@ export async function createCpoSelfAssignedRequest(
 }
 
 /**
+ * Finds a CPO (ROLE_DEPARTMENT_MANAGER or ROLE_PROJECT_MANAGER) who has a
+ * future holiday available for creating a transfer request (no existing active request).
+ * Tries employee_dayoff first (the UI data source), falls back to calendar_days.
+ * Read-only — does NOT create any request.
+ */
+export async function findCpoWithFreeHoliday(
+  db: DbClient,
+): Promise<{
+  cpoLogin: string;
+  cpoName: string;
+  originalDate: string;
+  personalDate: string;
+}> {
+  let cpo: { login: string; employeeName: string; originalDate: string };
+  try {
+    cpo = await db.queryOne<{
+      login: string;
+      employeeName: string;
+      originalDate: string;
+    }>(
+      `SELECT e.login,
+              CONCAT(e.russian_last_name, ' ', e.russian_first_name) AS "employeeName",
+              ed.original_date::text AS "originalDate"
+       FROM ttt_vacation.employee_dayoff ed
+       JOIN ttt_vacation.employee e ON ed.employee = e.id
+       JOIN ttt_backend.employee_global_roles egr ON egr.employee = e.id
+       WHERE e.enabled = true
+         AND egr.role_name IN ('ROLE_DEPARTMENT_MANAGER', 'ROLE_PROJECT_MANAGER')
+         AND ed.duration = 0
+         AND ed.original_date > CURRENT_DATE
+         AND NOT EXISTS (
+           SELECT 1 FROM ttt_vacation.employee_dayoff_request edr
+           WHERE edr.employee = e.id
+             AND edr.original_date = ed.original_date
+             AND edr.status NOT IN ('DELETED', 'DELETED_FROM_CALENDAR', 'CANCELED')
+         )
+       ORDER BY random()
+       LIMIT 1`,
+    );
+  } catch {
+    // Fallback: use calendar_days when employee_dayoff is exhausted
+    cpo = await db.queryOne<{
+      login: string;
+      employeeName: string;
+      originalDate: string;
+    }>(
+      `SELECT e.login,
+              CONCAT(e.russian_last_name, ' ', e.russian_first_name) AS "employeeName",
+              cd.calendar_date::text AS "originalDate"
+       FROM ttt_vacation.employee e
+       JOIN ttt_backend.employee_global_roles egr ON egr.employee = e.id
+       JOIN ttt_calendar.office_calendar oc ON oc.office_id = e.office_id
+       JOIN ttt_calendar.calendar_days cd ON cd.calendar_id = oc.calendar_id
+       WHERE e.enabled = true
+         AND egr.role_name IN ('ROLE_DEPARTMENT_MANAGER', 'ROLE_PROJECT_MANAGER')
+         AND cd.duration = 0
+         AND cd.calendar_date > CURRENT_DATE
+         AND NOT EXISTS (
+           SELECT 1 FROM ttt_vacation.employee_dayoff_request edr
+           WHERE edr.employee = e.id
+             AND edr.original_date = cd.calendar_date
+             AND edr.status NOT IN ('DELETED', 'DELETED_FROM_CALENDAR', 'CANCELED')
+         )
+       ORDER BY random()
+       LIMIT 1`,
+    );
+  }
+
+  const personalRow = await db.queryOne<{ workingDate: string }>(
+    `WITH dates AS (
+       SELECT generate_series(
+         ($1::date + INTERVAL '7 days')::date,
+         ($1::date + INTERVAL '60 days')::date,
+         '1 day'::interval
+       )::date AS d
+     )
+     SELECT d::text AS "workingDate"
+     FROM dates
+     WHERE EXTRACT(DOW FROM d) NOT IN (0, 6)
+     ORDER BY d
+     LIMIT 1`,
+    [cpo.originalDate],
+  );
+
+  return {
+    cpoLogin: cpo.login,
+    cpoName: cpo.employeeName,
+    originalDate: cpo.originalDate,
+    personalDate: personalRow.workingDate,
+  };
+}
+
+/**
  * Adds an optional approver to a dayoff request.
  * Inserts a row into employee_dayoff_approval with status ASKED.
  */
@@ -694,6 +794,46 @@ export async function addOptionalApprover(
     [requestId, approver.id],
   );
   return { approvalId: inserted.id, approverName: approver.fullName };
+}
+
+/**
+ * Finds a random enabled employee whose office's active calendar for the
+ * current year matches the given calendar name. Also returns the expected
+ * holiday count for that calendar (duration=0 entries in calendar_days).
+ *
+ * Active calendar = the one with the highest since_year <= current year
+ * in office_calendar for that office.
+ */
+export async function findEmployeeByActiveCalendar(
+  db: DbClient,
+  calendarName: string,
+): Promise<{ login: string; expectedCount: number }> {
+  return db.queryOne<{ login: string; expectedCount: number }>(
+    `SELECT e.login,
+            (SELECT COUNT(*)::int FROM ttt_calendar.calendar_days cd
+             WHERE cd.calendar_id = target_cal.calendar_id
+             AND EXTRACT(YEAR FROM cd.calendar_date) = EXTRACT(YEAR FROM CURRENT_DATE)
+            ) AS "expectedCount"
+     FROM ttt_vacation.employee e
+     JOIN (
+       SELECT oc.office_id, oc.calendar_id
+       FROM ttt_calendar.office_calendar oc
+       JOIN ttt_calendar.calendar c ON c.id = oc.calendar_id
+       WHERE c.name = $1
+         AND oc.since_year <= EXTRACT(YEAR FROM CURRENT_DATE)
+         AND NOT EXISTS (
+           SELECT 1 FROM ttt_calendar.office_calendar oc2
+           WHERE oc2.office_id = oc.office_id
+             AND oc2.since_year > oc.since_year
+             AND oc2.since_year <= EXTRACT(YEAR FROM CURRENT_DATE)
+         )
+     ) target_cal ON target_cal.office_id = e.office_id
+     WHERE e.enabled = true
+       AND e.manager IS NOT NULL
+     ORDER BY random()
+     LIMIT 1`,
+    [calendarName],
+  );
 }
 
 /**

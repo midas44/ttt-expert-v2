@@ -239,3 +239,35 @@ On the MY_DEPARTMENT tab (`/vacation/request/daysoff-request/MY_DEPARTMENT`):
 - `expert-system/artefacts/weekend-details-modal-add-approver.png` — new approver row with Select combobox
 - `expert-system/artefacts/weekend-details-modal-dropdown-open.png` — combobox dropdown open showing employee list
 - `expert-system/artefacts/weekend-details-modal-approved.png` — APPROVED request modal (no action buttons)
+
+## Transfer Dialog Calendar — maxDate Discovery (Session 55)
+
+**Frontend source:** `TransferDaysoffModal.tsx` lines 50-52
+
+```typescript
+const maxDate = moment(originalDate.format('YYYY'))
+  .add(1, 'y')
+  .subtract(1, 'd');
+```
+
+**Effective maxDate:** December 31 of the **same year** as the holiday — NOT the next year.
+- `moment("2026")` = Jan 1, 2026
+- `.add(1,'y')` = Jan 1, 2027
+- `.subtract(1,'d')` = **Dec 31, 2026**
+
+**renderDay disabling logic** (lines 58-98):
+- Weekends (Sat/Sun via `isWeekend()`)
+- Other public holidays AND personal dayoff dates from `currentDayoffs` array (both `publicDate` and `personalDate`)
+- Short-day dayoffs when `duration === 7` and it's the current dayoff being edited
+- **Exception:** Working weekends (`duration !== 0` entries in `currentDayoffs`) are NOT disabled
+
+**minDate** (line 123):
+- If `isMinCurrentDay` feature flag: `moment().subtract(1, 'd')` (yesterday)
+- Otherwise: `moment(originalDate)` (the holiday date itself)
+
+**Selectors confirmed (Phase C):**
+- Calendar header (month/year): `this.calendarTable.locator("th").nth(1)` — returns "Декабрь, 2026" format
+- Next month button: `this.calendarTable.locator("thead tr").first().locator("th").last()` — MUST target first thead row (second row has day-of-week labels)
+- Prev month button: `this.calendarTable.locator("thead tr").first().locator("th").first()`
+- Available day cells: `td:not(.rdtOld):not(.rdtNew):not(.rdtDisabled)`
+- Disabled check: cell class includes `rdtDisabled`
