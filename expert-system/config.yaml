@@ -4,7 +4,7 @@ session:
   offhours_utc: 15:00-03:00
   max_duration_minutes: 120
 phase:
-  current: knowledge_acquisition
+  current: autotest_generation
   generation_allowed: true
   coverage_override: -1
   scope: 3404
@@ -31,7 +31,7 @@ autonomy:
   consecutive_failure_limit: 30
   auto_phase_transition: true
   log_dir: expert-system/logs
-  stop: false
+  stop: true
   model: opus
   effort: max
   allow_api_mutations: true

@@ -1,48 +1,47 @@
 ---
-type: session-control
-updated: '2026-03-26'
+type: agenda
+updated: 2026-03-26
+phase: C
+scope: t3404
 ---
-# Investigation Agenda — Phase C (t3404)
 
-## Current Phase: Autotest Generation for #3404
+# Investigation Agenda — Ticket #3404
 
-### P0 — Completed
-- [x] TC-T3404-005: Edit icon visible PAST day-off open month ✅ verified
-- [x] TC-T3404-006: Edit icon HIDDEN closed month ✅ verified
-- [x] TC-T3404-016: Select earlier date same month ✅ verified
+## Status: PHASE C COMPLETE
 
-### P1 — Completed
-- [x] TC-T3404-004: Edit icon visible future day-off ✅ verified
-- [x] TC-T3404-007: Boundary on approve period start ✅ verified
-- [x] TC-T3404-010: Closed month Jan all disabled (datepicker) ✅ verified
-- [x] TC-T3404-011: Closed month Feb all disabled (datepicker) ✅ verified
-- [x] TC-T3404-012: Open month Mar working days enabled (datepicker) ✅ verified
-- [x] TC-T3404-015: March 2 first working day enabled (datepicker) ✅ verified
-- [x] TC-T3404-017: First working day of month selectable (earlier date) ✅ verified
+All 24 test cases have been processed (21 verified, 3 blocked).
+No further investigation or generation work needed for this scope.
 
-### P1 — Remaining
-- [ ] TC-T3404-018: Feb dates NOT selectable (earlier date)
-- [ ] TC-T3404-020: E2E reschedule + approval (regression)
-- [ ] TC-T3404-021: Month-close auto-rejection (regression, hybrid)
-- [ ] TC-T3404-022: Vacation recalculation overlap (regression, hybrid)
+<details>
+<summary>Completed Items (Sessions 55-60)</summary>
 
-### P2 — Pending
-- [ ] TC-T3404-001: EN tooltip text
-- [ ] TC-T3404-002: EN dialog title
-- [ ] TC-T3404-008: Edit icon hidden last day closed month
-- [ ] TC-T3404-009: Previous year all hidden
-- [ ] TC-T3404-013: Future month Apr enabled (datepicker)
-- [ ] TC-T3404-014: Boundary Feb 28 disabled (datepicker)
-- [ ] TC-T3404-019: Future holiday minDate ST-4 (earlier date)
-- [ ] TC-T3404-023: Max date Dec 31 unchanged (regression)
+### Phase A (Session 55)
+- [x] Read ticket #3404 with all comments
+- [x] Analyze MR !5333 code changes (4 frontend files)
+- [x] Map approve period → edit icon visibility logic
+- [x] Document BUG-T3404-1 (> vs >= boundary)
+- [x] Create vault notes for day-off module
 
-### P3 — Pending
-- [ ] TC-T3404-003: RU tooltip text unchanged
-- [ ] TC-T3404-024: Global approve period diff offices
+### Phase B (Session 55)
+- [x] Generate t3404.xlsx with 24 test cases across 5 suites
+- [x] Parse XLSX to manifest JSON
 
-### Key Learnings
-- **Data source:** UI Days Off tab displays from production calendar (`calendar_days` via `office_calendar`), NOT from `employee_dayoff`. All queries must use `calendar_days`.
-- **Reusable page objects:** `DayOffPage` and `RescheduleDialog` cover all needed interactions.
-- **BUG-T3404-1:** Boundary test (TC-007) asserts current buggy behavior (edit icon hidden on exact period start) with known-bug annotation.
-- **Datepicker navigation:** react-datetime with minDate Feb 28 blocks backward navigation past February. TC-010 handles both scenarios (blocked or all-disabled).
-- **New RescheduleDialog methods:** `areAllCurrentMonthDaysDisabled()`, `getDayStates()`, `clickPrevMonth()` — added in session 60 for datepicker suite.
+### Phase C (Sessions 56-60)
+- [x] P0: TC-016 core earlier date selection
+- [x] P0: TC-001 EN tooltip, TC-002 EN dialog title
+- [x] P1: TC-004/005 edit icon open period, TC-006/008 closed period
+- [x] P1: TC-007 boundary approve period start
+- [x] P1: TC-009 previous year all hidden
+- [x] P1: TC-010/011 closed months disabled, TC-012 open month enabled
+- [x] P1: TC-013 future month enabled, TC-015 March 2 boundary
+- [x] P1: TC-016/017 earlier date + first working day
+- [x] P1: TC-018 February all disabled
+- [x] P2: TC-003 RU tooltip, TC-014 Feb 28 boundary
+- [x] P2: TC-019 future minDate uses original date (ST-4)
+- [x] P2: TC-023 max date Dec 31 unchanged
+- [x] P1: TC-020 E2E reschedule + approval flow
+- [x] Blocked: TC-021 (env admin), TC-022 (cross-service), TC-024 (data limitation)
+- [x] Fixed data source: calendar_days + LATEST_CAL CTE (not employee_dayoff)
+- [x] Fixed two-user CAS SSO logout flow
+
+</details>

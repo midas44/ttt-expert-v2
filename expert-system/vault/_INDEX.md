@@ -228,3 +228,4 @@
 
 ## Exploration — Tickets (GitLab Mining)
 - [[exploration/tickets/day-off-ticket-findings]] — **[S46]** 25+ tickets mined, 20+ bugs, 6 categories: calendar cascade, transfer bugs, UI display, availability chart, cross-feature, feature design
+- [[exploration/tickets/t3404-investigation]] — **[S59]** #3404: Day-off transfer approve period changes, 2 bugs (ST-1 boundary, ST-3 incomplete)

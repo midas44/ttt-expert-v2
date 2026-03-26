@@ -207,6 +207,39 @@ export class DayOffPage {
     await this.page.waitForLoadState("networkidle").catch(() => {});
   }
 
+  /** Gets the tooltip text for the edit icon on a day-off row. */
+  async getEditButtonTooltip(
+    datePattern: string | RegExp,
+  ): Promise<string> {
+    const row = this.dayOffRow(datePattern).first();
+    const editBtn = row.locator("[data-testid='dayoff-action-edit']");
+
+    // Try title attribute on the button or its wrapper
+    const btnTitle = await editBtn.getAttribute("title");
+    if (btnTitle) return btnTitle;
+    const parentTitle = await editBtn
+      .locator("xpath=..")
+      .getAttribute("title");
+    if (parentTitle) return parentTitle;
+
+    // Hover and wait for tooltip element
+    await editBtn.hover();
+    await this.page.waitForTimeout(600);
+
+    const tooltipCandidates = [
+      this.page.getByRole("tooltip"),
+      this.page.locator("[class*='tooltip']").filter({ hasText: /.+/ }),
+    ];
+    for (const loc of tooltipCandidates) {
+      if ((await loc.count()) > 0) {
+        const text = await loc.first().textContent();
+        if (text?.trim()) return text.trim();
+      }
+    }
+
+    return "";
+  }
+
   /** Returns the text content of the first cell (date column) in a row. */
   async getRowFirstCellText(
     datePattern: string | RegExp,
