@@ -1,8 +1,8 @@
 session:
-  delay_minutes: 5
-  delay_minutes_offhours: 5
+  delay_minutes: 10
+  delay_minutes_offhours: 10
   offhours_utc: 15:00-03:00
-  max_duration_minutes: 120
+  max_duration_minutes: 90
 phase:
   current: autotest_generation
   generation_allowed: true
@@ -18,9 +18,9 @@ repos:
   - stage
 testing_dev_envs:
   primary:
-    name: timemachine
-  secondary:
     name: qa-1
+  secondary:
+    name: timemachine
 testing_prod_envs:
   primary:
     name: stage
@@ -46,7 +46,7 @@ autotest:
   target_env: qa-1
   max_tests_per_session: 5
   auto_fix_attempts: 3
-  scope: 3404
+  scope: vacation
   priority_order:
   - vacation
   - sick-leave
