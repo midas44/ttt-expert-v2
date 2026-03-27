@@ -251,6 +251,20 @@ export class MyVacationsPage {
     return this.tableRows.count();
   }
 
+  /** Navigates to the last page of the vacation table pagination. No-op if only 1 page. */
+  async goToLastPage(): Promise<void> {
+    const pagination = this.page.getByRole("navigation", { name: "Pagination" });
+    if (!(await pagination.isVisible().catch(() => false))) return;
+    const pageButtons = pagination.getByRole("button").filter({
+      hasNotText: /Previous|Next/i,
+    });
+    const count = await pageButtons.count();
+    if (count > 1) {
+      await pageButtons.last().click();
+      await this.page.waitForLoadState("networkidle");
+    }
+  }
+
   /** Clicks a column header button to toggle sort. */
   async clickColumnSort(columnLabel: string): Promise<void> {
     const header = this.page.locator("table thead th").filter({ hasText: columnLabel });

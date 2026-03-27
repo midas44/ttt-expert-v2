@@ -101,15 +101,17 @@ export class ApiVacationSetupFixture {
     }
   }
 
-  /** Delete (soft) a vacation via API. Used for cleanup. */
+  /** Hard-delete a vacation via test endpoint. Removes from DB completely. */
   async deleteVacation(vacationId: number): Promise<void> {
-    const url = `${this.baseUrl}/${vacationId}`;
-    const resp = await this.request.delete(url, { headers: this.headers });
+    const testUrl = this.tttConfig.buildUrl(
+      `/api/vacation/v1/test/vacations/${vacationId}`,
+    );
+    const resp = await this.request.delete(testUrl, { headers: this.headers });
     // Accept 200 or 404 (already deleted)
     if (!resp.ok() && resp.status() !== 404) {
       const body = await resp.text();
       throw new Error(
-        `Failed to delete vacation ${vacationId}: ${resp.status()} ${body}`,
+        `Failed to hard-delete vacation ${vacationId}: ${resp.status()} ${body}`,
       );
     }
   }

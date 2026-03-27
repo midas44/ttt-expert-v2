@@ -474,6 +474,53 @@ export async function findEmployeeWithLimitedDays(
   );
 }
 
+/**
+ * Finds two non-overlapping conflict-free Mon-Fri weeks for an employee.
+ * Returns both weeks guaranteed to not overlap with each other or existing vacations.
+ */
+export async function findTwoAvailableWeekSlots(
+  db: DbClient,
+  login: string,
+  weeksAhead = 4,
+  maxAttempts = 40,
+): Promise<{ week1Start: string; week1End: string; week2Start: string; week2End: string }> {
+  const now = new Date();
+  const day = now.getDay();
+  const daysToMon = day === 0 ? 1 : day === 1 ? 7 : 8 - day;
+  const base = new Date(now);
+  base.setDate(now.getDate() + daysToMon + weeksAhead * 7);
+
+  let week1: { start: string; end: string } | null = null;
+
+  for (let i = 0; i < maxAttempts; i++) {
+    const start = new Date(base);
+    start.setDate(base.getDate() + i * 7);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 4);
+
+    const startIso = toIsoDate(start);
+    const endIso = toIsoDate(end);
+
+    if (await hasVacationConflict(db, login, startIso, endIso)) continue;
+
+    if (!week1) {
+      week1 = { start: startIso, end: endIso };
+    } else {
+      return {
+        week1Start: week1.start,
+        week1End: week1.end,
+        week2Start: startIso,
+        week2End: endIso,
+      };
+    }
+  }
+  throw new Error(`Could not find two conflict-free weeks for ${login}`);
+}
+
+function toIsoDate(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
+
 /** Checks whether a vacation overlaps with existing vacations for the given login. */
 export async function hasVacationConflict(
   db: DbClient,

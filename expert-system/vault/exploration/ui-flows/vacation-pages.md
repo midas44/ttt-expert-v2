@@ -321,3 +321,32 @@ await requestsPage.waitForRequestRowToDisappear(data.employeeName, data.periodPa
 ### Cleanup Pattern
 - Tests creating vacations via UI (TC-VAC-001, 002) must clean up via UI (`openRequestDetails` → `deleteRequest`) because API_SECRET_TOKEN can only delete pvaynmaster's vacations
 - Tests using API setup (TC-VAC-005, 007, 008) can clean up via API since pvaynmaster owns those vacations
+
+
+## Tab Filter Behavior (discovered Session 70)
+
+**CRITICAL finding:** CANCELED vacations are NOT shown on ANY tab (Open, Closed, or All).
+
+| Tab | Statuses shown |
+|-----|---------------|
+| Open | NEW, APPROVED |
+| Closed | PAID, REJECTED |
+| All | NEW, APPROVED, PAID, REJECTED, DELETED, FINISHED |
+
+- CANCELED is excluded from all views
+- DELETED IS shown on All tab (but not on Open or Closed)
+- FINISHED (administrative vacations) shown on All tab
+
+## Pagination & Sort
+
+- Default sort: **DESCENDING** (newest first) on page 1
+- Pagination: ~20 rows per page
+- Pagination nav: `navigation "Pagination"` with `button "Page N"`, `button "Previous page"`, `button "Next page"`
+- Use `goToLastPage()` method in MyVacationsPage to navigate to oldest vacations
+
+## Selectors (discovered during Phase C)
+
+- Tab buttons: `getByRole("button", { name: /^Open$/i })`, `getByRole("button", { name: /^Closed$/i })`, `getByRole("button", { name: /^All$/i })`
+- Table rows: `table.user-vacations tbody tr, table tbody tr`
+- Sort button: inside `table thead th` filtered by column label, `getByRole("button", { name: columnLabel })`
+- Column filter button: second button inside the `th` (after sort button)
