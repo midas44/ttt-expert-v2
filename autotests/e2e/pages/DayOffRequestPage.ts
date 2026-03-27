@@ -203,7 +203,7 @@ export class DayOffRequestPage {
     for (let i = 0; i < count; i++) {
       const text = (await cells.nth(i).textContent())?.trim() ?? "";
       if (
-        /new|approved|rejected|на подтверждении|подтверждено|отклонено/i.test(
+        /new|approved|rejected|на подтверждении|подтвержден[аоы]?|отклонен[аоы]?/i.test(
           text,
         )
       ) {

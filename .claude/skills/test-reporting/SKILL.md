@@ -113,6 +113,133 @@ Rollback deployment tested on **qa-1** and **timemachine** environments using pi
 
 ---
 
+## Bug Report Format (Individual Bugs as Comments)
+
+Each bug found during QA testing gets its **own separate comment** on the GitLab issue. The format uses a checkbox prefix for tracking resolution status.
+
+### Template
+
+```markdown
+* [ ] <N>. <Brief description of the bug>
+
+**Example:**
+
+`<env>`, `<user>`, <context description>
+
+<details><summary>screen1</summary>
+
+![screen1](/uploads/...)
+
+</details>
+
+**Expected:**
+
+<What the correct behavior should be>
+
+**Notes:**
+
+* <Edge cases, related bugs, additional context>
+
+**Env:**
+
+`<env-name>`
+```
+
+### Checkbox Status Conventions
+
+| Checkbox | Meaning |
+|---|---|
+| `* [ ] 1.` | Open bug, not resolved |
+| `* [x] 1.` | Resolved / fixed |
+| `* [x] [NOT A BUG] 1.` | Investigated, not a bug |
+| `* [x] [WON'T FIX] 1.` | Acknowledged, won't be fixed |
+| `* [x] [CAN'T REPRODUCE] 1.` | Cannot reproduce on current build |
+| `* [x] [DESIGN] 1.` | Requires design decision |
+| `* [ ] [DESIGN] 1.` | Open design question |
+
+### Key Rules
+
+1. **One bug per comment** — enables reply threading and independent resolution tracking
+2. **Never edit original bug text** — always append updates using `**Upd:**`, `**Upd2:**` etc.
+3. **Screenshots in collapsible `<details>` blocks** — keeps comments compact
+4. **`**Env:**` block always present** — use backtick format: `` `qa-1` ``, `` `qa-1, timemachine` ``
+5. **`**Example:**` block** — include env, user login, and reproduction context in backticks
+6. **Sub-variants** of one bug use `1.1`, `1.2` numbering within the same comment
+7. **Use backticks** for code entities: `` `lastApprovedDate > approvePeriod` ``, `` `useWeekendTableHeaders.tsx` ``
+
+### Bug Report Example
+
+```markdown
+* [ ] 1. Edit icon missing for day-off on approve period start date (boundary `>` vs `>=`)
+
+**Example:**
+
+`qa-1`, `aglushko` (office Уран), approve period = `2026-03-01`, test holiday created on `2026-03-01`
+
+<details><summary>screen1</summary>
+
+![boundary-bug](/uploads/...)
+
+</details>
+
+**Expected:**
+
+Day-off on March 1 (= approve period start date) should have the edit icon, since March 1 IS in the open approve period.
+
+**Notes:**
+
+* Code in `useWeekendTableHeaders.tsx` uses `lastApprovedDate > moment(approvePeriod)` — should be `>=`
+* Low probability (holidays rarely fall on 1st of month) but incorrect behavior when they do
+* Identified during static analysis (GAP-1 / ST-1), confirmed dynamically by creating a test holiday
+
+**Env:**
+
+`qa-1`
+```
+
+### Design Notes Format
+
+For architectural or design observations (not bugs), use a separate comment:
+
+```markdown
+**Design Notes:** [Updated]
+
+@designer_name @developer_name
+
+* <Observation or recommendation>
+* <Cross-reference to related tickets>
+```
+
+### TO DO Tracking
+
+When bugs need developer attention, post a summary comment:
+
+```markdown
+**TO DO:**
+
+@developer_name
+
+1, 3, 5 (bug numbers from earlier comments that still need fixing)
+```
+
+---
+
+## Updating Existing QA Comments
+
+To update an existing QA comment (e.g., after deeper testing), use the PUT endpoint:
+
+```bash
+curl -s --noproxy "gitlab.noveogroup.com" \
+  --header "PRIVATE-TOKEN: $TOKEN" \
+  --header "Content-Type: application/json" \
+  -X PUT "https://gitlab.noveogroup.com/api/v4/projects/1288/issues/$IID/notes/$NOTE_ID" \
+  --data "$(python3 -c "import json,sys; print(json.dumps({'body': sys.stdin.read()}))" <<< "$BODY")"
+```
+
+**Note:** `$NOTE_ID` is the ID of the existing comment to update. Use GET to find it first.
+
+---
+
 ## How to Post
 
 Build the comment body in a shell variable, then post via the GitLab API:
