@@ -6,7 +6,7 @@ import type { Page, Locator } from "@playwright/test";
  */
 export class EmployeeRequestsPage {
   private readonly title = this.page
-    .locator(".page-body__title")
+    .locator("[class*='title'], h1, h2")
     .filter({ hasText: /Employees.?\s*requests/i });
   private readonly tableRows = this.page.locator("table tbody tr");
 
@@ -124,6 +124,60 @@ export class EmployeeRequestsPage {
     const dialog = this.page.getByRole("dialog").filter({ hasText: /Redirect the request/i });
     await dialog.getByRole("button", { name: "OK" }).click();
     await this.page.waitForLoadState("networkidle");
+  }
+
+  /** Returns the count number from the "Vacation requests (N)" tab text, or 0. */
+  async getVacationRequestsCount(): Promise<number> {
+    const tab = this.page.getByRole("button", {
+      name: /Vacation requests/i,
+    });
+    const text = (await tab.textContent()) ?? "";
+    const match = text.match(/\((\d+)\)/);
+    return match ? parseInt(match[1], 10) : 0;
+  }
+
+  /** Returns the count number from the "Approval (N)" sub-tab text, or 0. */
+  async getApprovalCount(): Promise<number> {
+    const tab = this.page.getByRole("button", { name: /^Approval/i });
+    const text = (await tab.textContent()) ?? "";
+    const match = text.match(/\((\d+)\)/);
+    return match ? parseInt(match[1], 10) : 0;
+  }
+
+  /** Checks whether the approve button exists on a matching row. */
+  async hasApproveButton(...filters: Array<string | RegExp>): Promise<boolean> {
+    const row = this.requestRow(...filters).first();
+    return row
+      .locator('[data-testid="vacation-request-action-approve"]')
+      .isVisible();
+  }
+
+  /** Checks whether the reject button exists on a matching row. */
+  async hasRejectButton(...filters: Array<string | RegExp>): Promise<boolean> {
+    const row = this.requestRow(...filters).first();
+    return row
+      .locator('[data-testid="vacation-request-action-reject"]')
+      .isVisible();
+  }
+
+  /** Checks whether the redirect button exists on a matching row. */
+  async hasRedirectButton(
+    ...filters: Array<string | RegExp>
+  ): Promise<boolean> {
+    const row = this.requestRow(...filters).first();
+    return row
+      .locator('[data-testid="vacation-request-action-redirect"]')
+      .isVisible();
+  }
+
+  /** Checks whether the details/info button exists on a matching row. */
+  async hasDetailsButton(
+    ...filters: Array<string | RegExp>
+  ): Promise<boolean> {
+    const row = this.requestRow(...filters).first();
+    // Details button is typically the 4th action or has an info icon
+    const actions = row.locator("td").last().locator("button");
+    return (await actions.count()) > 0;
   }
 
   /** Waits for a request row matching all filters to disappear from the list. */

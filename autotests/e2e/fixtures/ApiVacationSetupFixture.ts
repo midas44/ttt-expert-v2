@@ -125,6 +125,29 @@ export class ApiVacationSetupFixture {
     return { ...vacation, status: "APPROVED" };
   }
 
+  /** Reject a vacation via API. Uses API_SECRET_TOKEN (pvaynmaster rejects own vacation). */
+  async rejectVacation(vacationId: number): Promise<void> {
+    const url = `${this.baseUrl}/reject/${vacationId}`;
+    const resp = await this.request.put(url, { headers: this.headers });
+    if (!resp.ok()) {
+      const body = await resp.text();
+      throw new Error(
+        `Failed to reject vacation ${vacationId}: ${resp.status()} ${body}`,
+      );
+    }
+  }
+
+  /** Create → Reject a vacation as token owner. Returns the rejected vacation. */
+  async createAndReject(
+    startDate: string,
+    endDate: string,
+    paymentType = "REGULAR",
+  ): Promise<VacationApiResult> {
+    const vacation = await this.createVacation(startDate, endDate, paymentType);
+    await this.rejectVacation(vacation.id);
+    return { ...vacation, status: "REJECTED" };
+  }
+
   /** Create → Cancel a vacation as token owner. Returns the canceled vacation. */
   async createAndCancel(
     startDate: string,
