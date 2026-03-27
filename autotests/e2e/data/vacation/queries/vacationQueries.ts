@@ -517,6 +517,49 @@ export async function findTwoAvailableWeekSlots(
   throw new Error(`Could not find two conflict-free weeks for ${login}`);
 }
 
+/**
+ * Finds three non-overlapping conflict-free Mon-Fri weeks for an employee.
+ * Returns all three weeks guaranteed to not overlap with each other or existing vacations.
+ */
+export async function findThreeAvailableWeekSlots(
+  db: DbClient,
+  login: string,
+  weeksAhead = 4,
+  maxAttempts = 60,
+): Promise<{ week1Start: string; week1End: string; week2Start: string; week2End: string; week3Start: string; week3End: string }> {
+  const now = new Date();
+  const day = now.getDay();
+  const daysToMon = day === 0 ? 1 : day === 1 ? 7 : 8 - day;
+  const base = new Date(now);
+  base.setDate(now.getDate() + daysToMon + weeksAhead * 7);
+
+  const weeks: { start: string; end: string }[] = [];
+
+  for (let i = 0; i < maxAttempts && weeks.length < 3; i++) {
+    const start = new Date(base);
+    start.setDate(base.getDate() + i * 7);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 4);
+
+    const startIso = toIsoDate(start);
+    const endIso = toIsoDate(end);
+
+    if (await hasVacationConflict(db, login, startIso, endIso)) continue;
+    weeks.push({ start: startIso, end: endIso });
+  }
+
+  if (weeks.length < 3) throw new Error(`Could not find 3 conflict-free weeks for ${login}`);
+
+  return {
+    week1Start: weeks[0].start,
+    week1End: weeks[0].end,
+    week2Start: weeks[1].start,
+    week2End: weeks[1].end,
+    week3Start: weeks[2].start,
+    week3End: weeks[2].end,
+  };
+}
+
 function toIsoDate(d: Date): string {
   return d.toISOString().slice(0, 10);
 }

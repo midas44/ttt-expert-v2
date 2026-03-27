@@ -849,6 +849,9 @@ print(sum(1 for x in s['sessions'] if x.get('phase') == 'autotest_generation'))
 
         session_num=$((session_num + 1))
 
+        # Re-read config before delay check (stop flag may have changed during session)
+        parse_config
+
         # Inter-session delay (skip if this was the last session)
         if check_stop_conditions "$session_num" 2>/dev/null; then
             local current_delay
