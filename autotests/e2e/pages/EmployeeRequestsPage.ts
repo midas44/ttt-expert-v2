@@ -7,7 +7,7 @@ import type { Page, Locator } from "@playwright/test";
 export class EmployeeRequestsPage {
   private readonly title = this.page
     .locator("[class*='title'], h1, h2")
-    .filter({ hasText: /Employees.?\s*requests/i });
+    .filter({ hasText: /Employees?.?\s*requests|Vacation\s*requests/i });
   private readonly tableRows = this.page.locator("table tbody tr");
 
   constructor(private readonly page: Page) {}
@@ -20,6 +20,12 @@ export class EmployeeRequestsPage {
   /** Clicks the "Approval" sub-tab filter. */
   async clickApprovalTab(): Promise<void> {
     await this.page.getByRole("button", { name: /^Approval/i }).click();
+    await this.page.waitForLoadState("networkidle");
+  }
+
+  /** Clicks the "Agreement" sub-tab filter (optional approver view). */
+  async clickAgreementTab(): Promise<void> {
+    await this.page.getByRole("button", { name: /^Agreement/i }).click();
     await this.page.waitForLoadState("networkidle");
   }
 
@@ -55,6 +61,35 @@ export class EmployeeRequestsPage {
       '[data-testid="vacation-request-action-approve"]',
     );
     await btn.click();
+  }
+
+  /** Clicks the agree button on a matching row (Agreement tab — optional approver). */
+  async agreeRequest(...filters: Array<string | RegExp>): Promise<void> {
+    const row = this.requestRow(...filters).first();
+    await row.waitFor({ state: "visible" });
+
+    // Try agree-specific data-testid, then generic approve
+    const candidates = [
+      row.locator('[data-testid="vacation-request-action-agree"]'),
+      row.locator('[data-testid="vacation-request-action-approve"]'),
+    ];
+    for (const btn of candidates) {
+      if ((await btn.count()) > 0) {
+        await btn.first().click();
+        return;
+      }
+    }
+
+    // Fallback: click the first action button in the actions cell (last td)
+    const actionBtns = row.locator("td").last().locator("button");
+    if ((await actionBtns.count()) > 0) {
+      await actionBtns.first().click();
+      return;
+    }
+
+    // Last resort: any checkmark/approve icon button in the row
+    const iconBtn = row.locator("button").first();
+    await iconBtn.click();
   }
 
   /** Clicks the reject button (X icon) on a matching row. */

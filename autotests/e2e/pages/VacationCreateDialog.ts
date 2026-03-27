@@ -131,6 +131,40 @@ export class VacationCreateDialog {
     await this.saveButton.click();
   }
 
+  /** Returns true if the Save button is enabled (not disabled). */
+  async isSaveEnabled(): Promise<boolean> {
+    return this.saveButton.isEnabled();
+  }
+
+  /**
+   * Returns validation paragraph text shown in the dialog form area.
+   * These are `<p>` elements near the date pickers that display messages like
+   * "Vacation cannot be shorter than 1 day" or "You already have a vacation request...".
+   */
+  async getValidationMessage(): Promise<string> {
+    const paragraphs = this.dialog.locator("p");
+    const count = await paragraphs.count();
+    const messages: string[] = [];
+    for (let i = 0; i < count; i++) {
+      const text = (await paragraphs.nth(i).textContent())?.trim() ?? "";
+      if (text.length > 0 && text.length < 200) {
+        messages.push(text);
+      }
+    }
+    return messages.join(" | ");
+  }
+
+  /**
+   * Fills a date picker input directly by typing (bypasses calendar widget).
+   * Useful for testing invalid date combinations that the calendar auto-corrects.
+   */
+  async fillDateDirect(pickerIndex: number, dateStr: string): Promise<void> {
+    const input = this.datePickerInputs.nth(pickerIndex);
+    await input.click();
+    await input.fill(dateStr);
+    await this.page.keyboard.press("Tab");
+  }
+
   // ---------------------------------------------------------------------------
   // Private helpers
   // ---------------------------------------------------------------------------
@@ -372,6 +406,16 @@ export class VacationCreateDialog {
       return match ? match[0].trim() : "";
     }
     return "";
+  }
+
+  /** Sets the start date (first date picker). Date format: dd.mm.yyyy */
+  async selectStartDate(date: string): Promise<void> {
+    await this.selectDate(0, date);
+  }
+
+  /** Sets the end date (second date picker). Date format: dd.mm.yyyy */
+  async selectEndDate(date: string): Promise<void> {
+    await this.selectDate(1, date);
   }
 
   /** Closes the dialog without saving (Escape key). */

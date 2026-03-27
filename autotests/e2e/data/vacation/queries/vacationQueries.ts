@@ -424,6 +424,33 @@ export async function findAccountantForEmployee(
   );
 }
 
+interface OptionalApproverRow {
+  login: string;
+  display_name: string;
+}
+
+/** Finds a random enabled employee suitable as optional approver for the given employee. */
+export async function findOptionalApproverFor(
+  db: DbClient,
+  employeeLogin: string,
+): Promise<OptionalApproverRow> {
+  return db.queryOne<OptionalApproverRow>(
+    `SELECT oa.login,
+            COALESCE(bm.latin_first_name || ' ' || bm.latin_last_name, oa.login) AS display_name
+     FROM ttt_vacation.employee e
+     JOIN ttt_vacation.employee oa ON oa.enabled = true AND oa.id != e.id AND oa.id != e.manager
+     JOIN ttt_backend.employee bm ON bm.login = oa.login
+     WHERE e.login = $1
+       AND EXISTS (
+         SELECT 1 FROM ttt_vacation.employee sub
+         WHERE sub.manager = oa.id AND sub.enabled = true
+       )
+     ORDER BY random()
+     LIMIT 1`,
+    [employeeLogin],
+  );
+}
+
 interface EmployeeWithLimitedDaysRow {
   login: string;
   available_days: number;

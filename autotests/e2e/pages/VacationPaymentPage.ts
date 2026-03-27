@@ -105,8 +105,21 @@ export class VacationPaymentPage {
   async checkRow(...filters: Array<string | RegExp>): Promise<void> {
     const row = this.vacationRow(...filters).first();
     await row.waitFor({ state: "visible" });
+
+    // Try standard checkbox first
     const checkbox = row.locator("input[type='checkbox']");
-    await checkbox.check();
+    if ((await checkbox.count()) > 0) {
+      const isChecked = await checkbox.isChecked().catch(() => false);
+      if (!isChecked) {
+        // Native checkbox may be hidden behind a styled label — force check
+        await checkbox.check({ force: true });
+        return;
+      }
+      return;
+    }
+
+    // Fallback: click the first cell (checkbox column)
+    await row.locator("td").first().click();
   }
 
   /** Clicks the "Pay all the checked requests" button and confirms all payment dialogs. */
