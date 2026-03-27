@@ -1,69 +1,52 @@
----
-type: tracking
-updated: 2026-03-27
-phase: C
----
+# Autotest Progress — Phase C
 
-# Autotest Generation Progress
+## Overall Status (2026-03-27, Session 68)
 
-**Last updated:** Session 66 (2026-03-27)
-**Target env:** qa-1
-**Scope:** vacation (current)
+| Module | Total | Verified | Blocked | Pending | Coverage |
+|--------|-------|----------|---------|---------|----------|
+| vacation | 100 | 19 | 1 | 80 | 19% |
+| day-off | 121 | 0 | 0 | 121 | 0% |
+| **Total** | **221** | **19** | **1** | **201** | **8.6%** |
 
-## Overall Progress
+## Verified Tests by Session
 
-| Status | Count | % |
-|--------|-------|---|
-| verified | 55 | 36.2% |
-| blocked | 7 | 4.6% |
-| pending | 90 | 59.2% |
-| **Total tracked** | **152** | |
+### Session 65 (5 verified)
+- TC-VAC-001: View personal vacation list
+- TC-VAC-002: View vacation balance per year
+- TC-VAC-003: Create REGULAR vacation — happy path
+- TC-VAC-004: Create ADMINISTRATIVE vacation
+- TC-VAC-005: Edit NEW vacation dates
 
-**Manifest total:** 245 test cases (vacation: 100, day-off: 121, sick-leave: 24)
+### Session 66 (5 verified, 1 blocked)
+- TC-VAC-006: Delete NEW vacation
+- TC-VAC-007: View vacation details in read-only modal
+- TC-VAC-008: Filter vacation list by status
+- TC-VAC-009: Filter vacation list by year
+- TC-VAC-010: blocked (pagination — insufficient data)
+- TC-VAC-011: Verify vacation creation notification
 
-## Vacation Module Progress
+### Session 67 (5 verified)
+- TC-VAC-012: Manager approve vacation
+- TC-VAC-013: Manager reject vacation
+- TC-VAC-014: Verify approval changes status to APPROVED
+- TC-VAC-015: Verify rejection reason saved in DB
+- TC-VAC-016: Verify manager sees pending requests count
 
-| Status | Count | % |
-|--------|-------|---|
-| verified | 9 | 9% |
-| blocked | 1 | 1% |
-| pending | 90 | 90% |
-| **Total** | **100** | |
+### Session 68 (5 verified)
+- TC-VAC-019: CPO self-approval on create
+- TC-VAC-020: Change approver (redirect request)
+- TC-VAC-025: Pay APPROVED REGULAR vacation
+- TC-VAC-034: Start date in past — rejected
+- TC-VAC-036: Insufficient available days — REGULAR blocked
 
-### Verified Tests (Session 65-66)
-- TC-VAC-001: Create basic vacation (UI)
-- TC-VAC-002: Delete NEW vacation (API setup + UI)
-- TC-VAC-003: Create vacation with comment (UI)
-- TC-VAC-004: Create with Also notify recipients (UI + DB verify)
-- TC-VAC-005: Edit NEW vacation dates (API setup + UI)
-- TC-VAC-006: Edit APPROVED → status resets to NEW (API setup + UI)
-- TC-VAC-007: Approve vacation as manager (API setup + UI)
-- TC-VAC-008: Cancel APPROVED vacation (API setup + UI)
-- TC-VAC-010: View Request Details dialog (API setup + UI)
+## Reusable Artifacts Created
+- **Page Objects**: MyVacationsPage, VacationCreationDialog, VacationDetailsDialog, EmployeeRequestsPage, VacationPaymentPage, MainPage
+- **Fixtures**: LoginFixture, LogoutFixture, VerificationFixture, ApiVacationSetupFixture
+- **Data queries**: vacationQueries.ts (findEmployeeWithManager, findCpoEmployeeWithManager, findSubordinateAndAltManager, findAccountantForEmployee, findEmployeeWithLimitedDays, hasVacationConflict, +more)
 
-### Blocked Tests
-- TC-VAC-009: Re-open CANCELED vacation — Cancel API sets DELETED not CANCELED; CANCELED→NEW not testable via UI
-
-## Week Offset Registry (pvaynmaster — qa-1)
-
-Prevents calendar date conflicts between tests using the same API token owner:
-
-| Offset | Test ID | Description |
-|--------|---------|-------------|
-| 2 | TC-VAC-002 | Delete NEW vacation |
-| 5 | TC-VAC-005 | Edit NEW dates |
-| 6 | TC-VAC-008 | Cancel APPROVED |
-| 7 | TC-VAC-006 | Edit APPROVED → NEW |
-| 8 | TC-VAC-007 | Approve as manager (findEmployeeWithManager) |
-| 9 | TC-VAC-009 | Re-open CANCELED (blocked) |
-| 10 | TC-VAC-010 | View Request Details |
-
-**Next available offset:** 11
-
-## Key Discoveries (Phase C)
-
-1. Cancel API (`PUT /v1/vacations/cancel/{id}`) sets DELETED, not CANCELED
-2. Warning text in edit dialog is version-dependent — tests should check softly
-3. `getFieldValue` pattern for VacationDetailsDialog reads dt/dd or strong/label pairs
-4. Non-pvaynmaster vacations require UI cleanup (API returns 403 for non-owner delete)
-5. `findEmployeeWithColleague` query supports Also notify recipient selection
+## Key Technical Notes
+- All tests pass with `--workers=1` (sequential) — parallel execution causes CAS session conflicts
+- react-select dropdowns: use `[class*='option']` divs, type with `{ delay: 50 }` + 1500ms wait
+- react-datetime picker: `rdtSwitch` header, `rdtNext` navigation, `rdtMonth` cells
+- Payment page: dual confirmation dialogs, office-filtered accountants, "Last First" name format
+- PAID+EXACT vacations are permanent — test pollution accumulates

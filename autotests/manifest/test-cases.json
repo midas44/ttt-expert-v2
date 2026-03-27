@@ -2370,7 +2370,7 @@
               "module_component": "vacation/approval",
               "notes": "CPO = ROLE_DEPARTMENT_MANAGER. pvaynmaster confirmed as CPO on qa-1. Status is NEW, not auto-APPROVED.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-020",
@@ -2384,7 +2384,7 @@
               "module_component": "vacation/approval",
               "notes": "Bug #2718 (OPEN): Redirected approved/rejected request doesn't reset status to NEW.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-021",
@@ -2458,7 +2458,7 @@
               "module_component": "vacation/payment",
               "notes": "PAID+EXACT is terminal and undeletable. Creates permanent data in test environment.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-026",
@@ -2588,7 +2588,7 @@
               "module_component": "vacation/validation",
               "notes": "Missing i18n: error key displayed as raw string. Boundary at today (not tomorrow).",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-035",
@@ -2616,7 +2616,7 @@
               "module_component": "vacation/validation",
               "notes": "AV=false: red error, block submit. AV=true: Error 11.4. Frontend validation fires dynamically on field change.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-037",

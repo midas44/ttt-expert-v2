@@ -107,16 +107,20 @@ export class EmployeeRequestsPage {
     const dialog = this.page.getByRole("dialog").filter({ hasText: /Redirect the request/i });
     await dialog.waitFor({ state: "visible", timeout: 10000 });
 
-    // The dialog uses a react-select combobox
-    const combobox = dialog.getByRole("combobox");
-    await combobox.click();
-    // Type first few characters to filter
-    await combobox.fill(managerName.split(" ")[0]);
-    await this.page.waitForTimeout(500);
+    // The dialog uses a react-select combobox — click the control area to open
+    const selectControl = dialog.locator("[class*='control']").first();
+    await selectControl.click();
+    // Type last name (more unique) to filter the dropdown
+    const parts = managerName.split(" ");
+    const searchTerm = parts.length > 1 ? parts[1] : parts[0];
+    await this.page.keyboard.type(searchTerm, { delay: 50 });
+    await this.page.waitForTimeout(1500);
 
-    // Select the matching option from the listbox
-    const option = this.page.getByRole("option", { name: managerName });
-    await option.click();
+    // react-select uses div[class*='option'] instead of native <option> elements
+    const option = this.page.locator("[class*='option']").filter({
+      hasText: new RegExp(searchTerm, "i"),
+    });
+    await option.first().click({ timeout: 10_000 });
   }
 
   /** Confirms the redirect action (clicks OK button in redirect dialog). */

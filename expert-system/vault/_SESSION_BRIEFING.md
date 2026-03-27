@@ -1,33 +1,49 @@
 # Session Briefing
 
-## Last Session: 67 (2026-03-27)
-**Phase:** C — Autotest Generation
-**Scope:** vacation (approval workflow tests)
+## Session 68 — 2026-03-27
+**Phase:** C (Autotest Generation) | **Scope:** vacation | **Env:** qa-1
 
 ### Completed
-- **5 vacation approval autotests verified** (all pass together in batch):
-  - TC-VAC-015: Approve NEW vacation — happy path (pvaynmaster self-approval via API setup)
-  - TC-VAC-016: Reject NEW vacation (pvaynmaster self-approval via API setup)
-  - TC-VAC-017: Reject APPROVED vacation (two-login: subordinate creates via UI → manager approves then rejects)
-  - TC-VAC-018: Re-approve REJECTED vacation (two-login: subordinate creates via UI → manager rejects then re-approves)
-  - TC-VAC-023: Employee Requests page — view pending approvals (pvaynmaster via API setup)
+- **5 vacation autotests generated and verified** (all pass with `--workers=1`, 54.0s total):
+  - **TC-VAC-019**: CPO self-approval on create — verified
+  - **TC-VAC-020**: Change approver (redirect request) — verified (required subordinate existence check for alt_manager query)
+  - **TC-VAC-025**: Pay APPROVED REGULAR vacation — verified (10 iterative fixes: DB schema, conflict detection, accountant-office mapping, name format, dual confirmation dialogs, month navigation via react-datetime picker)
+  - **TC-VAC-034**: Start date in past — rejected — verified
+  - **TC-VAC-036**: Insufficient available days — REGULAR blocked — verified
 
-### Key Technical Discoveries (Session 67)
-1. **CAS SSO session persistence**: After logout, the app stores auth tokens in localStorage on its domain. `clearCookies()` alone is insufficient for multi-user tests. Must navigate to app domain → clear localStorage/sessionStorage → clear cookies → navigate to about:blank before second login.
-2. **Employee name filtering required**: The Employee Requests "My department" tab shows all subordinates. When multiple employees have vacations for the same date range (common from leftover test data), `periodPattern` alone is ambiguous. Must pass both `employeeName` and `periodPattern` to `requestRow()` filters.
-3. **Data class robustness**: Subordinate employees selected for two-login tests must have no existing future vacations (`NOT EXISTS` clause), otherwise available vacation days in UI won't match DB `available_vacation_days`. Also increased `maxAttempts` to 40 for `findAvailableWeek` to handle pvaynmaster's many leftover test vacations.
-4. **VacationCreationFixture**: Added wait for dialog close after submit to prevent race conditions.
+### Key Discoveries & Fixes
+1. **`office_accountants` table**: Maps accountants to offices (many-to-many). Payment page filters by office — accountant must be assigned to the employee's salary office.
+2. **`employee_global_roles`**: Correct table for role checks (not `employee_role`/`role`). Columns: `(employee bigint, role_name text)`.
+3. **Payment page name format**: Shows "Last First" (e.g., "Weinmeister Pavel"), not "First Last".
+4. **Payment month tabs**: Only show months with pre-existing unpaid vacations. New vacations don't add tabs — must use react-datetime date picker as fallback.
+5. **Dual confirmation dialogs**: "Payment of requests" → "Attention!" (unclosed period). Both must be handled.
+6. **`hasVacationConflict` fix**: Must exclude DELETED/CANCELED/REJECTED vacations from conflict check.
+7. **Redirect dialog**: Only shows managers who have actual subordinates (people whose `manager` column references their id).
 
-### Framework Improvements
-- `VacationCreationFixture`: Added dialog close wait after submit
-- `VacationTc017Data` / `VacationTc018Data`: Added `NOT EXISTS` clause for future vacations in employee query
-- `VacationTc015Data` / `VacationTc016Data`: Increased `maxAttempts` to 40
+### Progress
+| Metric | Value |
+|--------|-------|
+| Verified | 19/100 (19%) |
+| Blocked | 1 |
+| Pending | 80 |
+| Sessions 65-68 total | 20 tests verified |
 
-### Progress Summary
-- **Vacation autotests**: 14 verified, 1 blocked, 85 pending (14% coverage)
-- **Sessions 65-67 batch**: 15 vacation autotests generated (10 CRUD/lifecycle + 5 approval workflow)
+### Files Created/Modified This Session
+- `e2e/tests/vacation/vacation-tc019.spec.ts` (new)
+- `e2e/tests/vacation/vacation-tc020.spec.ts` (new)
+- `e2e/tests/vacation/vacation-tc025.spec.ts` (new)
+- `e2e/tests/vacation/vacation-tc034.spec.ts` (new)
+- `e2e/tests/vacation/vacation-tc036.spec.ts` (new)
+- `e2e/data/vacation/VacationTc019Data.ts` (new)
+- `e2e/data/vacation/VacationTc020Data.ts` (new)
+- `e2e/data/vacation/VacationTc025Data.ts` (new)
+- `e2e/data/vacation/VacationTc034Data.ts` (new)
+- `e2e/data/vacation/VacationTc036Data.ts` (new)
+- `e2e/pages/VacationPaymentPage.ts` (new)
+- `e2e/pages/EmployeeRequestsPage.ts` (updated — redirect target typing)
+- `e2e/data/vacation/queries/vacationQueries.ts` (updated — findAccountantForEmployee, subordinate check, conflict status filter)
 
 ### Next Session Priorities
-1. Continue vacation approval workflow tests (TC-VAC-019 through TC-VAC-022 if available)
-2. Or move to next priority area in manifest
-3. Clean up leftover test vacations for pvaynmaster on qa-1 if data pollution becomes blocking
+1. Continue Phase C vacation autotests — next batch from approval/payment/validation suites
+2. Consider TC-VAC-021 (optional approver), TC-VAC-026 (pay administrative), TC-VAC-037 (overlap check)
+3. VacationPaymentPage is now reusable for TC-VAC-026+ payment tests
