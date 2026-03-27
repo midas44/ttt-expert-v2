@@ -91,7 +91,7 @@ export class ApiVacationSetupFixture {
 
   /** Cancel a vacation via API. Uses API_SECRET_TOKEN (owner cancels own vacation). */
   async cancelVacation(vacationId: number): Promise<void> {
-    const url = `${this.baseUrl}/${vacationId}/cancel`;
+    const url = `${this.baseUrl}/cancel/${vacationId}`;
     const resp = await this.request.put(url, { headers: this.headers });
     if (!resp.ok()) {
       const body = await resp.text();

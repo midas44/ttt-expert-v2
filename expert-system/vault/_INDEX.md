@@ -63,7 +63,7 @@
 - [[analysis/office-period-model]] — REPORT/APPROVE dual periods
 - [[analysis/phase-b-readiness-assessment]] — Phase B readiness: 99.5% - 100% coverage
 - [[analysis/role-permission-matrix]] — 85+ endpoints, 26 routes, 12 permission classes, 5 security gaps
-- [[analysis/vacation-business-rules-reference]] — 10 sections, 45+ rules, 12 known bugs
+- [[analysis/vacation-business-rules-reference]] — **[S62]** 11 sections, 50+ bugs cataloged (ticket-mining enriched), 10 bug categories, recurring root causes
 - [[analysis/reports-business-rules-reference]] — 10 sections, 14 bugs, reports/confirmation/periods/statistics
 - [[analysis/sick-leave-dayoff-business-rules-reference]] — 2 parts, 23 bugs, 4 calendar conflict paths
 - [[analysis/qase-dedup-strategy]] — 258 suites, 1116 cases mapped, priority generation targets
@@ -216,11 +216,14 @@
 - [[debt/vacation-service-debt]] — 4 bugs, 2 security, schema debt
 - [[debt/planner-ordering-debt]] — Dual ordering, 9 issues
 
-## Phase B v2 — Generated Test Documentation (UI-First)
-- **Vacation** (S30): `vacation/vacation.xlsx` (14 tabs, 109 cases) — 11 suites, UI-first test steps
-  - TS-Vac-CRUD (20), TS-Vac-Lifecycle (10), TS-Vac-Approval (17), TS-Vac-Payment (8)
-  - TS-Vac-DayCalc (8), TS-Vac-DayCorrection (5), TS-Vac-Chart (5), TS-Vac-Permissions (9)
-  - TS-Vac-Validation (13), TS-Vac-Notifications (7), TS-Vac-Integration (7)
+## Phase B v3 — Generated Test Documentation (Current)
+- **Vacation** (S64): `vacation/vacation.xlsx` (13 tabs, 100 cases) — 10 suites, UI-first, SETUP/CLEANUP steps, SQL query hints
+  - TS-Vacation-CRUD (14), TS-Vac-Approval (10), TS-Vac-Payment (9), TS-Vac-Validation (13)
+  - TS-Vac-Filters (10), TS-Vacation-AV (7), TS-Vac-Notif (7), TS-Vac-Regression (14)
+  - TS-Vac-Perms (6), TS-Vac-API (10)
+
+## Phase B v2 — Generated Test Documentation (Archived)
+- **Vacation** (S30): `vacation/vacation.xlsx` superseded by v3 above
 - **Day-Off** (S48+S49): `day-off/day-off.xlsx` (11 tabs, 121 cases) — 8 suites, UI-first test steps
   - TS-DayOff-Lifecycle (17), TS-DayOff-Approval (20), TS-DayOff-CalendarConflict (11)
   - TS-DayOff-Search (12), TS-DayOff-Validation (12), TS-DayOff-Permissions (9)
@@ -229,3 +232,9 @@
 ## Exploration — Tickets (GitLab Mining)
 - [[exploration/tickets/day-off-ticket-findings]] — **[S46]** 25+ tickets mined, 20+ bugs, 6 categories: calendar cascade, transfer bugs, UI display, availability chart, cross-feature, feature design
 - [[exploration/tickets/t3404-investigation]] — **[S59]** #3404: Day-off transfer approve period changes, 2 bugs (ST-1 boundary, ST-3 incomplete)
+- [[exploration/tickets/vacation-ticket-findings]] — **[S62]** 250+ tickets searched, 55+ relevant, 11 OPEN bugs, 30+ regression test candidates
+- [[exploration/tickets/vacation-ticket-3092-advance-vacation]] — **[S62]** #3092: AV=True implementation, 14 sub-bugs, 7 design decisions, 12 edge cases
+- [[exploration/tickets/vacation-ticket-3015-accrued-days-validation]] — **[S62]** #3015: Accrued days validation, 31 sub-bugs, conversion logic edge cases
+- [[exploration/tickets/vacation-ticket-3014-form-changes]] — **[S62]** #3014: Form redesign, 35 sub-bugs, first 3 months restriction, dynamic validation
+- [[exploration/tickets/vacation-open-bugs-verification]] — **[S63]** 11 open bugs: #3374 confirmed (last_date sync), #3297 confirmed (search ignores param), #3369 not reproduced
+- [[exploration/api-findings/vacation-notification-templates]] — **[S63]** 50+ vacation email templates cataloged across 10 categories (create, status change, edit, delete, approver, recovered, auto-delete, calendar, reminders, accruals)

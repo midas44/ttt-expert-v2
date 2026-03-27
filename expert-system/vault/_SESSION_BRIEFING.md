@@ -1,51 +1,84 @@
 ---
-type: session-briefing
+type: session
 updated: 2026-03-27
+session: 66
+phase: C (Autotest Generation)
 ---
 
-# Session Briefing — Session 65
+# Session 66 — Phase C: Autotest Generation (Vacation batch 2)
 
-**Phase:** C (Autotest Generation) — vacation module
-**Timestamp:** 2026-03-27T00:30 UTC
-**Mode:** full autonomy
-**Duration:** ~25 min active
+**Timestamp:** 2026-03-27 ~08:20 UTC
+**Phase:** C — Autotest Generation
+**Scope:** vacation
+**Target env:** qa-1
 
-## Session 65 Accomplishments
+## Completed This Session
 
-### Phase C First Batch — 5 Vacation Tests Verified
-Generated, debugged, and verified 5 autotest specs running in parallel on qa-1:
+Generated and verified 5 vacation autotests (TC-VAC-003, 004, 006, 009, 010):
 
-| Test | Description | Key Fix |
-|------|-------------|---------|
-| TC-VAC-001 | Create REGULAR vacation (happy path) | UI cleanup instead of API (403 for non-owner) |
-| TC-VAC-002 | Create ADMINISTRATIVE (unpaid) | Same UI cleanup fix |
-| TC-VAC-005 | Edit vacation dates (NEW status) | Week offset spacing for parallel safety |
-| TC-VAC-007 | Cancel NEW vacation | Date pattern fix for EN locale |
-| TC-VAC-008 | Cancel APPROVED vacation | Approve endpoint path: `/approve/{id}` not `/{id}/approve` |
+| Test ID | Title | Status | Notes |
+|---------|-------|--------|-------|
+| TC-VAC-003 | Create vacation with comment | **verified** | UI creation + comment verification via Request Details dialog |
+| TC-VAC-004 | Create with Also notify recipients | **verified** | UI creation + DB verification of notify_also record |
+| TC-VAC-006 | Edit APPROVED vacation resets to NEW | **verified** | API setup (createAndApprove) + UI edit + status verification |
+| TC-VAC-009 | Re-open CANCELED vacation | **blocked** | Cancel API sets DELETED not CANCELED — see findings below |
+| TC-VAC-010 | View Request Details dialog | **verified** | API setup (createVacation) + dialog field verification |
 
-### Key Discoveries & Fixes Applied
-1. **EN date format in table**: `DD – DD Mon YYYY` (not `dd.mm.yyyy`) — fixed all 5 data classes
-2. **Language switching required**: App defaults to user's preferred language; added `MainPage.setLanguage("EN")` to all specs
-3. **`getAvailableDays()` leaf-first approach**: Rewrote to find leaf `<span>` elements near the "Available vacation days" label
-4. **Approve API path reversed**: `PUT /v1/vacations/approve/{id}` confirmed via swagger spec
-5. **UI cleanup pattern**: Tests creating vacations for non-pvaynmaster users must clean up via UI (openRequestDetails → deleteRequest)
-6. **Week offset isolation**: pvaynmaster tests use weeks 5-6 (TC-005), 8 (TC-007), 11 (TC-008) to prevent parallel conflicts
+### Key Findings
 
-### Coverage Progress
-- **Vacation autotest coverage:** 5/100 verified (5%)
-- **Total across all modules:** 51 verified + 6 blocked = 57/152
+1. **Cancel API path correction:** Endpoint is `/v1/vacations/cancel/{id}`, not `/{id}/cancel`. Fixed in `ApiVacationSetupFixture.ts`.
 
-### Maintenance (Session 65, every-5 check)
-- SQLite: 4 orphaned exploration_findings linked to vault notes
-- 2 new exploration_findings logged (EN date format, approve API correction)
-- No stale notes detected; vault notes enriched with Phase C discoveries
+2. **CRITICAL: Cancel API sets DELETED, not CANCELED.** `PUT /v1/vacations/cancel/{id}` transitions vacation to DELETED status, not CANCELED. The CANCELED status exists in the backend state machine but is NOT reachable through the cancel API or UI. DELETED vacations have no edit button and cannot be reopened. This means TC-VAC-009 (re-open CANCELED vacation) cannot be automated as written — the CANCELED→NEW transition is not exposed.
 
-## Next Session Priorities
-1. Generate next batch of 5 vacation tests (TC-VAC-003, 004, 006, 009, 010)
-2. Focus on: Create with specific payment month, validation errors, reject flow
-3. Continue enriching vault with selector and API discoveries
+3. **VacationDetailsDialog enhanced** with `getFieldValue(label)` method for reading structured field values from the Request Details dialog.
 
-## Vault Notes to Read
-- `exploration/ui-flows/vacation-pages.md` — updated with EN date format, available days counter, API corrections, cleanup patterns
-- `modules/vacation-service-deep-dive.md` — updated with API endpoint path corrections
-- `modules/frontend-vacation-module.md` — page object architecture
+4. **Warning text in edit dialog is optional** — not all environments/versions show the "Changing dates will reset to New status" warning. TC-VAC-006 makes this check soft.
+
+### Files Created/Modified
+
+**New files:**
+- `e2e/data/vacation/VacationTc003Data.ts` — week offset 3, findEmployeeWithManager
+- `e2e/data/vacation/VacationTc004Data.ts` — week offset 4, findEmployeeWithColleague
+- `e2e/data/vacation/VacationTc006Data.ts` — week offset 7, pvaynmaster
+- `e2e/data/vacation/VacationTc009Data.ts` — week offset 9, pvaynmaster
+- `e2e/data/vacation/VacationTc010Data.ts` — week offset 10, pvaynmaster
+- `e2e/tests/vacation/vacation-tc003.spec.ts`
+- `e2e/tests/vacation/vacation-tc004.spec.ts`
+- `e2e/tests/vacation/vacation-tc006.spec.ts`
+- `e2e/tests/vacation/vacation-tc009.spec.ts`
+- `e2e/tests/vacation/vacation-tc010.spec.ts`
+
+**Modified files:**
+- `e2e/fixtures/ApiVacationSetupFixture.ts` — fixed cancel path, added createAndCancel method
+- `e2e/pages/VacationDetailsDialog.ts` — added getFieldValue method
+
+### Cleanup
+- Orphaned vacation 51647 (pvaynmaster, NEW, Aug 3-7) deleted via API.
+
+## Current Autotest Coverage (vacation)
+
+| Status | Count |
+|--------|-------|
+| verified | 9 |
+| blocked | 1 |
+| pending | 90 |
+| **Total** | **100** |
+
+**Coverage: 10% (10/100 test cases addressed)**
+
+## Week Offset Registry (pvaynmaster)
+Tracks which week offsets are used by which tests to prevent date conflicts:
+- Offset 2: TC-VAC-002 (delete NEW)
+- Offset 5: TC-VAC-005 (edit NEW dates)
+- Offset 6: TC-VAC-008 (cancel APPROVED)
+- Offset 7: TC-VAC-006 (edit APPROVED → NEW)
+- Offset 8: TC-VAC-007 (approve as manager — uses findEmployeeWithManager)
+- Offset 9: TC-VAC-009 (re-open CANCELED — blocked)
+- Offset 10: TC-VAC-010 (view Request Details)
+
+## Next Session (67) Priorities
+
+1. Continue vacation autotests — next batch from manifest (TC-VAC-011 onward)
+2. Consider TC-VAC-009 alternatives: investigate if there's a DB-level way to set CANCELED status, or mark the test case as not-automatable
+3. Look at hybrid test types and more complex approval/rejection workflows
+4. Keep enriching vault with selector discoveries
