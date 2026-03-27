@@ -314,6 +314,28 @@ export class MyVacationsPage {
     await this.page.getByRole("checkbox", { name: optionLabel }).click();
   }
 
+  /** Closes the currently open column filter dropdown by pressing Escape. */
+  async closeColumnFilter(): Promise<void> {
+    await this.page.keyboard.press("Escape");
+  }
+
+  /** Returns the text of a footer column cell (from tfoot Total row). */
+  async getFooterColumnValue(columnLabel: string): Promise<string> {
+    const headerCells = this.page.locator("table thead th");
+    const colIndex = await headerCells.evaluateAll(
+      (headers: Element[], label: string) => {
+        for (let i = 0; i < headers.length; i++) {
+          if (headers[i].textContent?.trim().toLowerCase().includes(label.toLowerCase())) return i;
+        }
+        return -1;
+      },
+      columnLabel,
+    );
+    if (colIndex === -1) throw new Error(`Column "${columnLabel}" not found in table footer`);
+    const footerCell = this.page.locator("table tfoot tr td, table tfoot tr th").nth(colIndex);
+    return ((await footerCell.textContent()) ?? "").trim();
+  }
+
   /** Returns the full "Available vacation days" text (e.g., "22" or "4 in 2026"). */
   async getAvailableDaysFullText(): Promise<string> {
     await this.page.waitForLoadState("networkidle");
