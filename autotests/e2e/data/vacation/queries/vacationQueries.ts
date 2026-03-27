@@ -350,6 +350,177 @@ export async function findCpoEmployeeWithManager(
   );
 }
 
+interface SubordinateAndAltManagerRow {
+  employee_login: string;
+  employee_name: string;
+  manager_login: string;
+  alt_manager_login: string;
+  alt_manager_name: string;
+}
+
+/** Returns a subordinate of the given manager + an alternative manager for redirect tests. */
+export async function findSubordinateAndAltManager(
+  db: DbClient,
+  managerLogin: string,
+  minDays: number,
+): Promise<SubordinateAndAltManagerRow> {
+  return db.queryOne<SubordinateAndAltManagerRow>(
+    `SELECT e.login AS employee_login,
+            COALESCE(be.latin_first_name || ' ' || be.latin_last_name, e.login) AS employee_name,
+            m.login AS manager_login,
+            m2.login AS alt_manager_login,
+            COALESCE(bm2.latin_first_name || ' ' || bm2.latin_last_name, m2.login) AS alt_manager_name
+     FROM ttt_vacation.employee e
+     JOIN ttt_vacation.employee_vacation ev ON e.id = ev.employee
+     JOIN ttt_vacation.employee m ON e.manager = m.id
+     JOIN ttt_backend.employee be ON be.login = e.login
+     JOIN ttt_vacation.employee m2 ON m2.enabled = true AND m2.id != m.id AND m2.id != e.id
+     JOIN ttt_backend.employee bm2 ON bm2.login = m2.login
+     WHERE m.login = $1
+       AND e.enabled = true
+       AND e.login != $1
+       AND ev.year = EXTRACT(YEAR FROM CURRENT_DATE)
+       AND ev.available_vacation_days >= $2
+       AND NOT EXISTS (
+         SELECT 1 FROM ttt_vacation.vacation v
+         WHERE v.employee = e.id
+           AND v.status IN ('NEW', 'APPROVED')
+           AND v.start_date > CURRENT_DATE
+       )
+       AND m2.manager IS NOT NULL
+       AND EXISTS (
+         SELECT 1 FROM ttt_vacation.employee sub
+         WHERE sub.manager = m2.id AND sub.enabled = true
+       )
+     ORDER BY random()
+     LIMIT 1`,
+    [managerLogin, minDays],
+  );
+}
+
+interface AccountantRow {
+  login: string;
+  display_name: string;
+}
+
+/** Returns a random accountant assigned to the given employee's salary office. */
+export async function findAccountantForEmployee(
+  db: DbClient,
+  employeeLogin: string,
+): Promise<AccountantRow> {
+  return db.queryOne<AccountantRow>(
+    `SELECT acct.login,
+            COALESCE(be.latin_first_name || ' ' || be.latin_last_name, acct.login) AS display_name
+     FROM ttt_vacation.office_accountants oa
+     JOIN ttt_vacation.employee acct ON oa.employee = acct.id
+     JOIN ttt_backend.employee be ON be.login = acct.login
+     JOIN ttt_vacation.employee target ON target.office_id = oa.office
+     WHERE target.login = $1
+       AND acct.enabled = true
+       AND acct.login != $1
+     ORDER BY random()
+     LIMIT 1`,
+    [employeeLogin],
+  );
+}
+
+interface OptionalApproverRow {
+  login: string;
+  display_name: string;
+}
+
+/** Finds a random enabled employee suitable as optional approver for the given employee. */
+export async function findOptionalApproverFor(
+  db: DbClient,
+  employeeLogin: string,
+): Promise<OptionalApproverRow> {
+  return db.queryOne<OptionalApproverRow>(
+    `SELECT oa.login,
+            COALESCE(bm.latin_first_name || ' ' || bm.latin_last_name, oa.login) AS display_name
+     FROM ttt_vacation.employee e
+     JOIN ttt_vacation.employee oa ON oa.enabled = true AND oa.id != e.id AND oa.id != e.manager
+     JOIN ttt_backend.employee bm ON bm.login = oa.login
+     WHERE e.login = $1
+       AND EXISTS (
+         SELECT 1 FROM ttt_vacation.employee sub
+         WHERE sub.manager = oa.id AND sub.enabled = true
+       )
+     ORDER BY random()
+     LIMIT 1`,
+    [employeeLogin],
+  );
+}
+
+interface EmployeeWithLimitedDaysRow {
+  login: string;
+  available_days: number;
+}
+
+/** Returns an employee with limited vacation days (1-5) for insufficient-days tests. */
+export async function findEmployeeWithLimitedDays(
+  db: DbClient,
+): Promise<EmployeeWithLimitedDaysRow> {
+  return db.queryOne<EmployeeWithLimitedDaysRow>(
+    `SELECT e.login,
+            ev.available_vacation_days::int AS available_days
+     FROM ttt_vacation.employee e
+     JOIN ttt_vacation.employee_vacation ev ON e.id = ev.employee
+     WHERE ev.available_vacation_days BETWEEN 1 AND 5
+       AND ev.year = EXTRACT(YEAR FROM CURRENT_DATE)
+       AND e.enabled = true
+       AND e.manager IS NOT NULL
+     ORDER BY random()
+     LIMIT 1`,
+  );
+}
+
+/**
+ * Finds two non-overlapping conflict-free Mon-Fri weeks for an employee.
+ * Returns both weeks guaranteed to not overlap with each other or existing vacations.
+ */
+export async function findTwoAvailableWeekSlots(
+  db: DbClient,
+  login: string,
+  weeksAhead = 4,
+  maxAttempts = 40,
+): Promise<{ week1Start: string; week1End: string; week2Start: string; week2End: string }> {
+  const now = new Date();
+  const day = now.getDay();
+  const daysToMon = day === 0 ? 1 : day === 1 ? 7 : 8 - day;
+  const base = new Date(now);
+  base.setDate(now.getDate() + daysToMon + weeksAhead * 7);
+
+  let week1: { start: string; end: string } | null = null;
+
+  for (let i = 0; i < maxAttempts; i++) {
+    const start = new Date(base);
+    start.setDate(base.getDate() + i * 7);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 4);
+
+    const startIso = toIsoDate(start);
+    const endIso = toIsoDate(end);
+
+    if (await hasVacationConflict(db, login, startIso, endIso)) continue;
+
+    if (!week1) {
+      week1 = { start: startIso, end: endIso };
+    } else {
+      return {
+        week1Start: week1.start,
+        week1End: week1.end,
+        week2Start: startIso,
+        week2End: endIso,
+      };
+    }
+  }
+  throw new Error(`Could not find two conflict-free weeks for ${login}`);
+}
+
+function toIsoDate(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
+
 /** Checks whether a vacation overlaps with existing vacations for the given login. */
 export async function hasVacationConflict(
   db: DbClient,
@@ -363,7 +534,8 @@ export async function hasVacationConflict(
      JOIN ttt_vacation.employee ve ON ve.id = v.employee
      WHERE ve.login = $1
        AND v.start_date <= $3::date
-       AND v.end_date >= $2::date`,
+       AND v.end_date >= $2::date
+       AND v.status NOT IN ('DELETED', 'CANCELED', 'REJECTED')`,
     [login, startIso, endIso],
   );
   return Number(row.cnt) > 0;

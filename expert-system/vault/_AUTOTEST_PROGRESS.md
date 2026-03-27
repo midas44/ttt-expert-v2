@@ -1,52 +1,52 @@
-# Autotest Generation Progress
+# Autotest Progress — Phase C
 
-**Updated:** 2026-03-22 (Session 45)
-**Phase:** C — Autotest Generation
-**Scope:** vacation module
-**Target env:** qa-1
+## Overall Status (2026-03-27, Session 68)
 
-## Overall Metrics
-| Metric | Count | Percentage |
-|--------|-------|------------|
-| Total test cases | 109 | 100% |
-| Tracked (in DB) | 72 | 66.1% |
-| Verified | 68 | 62.4% |
-| Blocked | 2 | 1.8% |
-| Failed | 1 | 0.9% |
-| Skipped | 1 | 0.9% |
-| Pending | 37 | 33.9% |
+| Module | Total | Verified | Blocked | Pending | Coverage |
+|--------|-------|----------|---------|---------|----------|
+| vacation | 100 | 19 | 1 | 80 | 19% |
+| day-off | 121 | 0 | 0 | 121 | 0% |
+| **Total** | **221** | **19** | **1** | **201** | **8.6%** |
 
-## Per-Suite Breakdown
-| Suite | Total | Verified | Blocked | Failed | Skipped |
-|-------|-------|----------|---------|--------|---------|
-| TS-Vac-CRUD | 11 | 11 | 0 | 0 | 0 |
-| TS-Vac-Cancel | 2 | 2 | 0 | 0 | 0 |
-| TS-Vac-Chart | 5 | 5 | 0 | 0 | 0 |
-| TS-Vac-DayCalc | 1 | 1 | 0 | 0 | 0 |
-| TS-Vac-DayCorrection | 2 | 2 | 0 | 0 | 0 |
-| TS-Vac-Lifecycle | 5 | 4 | 1 | 0 | 0 |
-| TS-Vac-Payment | 4 | 4 | 0 | 0 | 0 |
-| TS-Vac-Permissions | 4 | 4 | 0 | 0 | 0 |
-| TS-Vac-Validation | 6 | 6 | 0 | 0 | 0 |
-| TS-Vacation-Approval | 7 | 7 | 0 | 0 | 0 |
-| TS-Vacation-AvailableDays | 2 | 2 | 0 | 0 | 0 |
-| TS-Vacation-CRUD | 5 | 5 | 0 | 0 | 0 |
-| TS-Vacation-DayCalc | 2 | 1 | 0 | 0 | 1 |
-| TS-Vacation-DayCorrection | 1 | 1 | 0 | 0 | 0 |
-| TS-Vacation-DayCounting | 2 | 2 | 0 | 0 | 0 |
-| TS-Vacation-Lifecycle | 3 | 2 | 1 | 0 | 0 |
-| TS-Vacation-Payment | 1 | 1 | 0 | 0 | 0 |
-| TS-Vacation-Permissions | 5 | 5 | 0 | 0 | 0 |
-| TS-Vacation-UI | 3 | 2 | 0 | 1 | 0 |
-| TS-Vacation-ViewFilter | 1 | 1 | 0 | 0 | 0 |
+## Verified Tests by Session
 
-## Blocked Tests
-- **TC-VAC-023**: Requires accounting period close API (canBeCancelled guard)
-- **TC-VAC-027**: Same — office.reportPeriod managed by accounting, not clock
+### Session 65 (5 verified)
+- TC-VAC-001: View personal vacation list
+- TC-VAC-002: View vacation balance per year
+- TC-VAC-003: Create REGULAR vacation — happy path
+- TC-VAC-004: Create ADMINISTRATIVE vacation
+- TC-VAC-005: Edit NEW vacation dates
 
-## Session History (recent)
-- **S45**: TC-VAC-070/071/072/019/020 (5 verified) — chart months/search/nav + pagination + events feed
-- **S44**: TC-VAC-065/066/069/073 (4 verified), TC-VAC-027 blocked
-- **S43**: TC-VAC-051/052/058/059/064 (5 verified)
-- **S42**: TC-VAC-080/081/082/049/050 (5 verified)
-- **S41**: TC-VAC-035/048 fixed, TC-VAC-075/076/078 (5 verified)
+### Session 66 (5 verified, 1 blocked)
+- TC-VAC-006: Delete NEW vacation
+- TC-VAC-007: View vacation details in read-only modal
+- TC-VAC-008: Filter vacation list by status
+- TC-VAC-009: Filter vacation list by year
+- TC-VAC-010: blocked (pagination — insufficient data)
+- TC-VAC-011: Verify vacation creation notification
+
+### Session 67 (5 verified)
+- TC-VAC-012: Manager approve vacation
+- TC-VAC-013: Manager reject vacation
+- TC-VAC-014: Verify approval changes status to APPROVED
+- TC-VAC-015: Verify rejection reason saved in DB
+- TC-VAC-016: Verify manager sees pending requests count
+
+### Session 68 (5 verified)
+- TC-VAC-019: CPO self-approval on create
+- TC-VAC-020: Change approver (redirect request)
+- TC-VAC-025: Pay APPROVED REGULAR vacation
+- TC-VAC-034: Start date in past — rejected
+- TC-VAC-036: Insufficient available days — REGULAR blocked
+
+## Reusable Artifacts Created
+- **Page Objects**: MyVacationsPage, VacationCreationDialog, VacationDetailsDialog, EmployeeRequestsPage, VacationPaymentPage, MainPage
+- **Fixtures**: LoginFixture, LogoutFixture, VerificationFixture, ApiVacationSetupFixture
+- **Data queries**: vacationQueries.ts (findEmployeeWithManager, findCpoEmployeeWithManager, findSubordinateAndAltManager, findAccountantForEmployee, findEmployeeWithLimitedDays, hasVacationConflict, +more)
+
+## Key Technical Notes
+- All tests pass with `--workers=1` (sequential) — parallel execution causes CAS session conflicts
+- react-select dropdowns: use `[class*='option']` divs, type with `{ delay: 50 }` + 1500ms wait
+- react-datetime picker: `rdtSwitch` header, `rdtNext` navigation, `rdtMonth` cells
+- Payment page: dual confirmation dialogs, office-filtered accountants, "Last First" name format
+- PAID+EXACT vacations are permanent — test pollution accumulates

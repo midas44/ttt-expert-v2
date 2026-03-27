@@ -79,8 +79,8 @@ export class ApiVacationSetupFixture {
 
   /** Approve a vacation via API. Uses API_SECRET_TOKEN (pvaynmaster is CPO, self-approves). */
   async approveVacation(vacationId: number): Promise<void> {
-    const url = `${this.baseUrl}/${vacationId}/approve`;
-    const resp = await this.request.post(url, { headers: this.headers });
+    const url = `${this.baseUrl}/approve/${vacationId}`;
+    const resp = await this.request.put(url, { headers: this.headers });
     if (!resp.ok()) {
       const body = await resp.text();
       throw new Error(
@@ -91,7 +91,7 @@ export class ApiVacationSetupFixture {
 
   /** Cancel a vacation via API. Uses API_SECRET_TOKEN (owner cancels own vacation). */
   async cancelVacation(vacationId: number): Promise<void> {
-    const url = `${this.baseUrl}/${vacationId}/cancel`;
+    const url = `${this.baseUrl}/cancel/${vacationId}`;
     const resp = await this.request.put(url, { headers: this.headers });
     if (!resp.ok()) {
       const body = await resp.text();
@@ -101,15 +101,17 @@ export class ApiVacationSetupFixture {
     }
   }
 
-  /** Delete (soft) a vacation via API. Used for cleanup. */
+  /** Hard-delete a vacation via test endpoint. Removes from DB completely. */
   async deleteVacation(vacationId: number): Promise<void> {
-    const url = `${this.baseUrl}/${vacationId}`;
-    const resp = await this.request.delete(url, { headers: this.headers });
+    const testUrl = this.tttConfig.buildUrl(
+      `/api/vacation/v1/test/vacations/${vacationId}`,
+    );
+    const resp = await this.request.delete(testUrl, { headers: this.headers });
     // Accept 200 or 404 (already deleted)
     if (!resp.ok() && resp.status() !== 404) {
       const body = await resp.text();
       throw new Error(
-        `Failed to delete vacation ${vacationId}: ${resp.status()} ${body}`,
+        `Failed to hard-delete vacation ${vacationId}: ${resp.status()} ${body}`,
       );
     }
   }
@@ -123,6 +125,29 @@ export class ApiVacationSetupFixture {
     const vacation = await this.createVacation(startDate, endDate, paymentType);
     await this.approveVacation(vacation.id);
     return { ...vacation, status: "APPROVED" };
+  }
+
+  /** Reject a vacation via API. Uses API_SECRET_TOKEN (pvaynmaster rejects own vacation). */
+  async rejectVacation(vacationId: number): Promise<void> {
+    const url = `${this.baseUrl}/reject/${vacationId}`;
+    const resp = await this.request.put(url, { headers: this.headers });
+    if (!resp.ok()) {
+      const body = await resp.text();
+      throw new Error(
+        `Failed to reject vacation ${vacationId}: ${resp.status()} ${body}`,
+      );
+    }
+  }
+
+  /** Create → Reject a vacation as token owner. Returns the rejected vacation. */
+  async createAndReject(
+    startDate: string,
+    endDate: string,
+    paymentType = "REGULAR",
+  ): Promise<VacationApiResult> {
+    const vacation = await this.createVacation(startDate, endDate, paymentType);
+    await this.rejectVacation(vacation.id);
+    return { ...vacation, status: "REJECTED" };
   }
 
   /** Create → Cancel a vacation as token owner. Returns the canceled vacation. */

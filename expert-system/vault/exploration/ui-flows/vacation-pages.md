@@ -277,3 +277,76 @@ When filtering by employee name on the Employees Requests page, **multiple rows 
 await requestsPage.rejectRequest(data.employeeName, data.periodPattern);
 await requestsPage.waitForRequestRowToDisappear(data.employeeName, data.periodPattern);
 ```
+
+
+## Autotest Discoveries (Phase C, Session 65)
+
+### Language Handling
+- TTT app defaults to the user's preferred language (often Russian)
+- Tests MUST switch to English via `MainPage.setLanguage("EN")` after login
+- MyVacationsPage title locator must be bilingual: `/My vacations and days off|Мои отпуска и выходные/i`
+
+### Date Format in Vacation Table (English locale)
+- Same month: `DD – DD Mon YYYY` (e.g., "13 – 17 Apr 2026")
+- Cross-month: `DD Mon – DD Mon YYYY` (e.g., "27 Apr – 01 May 2026")
+- Single day: `DD Mon YYYY` (e.g., "13 Apr 2026")
+- Month abbreviations: Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec
+- Day numbers may have leading zeros in cross-month format ("01 May") but not same-month ("17")
+- Pattern for matching: `new RegExp(\`${startDay}.*${endDay}.*${endMonthAbbr}\`)`
+
+### Available Days Counter
+- The "Available vacation days" section shows either:
+  - Plain number: `<span>14</span>` (single-year display)
+  - Multi-year format: `"29 in 2026"` (multi-year display for pvaynmaster)
+- `getAvailableDays()` uses leaf-first DOM traversal: finds `<span>` with `childElementCount === 0` containing a 1-3 digit number, then walks up 3 ancestor levels checking for "Available vacation days" label
+- The container class is `UserVacationsPage_vacationDaysContainer__*`
+
+### API Endpoint Corrections
+- **Approve vacation**: `PUT /v1/vacations/approve/{vacationId}` (NOT `/{vacationId}/approve`)
+- **Cancel vacation**: `PUT /v1/vacations/{vacationId}/cancel`
+- **Delete vacation**: `DELETE /v1/vacations/{vacationId}`
+- **Create vacation**: `POST /v1/vacations`
+- All under base path `/api/vacation/`
+
+### Vacation Status Display in UI (Closed tab)
+- Canceled APPROVED vacations show status "Deleted" (not "Canceled") in the Closed tab
+- Deleted NEW vacations also show "Deleted"
+- Pattern for matching: `/cancel|delet/i`
+
+### Test Data Isolation for pvaynmaster
+- Tests using pvaynmaster for API setup (TC-VAC-005, 007, 008) must use well-separated week offsets to avoid date conflicts when running in parallel
+- Current spacing: TC-VAC-005 week 5-6, TC-VAC-007 week 8, TC-VAC-008 week 11
+- `findAvailableWeek()` and `hasVacationConflict()` check for conflicts at data creation time but can't prevent conflicts from tests starting simultaneously
+
+### Cleanup Pattern
+- Tests creating vacations via UI (TC-VAC-001, 002) must clean up via UI (`openRequestDetails` → `deleteRequest`) because API_SECRET_TOKEN can only delete pvaynmaster's vacations
+- Tests using API setup (TC-VAC-005, 007, 008) can clean up via API since pvaynmaster owns those vacations
+
+
+## Tab Filter Behavior (discovered Session 70)
+
+**CRITICAL finding:** CANCELED vacations are NOT shown on ANY tab (Open, Closed, or All).
+
+| Tab | Statuses shown |
+|-----|---------------|
+| Open | NEW, APPROVED |
+| Closed | PAID, REJECTED |
+| All | NEW, APPROVED, PAID, REJECTED, DELETED, FINISHED |
+
+- CANCELED is excluded from all views
+- DELETED IS shown on All tab (but not on Open or Closed)
+- FINISHED (administrative vacations) shown on All tab
+
+## Pagination & Sort
+
+- Default sort: **DESCENDING** (newest first) on page 1
+- Pagination: ~20 rows per page
+- Pagination nav: `navigation "Pagination"` with `button "Page N"`, `button "Previous page"`, `button "Next page"`
+- Use `goToLastPage()` method in MyVacationsPage to navigate to oldest vacations
+
+## Selectors (discovered during Phase C)
+
+- Tab buttons: `getByRole("button", { name: /^Open$/i })`, `getByRole("button", { name: /^Closed$/i })`, `getByRole("button", { name: /^All$/i })`
+- Table rows: `table.user-vacations tbody tr, table tbody tr`
+- Sort button: inside `table thead th` filtered by column label, `getByRole("button", { name: columnLabel })`
+- Column filter button: second button inside the `th` (after sort button)

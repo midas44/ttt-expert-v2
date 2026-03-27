@@ -20,6 +20,33 @@ export class VacationDetailsDialog {
     return this.dialog;
   }
 
+  /** Reads the value of a named field from the details dialog.
+   *  Handles multiple DOM patterns: dt/dd, strong/text, label/value. */
+  async getFieldValue(label: string): Promise<string> {
+    return this.dialog.evaluate((el, lbl) => {
+      const re = new RegExp(lbl, "i");
+      // Strategy 1: <dt>Label</dt><dd>Value</dd>
+      for (const dt of el.querySelectorAll("dt")) {
+        if (re.test(dt.textContent ?? "")) {
+          const dd = dt.nextElementSibling;
+          if (dd) return dd.textContent?.trim() ?? "";
+        }
+      }
+      // Strategy 2: <strong>Label:</strong> value (text node after strong)
+      for (const node of el.querySelectorAll("strong, b, label")) {
+        if (re.test(node.textContent ?? "")) {
+          const parent = node.parentElement;
+          if (parent) {
+            const full = parent.textContent?.trim() ?? "";
+            const labelText = node.textContent?.trim() ?? "";
+            return full.replace(labelText, "").replace(/^[:\s]+/, "").trim();
+          }
+        }
+      }
+      return "";
+    }, label);
+  }
+
   /** Closes the details dialog. Tries Close button, then Escape key. */
   async close(): Promise<void> {
     const closeBtn = this.dialog.getByRole("button", { name: /close/i });

@@ -1,47 +1,52 @@
 ---
 type: agenda
-updated: 2026-03-26
-phase: C
-scope: t3404
+updated: 2026-03-27
+phase: C (autotest_generation)
 ---
 
-# Investigation Agenda — Ticket #3404
+# Investigation Agenda — Phase C (Autotest Generation)
 
-## Status: PHASE C COMPLETE
+## P0 — Immediate (Next Session)
+- [ ] Continue vacation autotests — pick 5 from pending (avoid multi-user tests)
+- [ ] TC-VAC-011: Yearly breakdown tooltip
+- [ ] TC-VAC-022: Approval resets on date edit — may be blocked (two-user)
+- [ ] TC-VAC-009: View vacation details dialog
+- [ ] TC-VAC-040-046: Table sorting/filtering tests (pagination-aware)
+- [ ] TC-VAC-050+: Remaining filter and view tests
 
-All 24 test cases have been processed (21 verified, 3 blocked).
-No further investigation or generation work needed for this scope.
+## P1 — Framework & Infrastructure
+- [ ] Extract `toPeriodPattern` into shared utility (duplicated in 7+ data classes now)
+- [ ] Add `cleanupPvaynmasterVacations()` pre-test hook for resilience
+- [ ] Investigate JWT-based auth for creating vacations as arbitrary employees
+- [x] Fix `deleteVacation` to use hard-delete test endpoint (done session 70)
+- [x] Add `goToLastPage()` pagination method to MyVacationsPage (done session 70)
+
+## P2 — Knowledge Gaps Found
+- [ ] Document which vacation statuses appear on which tabs comprehensively
+- [ ] Investigate CANCELED status — why it's excluded from all tabs
+- [ ] Map pagination behavior across different tab types
+
+## Completed (Sessions 65-70)
+- [x] TC-VAC-001-008, 010, 015-021, 023, 025 verified (sessions 65-69)
+- [x] TC-VAC-034-038 verified (session 69)
+- [x] TC-VAC-047 (Open tab filter) verified (session 69)
+- [x] TC-VAC-048 (Closed tab filter) verified — changed CANCELED→REJECTED (session 70)
+- [x] TC-VAC-049 (All tab filter) verified — changed CANCELED→REJECTED (session 70)
+- [x] TC-VAC-024 marked blocked (two-user workflow) (session 70)
+- [x] ApiVacationSetupFixture: hard-delete cleanup (session 70)
+- [x] Discovered: CANCELED vacations not shown on any tab (session 70)
+- [x] Session 70 maintenance (§9.4)
 
 <details>
-<summary>Completed Items (Sessions 55-60)</summary>
+<summary>Completed from Previous Phases</summary>
 
-### Phase A (Session 55)
-- [x] Read ticket #3404 with all comments
-- [x] Analyze MR !5333 code changes (4 frontend files)
-- [x] Map approve period → edit icon visibility logic
-- [x] Document BUG-T3404-1 (> vs >= boundary)
-- [x] Create vault notes for day-off module
+### Phase B (Sessions 59-64)
+- [x] Vacation XLSX: 100 test cases across 7 suites
+- [x] Deep-dive vault enrichment for vacation module (3000+ words)
+- [x] GitLab ticket mining (all history, descriptions + comments)
+- [x] UI exploration via Playwright for all vacation pages
 
-### Phase B (Session 55)
-- [x] Generate t3404.xlsx with 24 test cases across 5 suites
-- [x] Parse XLSX to manifest JSON
-
-### Phase C (Sessions 56-60)
-- [x] P0: TC-016 core earlier date selection
-- [x] P0: TC-001 EN tooltip, TC-002 EN dialog title
-- [x] P1: TC-004/005 edit icon open period, TC-006/008 closed period
-- [x] P1: TC-007 boundary approve period start
-- [x] P1: TC-009 previous year all hidden
-- [x] P1: TC-010/011 closed months disabled, TC-012 open month enabled
-- [x] P1: TC-013 future month enabled, TC-015 March 2 boundary
-- [x] P1: TC-016/017 earlier date + first working day
-- [x] P1: TC-018 February all disabled
-- [x] P2: TC-003 RU tooltip, TC-014 Feb 28 boundary
-- [x] P2: TC-019 future minDate uses original date (ST-4)
-- [x] P2: TC-023 max date Dec 31 unchanged
-- [x] P1: TC-020 E2E reschedule + approval flow
-- [x] Blocked: TC-021 (env admin), TC-022 (cross-service), TC-024 (data limitation)
-- [x] Fixed data source: calendar_days + LATEST_CAL CTE (not employee_dayoff)
-- [x] Fixed two-user CAS SSO logout flow
-
+### Phase A (Sessions 1-58)
+- [x] Full knowledge acquisition across all modules
+- [x] Day-off and t3404 autotest generation (previous Phase C scopes)
 </details>

@@ -6,8 +6,8 @@ import type { Page, Locator } from "@playwright/test";
  */
 export class EmployeeRequestsPage {
   private readonly title = this.page
-    .locator(".page-body__title")
-    .filter({ hasText: /Employees.?\s*requests/i });
+    .locator("[class*='title'], h1, h2")
+    .filter({ hasText: /Employees?.?\s*requests|Vacation\s*requests/i });
   private readonly tableRows = this.page.locator("table tbody tr");
 
   constructor(private readonly page: Page) {}
@@ -20,6 +20,12 @@ export class EmployeeRequestsPage {
   /** Clicks the "Approval" sub-tab filter. */
   async clickApprovalTab(): Promise<void> {
     await this.page.getByRole("button", { name: /^Approval/i }).click();
+    await this.page.waitForLoadState("networkidle");
+  }
+
+  /** Clicks the "Agreement" sub-tab filter (optional approver view). */
+  async clickAgreementTab(): Promise<void> {
+    await this.page.getByRole("button", { name: /^Agreement/i }).click();
     await this.page.waitForLoadState("networkidle");
   }
 
@@ -55,6 +61,35 @@ export class EmployeeRequestsPage {
       '[data-testid="vacation-request-action-approve"]',
     );
     await btn.click();
+  }
+
+  /** Clicks the agree button on a matching row (Agreement tab — optional approver). */
+  async agreeRequest(...filters: Array<string | RegExp>): Promise<void> {
+    const row = this.requestRow(...filters).first();
+    await row.waitFor({ state: "visible" });
+
+    // Try agree-specific data-testid, then generic approve
+    const candidates = [
+      row.locator('[data-testid="vacation-request-action-agree"]'),
+      row.locator('[data-testid="vacation-request-action-approve"]'),
+    ];
+    for (const btn of candidates) {
+      if ((await btn.count()) > 0) {
+        await btn.first().click();
+        return;
+      }
+    }
+
+    // Fallback: click the first action button in the actions cell (last td)
+    const actionBtns = row.locator("td").last().locator("button");
+    if ((await actionBtns.count()) > 0) {
+      await actionBtns.first().click();
+      return;
+    }
+
+    // Last resort: any checkmark/approve icon button in the row
+    const iconBtn = row.locator("button").first();
+    await iconBtn.click();
   }
 
   /** Clicks the reject button (X icon) on a matching row. */
@@ -107,16 +142,20 @@ export class EmployeeRequestsPage {
     const dialog = this.page.getByRole("dialog").filter({ hasText: /Redirect the request/i });
     await dialog.waitFor({ state: "visible", timeout: 10000 });
 
-    // The dialog uses a react-select combobox
-    const combobox = dialog.getByRole("combobox");
-    await combobox.click();
-    // Type first few characters to filter
-    await combobox.fill(managerName.split(" ")[0]);
-    await this.page.waitForTimeout(500);
+    // The dialog uses a react-select combobox — click the control area to open
+    const selectControl = dialog.locator("[class*='control']").first();
+    await selectControl.click();
+    // Type last name (more unique) to filter the dropdown
+    const parts = managerName.split(" ");
+    const searchTerm = parts.length > 1 ? parts[1] : parts[0];
+    await this.page.keyboard.type(searchTerm, { delay: 50 });
+    await this.page.waitForTimeout(1500);
 
-    // Select the matching option from the listbox
-    const option = this.page.getByRole("option", { name: managerName });
-    await option.click();
+    // react-select uses div[class*='option'] instead of native <option> elements
+    const option = this.page.locator("[class*='option']").filter({
+      hasText: new RegExp(searchTerm, "i"),
+    });
+    await option.first().click({ timeout: 10_000 });
   }
 
   /** Confirms the redirect action (clicks OK button in redirect dialog). */
@@ -124,6 +163,60 @@ export class EmployeeRequestsPage {
     const dialog = this.page.getByRole("dialog").filter({ hasText: /Redirect the request/i });
     await dialog.getByRole("button", { name: "OK" }).click();
     await this.page.waitForLoadState("networkidle");
+  }
+
+  /** Returns the count number from the "Vacation requests (N)" tab text, or 0. */
+  async getVacationRequestsCount(): Promise<number> {
+    const tab = this.page.getByRole("button", {
+      name: /Vacation requests/i,
+    });
+    const text = (await tab.textContent()) ?? "";
+    const match = text.match(/\((\d+)\)/);
+    return match ? parseInt(match[1], 10) : 0;
+  }
+
+  /** Returns the count number from the "Approval (N)" sub-tab text, or 0. */
+  async getApprovalCount(): Promise<number> {
+    const tab = this.page.getByRole("button", { name: /^Approval/i });
+    const text = (await tab.textContent()) ?? "";
+    const match = text.match(/\((\d+)\)/);
+    return match ? parseInt(match[1], 10) : 0;
+  }
+
+  /** Checks whether the approve button exists on a matching row. */
+  async hasApproveButton(...filters: Array<string | RegExp>): Promise<boolean> {
+    const row = this.requestRow(...filters).first();
+    return row
+      .locator('[data-testid="vacation-request-action-approve"]')
+      .isVisible();
+  }
+
+  /** Checks whether the reject button exists on a matching row. */
+  async hasRejectButton(...filters: Array<string | RegExp>): Promise<boolean> {
+    const row = this.requestRow(...filters).first();
+    return row
+      .locator('[data-testid="vacation-request-action-reject"]')
+      .isVisible();
+  }
+
+  /** Checks whether the redirect button exists on a matching row. */
+  async hasRedirectButton(
+    ...filters: Array<string | RegExp>
+  ): Promise<boolean> {
+    const row = this.requestRow(...filters).first();
+    return row
+      .locator('[data-testid="vacation-request-action-redirect"]')
+      .isVisible();
+  }
+
+  /** Checks whether the details/info button exists on a matching row. */
+  async hasDetailsButton(
+    ...filters: Array<string | RegExp>
+  ): Promise<boolean> {
+    const row = this.requestRow(...filters).first();
+    // Details button is typically the 4th action or has an info icon
+    const actions = row.locator("td").last().locator("button");
+    return (await actions.count()) > 0;
   }
 
   /** Waits for a request row matching all filters to disappear from the list. */

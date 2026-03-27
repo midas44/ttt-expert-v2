@@ -8,7 +8,7 @@ An autonomous AI expert system that systematically investigates the TTT applicat
 
 ## Problem
 
-TTT is a large legacy application (4 microservices, 366 API endpoints, 86 database tables, React frontend with 12 modules) with insufficient test coverage and significant undocumented business logic. Manual investigation and test case writing for a system of this scale requires months of QA effort, and the results quickly become outdated as the application evolves.
+TTT is a large legacy application (4 microservices, 268 API endpoints, 86 database tables, React frontend with 12 modules) with insufficient test coverage and significant undocumented business logic. Manual investigation and test case writing for a system of this scale requires months of QA effort, and the results quickly become outdated as the application evolves.
 
 ## Solution
 

@@ -1,58 +1,66 @@
 ---
 type: session
-updated: 2026-03-26
-session: 60
+updated: 2026-03-27
+session: 70
 phase: C (autotest_generation)
-scope: t3404
+scope: vacation
 ---
 
-# Session 60 — Phase C COMPLETE
+# Session 70 Briefing — Phase C Autotest Generation
 
-**Timestamp:** 2026-03-26 ~07:30 UTC
-**Phase:** C — Autotest Generation (ticket #3404)
-**Status:** ALL TEST CASES COVERED — Phase C complete for t3404
+**Timestamp:** 2026-03-27T12:00 UTC+7
+**Phase:** C — Autotest Generation (vacation scope)
+**Mode:** full autonomy
 
-## Final Coverage: 21/24 verified, 3/24 blocked (100% coverage)
+## Session Summary
 
-### Tests Generated This Session (5/5 passed)
-| Test ID | Title | Status |
-|---------|-------|--------|
-| TC-T3404-003 | RU tooltip text "Перенести событие" | verified |
-| TC-T3404-014 | Feb 28 boundary disabled in datepicker | verified |
-| TC-T3404-019 | Future holiday minDate uses original date (ST-4) | verified |
-| TC-T3404-020 | E2E reschedule to earlier date + manager approval | verified |
-| TC-T3404-023 | Max date Dec 31 unchanged (regression) | verified |
+Fixed and verified 3 vacation filter tab autotests (TC-VAC-047, TC-VAC-048, TC-VAC-049). Discovered critical application behavior around tab filters and vacation cleanup. Performed session 70 maintenance.
 
-### Blocked Tests (3) — Cannot Automate on Shared Environment
-| Test ID | Title | Reason |
-|---------|-------|--------|
-| TC-T3404-021 | Month-close auto-rejection | Requires admin to change approve period — would break all other tests on qa-1 |
-| TC-T3404-022 | Vacation recalculation overlap | Multi-service workflow (vacation+dayoff+approval+recalculation) — too complex for automated E2E, needs dedicated test environment |
-| TC-T3404-024 | Global approve period diff offices | All offices on qa-1 have same period (2026-03-01) — untestable without admin manipulation |
+## Key Accomplishments
 
-### Key Fixes This Session
-1. **`findPastDayoffWithManager` query**: Used `e.manager` column (not `e.manager_id`) for the employee→manager FK join
-2. **Two-user login flow (TC-020)**: CAS SSO requires explicit cookie clearing + CAS logout URL navigation between user sessions. `page.context().clearCookies()` + `localStorage.clear()` + navigate to CAS logout URL before second user login.
-3. **TC-023 auto-fixed by linter**: navigateToTargetMonth replaced with clickNextMonth + conditional check for max boundary behavior
+1. **TC-VAC-047 (Open tab filter):** Already verified in session 69 (7.3s pass)
+2. **TC-VAC-048 (Closed tab filter):** Fixed — changed from CANCELED to REJECTED status. Root cause: Closed tab shows PAID+REJECTED only, NOT CANCELED. Also fixed soft-delete pollution (old DELETED vacations matching regex patterns). Now passes (8.2s).
+3. **TC-VAC-049 (All tab filter):** Fixed — changed from NEW+CANCELED to NEW+REJECTED. Root cause: CANCELED vacations are NOT shown on ANY tab. Also added `goToLastPage()` pagination method to MyVacationsPage (not needed in final fix since default sort is descending, but available for future tests). Now passes (8.4s).
+4. **TC-VAC-024 (Approval resets on date edit):** Marked as blocked — requires two-user workflow.
+5. **ApiVacationSetupFixture.deleteVacation():** Changed from soft-delete to hard-delete via test endpoint. Prevents DELETED vacation accumulation that pollutes future test runs.
 
-### New Artifacts
-- `e2e/data/t3404/T3404Tc019Data.ts` — future mid-month day-off data class
-- `e2e/data/t3404/T3404Tc020Data.ts` — employee + manager data class for E2E flow
-- `t3404Queries.ts` — added `findFutureMidMonthDayoff()` and `findPastDayoffWithManager()`
+## Critical Discoveries
 
-### Full Suite: 21/21 passing (48.3s)
+### CANCELED vacations not shown on any tab
+- Open: NEW, APPROVED
+- Closed: PAID, REJECTED
+- All: NEW, APPROVED, PAID, REJECTED, DELETED, FINISHED
+- **CANCELED is excluded from ALL views** — this impacts any test expecting to see CANCELED vacations
 
-## Phase C Summary for Ticket #3404
+### Soft-delete vs hard-delete
+- `DELETE /v1/vacations/{id}` → soft-delete (status=DELETED, stays in DB, shows on All tab)
+- `DELETE /v1/test/vacations/{id}` → hard-delete (removed from DB)
+- All test cleanup now uses hard-delete to prevent pollution
 
-**Total test cases:** 24 (from XLSX manifest)
-**Verified (passing):** 21 (87.5%)
-**Blocked:** 3 (12.5%)
-**Failed:** 0
+### Pagination
+- Default sort: DESCENDING (newest first)
+- ~20 rows per page
+- Added `goToLastPage()` method to MyVacationsPage
 
-**Sessions spent:** 55-60 (6 sessions total for Phase C)
-**Key discovery:** Day Off tab data architecture uses 3 sources (calendar_days + employee_dayoff_request + frontend isWeekend), not the stale employee_dayoff table.
+## Current Progress
 
-## Next Steps
-- `autonomy.stop: true` — Phase C complete for t3404 scope
-- Human review of generated test suite recommended
-- Blocked tests could be automated with a dedicated test environment or timemachine env
+| Metric | Count |
+|--------|-------|
+| Verified | 26 |
+| Blocked | 3 |
+| Pending | 71 |
+| Total | 100 |
+| **Coverage** | **26%** |
+
+## Files Modified This Session
+- `e2e/data/vacation/VacationTc048Data.ts` — renamed canceled→rejected fields
+- `e2e/data/vacation/VacationTc049Data.ts` — renamed canceled→rejected fields
+- `e2e/tests/vacation/vacation-tc048.spec.ts` — createAndReject instead of createAndCancel
+- `e2e/tests/vacation/vacation-tc049.spec.ts` — createAndReject, removed pagination/sort hacks
+- `e2e/fixtures/ApiVacationSetupFixture.ts` — deleteVacation now uses hard-delete test endpoint
+- `e2e/pages/MainPage.ts` — added goToLastPage() pagination method
+
+## Next Session Priorities
+1. Continue vacation autotests — next batch from pending TC-VAC-011, TC-VAC-022, TC-VAC-009, etc.
+2. Focus on tests that don't require multi-user workflows
+3. Skip TC-VAC-024 (blocked) and similar two-user tests

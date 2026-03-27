@@ -56,9 +56,11 @@ export class MainPage {
 // ---------------------------------------------------------------------------
 
 export class MyVacationsPage {
-  private readonly title = this.page.locator(
-    ".page-body__title:has-text('My vacations and days off')",
-  );
+  private readonly title = this.page
+    .locator("[class*='page-body'] [class*='title'], h1, h2")
+    .filter({
+      hasText: /My vacations and days off|Мои отпуска и выходные/i,
+    });
   private readonly tableRows = this.page.locator(
     "table.user-vacations tbody tr, table tbody tr",
   );
@@ -208,12 +210,29 @@ export class MyVacationsPage {
 
   /** Reads the available vacation days count from the page header. */
   async getAvailableDays(): Promise<number> {
-    // "Available vacation days:" label and count (e.g. "30 in 2026") are in
-    // separate sibling containers. Use evaluate to find the count span directly.
     const text = await this.page.evaluate(() => {
-      for (const span of document.querySelectorAll("span")) {
+      // Strategy 1: "N in YYYY" pattern (multi-year balance)
+      for (const span of document.querySelectorAll("span, div")) {
         const t = span.textContent?.trim() ?? "";
         if (/^\d+[\s\u00a0]+in[\s\u00a0]+\d{4}$/.test(t)) return t;
+      }
+      // Strategy 2: leaf element with just a number, near "Available vacation days" label.
+      // Walk leaf nodes (no children) and check ancestors for the label text.
+      for (const el of document.querySelectorAll("span, div")) {
+        if (el.childElementCount !== 0) continue;
+        const ct = el.textContent?.trim() ?? "";
+        if (!/^\d{1,3}$/.test(ct)) continue;
+        let parent = el.parentElement;
+        for (let depth = 0; depth < 3 && parent; depth++) {
+          const pt = parent.textContent ?? "";
+          if (
+            pt.length < 300 &&
+            /available vacation days|доступно отпускных/i.test(pt)
+          ) {
+            return ct;
+          }
+          parent = parent.parentElement;
+        }
       }
       return "";
     });
@@ -230,6 +249,20 @@ export class MyVacationsPage {
   /** Returns the count of visible vacation rows. */
   async getRowCount(): Promise<number> {
     return this.tableRows.count();
+  }
+
+  /** Navigates to the last page of the vacation table pagination. No-op if only 1 page. */
+  async goToLastPage(): Promise<void> {
+    const pagination = this.page.getByRole("navigation", { name: "Pagination" });
+    if (!(await pagination.isVisible().catch(() => false))) return;
+    const pageButtons = pagination.getByRole("button").filter({
+      hasNotText: /Previous|Next/i,
+    });
+    const count = await pageButtons.count();
+    if (count > 1) {
+      await pageButtons.last().click();
+      await this.page.waitForLoadState("networkidle");
+    }
   }
 
   /** Clicks a column header button to toggle sort. */

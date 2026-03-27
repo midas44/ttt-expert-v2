@@ -17,6 +17,52 @@ export class VacationPaymentPage {
     await this.page.locator("text=Vacation payment").first().waitFor({ state: "visible" });
   }
 
+  /** Navigates to a specific payment month using the date picker or tab. */
+  async selectMonth(monthLabel: string): Promise<void> {
+    // Try clicking the month tab first (fastest)
+    const tab = this.page
+      .locator("button")
+      .filter({ hasText: new RegExp(`^${monthLabel}$`, "i") });
+    if (await tab.first().isVisible().catch(() => false)) {
+      await tab.first().click();
+      await this.page.waitForLoadState("networkidle");
+      return;
+    }
+
+    // Fallback: use the date picker textbox to navigate to the month
+    const pickerInput = this.page.getByRole("textbox").first();
+    await pickerInput.click();
+    // react-datetime opens a calendar picker — navigate forward to the target month
+    // The picker shows months; click the "next" arrow to advance
+    const [targetMonthAbbr, targetYear] = monthLabel.split(" "); // e.g., "Jun", "2026"
+    for (let i = 0; i < 24; i++) {
+      // Check if we're on the right year/month
+      const pickerHeader = this.page.locator("th.rdtSwitch, [class*='rdtSwitch']");
+      const headerText = await pickerHeader.textContent().catch(() => "");
+      if (headerText && headerText.includes(targetYear)) {
+        // We're on the right year — look for the target month cell
+        const monthCell = this.page
+          .locator("td[data-value], .rdtMonth")
+          .filter({ hasText: new RegExp(`^${targetMonthAbbr}`, "i") });
+        if (await monthCell.first().isVisible().catch(() => false)) {
+          await monthCell.first().click();
+          await this.page.waitForLoadState("networkidle");
+          return;
+        }
+      }
+      // Click next arrow
+      const nextBtn = this.page.locator("th.rdtNext, [class*='rdtNext']").first();
+      if (await nextBtn.isVisible().catch(() => false)) {
+        await nextBtn.click();
+        await this.page.waitForTimeout(300);
+      } else {
+        break;
+      }
+    }
+    // If nothing worked, try reloading the page
+    await this.page.reload({ waitUntil: "networkidle" });
+  }
+
   /** Returns a table row matching ALL provided text filters. */
   vacationRow(...filters: Array<string | RegExp>): Locator {
     let locator: Locator = this.tableRows;
@@ -59,13 +105,44 @@ export class VacationPaymentPage {
   async checkRow(...filters: Array<string | RegExp>): Promise<void> {
     const row = this.vacationRow(...filters).first();
     await row.waitFor({ state: "visible" });
+
+    // Try standard checkbox first
     const checkbox = row.locator("input[type='checkbox']");
-    await checkbox.check();
+    if ((await checkbox.count()) > 0) {
+      const isChecked = await checkbox.isChecked().catch(() => false);
+      if (!isChecked) {
+        // Native checkbox may be hidden behind a styled label — force check
+        await checkbox.check({ force: true });
+        return;
+      }
+      return;
+    }
+
+    // Fallback: click the first cell (checkbox column)
+    await row.locator("td").first().click();
   }
 
-  /** Clicks the "Pay all the checked requests" button. */
+  /** Clicks the "Pay all the checked requests" button and confirms all payment dialogs. */
   async clickPayAll(): Promise<void> {
     await this.payAllButton.click();
+    // Confirm "Payment of requests" dialog
+    const paymentDialog = this.page.getByRole("dialog").filter({
+      hasText: /Payment of requests/i,
+    });
+    await paymentDialog.waitFor({ state: "visible", timeout: 5000 });
+    await paymentDialog.getByRole("button", { name: /Pay/i }).click();
+
+    // Handle "Attention!" dialog about unclosed period (if it appears)
+    try {
+      const attentionDialog = this.page.getByRole("dialog").filter({
+        hasText: /Attention/i,
+      });
+      await attentionDialog.waitFor({ state: "visible", timeout: 5000 });
+      await attentionDialog.getByRole("button", { name: /Pay/i }).click();
+    } catch {
+      // No attention dialog — payment went through directly
+    }
+    await this.page.waitForLoadState("networkidle");
   }
 
   /** Waits for a row matching all filters to disappear. */

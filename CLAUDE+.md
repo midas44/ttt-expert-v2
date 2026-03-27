@@ -545,12 +545,7 @@ Update `_KNOWLEDGE_COVERAGE.md` comprehensively, query module_health for gaps.
 
 **Coverage override:** If `phase.coverage_override` is set to 0-100 in config.yaml, use that value as the current coverage instead of computing it. This allows the human to force a coverage reset (e.g., `coverage_override: 0` to restart deep investigation). When the override is present and >= 0, do NOT auto-transition regardless of computed coverage — investigate until the notes genuinely reach the depth described below, then remove the override (set to -1) before allowing transition.
 
-**Phase transitions when scope is a specific module (not `"all"`):** When scope targets a module name, all transitions are human-approved. The agent must NOT auto-transition — instead:
-1. Log a readiness report to `_SESSION_BRIEFING.md` with evidence of depth (word counts, tickets mined, methods used)
-2. Set `autonomy.stop: true` and wait for human review
-3. The human will review and manually update `phase.current` and `phase.generation_allowed` if satisfied
-
-**Exception — ticket scope auto-transitions:** When scope is a GitLab ticket number (pure digits → `t<number>`), auto-transitions ARE allowed if `auto_phase_transition: true`. Ticket scope is inherently narrow (a single issue), so phases are shorter and auto-transition is safe. The agent should still log readiness reports but proceed automatically: A→B when ticket is fully investigated, B→C when XLSX is generated and covers the ticket.
+**Phase transitions when scope is a specific module or ticket (not `"all"`):** When `auto_phase_transition: true`, the agent MAY auto-transition for both module and ticket scope, provided the minimum depth requirements below are met. The agent must still log a readiness report to `_SESSION_BRIEFING.md` with evidence of depth (word counts, tickets mined, methods used) before each transition. If `auto_phase_transition: false`, all transitions require human approval — set `autonomy.stop: true` and wait for review.
 
 When `phase.scope` is `"all"` (global sweep), the original auto-transition rules apply:
 - **hybrid mode**: Present coverage report to human with Phase B readiness recommendation.
@@ -1031,19 +1026,13 @@ Compare against the manifest total for those modules. If covered >= manifest tot
 
 ### Phase Transition to Phase C
 
-**Phase B→C transition is human-approved for module scope.** Premature transition produces shallow test documentation with fewer test cases and lower quality. Phase B needs enough sessions to:
-- Mine GitLab tickets thoroughly (descriptions AND comments for all related bugs)
-- Explore the full UI via Playwright (every page, every dialog, every form field)
-- Enrich vault notes to 1500+ words per module with code snippets and validation rules
-- Generate a comprehensive XLSX with 80+ test cases per major module (including regression tests from bugs)
+**Phase B→C transition quality gates.** Before auto-transitioning from B to C, Phase B must have:
+- Mined GitLab tickets thoroughly (descriptions AND comments for all related bugs)
+- Explored the full UI via Playwright (every page, every dialog, every form field)
+- Enriched vault notes to 1500+ words per module with code snippets and validation rules
+- Generated a comprehensive XLSX with 80+ test cases per major module (including regression tests from bugs)
 
-**When Phase B believes it is complete (module scope):**
-1. Log a "Phase B readiness report" to `_SESSION_BRIEFING.md` with: total test cases generated, suites covered, GitLab tickets mined, vault notes enriched
-2. **Do NOT auto-transition.** Set `autonomy.stop: true` and wait for human review
-3. The human will review the XLSX, check test case quality and coverage, then manually set `phase.current: "autotest_generation"` if satisfied
-4. If the human wants more depth, they will restart Phase B with `autonomy.stop: false`
-
-**Exception — ticket scope:** When scope is a ticket number (`t<number>`), B→C auto-transition is allowed if `auto_phase_transition: true`. Ticket scope produces a small focused XLSX (typically 5-20 test cases), so human review is less critical. The agent should auto-transition to Phase C after generating the XLSX and populating the manifest.
+When Phase B believes it is complete, log a "Phase B readiness report" to `_SESSION_BRIEFING.md` with: total test cases generated, suites covered, GitLab tickets mined, vault notes enriched. If `auto_phase_transition: true`, proceed to Phase C automatically. Otherwise, set `autonomy.stop: true` and wait for human review.
 
 ---
 

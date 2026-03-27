@@ -37,6 +37,13 @@ export class VacationCreationFixture {
     await dialog.fillVacationPeriod(data.startInput, data.endInput);
     await dialog.submit();
 
+    // Wait for dialog to close after submission
+    await dialog
+      .root()
+      .waitFor({ state: "detached", timeout: 15_000 })
+      .catch(() => {});
+    await this.globalConfig.delay();
+
     const row = await this.vacationsPage.waitForVacationRow(
       data.periodPattern,
     );
