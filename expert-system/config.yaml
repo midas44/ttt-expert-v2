@@ -4,7 +4,7 @@ session:
   offhours_utc: 15:00-03:00
   max_duration_minutes: 90
 phase:
-  current: knowledge_acquisition
+  current: autotest_generation
   generation_allowed: true
   coverage_override: -1
   scope: vacation

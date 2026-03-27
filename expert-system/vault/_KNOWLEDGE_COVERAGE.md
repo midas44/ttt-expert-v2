@@ -1,29 +1,36 @@
 ---
-type: tracking
-updated: 2026-03-26
-phase: C
-scope: t3404
+type: coverage
+updated: 2026-03-27
+phase: C (autotest_generation)
 ---
 
-# Knowledge Coverage — Ticket #3404
+# Knowledge Coverage — Phase C Autotest Progress
 
-## Phase C Autotest Coverage: 100% (21 verified + 3 blocked = 24/24)
+## Current Scope: vacation
 
-### By Suite
+| Metric | Value |
+|--------|-------|
+| Total test cases in manifest | 100 |
+| Verified (passing) | 5 |
+| Failed | 0 |
+| Blocked | 0 |
+| Pending | 95 |
+| **Coverage** | **5%** |
 
-| Suite | Total | Verified | Blocked | Coverage |
-|-------|-------|----------|---------|----------|
-| TS-T3404-Tooltip | 3 | 3 | 0 | 100% |
-| TS-T3404-EditIcon | 6 | 6 | 0 | 100% |
-| TS-T3404-Datepicker | 6 | 6 | 0 | 100% |
-| TS-T3404-EarlierDate | 3 | 3 | 0 | 100% |
-| TS-T3404-Regression | 6 | 3 | 3 | 50% |
-| **Total** | **24** | **21** | **3** | **87.5%** |
+### Verified Tests
+| Test ID | Title | Spec File |
+|---------|-------|-----------|
+| TC-VAC-001 | Create REGULAR vacation — happy path | vacation-tc001.spec.ts |
+| TC-VAC-002 | Create ADMINISTRATIVE (unpaid) vacation | vacation-tc002.spec.ts |
+| TC-VAC-005 | Edit vacation dates (NEW status) | vacation-tc005.spec.ts |
+| TC-VAC-007 | Cancel NEW vacation | vacation-tc007.spec.ts |
+| TC-VAC-008 | Cancel APPROVED vacation | vacation-tc008.spec.ts |
 
-### Blocked Analysis
-- TC-021 (month-close): Requires env-level admin change — manual test only
-- TC-022 (vacation recalc): Cross-service E2E — needs dedicated env
-- TC-024 (multi-office period): qa-1 data limitation — all offices same period
+## All Modules Summary
 
-### Phase C Status: COMPLETE
-All automatable test cases have been generated and verified.
+| Module | Verified | Blocked | Pending | Total | Coverage |
+|--------|----------|---------|---------|-------|----------|
+| vacation | 5 | 0 | 95 | 100 | 5% |
+| day-off | 25 | 3 | 0 | 28 | 89% |
+| t3404 | 21 | 3 | 0 | 24 | 88% |
+| **Total** | **51** | **6** | **95** | **152** | **34%** |

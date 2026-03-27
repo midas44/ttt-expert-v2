@@ -1,58 +1,51 @@
 ---
-type: session
-updated: 2026-03-26
-session: 60
-phase: C (autotest_generation)
-scope: t3404
+type: session-briefing
+updated: 2026-03-27
 ---
 
-# Session 60 — Phase C COMPLETE
+# Session Briefing — Session 65
 
-**Timestamp:** 2026-03-26 ~07:30 UTC
-**Phase:** C — Autotest Generation (ticket #3404)
-**Status:** ALL TEST CASES COVERED — Phase C complete for t3404
+**Phase:** C (Autotest Generation) — vacation module
+**Timestamp:** 2026-03-27T00:30 UTC
+**Mode:** full autonomy
+**Duration:** ~25 min active
 
-## Final Coverage: 21/24 verified, 3/24 blocked (100% coverage)
+## Session 65 Accomplishments
 
-### Tests Generated This Session (5/5 passed)
-| Test ID | Title | Status |
-|---------|-------|--------|
-| TC-T3404-003 | RU tooltip text "Перенести событие" | verified |
-| TC-T3404-014 | Feb 28 boundary disabled in datepicker | verified |
-| TC-T3404-019 | Future holiday minDate uses original date (ST-4) | verified |
-| TC-T3404-020 | E2E reschedule to earlier date + manager approval | verified |
-| TC-T3404-023 | Max date Dec 31 unchanged (regression) | verified |
+### Phase C First Batch — 5 Vacation Tests Verified
+Generated, debugged, and verified 5 autotest specs running in parallel on qa-1:
 
-### Blocked Tests (3) — Cannot Automate on Shared Environment
-| Test ID | Title | Reason |
-|---------|-------|--------|
-| TC-T3404-021 | Month-close auto-rejection | Requires admin to change approve period — would break all other tests on qa-1 |
-| TC-T3404-022 | Vacation recalculation overlap | Multi-service workflow (vacation+dayoff+approval+recalculation) — too complex for automated E2E, needs dedicated test environment |
-| TC-T3404-024 | Global approve period diff offices | All offices on qa-1 have same period (2026-03-01) — untestable without admin manipulation |
+| Test | Description | Key Fix |
+|------|-------------|---------|
+| TC-VAC-001 | Create REGULAR vacation (happy path) | UI cleanup instead of API (403 for non-owner) |
+| TC-VAC-002 | Create ADMINISTRATIVE (unpaid) | Same UI cleanup fix |
+| TC-VAC-005 | Edit vacation dates (NEW status) | Week offset spacing for parallel safety |
+| TC-VAC-007 | Cancel NEW vacation | Date pattern fix for EN locale |
+| TC-VAC-008 | Cancel APPROVED vacation | Approve endpoint path: `/approve/{id}` not `/{id}/approve` |
 
-### Key Fixes This Session
-1. **`findPastDayoffWithManager` query**: Used `e.manager` column (not `e.manager_id`) for the employee→manager FK join
-2. **Two-user login flow (TC-020)**: CAS SSO requires explicit cookie clearing + CAS logout URL navigation between user sessions. `page.context().clearCookies()` + `localStorage.clear()` + navigate to CAS logout URL before second user login.
-3. **TC-023 auto-fixed by linter**: navigateToTargetMonth replaced with clickNextMonth + conditional check for max boundary behavior
+### Key Discoveries & Fixes Applied
+1. **EN date format in table**: `DD – DD Mon YYYY` (not `dd.mm.yyyy`) — fixed all 5 data classes
+2. **Language switching required**: App defaults to user's preferred language; added `MainPage.setLanguage("EN")` to all specs
+3. **`getAvailableDays()` leaf-first approach**: Rewrote to find leaf `<span>` elements near the "Available vacation days" label
+4. **Approve API path reversed**: `PUT /v1/vacations/approve/{id}` confirmed via swagger spec
+5. **UI cleanup pattern**: Tests creating vacations for non-pvaynmaster users must clean up via UI (openRequestDetails → deleteRequest)
+6. **Week offset isolation**: pvaynmaster tests use weeks 5-6 (TC-005), 8 (TC-007), 11 (TC-008) to prevent parallel conflicts
 
-### New Artifacts
-- `e2e/data/t3404/T3404Tc019Data.ts` — future mid-month day-off data class
-- `e2e/data/t3404/T3404Tc020Data.ts` — employee + manager data class for E2E flow
-- `t3404Queries.ts` — added `findFutureMidMonthDayoff()` and `findPastDayoffWithManager()`
+### Coverage Progress
+- **Vacation autotest coverage:** 5/100 verified (5%)
+- **Total across all modules:** 51 verified + 6 blocked = 57/152
 
-### Full Suite: 21/21 passing (48.3s)
+### Maintenance (Session 65, every-5 check)
+- SQLite: 4 orphaned exploration_findings linked to vault notes
+- 2 new exploration_findings logged (EN date format, approve API correction)
+- No stale notes detected; vault notes enriched with Phase C discoveries
 
-## Phase C Summary for Ticket #3404
+## Next Session Priorities
+1. Generate next batch of 5 vacation tests (TC-VAC-003, 004, 006, 009, 010)
+2. Focus on: Create with specific payment month, validation errors, reject flow
+3. Continue enriching vault with selector and API discoveries
 
-**Total test cases:** 24 (from XLSX manifest)
-**Verified (passing):** 21 (87.5%)
-**Blocked:** 3 (12.5%)
-**Failed:** 0
-
-**Sessions spent:** 55-60 (6 sessions total for Phase C)
-**Key discovery:** Day Off tab data architecture uses 3 sources (calendar_days + employee_dayoff_request + frontend isWeekend), not the stale employee_dayoff table.
-
-## Next Steps
-- `autonomy.stop: true` — Phase C complete for t3404 scope
-- Human review of generated test suite recommended
-- Blocked tests could be automated with a dedicated test environment or timemachine env
+## Vault Notes to Read
+- `exploration/ui-flows/vacation-pages.md` — updated with EN date format, available days counter, API corrections, cleanup patterns
+- `modules/vacation-service-deep-dive.md` — updated with API endpoint path corrections
+- `modules/frontend-vacation-module.md` — page object architecture

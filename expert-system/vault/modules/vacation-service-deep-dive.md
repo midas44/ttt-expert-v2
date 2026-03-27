@@ -746,3 +746,20 @@ Access vacation ID via `response.vacation.id`, approver via `response.vacation.a
 ### TC-056 (crossing on approve) Deferred
 - Cannot create two overlapping vacations for the same user — crossing check runs on both POST create and PUT update
 - Would need: (a) multi-user support to create overlapping vacations for different users, or (b) direct DB manipulation to insert an overlapping record, or (c) timing exploit between create and crossing check
+
+
+## Autotest Notes (Phase C corrections)
+
+### API Endpoint Path Corrections
+The Controller Endpoint Security Matrix in §6 above lists paths relative to the controller mapping, but the **actual deployed paths** differ for some operations (confirmed via swagger spec `/v2/api-docs`):
+
+| Operation | Code/Vault Path | Actual Deployed Path | Method |
+|-----------|----------------|---------------------|--------|
+| Approve | `/{vacationId}/approve` | `/approve/{vacationId}` | PUT |
+| Cancel | `/{vacationId}/cancel` | `/{vacationId}/cancel` | PUT |
+| Delete | `/{vacationId}` | `/{vacationId}` | DELETE |
+| Create | (root) | (root) | POST |
+
+All paths are relative to base `/v1/vacations` (full: `/api/vacation/v1/vacations`).
+
+The swagger spec (`/api/vacation/v2/api-docs`) is the authoritative source for deployed endpoint paths. The code analysis may show controller annotations that differ from the deployed routing due to API gateway remapping.

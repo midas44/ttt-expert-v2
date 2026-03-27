@@ -79,8 +79,8 @@ export class ApiVacationSetupFixture {
 
   /** Approve a vacation via API. Uses API_SECRET_TOKEN (pvaynmaster is CPO, self-approves). */
   async approveVacation(vacationId: number): Promise<void> {
-    const url = `${this.baseUrl}/${vacationId}/approve`;
-    const resp = await this.request.post(url, { headers: this.headers });
+    const url = `${this.baseUrl}/approve/${vacationId}`;
+    const resp = await this.request.put(url, { headers: this.headers });
     if (!resp.ok()) {
       const body = await resp.text();
       throw new Error(
