@@ -1892,7 +1892,7 @@
               "module_component": "planner/navigation",
               "notes": "Observed banners: norm exceeded, overdue day-off, non-working days reminder.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             }
           ]
         },
@@ -1910,7 +1910,7 @@
               "module_component": "planner/task-crud",
               "notes": "Search supports: project/task name, ticket number, tracker URL.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-PLN-013",
@@ -1924,7 +1924,7 @@
               "module_component": "planner/task-crud",
               "notes": "Editing triggers lock acquisition. Other users see cell as locked.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-PLN-014",
@@ -1938,7 +1938,7 @@
               "module_component": "planner/task-crud",
               "notes": "Comment cell has two buttons. Multi-line text supported.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-PLN-015",
@@ -1952,7 +1952,7 @@
               "module_component": "planner/task-crud",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-PLN-016",

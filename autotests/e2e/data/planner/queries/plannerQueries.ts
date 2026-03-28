@@ -107,6 +107,81 @@ export async function findEmployeeWithWeekdayAssignment(
   );
 }
 
+interface EmployeeWithAvailableTaskRow {
+  login: string;
+  project_name: string;
+  task_name: string;
+  days_back: number;
+}
+
+/**
+ * Finds an employee with a weekday assignment AND another task in the same project
+ * that they don't yet have an assignment for on that date — suitable for add-task tests.
+ */
+export async function findEmployeeWithAvailableTask(
+  db: DbClient,
+): Promise<EmployeeWithAvailableTaskRow> {
+  return db.queryOne<EmployeeWithAvailableTaskRow>(
+    `WITH emp_with_assignment AS (
+       SELECT e.id AS emp_id, e.login, p.id AS project_id, p.name AS project_name,
+              ta.date AS assignment_date,
+              (CURRENT_DATE - ta.date)::int AS days_back
+       FROM ttt_backend.employee e
+       JOIN ttt_backend.task_assignment ta ON ta.assignee = e.id
+       JOIN ttt_backend.task t ON ta.task = t.id
+       JOIN ttt_backend.project p ON t.project = p.id
+       WHERE e.enabled = true
+         AND p.status = 'ACTIVE'
+         AND ta.closed = false
+         AND ta.date >= CURRENT_DATE - 7
+         AND ta.date <= CURRENT_DATE
+         AND EXTRACT(DOW FROM ta.date) BETWEEN 1 AND 5
+       ORDER BY ta.date DESC, random()
+       LIMIT 1
+     )
+     SELECT ewa.login, ewa.project_name, t.name AS task_name, ewa.days_back
+     FROM emp_with_assignment ewa
+     JOIN ttt_backend.task t ON t.project = ewa.project_id
+     WHERE NOT EXISTS (
+         SELECT 1 FROM ttt_backend.task_assignment ta3
+         WHERE ta3.assignee = ewa.emp_id
+           AND ta3.task = t.id
+           AND ta3.date = ewa.assignment_date
+       )
+     ORDER BY random()
+     LIMIT 1`,
+  );
+}
+
+interface EmployeeWithTaskDetailsRow {
+  login: string;
+  project_name: string;
+  task_name: string;
+  days_back: number;
+}
+
+/** Finds an employee with a task_assignment on a recent weekday, including task name for row identification. */
+export async function findEmployeeWithTaskDetails(
+  db: DbClient,
+): Promise<EmployeeWithTaskDetailsRow> {
+  return db.queryOne<EmployeeWithTaskDetailsRow>(
+    `SELECT e.login, p.name AS project_name, t.name AS task_name,
+            (CURRENT_DATE - ta.date)::int AS days_back
+     FROM ttt_backend.employee e
+     JOIN ttt_backend.task_assignment ta ON ta.assignee = e.id
+     JOIN ttt_backend.task t ON ta.task = t.id
+     JOIN ttt_backend.project p ON t.project = p.id
+     WHERE e.enabled = true
+       AND p.status = 'ACTIVE'
+       AND ta.closed = false
+       AND ta.date >= CURRENT_DATE - 7
+       AND ta.date <= CURRENT_DATE
+       AND EXTRACT(DOW FROM ta.date) BETWEEN 1 AND 5
+     ORDER BY ta.date DESC, random()
+     LIMIT 1`,
+  );
+}
+
 interface MultiProjectEmployeeRow {
   login: string;
 }

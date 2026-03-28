@@ -177,6 +177,64 @@ export class PlannerPage {
     }
   }
 
+  /**
+   * Ensures the planner is in editing mode with retries.
+   * Clicks "Open for editing" if present, verifies the search input appears
+   * (indicating editing mode is active), dismisses error banners, and retries once.
+   * Returns true if editing mode is active, false if it could not be activated.
+   */
+  async ensureEditMode(): Promise<boolean> {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const openBtn = this.openForEditingButton();
+      if (await openBtn.isVisible({ timeout: 3_000 }).catch(() => false)) {
+        // Dismiss any existing error banner first
+        await this.dismissErrorBanner();
+        await openBtn.click();
+        // Wait for button to hide AND search input to appear
+        try {
+          await this.searchInput().waitFor({ state: "visible", timeout: 15_000 });
+          // Double-check: button should be hidden
+          if (await openBtn.isVisible({ timeout: 1_000 }).catch(() => false)) {
+            continue; // Button re-appeared — retry
+          }
+          await this.page.waitForLoadState("networkidle");
+          return true;
+        } catch {
+          // Search input didn't appear — API likely failed
+          await this.dismissErrorBanner();
+          continue;
+        }
+      } else {
+        // No "Open for editing" button — check if search input is present
+        if (await this.searchInput().isVisible({ timeout: 2_000 }).catch(() => false)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  /** Dismisses the error banner if visible. */
+  async dismissErrorBanner(): Promise<void> {
+    const banner = this.page.locator("text=An error has occurred in the system");
+    if (await banner.isVisible({ timeout: 1_000 }).catch(() => false)) {
+      // Try clicking the dismiss button (X icon) if available
+      const closeBtn = banner.locator("..").locator("button").first();
+      if (await closeBtn.isVisible().catch(() => false)) {
+        await closeBtn.click();
+      }
+    }
+  }
+
+  /** Checks if a cell is editable by verifying comment buttons are not disabled. */
+  async isCellEditable(taskRow: Locator): Promise<boolean> {
+    const commentCell = this.getCommentCell(taskRow);
+    const disabledBtns = commentCell.locator("button[disabled]");
+    const disabledCount = await disabledBtns.count().catch(() => 0);
+    // If comment buttons are disabled, the row is readonly
+    return disabledCount === 0;
+  }
+
   // --- Search bar methods ---
 
   /** Returns the main search/autosuggest input (top-level search bar, not per-row inputs). */
@@ -208,6 +266,62 @@ export class PlannerPage {
     await this.page
       .locator("[class*='react-autosuggest__clear']")
       .click();
+  }
+
+  // --- Add task methods ---
+
+  /** Returns the "Add a task" button. */
+  addTaskButton(): Locator {
+    return this.page.getByRole("button", { name: "Add a task" });
+  }
+
+  // --- Task row & inline editing methods ---
+
+  /** Returns a task data row containing the given task name text. */
+  getTaskRow(taskName: string): Locator {
+    return this.page
+      .locator("table tbody tr")
+      .filter({ hasText: taskName });
+  }
+
+  /**
+   * Returns the effort (date) cell for a given task row.
+   * Column order: №(0), Info(1), Tracker(2), Task/Ticket(3), Date(4), Remaining(5), Comment(6).
+   */
+  getEffortCell(taskRow: Locator): Locator {
+    return taskRow.locator("td").nth(4);
+  }
+
+  /** Returns the "Remaining work" cell for a given task row (column index 5). */
+  getRemainingWorkCell(taskRow: Locator): Locator {
+    return taskRow.locator("td").nth(5);
+  }
+
+  /** Returns the "Comment" cell for a given task row (column index 6). */
+  getCommentCell(taskRow: Locator): Locator {
+    return taskRow.locator("td").nth(6);
+  }
+
+  /** Returns an input inside a table cell (appears during inline editing). */
+  getCellInput(cell: Locator): Locator {
+    return cell.locator("input").first();
+  }
+
+  /**
+   * Clicks a cell twice to enter edit mode (focus → edit).
+   * The planner uses a two-click pattern: first click sets focus,
+   * second click enters edit mode after the focus/lock is confirmed.
+   */
+  async clickCellToEdit(cell: Locator): Promise<void> {
+    await cell.click(); // First click — sets focus
+    // Brief pause for focus/lock dispatch to complete
+    await this.page.waitForTimeout(500);
+    await cell.click(); // Second click — enters edit mode
+  }
+
+  /** Returns the Total row's effort value cell. */
+  getTotalEffort(): Locator {
+    return this.totalRow().locator("th, td").nth(1);
   }
 
   // --- Collapse/Expand methods ---
