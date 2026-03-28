@@ -61,6 +61,68 @@ export async function tagExists(
   return Number(rows[0]?.cnt) > 0;
 }
 
+interface ProjectWithSeniorManagerRow {
+  project_id: number;
+  project_name: string;
+  spm_login: string;
+}
+
+/**
+ * Finds a random enabled project with an enabled senior project manager (SPM).
+ * The SPM is stored in project.senior_manager_id.
+ */
+export async function findProjectWithSeniorManager(
+  db: DbClient,
+): Promise<ProjectWithSeniorManagerRow> {
+  return db.queryOne<ProjectWithSeniorManagerRow>(
+    `SELECT p.id AS project_id,
+            p.name AS project_name,
+            e.login AS spm_login
+     FROM ttt_backend.project p
+     JOIN ttt_backend.employee e ON p.senior_manager = e.id
+     WHERE e.enabled = true
+       AND p.status = 'ACTIVE'
+       AND e.login IS NOT NULL
+       AND p.senior_manager IS NOT NULL
+     ORDER BY random()
+     LIMIT 1`,
+  );
+}
+
+interface TwoProjectsRow {
+  project_a_id: number;
+  project_a_name: string;
+  pm_a_login: string;
+  project_b_id: number;
+  project_b_name: string;
+  pm_b_login: string;
+}
+
+/**
+ * Finds two distinct ACTIVE projects with different PMs.
+ * PM of project B is NOT the PM or SPM of project A.
+ */
+export async function findTwoProjectsWithDifferentManagers(
+  db: DbClient,
+): Promise<TwoProjectsRow> {
+  return db.queryOne<TwoProjectsRow>(
+    `SELECT a.id AS project_a_id, a.name AS project_a_name, ea.login AS pm_a_login,
+            b.id AS project_b_id, b.name AS project_b_name, eb.login AS pm_b_login
+     FROM ttt_backend.project a
+     JOIN ttt_backend.employee ea ON a.manager = ea.id
+     JOIN ttt_backend.project b ON b.id != a.id
+     JOIN ttt_backend.employee eb ON b.manager = eb.id
+     WHERE a.status = 'ACTIVE' AND b.status = 'ACTIVE'
+       AND ea.enabled = true AND eb.enabled = true
+       AND ea.login IS NOT NULL AND eb.login IS NOT NULL
+       AND eb.id != a.manager
+       AND eb.id != COALESCE(a.senior_manager, 0)
+       AND eb.id != COALESCE(a.old_owner, 0)
+     ORDER BY random()
+     LIMIT 1`,
+  );
+}
+
 /** Finds an ACTIVE project with a PM but no existing close tags. */
 export async function findProjectWithNoTags(
   db: DbClient,
