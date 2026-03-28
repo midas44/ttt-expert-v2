@@ -428,6 +428,138 @@ interface ProjectWithPlainMemberRow {
   member_login: string;
 }
 
+// --------------- TC-026: Open-for-editing then apply ---------------
+
+interface NewAssignmentSlotRow {
+  project_id: number;
+  project_name: string;
+  manager_login: string;
+  task_id: number;
+  ticket_info: string;
+  employee_id: number;
+  target_date: string;
+}
+
+/**
+ * Finds a task with ticket_info and a bound employee (fixed_task) who has
+ * NO existing assignment on CURRENT_DATE - 2. Used to simulate "open for editing"
+ * by inserting a new assignment, then applying close-by-tag.
+ */
+export async function findNewAssignmentSlot(
+  db: DbClient,
+): Promise<NewAssignmentSlotRow> {
+  return db.queryOne<NewAssignmentSlotRow>(
+    `SELECT t.project AS project_id, p.name AS project_name,
+            pm.login AS manager_login,
+            t.id AS task_id, t.ticket_info,
+            ft.employee AS employee_id,
+            to_char(CURRENT_DATE - 2, 'YYYY-MM-DD') AS target_date
+     FROM ttt_backend.fixed_task ft
+     JOIN ttt_backend.task t ON ft.task = t.id
+     JOIN ttt_backend.project p ON t.project = p.id
+     JOIN ttt_backend.employee pm ON p.manager = pm.id
+     JOIN ttt_backend.employee emp ON ft.employee = emp.id
+     WHERE p.status = 'ACTIVE'
+       AND pm.enabled = true AND pm.login IS NOT NULL
+       AND emp.enabled = true
+       AND t.ticket_info IS NOT NULL AND t.ticket_info != ''
+       AND NOT EXISTS (
+         SELECT 1 FROM ttt_backend.task_assignment ta
+         WHERE ta.task = t.id AND ta.assignee = ft.employee AND ta.date = CURRENT_DATE - 2
+       )
+       AND NOT EXISTS (
+         SELECT 1 FROM ttt_backend.task_report tr
+         WHERE tr.task = t.id AND tr.executor = ft.employee AND tr.report_date = CURRENT_DATE - 2
+       )
+     ORDER BY random()
+     LIMIT 1`,
+  );
+}
+
+/** Inserts an open (closed=false) task_assignment. Returns the new ID. */
+export async function insertAssignment(
+  db: DbClient,
+  taskId: number,
+  assigneeId: number,
+  date: string,
+): Promise<number> {
+  const row = await db.queryOne<{ id: number }>(
+    `INSERT INTO ttt_backend.task_assignment (task, assignee, date, closed)
+     VALUES ($1, $2, $3::date, false)
+     RETURNING id`,
+    [taskId, assigneeId, date],
+  );
+  return row.id;
+}
+
+// --------------- TC-027: Multiple tags, partial matches ---------------
+
+/**
+ * Finds a second closable assignment in the same project with a DIFFERENT ticket_info.
+ * Used together with findApplyTargetNoReports for multi-tag OR matching tests.
+ */
+export async function findSecondClosableAssignment(
+  db: DbClient,
+  projectId: number,
+  excludeTicketInfo: string,
+): Promise<{ assignment_id: number; assignment_date: string; ticket_info: string }> {
+  return db.queryOne<{ assignment_id: number; assignment_date: string; ticket_info: string }>(
+    `SELECT ta.id AS assignment_id, ta.date::text AS assignment_date,
+            t.ticket_info
+     FROM ttt_backend.task_assignment ta
+     JOIN ttt_backend.task t ON ta.task = t.id
+     WHERE t.project = $1
+       AND ta.closed = false
+       AND t.ticket_info IS NOT NULL AND t.ticket_info != ''
+       AND LOWER(t.ticket_info) != LOWER($2)
+       AND ta.date BETWEEN CURRENT_DATE - 30 AND CURRENT_DATE
+       AND NOT EXISTS (
+         SELECT 1 FROM ttt_backend.task_report tr
+         WHERE tr.task = t.id AND tr.executor = ta.assignee AND tr.report_date = ta.date
+       )
+     ORDER BY random()
+     LIMIT 1`,
+    [projectId, excludeTicketInfo],
+  );
+}
+
+// --------------- TC-028: Blank ticket_info skipped ---------------
+
+interface BlankTicketInfoRow {
+  project_id: number;
+  project_name: string;
+  manager_login: string;
+  assignment_id: number;
+  assignment_date: string;
+  task_id: number;
+}
+
+/**
+ * Finds an unclosed assignment where task.ticket_info is NULL or empty.
+ * Used to verify apply skips assignments with blank info.
+ */
+export async function findBlankTicketInfoAssignment(
+  db: DbClient,
+): Promise<BlankTicketInfoRow> {
+  return db.queryOne<BlankTicketInfoRow>(
+    `SELECT t.project AS project_id, p.name AS project_name,
+            pm.login AS manager_login,
+            ta.id AS assignment_id, ta.date::text AS assignment_date,
+            t.id AS task_id
+     FROM ttt_backend.task_assignment ta
+     JOIN ttt_backend.task t ON ta.task = t.id
+     JOIN ttt_backend.project p ON t.project = p.id
+     JOIN ttt_backend.employee pm ON p.manager = pm.id
+     WHERE p.status = 'ACTIVE'
+       AND pm.enabled = true AND pm.login IS NOT NULL
+       AND (t.ticket_info IS NULL OR t.ticket_info = '')
+       AND ta.closed = false
+       AND ta.date BETWEEN CURRENT_DATE - 30 AND CURRENT_DATE
+     ORDER BY random()
+     LIMIT 1`,
+  );
+}
+
 /** Finds an ACTIVE project with a PM and a separate plain member (not PM/SPM/admin). */
 export async function findProjectWithPlainMember(
   db: DbClient,
