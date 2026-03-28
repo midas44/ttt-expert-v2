@@ -63,6 +63,19 @@ export class PlannerPage {
     return this.page.getByRole("table");
   }
 
+  /** Waits for the Project Settings dialog to be visible. */
+  async waitForSettingsDialog(): Promise<void> {
+    await this.page.getByRole("dialog").waitFor({ state: "visible" });
+  }
+
+  /** Clicks the OK button in the Project Settings dialog. */
+  async clickSettingsOk(): Promise<void> {
+    await this.page
+      .getByRole("dialog")
+      .getByRole("button", { name: "OK" })
+      .click();
+  }
+
   /** Checks if the Project Settings icon is visible (PM-only control). */
   async isProjectSettingsIconVisible(): Promise<boolean> {
     const count = await this.page

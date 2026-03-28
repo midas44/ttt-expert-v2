@@ -3242,7 +3242,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Frontend sends currentDay from Redux store. Backend uses section.date or section.startDate.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-T2724-022",
@@ -3256,7 +3256,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Guard added in !5341. Critical for projects without close-by-tag configuration.",
               "classified_type": "hybrid",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-T2724-023",
@@ -3270,7 +3270,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "window.location.reload() is a blunt approach. The finally block (stopLoading + closeModal) is dead code since page reloads.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-T2724-024",
@@ -3284,7 +3284,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Design side effect: user who only changed Project Members still triggers close-tags apply.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-T2724-025",
@@ -3298,7 +3298,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Silent failure: if createForCloseByTag throws, error is swallowed with log.debug() only.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-T2724-026",

@@ -1,62 +1,70 @@
 # Session Briefing
 
-## Session 82 — 2026-03-28T23:30 UTC
+## Session 83 — 2026-03-29T01:00 UTC
 **Phase:** C — Autotest Generation
 **Scope:** planner, t2724
 **Mode:** Full autonomy
 
-### Session 82 Progress
+### Session 83 Progress
 
-**Generated and verified 5 apply-suite test cases for t2724 (TC-T2724-016 through TC-T2724-020).**
+**Generated and verified 5 apply-suite tests for t2724 (TC-T2724-021 through TC-T2724-025).**
 
 | Test ID | Title | Status | Fix Attempts |
 |---------|-------|--------|-------------|
-| TC-T2724-016 | Apply — assignment without reports gets closed | verified | 3 |
-| TC-T2724-017 | Apply — assignment with reports stays open | verified | 0 |
-| TC-T2724-018 | Apply — case-insensitive matching | verified | 0 |
-| TC-T2724-019 | Apply — substring matching | verified | 0 |
-| TC-T2724-020 | Apply — false positive tag matches unintended text | verified | 0 |
+| TC-T2724-021 | Apply on specific date — only affects selected date | verified | 0 |
+| TC-T2724-022 | Apply with no tags — no API call, no reload | verified | 0 |
+| TC-T2724-023 | Apply — page reloads after successful apply | verified | 0 |
+| TC-T2724-024 | Apply from Project Members tab — triggers if tags exist | verified | 0 |
+| TC-T2724-025 | Apply — generated (not-yet-opened) assignments also closed | verified | 3 |
 
-All 20 t2724 tests passing on timemachine (5 apply tests: 3.5m total).
+All 25 t2724 tests passing on timemachine. Full suite run (5 tests): 2.1m.
 
-### Key Technical Findings (session 82)
+### Key Technical Findings (session 83)
 
-**Apply endpoint proxy bypass pattern:**
-- Playwright's Node.js `request` context cannot reach VPN hosts (proxy issue)
-- Solution: `page.evaluate(fetch(...))` makes same-origin requests from browser context, bypassing proxy
-- This pattern is reusable for any API call that needs to happen within the browser's origin
+**TC-025 — Generated assignments (fixed_task table):**
+- The table binding employees to tasks is `ttt_backend.fixed_task` (columns: task, employee), NOT `task_bound_employee` which doesn't exist
+- Generated assignments: when an employee is in `fixed_task` but has no `task_assignment` row for a date, the apply endpoint creates a new closed assignment via `createForCloseByTag()`
+- The query uses `generate_series` to find candidate dates where no assignment exists but the employee has assignments on other dates
+- **Date format critical:** Java API expects `java.time.LocalDate` (`YYYY-MM-DD`). PostgreSQL `generate_series` returns timestamps — must use `to_char(d.dt, 'YYYY-MM-DD')` not `d.dt::text` (which gives `2026-03-23 00:00:00+00`)
 
-**React state caching issue:**
-- Tags created via DB INSERT or API after page load don't appear in the Project Settings dialog
-- React's Redux store caches the tag list; externally-created tags don't refresh the cache
-- Solution for apply tests: DB INSERT for tag setup + skip dialog verification (covered by CRUD suite)
+**TC-021 — Date-scoped apply:**
+- Apply POST body accepts `{date: "YYYY-MM-DD"}` to scope to a single date
+- Verified: applying on date1 closes only date1's assignment, date2 stays open
+- Test uses `findApplyTargetTwoDatesNoReports` — finds same task+assignee with two different unclosed assignment dates
 
-**Apply test pattern (reusable for TC-021+):**
-1. DB INSERT tag via `insertTag()` (new query helper)
-2. Login + navigate to planner (establishes same-origin context)
-3. `page.evaluate(fetch(...))` to call apply endpoint
-4. DB verification via `getAssignmentClosedStatus()`
-5. DB cleanup via `deleteTagByName()` + `reopenAssignment()`
+**TC-022 — No-tags no-op:**
+- `findProjectWithNoTags` finds ACTIVE project with PM but zero close tags
+- Apply on such a project returns 200 but makes no changes (no-op)
 
-**New query helpers added to t2724Queries.ts:**
-- `insertTag(db, projectId, tag)` — ON CONFLICT DO NOTHING
-- `deleteTagByName(db, projectId, tag)` — case-insensitive delete
+**TC-024 — Settings dialog accessibility:**
+- PM can access Project Settings dialog via the settings icon
+- Dialog closed via Escape, then `dialog.waitFor({ state: "hidden" })`
+
+### New Query Helpers Added to t2724Queries.ts
+- `findApplyTargetTwoDatesNoReports()` — two unclosed same-task assignments on different dates
+- `findUnclosedAssignmentForProject()` — any unclosed assignment for a project
+- `findGeneratedAssignmentTarget()` — task with bound employee but no assignment on candidate date
+- `findAssignmentByTaskEmployeeDate()` — lookup assignment by task+employee+date
+- `deleteAssignment()` — cleanup helper for generated assignment tests
+- `findProjectWithNoTags()` — ACTIVE project with PM but no close tags
+- `findProjectWithPlainMember()` — ACTIVE project with PM and a separate plain member (not PM/SPM/admin)
 
 ### Files Created/Modified
-- `e2e/tests/t2724/t2724-tc016.spec.ts` through `t2724-tc020.spec.ts` — 5 apply test specs
-- `e2e/data/t2724/queries/t2724Queries.ts` — added `insertTag`, `deleteTagByName`
-- Data classes TC-016 through TC-020 already existed from session 80
+- `e2e/tests/t2724/t2724-tc021.spec.ts` through `t2724-tc025.spec.ts` — 5 apply test specs
+- `e2e/data/t2724/T2724Tc021Data.ts` through `T2724Tc025Data.ts` — 5 data classes
+- `e2e/data/t2724/queries/t2724Queries.ts` — 7 new query functions added
+- `e2e/pages/PlannerPage.ts` — added `waitForSettingsDialog()`, `clickSettingsOk()`
+- `config/ttt/ttt.yml` — temporarily switched to timemachine, restored to qa-1
 
 ### Coverage Update
-- t2724 module: 20/38 test cases automated (52.6%)
+- t2724 module: 25/38 test cases automated (65.8%)
 - planner module: 0/82 test cases automated (0%)
-- Overall scope: 20/120 (16.7%)
+- Overall scope: 25/120 (20.8%)
 
 ### Next Session Priorities
-1. Continue t2724: TC-T2724-021 through TC-T2724-025 (Apply suite continued — date scoping, no-tag project, already-closed, multiple tags, null ticket_info)
-2. TC-T2724-021 tests date-scoped apply (only selected date affected)
-3. TC-T2724-022 tests apply on project with no tags (no-op)
-4. Same page.evaluate + DB verification pattern applies to remaining apply tests
+1. Continue t2724: TC-T2724-026 through TC-T2724-030 (remaining apply/edge-case tests)
+2. After t2724 complete (38 total), begin planner module tests
+3. Apply tests require timemachine env — switch ttt.yml temporarily during those runs
 
 ### Previous Phase Context
 Phase B completed in session 78: 120 test cases across 16 suites (82 planner + 38 t2724). Phase C started session 79.
