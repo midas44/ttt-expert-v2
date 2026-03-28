@@ -1,4 +1,4 @@
-import type { Locator, Page } from "@playwright/test";
+import { expect, type Locator, type Page } from "@playwright/test";
 
 export class PlannerPage {
   constructor(private readonly page: Page) {}
@@ -58,9 +58,23 @@ export class PlannerPage {
     return this.page.getByRole("button", { name: "Actions" });
   }
 
-  /** Returns the planner data table. */
+  /** Waits for the datasheet table to finish loading (loading spinner removed). */
+  async waitForTableLoaded(): Promise<void> {
+    await expect(
+      this.page.locator("table[class*='datasheet__loading--active']"),
+    ).toBeHidden({ timeout: 15_000 });
+  }
+
+  /** Returns the planner data table (datasheet, not datepicker). */
   dataTable(): Locator {
-    return this.page.getByRole("table");
+    return this.page.locator("table[class*='datasheet__table']");
+  }
+
+  /** Returns direct data rows from the planner table (excludes nested datepicker rows). */
+  dataTableRows(): Locator {
+    return this.page.locator(
+      "table[class*='datasheet__table'] > tbody > tr",
+    );
   }
 
   /** Waits for the Project Settings dialog to be visible. */
@@ -372,6 +386,62 @@ export class PlannerPage {
       .locator("th")
       .filter({ hasText: /Task/ })
       .filter({ hasText: /Ticket/ });
+  }
+
+  // --- Info / Tracker / Delete column methods ---
+
+  /** Returns the Info column cell (column index 1) for a given task row. */
+  getInfoCell(taskRow: Locator): Locator {
+    return taskRow.locator("td").nth(1);
+  }
+
+  /** Returns the Tracker column cell (column index 2) for a given task row. */
+  getTrackerCell(taskRow: Locator): Locator {
+    return taskRow.locator("td").nth(2);
+  }
+
+  /**
+   * Returns the delete (close) button for a task row.
+   * The button is inside .planner__row-item--hover (hidden until row hover).
+   * It's the first button in that container (second is history).
+   */
+  getDeleteButton(taskRow: Locator): Locator {
+    return taskRow
+      .locator("[class*='planner__row-item--hover'] button")
+      .first();
+  }
+
+  /** Returns the DnD handle button ("::" text) for a task row. */
+  getDndHandle(taskRow: Locator): Locator {
+    return taskRow.getByRole("button", { name: "::" });
+  }
+
+  // --- Projects tab employee header methods ---
+
+  /**
+   * Returns the employee group header row containing the employee name.
+   * On the Projects tab, employees are grouped in separate sections.
+   */
+  getEmployeeHeaderRow(employeeName: string): Locator {
+    return this.page
+      .locator("tr")
+      .filter({ hasText: employeeName })
+      .first();
+  }
+
+  /** Returns the per-employee "Open for editing" button within an employee header row. */
+  getEmployeeOpenForEditingButton(headerRow: Locator): Locator {
+    return headerRow.getByRole("button", { name: "Open for editing" });
+  }
+
+  /** Returns all cells with blocked color coding (red/orange background). */
+  blockedCells(): Locator {
+    return this.page.locator("[class*='planner__cel--color-blocked']");
+  }
+
+  /** Returns all cells with done color coding (green background). */
+  doneCells(): Locator {
+    return this.page.locator("[class*='planner__cel--color-done']");
   }
 
   /**

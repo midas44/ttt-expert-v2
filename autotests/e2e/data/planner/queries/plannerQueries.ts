@@ -182,6 +182,112 @@ export async function findEmployeeWithTaskDetails(
   );
 }
 
+interface ProjectManagerWithEmployeeRow {
+  login: string;
+  project_id: number;
+  project_name: string;
+  employee_login: string;
+  employee_name: string;
+  days_back: number;
+}
+
+/**
+ * Finds a PM whose project has at least one different employee member
+ * with task assignments on a recent weekday. Used for Projects tab tests.
+ */
+export async function findProjectManagerWithEmployee(
+  db: DbClient,
+): Promise<ProjectManagerWithEmployeeRow> {
+  return db.queryOne<ProjectManagerWithEmployeeRow>(
+    `SELECT e_pm.login,
+            p.id AS project_id,
+            p.name AS project_name,
+            e_member.login AS employee_login,
+            e_member.name AS employee_name,
+            (CURRENT_DATE - ta.date)::int AS days_back
+     FROM ttt_backend.project p
+     JOIN ttt_backend.employee e_pm ON p.manager = e_pm.id
+     JOIN ttt_backend.project_member pm ON pm.project = p.id
+     JOIN ttt_backend.employee e_member ON pm.employee = e_member.id
+     JOIN ttt_backend.task_assignment ta ON ta.assignee = e_member.id
+     JOIN ttt_backend.task t ON ta.task = t.id AND t.project = p.id
+     WHERE e_pm.enabled = true
+       AND e_member.enabled = true
+       AND p.status = 'ACTIVE'
+       AND ta.closed = false
+       AND ta.date >= CURRENT_DATE - 7
+       AND ta.date <= CURRENT_DATE
+       AND EXTRACT(DOW FROM ta.date) BETWEEN 1 AND 5
+       AND e_pm.id != e_member.id
+     ORDER BY random()
+     LIMIT 1`,
+  );
+}
+
+interface ProjectWithTrackerInfoRow {
+  login: string;
+  project_name: string;
+}
+
+/**
+ * Finds a PM whose project has tasks with non-empty ticket_info.
+ * Used for color coding and tracker info display tests.
+ */
+export async function findProjectWithTrackerInfo(
+  db: DbClient,
+): Promise<ProjectWithTrackerInfoRow> {
+  return db.queryOne<ProjectWithTrackerInfoRow>(
+    `SELECT e.login, p.name AS project_name
+     FROM ttt_backend.project p
+     JOIN ttt_backend.employee e ON p.manager = e.id
+     JOIN ttt_backend.task t ON t.project = p.id
+     WHERE e.enabled = true
+       AND p.status = 'ACTIVE'
+       AND e.login IS NOT NULL
+       AND t.ticket_info IS NOT NULL
+       AND t.ticket_info != ''
+     ORDER BY random()
+     LIMIT 1`,
+  );
+}
+
+interface EmployeeWithDeletableAssignmentRow {
+  login: string;
+  project_name: string;
+  task_name: string;
+  days_back: number;
+}
+
+/**
+ * Finds an employee with a task_assignment on a recent weekday that has NO reported hours,
+ * so the delete button is enabled. Used for delete assignment tests.
+ */
+export async function findEmployeeWithDeletableAssignment(
+  db: DbClient,
+): Promise<EmployeeWithDeletableAssignmentRow> {
+  return db.queryOne<EmployeeWithDeletableAssignmentRow>(
+    `SELECT e.login, p.name AS project_name, t.name AS task_name,
+            (CURRENT_DATE - ta.date)::int AS days_back
+     FROM ttt_backend.employee e
+     JOIN ttt_backend.task_assignment ta ON ta.assignee = e.id
+     JOIN ttt_backend.task t ON ta.task = t.id
+     JOIN ttt_backend.project p ON t.project = p.id
+     LEFT JOIN ttt_backend.task_report tr
+       ON tr.task = ta.task
+       AND tr.executor = ta.assignee
+       AND tr.report_date = ta.date
+     WHERE e.enabled = true
+       AND p.status = 'ACTIVE'
+       AND ta.closed = false
+       AND ta.date >= CURRENT_DATE - 7
+       AND ta.date <= CURRENT_DATE
+       AND EXTRACT(DOW FROM ta.date) BETWEEN 1 AND 5
+       AND (tr.id IS NULL OR tr.actual_efforts IS NULL OR tr.actual_efforts = 0)
+     ORDER BY ta.date DESC, random()
+     LIMIT 1`,
+  );
+}
+
 interface MultiProjectEmployeeRow {
   login: string;
 }
@@ -257,16 +363,16 @@ export async function findEmployeeWithMultipleRoles(
          AND e.login IS NOT NULL
      ),
      member_projects AS (
-       SELECT pe.employee_id, p.name AS member_project_name
-       FROM ttt_backend.project_employee pe
-       JOIN ttt_backend.project p ON pe.project_id = p.id
+       SELECT pm2.employee, p.name AS member_project_name
+       FROM ttt_backend.project_member pm2
+       JOIN ttt_backend.project p ON pm2.project = p.id
        WHERE p.status = 'ACTIVE'
      )
      SELECT pm.login,
             pm.pm_project_name,
             mp.member_project_name
      FROM pm_projects pm
-     JOIN member_projects mp ON mp.employee_id = pm.emp_id
+     JOIN member_projects mp ON mp.employee = pm.emp_id
        AND mp.member_project_name != pm.pm_project_name
      ORDER BY random()
      LIMIT 1`,

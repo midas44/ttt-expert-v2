@@ -1,19 +1,30 @@
 ---
 type: tracking
-updated: 2026-03-28
+updated: '2026-03-28'
 ---
 
 # Autotest Generation Progress
+
+## Overall Progress
+
+| Module | Verified | Total | Coverage | Blocked |
+|--------|----------|-------|----------|---------|
+| t2724 | 38 | 38 | 100% | 0 |
+| day-off | 25 | 28 | 89.3% | 3 |
+| t3404 | 21 | 24 | 87.5% | 3 |
+| vacation | 26 | 100 | 26.0% | 3 |
+| planner | 20 | 82 | 24.4% | 0 |
+| **Total** | **130** | **272** | **47.8%** | **9** |
 
 ## Planner Module
 
 | Metric | Value |
 |--------|-------|
 | Total test cases | 82 |
-| Verified | 15 |
+| Verified | 20 |
 | Failed | 0 |
-| Pending | 67 |
-| Coverage | 18.3% |
+| Pending | 62 |
+| Coverage | 24.4% |
 
 ### Verified Tests by Session
 
@@ -22,6 +33,8 @@ updated: 2026-03-28
 **Session 88 (TC-PLN-006 to TC-PLN-010):** Navigation advanced — role filter, WebSocket indicator, Total row, collapse/expand, Task/Ticket toggle.
 
 **Session 89 (TC-PLN-011 to TC-PLN-015):** Notification banners + inline editing (effort, comment, remaining work). Key patterns: two-click editing, rich text editor, ensureEditMode with retries.
+
+**Session 90 (TC-PLN-016 to TC-PLN-020):** Projects tab — project selector dropdown filtering, "Open for editing" generates assignments, edit hours in manager view, color coding (blocked/done), Info/Tracker column display. Major table architecture discovery.
 
 ### PlannerPage Object Methods
 
@@ -41,8 +54,16 @@ updated: 2026-03-28
 | `isCellEditable()` | s89 | Readonly detection |
 | `dismissErrorBanner()` | s89 | Error banner handling |
 | `getEffortCell/RemainingWorkCell/CommentCell()` | s89 | Cell locators by column index |
+| `waitForTableLoaded()` | s90 | DO NOT USE — loading class is perpetual |
+| `dataTable()` | s90 | Datasheet table locator |
+| `dataTableRows()` | s90 | Direct child rows (unreliable — prefer planner__cel filter) |
+| `blockedCells() / doneCells()` | s90 | Color-coded cell locators |
+| `getEmployeeHeaderRow()` | s90 | Projects tab employee header |
+| `getEmployeeOpenForEditingButton()` | s90 | Per-employee edit button |
 
 ### Known Issues
 
 - **"Open for editing" API unreliability** on qa-1 — `POST /v1/assignments/generate` intermittently fails, causing inline editing tests (TC-PLN-013/014/015) to skip. Tests are architecturally correct — they pass when the API works. Graceful degradation via `test.skip()`.
 - **Saturday/Sunday navigation** — planner shows weekend dates which may have no assignments. Tests navigate backwards to find weekdays with data.
+- **Perpetual loading state** (discovered s90) — `datasheet__loading--active` class never clears due to WebSocket sync. Never wait for loading to complete. Use content-specific waits.
+- **Datepicker table nested in thead** (discovered s90) — `tbody tr` selectors match hidden datepicker rows. Use `planner__cel` class filter for definitive row identification.

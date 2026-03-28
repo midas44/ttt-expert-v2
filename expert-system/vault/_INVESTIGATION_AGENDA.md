@@ -3,18 +3,15 @@
 ## Scope: planner, t2724
 
 ### P0 — Immediate (next session)
-- [ ] Complete t2724: TC-T2724-036 (info text), TC-T2724-037 (200 char limit), TC-T2724-038 (error handling) — 3 remaining
-- [ ] TC-036 and TC-037 are Low priority UI tests, run on qa-1
-- [ ] TC-038 (silent error handling) needs timemachine — verify frontend swallows apply errors gracefully
+- [ ] Continue planner: TC-PLN-021 through TC-PLN-025 (Projects tab — search, add task, delete task, DnD, task/ticket toggle)
+- [ ] Leverage session 90 discoveries: use `planner__cel` filter pattern, skip `waitForTableLoaded()`
 
-### P1 — Begin planner module (sessions 86-95+)
-- [ ] Begin planner autotest generation: TS-PLN-Nav (TC-PLN-001 through TC-PLN-011)
-- [ ] Create data classes for planner employees, projects, assignments
-- [ ] Generate planner editing tests (TS-PLN-Edit, TS-PLN-DnD)
-- [ ] Generate planner tracker tests (TS-PLN-Tracker, TS-PLN-TrkAdv)
-- [ ] Generate planner settings and copy-table tests
-- [ ] Generate bug regression tests (TS-PLN-BugReg)
-- [ ] Generate planner report period tests (TS-PLN-Reports)
+### P1 — Planner module continued (sessions 91-100+)
+- [ ] Generate planner tracker tests (TS-PLN-Tracker: TC-PLN-026 to TC-PLN-035)
+- [ ] Generate planner advanced tracker tests (TS-PLN-TrkAdv: TC-PLN-036 to TC-PLN-045)
+- [ ] Generate planner settings and copy-table tests (TS-PLN-Settings: TC-PLN-046 to TC-PLN-055)
+- [ ] Generate bug regression tests (TS-PLN-BugReg: TC-PLN-056 to TC-PLN-065)
+- [ ] Generate planner report period tests (TS-PLN-Reports: TC-PLN-066 to TC-PLN-082)
 
 ### P2 — Polish
 - [ ] Fix flaky tests, improve selector resilience
@@ -22,20 +19,20 @@
 - [ ] Phase C completion report
 
 <details>
-<summary>Completed Phase C Items (Sessions 79-85)</summary>
+<summary>Completed Phase C Items (Sessions 79-90)</summary>
 
 - [x] Parse XLSX manifest: `parse_xlsx.py` for planner + t2724
 - [x] Verify autotests/ framework dependencies installed
 - [x] Initialize `autotest_tracking` SQLite table
-- [x] Generate + verify TC-T2724-001 through TC-T2724-010 (CRUD + permissions, sessions 79-80)
-- [x] Generate + verify TC-T2724-011 through TC-T2724-015 (SPM, cross-project, Unicode, VARCHAR, multi-tag, session 81)
-- [x] Generate + verify TC-T2724-016 through TC-T2724-020 (close-by-tag apply core, session 82)
-- [x] Generate + verify TC-T2724-021 through TC-T2724-025 (date-scoped, no-tags, reload, settings dialog, generated assignments, session 83)
-- [x] Generate + verify TC-T2724-026 through TC-T2724-030 (open-for-editing, multi-tag, blank-info, API, popup regression, session 84)
-- [x] Generate + verify TC-T2724-031 through TC-T2724-035 (column header EN+RU, OK button, heavy data project, auto-refresh, task order, session 85)
+- [x] t2724 coverage: 38/38 (100%) — sessions 79-86
 - [x] Created PlannerPage, ProjectSettingsDialog page objects
 - [x] Created t2724Queries.ts with 20+ query helpers
-- [x] t2724 coverage: 35/38 (92.1%)
+- [x] TC-PLN-001 to TC-PLN-005: navigation basics (session 87)
+- [x] TC-PLN-006 to TC-PLN-010: navigation advanced (session 88)
+- [x] TC-PLN-011 to TC-PLN-015: inline editing (session 89)
+- [x] TC-PLN-016 to TC-PLN-020: Projects tab — open for editing, edit hours, color coding, info/tracker columns (session 90)
+- [x] Key discovery: planner table loading state is perpetual, datepicker nested in thead, definitive row selector is `planner__cel` filter
+- [x] Session 90 maintenance: SQLite audit clean, no duplicates, agenda refined
 
 </details>
 

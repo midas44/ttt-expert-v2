@@ -1,42 +1,46 @@
----
-type: session
-updated: 2026-03-28
----
+# Session Briefing
 
-# Session 89 — Phase C: Planner Autotests (TC-PLN-011 to TC-PLN-015)
+## Session 90 — 2026-03-28
+**Phase:** C (Autotest Generation) | **Scope:** planner, t2724 | **Env:** qa-1
 
-**Timestamp:** 2026-03-28
-**Phase:** C — Autotest Generation
-**Scope:** planner
-**Mode:** full autonomy
+### Completed
+- **TC-PLN-016 to TC-PLN-020** — all 5 verified on qa-1 (chrome-headless)
+  - TC-PLN-016: Project selector dropdown filtering — 18.7s
+  - TC-PLN-017: Open for editing generates assignments — passed
+  - TC-PLN-018: Edit hours in Projects tab — 35.8s (9 attempts to solve datepicker/table selector ambiguity)
+  - TC-PLN-019: Color coding blocked/done — passed (with 14-day backward navigation)
+  - TC-PLN-020: Info column tracker priority tags — passed first run
+- **Session 90 maintenance (§9.4):** SQLite audit clean, no duplicates, agenda refined, key discovery written to vault
 
-## Completed
+### Key Discovery — Planner Table Architecture
+**Critical for all future planner tests:**
+1. **Loading state is perpetual** — `datasheet__loading--active` CSS class never clears (WebSocket sync). Never use `waitForTableLoaded()`.
+2. **Datepicker table nested inside datasheet thead** — `tbody tr` selectors match hidden datepicker rows.
+3. **Definitive row selector:** `page.locator("tr").filter({ has: page.locator("[class*='planner__cel']") })` — the ONLY reliable way to find planner data rows.
+4. **Color coding classes confirmed:** `planner__cel--color-blocked` (red), `planner__cel--color-done` (green).
 
-5 planner tests generated and verified this session:
+### Page Object Updates (PlannerPage.ts)
+| Method | Added/Modified | Purpose |
+|--------|---------------|---------|
+| `waitForTableLoaded()` | s90 | Exists but SHOULD NOT BE USED — loading class is perpetual |
+| `dataTable()` | s90 | Returns `table[class*='datasheet__table']` |
+| `dataTableRows()` | s90 | Direct `> tbody > tr` — unreliable due to datepicker nesting |
+| `blockedCells()` | s90 | `[class*='planner__cel--color-blocked']` |
+| `doneCells()` | s90 | `[class*='planner__cel--color-done']` |
+| `getEmployeeHeaderRow()` | s90 | Projects tab employee group header |
+| `getEmployeeOpenForEditingButton()` | s90 | Per-employee editing button |
 
-| Test ID | Title | Status | Notes |
-|---------|-------|--------|-------|
-| TC-PLN-011 | Notification banners display correctly | **verified** | Fixed timing (networkidle wait) + text matching (locator vs getByText). Checks 4 banner types. |
-| TC-PLN-012 | Add task via search bar | **verified** | Autosuggest interaction — type, select suggestion, verify row. |
-| TC-PLN-013 | Edit hours in effort cell | **verified** | Two-click edit pattern, Enter to confirm. Intermittent skip when "Open for editing" API fails. |
-| TC-PLN-014 | Edit comment in comment cell | **verified** | Rich text editor — Ctrl+A + keyboard.type(), blur-save. |
-| TC-PLN-015 | Edit remaining estimate | **verified** | Autosuggest input, clickCellToEdit(), Enter confirm. |
+### Progress Summary
+| Module | Verified | Total | Coverage |
+|--------|----------|-------|----------|
+| t2724 | 38 | 38 | 100% |
+| planner | 20 | 82 | 24.4% |
+| vacation | 26 | 100 | 26.0% |
+| day-off | 25 | 28 | 89.3% |
+| t3404 | 21 | 24 | 87.5% |
+| **Total** | **130** | **272** | **47.8%** |
 
-## Key Discoveries & PlannerPage Enhancements
-
-- **`ensureEditMode()`** — robust editing mode activation with retries, error banner dismissal, positive confirmation (wait for search input, not just button hidden)
-- **`clickCellToEdit()`** — two-click pattern (focus dispatch → edit mode) with 500ms pause
-- **`isCellEditable()`** — checks disabled comment buttons as readonly indicator
-- **`dismissErrorBanner()`** — handles "An error has occurred" banners from failed API calls
-- **Inline editing cell types**: effort (plain input, Enter save), remaining (autosuggest input, Enter save), comment (rich-edit div, blur save)
-- **"Open for editing" API unreliability** on qa-1 — intermittent `POST /v1/assignments/generate` failures cause test skips (graceful degradation via `test.skip()`)
-
-## Progress
-
-- **Planner:** 15/82 verified (18.3%) — sessions 87-89
-- **Overall Phase C:** Sessions 87-89 focused on planner navigation + CRUD tests
-
-## Next Session (90)
-
-- Continue planner: TC-PLN-016 onwards (remaining CRUD, DnD, Lock, Tracker suites)
-- Priority: TC-PLN-016 to TC-PLN-020 (5 tests per session target)
+### Next Session (91)
+- TC-PLN-021 to TC-PLN-025: Projects tab search, add task, delete task, DnD, task/ticket toggle
+- Use `planner__cel` filter pattern for all row locators
+- Skip `waitForTableLoaded()` — use content-specific waits instead

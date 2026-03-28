@@ -1966,7 +1966,7 @@
               "module_component": "planner/task-crud",
               "notes": "Deletion is one-way — no un-delete mechanism (same as close-by-tag).",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-PLN-017",
@@ -1980,7 +1980,7 @@
               "module_component": "planner/task-crud",
               "notes": "readOnlyEmployee goes from true to false. WebSocket TaskAssignmentGenerateEvent published.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-PLN-018",
@@ -1994,7 +1994,7 @@
               "module_component": "planner/task-crud",
               "notes": "Per-employee editing can be toggled independently of global 'Open for editing'.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-PLN-019",
@@ -2008,7 +2008,7 @@
               "module_component": "planner/task-crud",
               "notes": "Status derived from tracker ticket info.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-PLN-020",
@@ -2022,7 +2022,7 @@
               "module_component": "planner/task-crud",
               "notes": "These Info values are what close-by-tag matches against.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             }
           ]
         },
