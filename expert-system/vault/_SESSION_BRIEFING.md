@@ -1,37 +1,59 @@
 # Session Briefing
 
-## Last Session: 91 — 2026-03-28
-**Phase:** C (Autotest Generation)
-**Scope:** planner
-**Mode:** full autonomy
+## Last Session: 95 (2026-03-28)
+**Phase:** C — Autotest Generation
+**Scope:** reports, accounting
+**Mode:** Full autonomy
 
-### Completed
-- **TC-PLN-021 to TC-PLN-025 (TS-PLN-DnD suite)** — DnD reorder tests for Projects tab
-  - TC-PLN-021: Drag task to reorder — **verified** (37.3s)
-  - TC-PLN-022: DnD handles only in editing mode — **verified** (2.1m)
-  - TC-PLN-024: Bug #3332 no duplicate rows after DnD — **verified** (1.8m)
-  - TC-PLN-025: Bug #3314 order preserved after toggle — **verified** (1.7m)
-  - TC-PLN-023: DnD order persists after reload — **failed** (genuine finding)
+## Session 95 Accomplishments
 
-### Key Findings
-- **TC-PLN-023 reveals real issue:** DnD task reorder does NOT persist after page reload. The order reverts to default sort. This indicates the DnD reorder is client-side only, or the backend save/re-read is broken. This is the behavior the test was designed to detect.
-- **PlannerPage.ts enhanced** with 8+ new DnD methods: `enterProjectsEditMode()`, `allDndHandles()`, `dndEditableRows()`, `getFirstDndRowTaskNames()`, `dragTaskWithMouse()`, `dragTaskUp()`, `dragTaskDown()`, `getEmployeeHeaderRow()`, `getEmployeeOpenForEditingButton()`
-- **enterProjectsEditMode()** fixed to skip disabled "Open for editing" buttons (some dates have disabled buttons)
-- **getTaskNameFromRow()** made fault-tolerant with 5s timeout + try/catch
-- **selectProject()** improved with explicit waitFor before option click
-- **plannerQueries.ts** — added `findPMWithDndReadyEmployee` and `findPMWithTwoEmployees` query functions
+### Reports Module — First Tests Generated
+- **TC-RPT-001**: Create a time report — **VERIFIED** (carried from session 94, verified after TaskReportingFixture fix)
+- **TC-RPT-002**: Edit existing report — change hours — **VERIFIED** (first-pass)
+- **TC-RPT-003**: Delete report by setting hours to 0 — **VERIFIED** (first-pass)
+- **TC-RPT-005**: Add new task on My Tasks page — **FAILED** (3 attempts)
 
-### Infrastructure Improvements
-- Mouse-based DnD for react-beautiful-dnd requires: 250ms after mousedown, 300ms threshold wait, 30-step slow drag, 500ms pre-drop, 800ms post-drop
-- Projects tab can have 400-700+ DnD rows across all employees — must scope operations to limited row sets
-- "Open for editing" buttons can be disabled on certain dates — filtering for enabled-only is required
-- Project dropdown after page reload needs explicit waitFor on option visibility
+### Key Fix: TaskReportingFixture (from session 94, verified in 95)
+- Root cause of TC-RPT-001 failures: `exitInlineEditing` method clicked outside cell after Enter, disrupting React save
+- Fix: simplified to `fill → Enter → networkidle → delay → verify`
+- Deleted `exitInlineEditing` method entirely
+- `clearReportValue` updated with same pattern
 
-### Progress
-- Planner: 24 verified, 1 failed, 57 pending (25/82 = 30.5% covered)
-- Next: TS-PLN-Lock suite (TC-PLN-026 to TC-PLN-030)
+### TC-RPT-005 Failure Analysis
+The "Add a task" flow requires a 3-step interaction:
+1. Type in search → autocomplete dropdown appears
+2. Click autocomplete suggestion → search box fills with full task name
+3. Click "Add a task" button → task added to grid
 
-### State for Next Session
-- Continue with session 92, next batch from TS-PLN-Lock suite
-- All DnD page object methods are in place and working
-- `enterProjectsEditMode()` handles disabled buttons correctly
+Issues discovered:
+- Page object `addTask()` originally just filled search + clicked button (skipped suggestion click)
+- Updated to click first suggestion, but task still doesn't appear in grid
+- Possible causes: task not actually addable by that user, grid refresh issue, or "Group by project" display mismatch
+- Query updated to exclude fixed_task entries and strip project prefix
+- Needs deeper investigation of the Add Task API response
+
+### Maintenance (session 95 = 5x)
+- Audited SQLite: 276 total test cases tracked, 137 verified (49.6%), 2 failed, 9 blocked, 128 pending
+- All tables healthy, no stale data cleanup needed
+
+## Overall Autotest Progress
+| Module | Verified | Failed | Blocked | Pending | Total |
+|--------|----------|--------|---------|---------|-------|
+| day-off | 25 | 0 | 3 | 0 | 28 |
+| vacation | 26 | 0 | 3 | 71 | 100 |
+| t2724 | 38 | 0 | 0 | 0 | 38 |
+| t3404 | 21 | 0 | 3 | 0 | 24 |
+| planner | 24 | 1 | 0 | 57 | 82 |
+| reports | 3 | 1 | 0 | 0 | 4 |
+| **Total** | **137** | **2** | **9** | **128** | **276** |
+
+## Next Session Priorities
+1. Continue reports autotests: TC-RPT-004 (closed period), TC-RPT-006..010 (confirmation flow)
+2. Retry TC-RPT-005 with deeper "Add task" API investigation
+3. Start accounting module tests if reports pace allows
+4. Consider planner pending tests (57 remaining)
+
+## State
+- Branch: dev32
+- All new specs, data classes, and fixtures committed
+- Manifest updated with automation_status for TC-RPT-001..003 (verified), TC-RPT-005 (failed)

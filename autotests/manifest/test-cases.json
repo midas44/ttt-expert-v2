@@ -1,7 +1,569 @@
 {
-  "generated": "2026-03-28T03:19:23.031975+00:00",
-  "total_cases": 365,
+  "generated": "2026-03-28T21:34:45.129801+00:00",
+  "total_cases": 463,
   "modules": {
+    "accounting": {
+      "xlsx_path": "test-docs/accounting/accounting.xlsx",
+      "total": 38,
+      "suites": {
+        "TS-Accounting-Periods": {
+          "test_cases": [
+            {
+              "test_id": "TC-ACC-001",
+              "title": "View Salary page — salary office list",
+              "preconditions": "Accountant or admin with access to Accounting.\nQuery: SELECT DISTINCT e.login FROM ttt_backend.employee e JOIN ttt_backend.employee_role er ON e.id = er.employee_id JOIN ttt_backend.role r ON er.role_id = r.id WHERE r.name IN ('ROLE_ACCOUNTANT', 'ROLE_CHIEF_ACCOUNTANT', 'ROLE_ADMIN') AND e.enabled = true ORDER BY random() LIMIT 1",
+              "steps": "1. Login as the accountant/admin\n2. Navigate to Accounting > Salary page\n3. Verify a list of salary offices is displayed\n4. Verify each office shows: name, report period, approve period\n5. Verify a salary office filter/dropdown is present\n6. Select a specific salary office from the filter\n7. Verify the employee list updates to show only employees from that office\n8. Verify 'All' option shows employees from all accessible offices",
+              "expected_result": "Salary page shows all accessible salary offices with period info. Filter works correctly.",
+              "priority": "Critical",
+              "type": "UI",
+              "requirement_ref": "accounting-service-deep-dive.md §Salary Page",
+              "module_component": "accounting/salary",
+              "notes": "Filter bug #2841: localStorage with stale data can cause empty filter. ACCOUNTANT+ADMIN role combination may show zero SO.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-ACC-002",
+              "title": "Salary office filter — all accessible offices visible (#2841)",
+              "preconditions": "User with ACCOUNTANT + ADMIN dual roles.\nQuery: SELECT e.login FROM ttt_backend.employee e JOIN ttt_backend.employee_role er ON e.id = er.employee_id JOIN ttt_backend.role r ON er.role_id = r.id WHERE r.name = 'ROLE_ACCOUNTANT' AND e.enabled = true AND EXISTS (SELECT 1 FROM ttt_backend.employee_role er2 JOIN ttt_backend.role r2 ON er2.role_id = r2.id WHERE er2.employee_id = e.id AND r2.name = 'ROLE_ADMIN') ORDER BY random() LIMIT 1",
+              "steps": "1. Login as the ACCOUNTANT+ADMIN user\n2. Navigate to Accounting > Salary page\n3. Open the salary office filter dropdown\n4. Count the number of offices in the dropdown\n5. Compare with expected number (all offices for ADMIN role)\n6. Verify no offices are missing\n7. Clear browser localStorage and reload\n8. Verify filter shows correct offices after localStorage clear\n9. Test with >20 salary offices — verify pagination works",
+              "expected_result": "All salary offices visible in filter. No missing offices due to localStorage corruption.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "#2841 SO filter bug",
+              "module_component": "accounting/salary",
+              "notes": "Bug #2841: filter showed subset of offices. Also: >20 SO pagination bug, filter breaks with nameless SO, names don't update on language switch.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-ACC-003",
+              "title": "Salary office filter — language switch updates names",
+              "preconditions": "Accountant on Salary page with salary offices that have both EN and RU names.",
+              "steps": "1. Login as accountant\n2. Navigate to Accounting > Salary page\n3. Note salary office names in current language (e.g., English)\n4. Click language switcher → switch to Russian\n5. Verify salary office names update to Russian translations\n6. Switch back to English\n7. Verify names revert to English",
+              "expected_result": "Salary office names update immediately on language switch. No stale cached names.",
+              "priority": "Medium",
+              "type": "UI",
+              "requirement_ref": "#2841 language switch",
+              "module_component": "accounting/salary",
+              "notes": "Bug from #2841 comments: SO names don't update on language switch.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-ACC-004",
+              "title": "Archived salary offices hidden from dropdowns (#3323)",
+              "preconditions": "At least one archived salary office exists in the system.",
+              "steps": "1. Login as accountant/admin\n2. Navigate to Accounting > Salary page\n3. Open the salary office dropdown\n4. Verify archived salary offices are NOT listed\n5. Navigate to Accounting > Changing periods\n6. Open the salary office dropdown\n7. Verify archived offices are NOT listed here either\n8. Navigate to Admin > Salary offices\n9. Verify archived offices ARE visible but dimmed/grayed\n10. Verify archived offices are at the bottom of the list\n11. Verify archived offices cannot be edited",
+              "expected_result": "Archived SO hidden from Accounting dropdowns. Visible but non-editable and dimmed in Admin panel.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "#3323 archived SO",
+              "module_component": "accounting/salary",
+              "notes": "#3323 (OPEN, Sprint 15): archived SO hidden from Accounting, dimmed in Admin.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-ACC-005",
+              "title": "Changing periods page — view current periods",
+              "preconditions": "Accountant/admin.\nQuery: (same as TC-ACC-001)",
+              "steps": "1. Login as accountant/admin\n2. Navigate to Accounting > Changing periods\n3. Select a salary office\n4. Verify Report period displayed (month + year)\n5. Verify Approve period displayed (month + year)\n6. Verify Approve period ≤ Report period (invariant)\n7. Verify 'Edit' buttons are present for both periods",
+              "expected_result": "Both periods displayed correctly. Approve period is at most equal to report period.",
+              "priority": "Critical",
+              "type": "UI",
+              "requirement_ref": "reports-business-rules-reference.md §4 Dual Period Model",
+              "module_component": "accounting/periods",
+              "notes": "Invariant: approve ≤ report. Non-salary offices return 404 on PATCH.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-ACC-006",
+              "title": "Advance report period +1 month",
+              "preconditions": "Accountant with a salary office where report period can advance.\nQuery: (same as TC-ACC-001)",
+              "steps": "1. Login as accountant\n2. Navigate to Accounting > Changing periods\n3. Select a salary office\n4. Note current report period\n5. Click 'Edit' for Report period\n6. In the picker, select +1 month\n7. Click 'Save'\n8. Verify period advances\n9. Verify employees in that SO can no longer report in the old period\n10. Verify success notification",
+              "expected_result": "Report period advances by 1 month. Old period locked for employee reporting.",
+              "priority": "Critical",
+              "type": "UI",
+              "requirement_ref": "#3350 1-month rule",
+              "module_component": "accounting/periods",
+              "notes": "Max 1-month delta from saved value. Must be first of month.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-ACC-007",
+              "title": "Advance approve period +1 month (triggers side effects)",
+              "preconditions": "Accountant. Approve period at least 1 month behind report period.\nQuery: (same as TC-ACC-001)",
+              "steps": "1. Login as accountant\n2. Navigate to Accounting > Changing periods\n3. Select salary office\n4. Click 'Edit' for Approve period\n5. Select +1 month\n6. Click 'Save'\n7. Verify period advances\n8. Verify PeriodChangedEvent triggers:\n   a. Auto-reject of unapproved hours (if enabled)\n   b. Vacation day recalculation\n9. Check: employees in the closed approve period can no longer be confirmed",
+              "expected_result": "Approve period advances. Side effects fire: auto-reject + vacation recalc.",
+              "priority": "Critical",
+              "type": "UI",
+              "requirement_ref": "reports-business-rules-reference.md §4 Approve Period",
+              "module_component": "accounting/periods",
+              "notes": "PeriodChangedEvent vs PeriodReopenedEvent: advance triggers changed, revert triggers reopened.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-ACC-008",
+              "title": "Revert approve period -1 month (reopen)",
+              "preconditions": "Accountant. Approve period can be moved back (within 2-month lower bound).\nQuery: (same as TC-ACC-001)",
+              "steps": "1. Login as accountant\n2. Navigate to Accounting > Changing periods\n3. Select salary office\n4. Note current approve period\n5. Click 'Edit' for Approve period\n6. Select -1 month (previous month)\n7. Click 'Save'\n8. Verify period reverts\n9. Verify PeriodReopenedEvent fires:\n   a. Previously closed month is now open for confirmation\n   b. Auto-rejected hours (if any) can be re-confirmed\n10. Login as manager, verify confirmation possible for the reopened month",
+              "expected_result": "Approve period reverted. Closed month reopened for confirmation. No data loss.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "#3367 reopen after auto-reject",
+              "module_component": "accounting/periods",
+              "notes": "Lower bound: cannot go back >2 months from today. PeriodReopenedEvent fires on revert.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-ACC-009",
+              "title": "Period — 2+ month jump blocked in UI (#3350)",
+              "preconditions": "Accountant on Changing periods page.\nQuery: (same as TC-ACC-001)",
+              "steps": "1. Login as accountant\n2. Navigate to Accounting > Changing periods\n3. Select salary office\n4. Click 'Edit' for Report period\n5. Verify months >1 ahead of saved value are DISABLED in picker\n6. Click 'Edit' for Approve period\n7. Verify months >1 ahead or >1 behind saved value are DISABLED\n8. Attempt to force submit via browser console (bypass UI)\n9. Verify 400 error from backend validation",
+              "expected_result": "Months beyond 1-month delta are disabled in UI. Backend enforces the same rule.",
+              "priority": "Critical",
+              "type": "UI",
+              "requirement_ref": "#3350 max 1-month delta",
+              "module_component": "accounting/periods",
+              "notes": "All offices now follow same rule — Persei special rule removed (#3264). Sequential saves needed for multi-month changes.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-ACC-010",
+              "title": "Period — confirmation month ahead of report period disabled (#3350 bug 3)",
+              "preconditions": "Accountant on Changing periods.\nQuery: (same as TC-ACC-001)",
+              "steps": "1. Login as accountant\n2. Navigate to Accounting > Changing periods\n3. Select a salary office\n4. Click 'Edit' for Approve period\n5. Verify months AHEAD of the saved Report period are DISABLED\n6. Attempt to select a month after the report period\n7. If selectable: save → verify 400 error\n8. Verify error notification appears explaining the constraint",
+              "expected_result": "Approve period months after report period are disabled. Constraint enforced in UI and backend.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "#3350 bug 3",
+              "module_component": "accounting/periods",
+              "notes": "Bug #3350 finding: confirmation period month AHEAD of saved report period not disabled in UI.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-ACC-011",
+              "title": "Period — report month before confirmation disabled (#3365)",
+              "preconditions": "Accountant on Changing periods.\nQuery: (same as TC-ACC-001)",
+              "steps": "1. Login as accountant\n2. Navigate to Changing periods\n3. Select salary office\n4. Click 'Edit' for Report period\n5. Verify months BEFORE the saved Approve period are DISABLED\n6. Attempt to select such a month\n7. Verify it cannot be selected or 400 error on save",
+              "expected_result": "Report period cannot precede approve period. Constraint enforced.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "#3365",
+              "module_component": "accounting/periods",
+              "notes": "Bug #3365 (OPEN): month preceding saved confirmation period not disabled. Partially fixed.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-ACC-012",
+              "title": "Period — partial save prevention (#3350 bug 4)",
+              "preconditions": "Accountant on Changing periods with both periods editable.",
+              "steps": "1. Login as accountant\n2. Navigate to Changing periods\n3. Select salary office\n4. Edit Report period: select +1 month\n5. Edit Approve period: select a value that creates constraint violation with the new report period\n6. Save\n7. Verify NEITHER period saves (both-or-nothing)\n8. If one saves and other fails: document as partial save bug",
+              "expected_result": "No partial saves. Both periods validated as a pair before committing.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "#3350 bug 4",
+              "module_component": "accounting/periods",
+              "notes": "Known issue: one period may save while other fails validation → inconsistent state.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-ACC-013",
+              "title": "Period — labels and translations (#3351)",
+              "preconditions": "Accountant on Changing periods in both EN and RU.",
+              "steps": "1. Login as accountant\n2. Navigate to Changing periods (English)\n3. Verify page title matches spec\n4. Verify 'Edit' button label\n5. Verify tooltip/modal labels\n6. Verify datepicker month names\n7. Switch to Russian\n8. Repeat verification for all labels\n9. Note any missing or incorrect translations",
+              "expected_result": "All labels, titles, tooltips, and datepicker content correctly translated in both languages.",
+              "priority": "Low",
+              "type": "UI",
+              "requirement_ref": "#3351 UI cosmetics",
+              "module_component": "accounting/periods",
+              "notes": "#3351 (OPEN): page title rename, tooltip/modal/datepicker translation fixes.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            }
+          ]
+        },
+        "TS-Accounting-Payment": {
+          "test_cases": [
+            {
+              "test_id": "TC-ACC-014",
+              "title": "Pay single APPROVED vacation — happy path",
+              "preconditions": "Accountant/admin. Employee with an APPROVED+EXACT vacation with payment month in an open period.\nQuery: SELECT v.id, e.login, v.start_date, v.end_date FROM ttt_vacation.vacation v JOIN ttt_vacation.employee e ON v.employee_id = e.id WHERE v.status = 'APPROVED' AND v.period_type = 'EXACT' AND e.enabled = true AND EXISTS (SELECT 1 FROM ttt_vacation.employee_vacation ev WHERE ev.employee = e.id AND ev.available_vacation_days >= 0 AND ev.year = EXTRACT(YEAR FROM CURRENT_DATE)) ORDER BY random() LIMIT 1",
+              "steps": "1. Login as accountant/admin\n2. Navigate to Accounting > Vacation payment page\n3. Select the salary office containing the employee\n4. Find the APPROVED vacation in the payment table\n5. Verify payment details: employee name, dates, days count, payment month\n6. Click the checkbox to select the vacation\n7. Click 'Pay' button\n8. Confirm payment in the confirmation dialog\n9. Verify success notification\n10. Verify vacation status changes to 'Paid' in the table\nDB-CHECK: SELECT status FROM ttt_vacation.vacation WHERE id = <id> — verify 'PAID'",
+              "expected_result": "Vacation status changes to PAID. Payment recorded. Vacation disappears from pending payment list.",
+              "priority": "Critical",
+              "type": "UI",
+              "requirement_ref": "accounting-service-deep-dive.md §Payment",
+              "module_component": "accounting/payment",
+              "notes": "5-check payment guard: APPROVED + EXACT + payment month in approve period + office not archived + employee in office. All must pass.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-ACC-015",
+              "title": "Bulk pay multiple vacations",
+              "preconditions": "Accountant. Multiple APPROVED+EXACT vacations in the same salary office.\nSETUP: May need to create vacations via API and approve them.",
+              "steps": "SETUP: Ensure 2+ APPROVED vacations exist for different employees in same SO\n1. Login as accountant\n2. Navigate to Vacation payment page\n3. Select the salary office\n4. Select the 'Select all' checkbox (or individually check 2+ vacations)\n5. Click 'Pay' button\n6. Confirm payment\n7. Verify all selected vacations change to 'Paid'\n8. Verify vacation count decreases in the table",
+              "expected_result": "Multiple vacations paid in one action. All selected move to PAID status.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "accounting-service-deep-dive.md §Bulk Payment",
+              "module_component": "accounting/payment",
+              "notes": "Bulk payment uses same 5-check guard per vacation. Any failing check skips that vacation.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-ACC-016",
+              "title": "Payment blocked — vacation not in EXACT period type",
+              "preconditions": "APPROVED vacation with period_type != EXACT (e.g., NON_EXACT).\nQuery: SELECT v.id, e.login FROM ttt_vacation.vacation v JOIN ttt_vacation.employee e ON v.employee_id = e.id WHERE v.status = 'APPROVED' AND v.period_type != 'EXACT' AND e.enabled = true ORDER BY random() LIMIT 1",
+              "steps": "1. Login as accountant\n2. Navigate to Vacation payment page\n3. Attempt to find the non-EXACT vacation in the payment table\n4. If visible: attempt to pay\n5. Verify payment is BLOCKED with appropriate error\n6. Or: verify the vacation is not shown in the payment list at all",
+              "expected_result": "Non-EXACT vacations cannot be paid. Either not shown or blocked with error.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "accounting-service-deep-dive.md §5-check guard",
+              "module_component": "accounting/payment",
+              "notes": "5-check: only EXACT period type eligible for payment. NON_EXACT created when payment month adjusted post-approval.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-ACC-017",
+              "title": "Payment with negative combined balance — 500 error (#3363)",
+              "preconditions": "AV=true office. Employee with combined (current + next year) vacation balance < 0.\nQuery: SELECT e.login, SUM(ev.available_vacation_days) AS total FROM ttt_vacation.employee e JOIN ttt_vacation.employee_vacation ev ON e.id = ev.employee JOIN ttt_vacation.office o ON e.office_id = o.id WHERE o.advance_vacation = true AND e.enabled = true GROUP BY e.login HAVING SUM(ev.available_vacation_days) < 0 LIMIT 1",
+              "steps": "1. Identify an AV=true employee with negative combined balance\n2. If no such employee exists: create the scenario via day corrections\n3. SETUP: Create an APPROVED vacation for this employee via API\n4. Login as accountant\n5. Navigate to Vacation payment page\n6. Find the vacation\n7. Attempt to pay\n8. Verify: if bug exists → HTTP 500 error\n9. Verify: if fixed → appropriate error message (not 500)\n10. Check: payment with current year negative but sum positive → should succeed",
+              "expected_result": "Payment with combined negative balance shows proper error (not 500). Payment succeeds when sum is non-negative.",
+              "priority": "Critical",
+              "type": "UI",
+              "requirement_ref": "#3363 negative balance 500",
+              "module_component": "accounting/payment",
+              "notes": "Bug #3363 (OPEN, Sprint 15): AV=true, combined balance <0 → 500. Works when sum ≥0. Not on production.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-ACC-018",
+              "title": "Auto-payment of expired approved vacations",
+              "preconditions": "APPROVED vacation older than 2 months from current date (expired threshold).\nSETUP: Via test endpoint or clock manipulation.",
+              "steps": "SETUP: Via test API — trigger auto-payment scheduler: POST /api/vacation/test/v1/pay-expired-approved\n1. Verify endpoint returns 200\n2. Check if the expired APPROVED vacation's status changed to PAID\n3. If auto-payment triggered: verify correct payment date and amount\nDB-CHECK: SELECT status, payment_date FROM ttt_vacation.vacation WHERE id = <id>",
+              "expected_result": "Expired APPROVED vacations auto-paid by scheduler. Status changes to PAID with correct payment details.",
+              "priority": "Medium",
+              "type": "Hybrid",
+              "requirement_ref": "accounting-service-deep-dive.md §Auto-payment",
+              "module_component": "accounting/payment",
+              "notes": "2-month threshold for auto-payment of unpaid approved vacations.",
+              "classified_type": "API",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-ACC-019",
+              "title": "Payment page — salary office filter completeness (#2841)",
+              "preconditions": "Accountant with access to multiple salary offices.",
+              "steps": "1. Login as accountant\n2. Navigate to Vacation payment page\n3. Open salary office filter dropdown\n4. Count offices and compare with expected count\n5. Verify ALL accessible offices are present (not subset)\n6. Navigate to Sick leave accounting page\n7. Open salary office filter\n8. Verify same completeness (bug #2841 also affects sick leave page)",
+              "expected_result": "All accessible offices in filter on both Payment and Sick leave accounting pages.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "#2841 SO filter",
+              "module_component": "accounting/payment",
+              "notes": "Same filter bug as Salary page (#2841). Also test >20 SO pagination and nameless SO.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            }
+          ]
+        },
+        "TS-Accounting-DayCorrection": {
+          "test_cases": [
+            {
+              "test_id": "TC-ACC-020",
+              "title": "Manual day correction — add days (AV=No office)",
+              "preconditions": "Accountant. Employee in AV=false (Russia) office with known balance.\nQuery: SELECT e.login, ev.available_vacation_days, o.name FROM ttt_vacation.employee e JOIN ttt_vacation.employee_vacation ev ON e.id = ev.employee JOIN ttt_vacation.office o ON e.office_id = o.id WHERE o.advance_vacation = false AND e.enabled = true AND ev.year = EXTRACT(YEAR FROM CURRENT_DATE) ORDER BY random() LIMIT 1",
+              "steps": "1. Login as accountant/admin\n2. Navigate to Accounting > Day corrections page (or Salary page inline edit)\n3. Find the employee from the AV=false office\n4. Note current available vacation days\n5. Click the days value to edit inline\n6. Enter a positive correction: +3\n7. Enter a comment: 'Annual adjustment'\n8. Save\n9. Verify available days increased by 3\n10. Verify the correction is logged in the events feed\nDB-CHECK: SELECT available_vacation_days FROM ttt_vacation.employee_vacation WHERE employee = <id> AND year = EXTRACT(YEAR FROM CURRENT_DATE)",
+              "expected_result": "Vacation days increased by 3. Comment saved. Events feed shows the correction.",
+              "priority": "Critical",
+              "type": "UI",
+              "requirement_ref": "#3283 AV-dependent correction",
+              "module_component": "accounting/correction",
+              "notes": "AV=No: overwork/underwork don't affect vacation days. Available days CANNOT go negative.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-ACC-021",
+              "title": "Manual day correction — prevent negative input for AV=No (#3283)",
+              "preconditions": "Accountant. Employee in AV=false office.\nQuery: (same as TC-ACC-020 but with available_vacation_days > 0)",
+              "steps": "1. Login as accountant\n2. Navigate to Day corrections\n3. Find employee in AV=false office with balance > 0 (e.g., 10)\n4. Click to edit days\n5. Attempt to enter -15 (which would make balance negative)\n6. Verify the minus sign is PREVENTED in the input field\n7. If minus accepted: save and verify DB stores ≥0 (not negative)\n8. Check events feed — verify no negative delta shown",
+              "expected_result": "AV=No offices: minus sign prevented in correction input. Balance cannot go negative.",
+              "priority": "Critical",
+              "type": "UI",
+              "requirement_ref": "#3283 prevent negative for AV=No",
+              "module_component": "accounting/correction",
+              "notes": "Bug #3283 AS-IS: system pretends to accept negative, DB stores ≥0, feed shows negative delta (inconsistency). TO-BE: prevent minus sign entirely.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-ACC-022",
+              "title": "Manual day correction — negative allowed for AV=Yes",
+              "preconditions": "Accountant. Employee in AV=true office (Cyprus, Germany).\nQuery: SELECT e.login, ev.available_vacation_days FROM ttt_vacation.employee e JOIN ttt_vacation.employee_vacation ev ON e.id = ev.employee JOIN ttt_vacation.office o ON e.office_id = o.id WHERE o.advance_vacation = true AND e.enabled = true AND ev.year = EXTRACT(YEAR FROM CURRENT_DATE) ORDER BY random() LIMIT 1",
+              "steps": "1. Login as accountant\n2. Navigate to Day corrections\n3. Find employee in AV=true office\n4. Note current balance (e.g., 5)\n5. Enter correction: -8 (which makes balance negative: -3)\n6. Enter comment: 'Underwork correction'\n7. Save\n8. Verify balance shows -3 (negative displayed correctly)\n9. Verify events feed shows -8 delta\nDB-CHECK: SELECT available_vacation_days FROM ttt_vacation.employee_vacation WHERE employee = <id> AND year = EXTRACT(YEAR FROM CURRENT_DATE) — verify negative value stored",
+              "expected_result": "AV=Yes offices: negative corrections allowed. Negative balance displayed correctly. DB stores negative value.",
+              "priority": "Critical",
+              "type": "UI",
+              "requirement_ref": "#3283 AV=Yes allows negative",
+              "module_component": "accounting/correction",
+              "notes": "AV=Yes: overwork/underwork affect vacation days, negative balance CAN result.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-ACC-023",
+              "title": "Day correction — year-to-year distribution",
+              "preconditions": "Employee with vacation days across multiple years.\nQuery: SELECT e.login, ev.year, ev.available_vacation_days FROM ttt_vacation.employee e JOIN ttt_vacation.employee_vacation ev ON e.id = ev.employee WHERE e.enabled = true GROUP BY e.login, ev.year, ev.available_vacation_days HAVING COUNT(*) > 1 ORDER BY random() LIMIT 5",
+              "steps": "1. Login as accountant\n2. Find employee with multi-year balances (e.g., 2025: 5 days, 2026: 10 days)\n3. Apply a negative correction of -7\n4. Verify deduction follows FIFO: earliest year first\n5. Expected: 2025 → 0 days, 2026 → 8 days (5 from 2025 + 2 from 2026 = 7 deducted)\n6. Verify events feed shows correct per-year breakdown\n7. Apply a positive correction of +3\n8. Verify days added to current year",
+              "expected_result": "Negative corrections follow FIFO (earliest year first). Positive corrections add to current year.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "#3204 year distribution",
+              "module_component": "accounting/correction",
+              "notes": "Bug #3204: VACATION_MONTHLY_RECALCULATION logic differs from DAYS_ADJUSTMENT distribution. Negative accrued shown as zeros.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-ACC-024",
+              "title": "Day correction — balance operates on sum not accrued days (architecture bug)",
+              "preconditions": "Employee in AV=false office with correction history.\nQuery: (same as TC-ACC-020)",
+              "steps": "1. Login as accountant\n2. Find employee with known accrued and balance values\n3. Apply a manual correction\n4. Verify: does the correction operate on 'balance sum' or 'accrued days'?\n5. If balance sum: correction may allow payment for non-accrued days\n6. Verify: manual correction event triggers redistribution between years\n7. If no redistribution: document as known architecture bug\nDB-CHECK: SELECT available_vacation_days, accrued_days FROM ttt_vacation.employee_vacation WHERE employee = <id>",
+              "expected_result": "Correction should operate on accrued days, not balance sum. Document actual behavior.",
+              "priority": "Medium",
+              "type": "UI",
+              "requirement_ref": "#3283 architecture findings",
+              "module_component": "accounting/correction",
+              "notes": "QA architecture finding: both corrections operate on balance sum instead of accrued days — fundamentally incorrect per #3283.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-ACC-025",
+              "title": "Day correction — comment field validation",
+              "preconditions": "Accountant on correction page.",
+              "steps": "1. Login as accountant\n2. Navigate to Day corrections\n3. Select an employee\n4. Enter correction value\n5. Leave comment empty → attempt save\n6. Verify if comment is required (should be — audit trail)\n7. Enter a very long comment (>255 chars)\n8. Verify backend validation (BigDecimal + comment 255 char limit)\n9. Enter valid comment and save",
+              "expected_result": "Comment field enforces 255 char max. Verify if comment is required for corrections.",
+              "priority": "Medium",
+              "type": "UI",
+              "requirement_ref": "accounting-service-deep-dive.md §Day Correction Validation",
+              "module_component": "accounting/correction",
+              "notes": "Backend validation: BigDecimal for days, 255 chars max for comment.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-ACC-026",
+              "title": "AV=false — balance recalculation after day-off change (#3339)",
+              "preconditions": "AV=false office. Employee with an active vacation that overlaps with a day-off period.\nThis is an edge case requiring specific calendar setup.",
+              "steps": "1. Identify or create scenario: AV=false employee with vacation covering a date that also has a day-off\n2. Delete the day-off (via calendar admin)\n3. Verify vacation type conversion occurs (if applicable)\n4. Verify balance recalculation result is CORRECT (not 0)\n5. Check: does balance drop to 0 incorrectly? (#3339 bug)\n6. Transfer a day-off within the vacation period\n7. Verify recalculation is correct after transfer",
+              "expected_result": "Balance recalculation after day-off changes produces correct values. No incorrect drop to 0.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "#3339 AV=false recalculation",
+              "module_component": "accounting/correction",
+              "notes": "Bug #3339: delete/transfer day-off within vacation → conversion results in 0 balance instead of correct value.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            }
+          ]
+        },
+        "TS-Accounting-Views": {
+          "test_cases": [
+            {
+              "test_id": "TC-ACC-027",
+              "title": "Salary page — employee list with correct data",
+              "preconditions": "Accountant viewing Salary page.\nQuery: (same as TC-ACC-001)",
+              "steps": "1. Login as accountant\n2. Navigate to Accounting > Salary page\n3. Select a salary office\n4. Verify employee list shows: name, vacation days, report status, payment info\n5. Verify data matches DB values\n6. Click an employee name\n7. Verify employee details open (either popup or separate page)\n8. Verify details include: current vacation balance, pending requests, payment history",
+              "expected_result": "Employee list accurate. Details accessible with correct vacation/payment data.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "accounting-service-deep-dive.md §Salary Page",
+              "module_component": "accounting/views",
+              "notes": "Salary page is the primary accounting interface for managing vacation payments and corrections.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-ACC-028",
+              "title": "Departing employee tooltip (#3336)",
+              "preconditions": "Employee who is in the process of being dismissed (beingDismissed=true from CS).\nQuery: SELECT e.login, e.last_date FROM ttt_backend.employee e WHERE e.last_date IS NOT NULL AND e.last_date > CURRENT_DATE AND e.enabled = true ORDER BY e.last_date ASC LIMIT 1",
+              "steps": "1. Login as accountant\n2. Navigate to Accounting > Salary page\n3. Find the departing employee in the list\n4. Verify a tooltip or indicator shows 'Date of leave: {date}'\n5. Verify the tooltip appears stably (not flicker/disappear)\n6. Check after CS sync removes the employee: tooltip should disappear\n7. Note timing: tooltip shows while beingDismissed=true, disappears when employee removed from CS list",
+              "expected_result": "Departing employee shows leave date tooltip. Tooltip stable while beingDismissed flag is true.",
+              "priority": "Medium",
+              "type": "UI",
+              "requirement_ref": "#3336 leave date tooltip",
+              "module_component": "accounting/views",
+              "notes": "Bug #3336: tooltip appears then disappears when CS sync removes employee. Timing issue between dismissal and salary calculation.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-ACC-029",
+              "title": "Vacation days — per-year grouped view",
+              "preconditions": "Employee with vacation days across multiple years.\nQuery: SELECT e.login FROM ttt_vacation.employee e JOIN ttt_vacation.employee_vacation ev ON e.id = ev.employee WHERE e.enabled = true GROUP BY e.login HAVING COUNT(DISTINCT ev.year) > 1 ORDER BY random() LIMIT 1",
+              "steps": "1. Login as accountant\n2. Navigate to Salary page, find the multi-year employee\n3. View their vacation day balance\n4. Verify per-year breakdown is shown\n5. Verify total matches sum of all years\n6. Compare with GET /api/vacation/v1/vacationDays/{login}/grouped API response\n7. Verify accrued vs available distinction (if shown)",
+              "expected_result": "Per-year vacation day breakdown visible. Total matches DB sum. Accrued/available correctly distinguished.",
+              "priority": "Medium",
+              "type": "UI",
+              "requirement_ref": "accounting-service-deep-dive.md §Day Calculation",
+              "module_component": "accounting/views",
+              "notes": "API endpoint: GET /v1/vacationDays/{login}/grouped. Bug #3204: negative accrued shown as zeros.",
+              "classified_type": "hybrid",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-ACC-030",
+              "title": "Accounting page — regular employee access blocked (#3012)",
+              "preconditions": "Regular employee with ROLE_EMPLOYEE only.\nQuery: SELECT e.login FROM ttt_backend.employee e JOIN ttt_backend.employee_role er ON e.id = er.employee_id JOIN ttt_backend.role r ON er.role_id = r.id WHERE r.name = 'ROLE_EMPLOYEE' AND e.enabled = true AND NOT EXISTS (SELECT 1 FROM ttt_backend.employee_role er2 JOIN ttt_backend.role r2 ON er2.role_id = r2.id WHERE er2.employee_id = e.id AND r2.name NOT IN ('ROLE_EMPLOYEE', 'ROLE_CONTRACTOR')) ORDER BY random() LIMIT 1",
+              "steps": "1. Login as regular employee\n2. Navigate directly to /accounting/sick-leaves\n3. Verify access is DENIED (redirect or error page)\n4. Navigate to /accounting/salary\n5. Verify access denied\n6. Navigate to /accounting/periods\n7. Verify access denied\n8. Verify the Accounting menu item is NOT visible in the navigation",
+              "expected_result": "Regular employee cannot access any accounting routes. Menu item hidden. Direct URL access blocked.",
+              "priority": "Critical",
+              "type": "UI",
+              "requirement_ref": "#3012 accounting route exposed",
+              "module_component": "accounting/views",
+              "notes": "Bug #3012 (CLOSED): /accounting/sick-leaves was accessible to regular employees using VACATIONS:VIEW instead of SICK_LEAVE_ACCOUNTING_VIEW.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-ACC-031",
+              "title": "Sick leave accounting page — list and filter",
+              "preconditions": "Accountant with access to sick leave accounting.\nQuery: (same as TC-ACC-001)",
+              "steps": "1. Login as accountant\n2. Navigate to Accounting > Sick leave accounting\n3. Verify page loads with employee sick leave list\n4. Verify salary office filter works\n5. Verify columns: employee name, sick leave dates, status, duration\n6. Verify filter shows ALL accessible offices (#2841)\n7. Select an office and verify correct employee list",
+              "expected_result": "Sick leave accounting page loads with correct data. SO filter works completely.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "#2841 same filter bug",
+              "module_component": "accounting/views",
+              "notes": "Same SO filter bug as Salary page (#2841). SICK_LEAVE_ACCOUNTING_VIEW permission required.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            }
+          ]
+        },
+        "TS-Accounting-SickLeave": {
+          "test_cases": [
+            {
+              "test_id": "TC-ACC-032",
+              "title": "Sick leave — close (mark as closed by accountant)",
+              "preconditions": "Accountant. Employee with an open sick leave.\nQuery: SELECT sl.id, e.login FROM ttt_vacation.sick_leave sl JOIN ttt_vacation.employee e ON sl.employee_id = e.id WHERE sl.status IN ('OPEN', 'ISSUED') AND e.enabled = true ORDER BY random() LIMIT 1",
+              "steps": "1. Login as accountant\n2. Navigate to Accounting > Sick leave accounting\n3. Find the employee with open sick leave\n4. Click on the sick leave row\n5. Click 'Close' or change status to 'Closed'\n6. Confirm the action\n7. Verify status changes to CLOSED\n8. Verify the sick leave duration is finalized\nDB-CHECK: SELECT status, end_date FROM ttt_vacation.sick_leave WHERE id = <id>",
+              "expected_result": "Sick leave closed by accountant. Status = CLOSED. End date finalized.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "accounting-service-deep-dive.md §Sick Leave Accounting",
+              "module_component": "accounting/sick-leave",
+              "notes": "Sick leave has dual status model (internal + external). Accountant operates on external status.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-ACC-033",
+              "title": "Sick leave — overdue notification count",
+              "preconditions": "Accountant. Sick leaves past expected end date without closure.\nQuery: SELECT COUNT(*) FROM ttt_vacation.sick_leave WHERE status IN ('OPEN', 'ISSUED') AND start_date < CURRENT_DATE - INTERVAL '14 days'",
+              "steps": "1. Login as accountant\n2. Navigate to Sick leave accounting page\n3. Verify overdue counter/badge shows count of overdue sick leaves\n4. Compare with DB query result\n5. Click on overdue filter\n6. Verify only overdue sick leaves displayed",
+              "expected_result": "Overdue count matches DB. Filter shows only overdue sick leaves.",
+              "priority": "Medium",
+              "type": "UI",
+              "requirement_ref": "accounting-service-deep-dive.md §Overdue",
+              "module_component": "accounting/sick-leave",
+              "notes": "API endpoint: GET /v1/sick-leaves/overdue-count.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            }
+          ]
+        },
+        "TS-Accounting-API": {
+          "test_cases": [
+            {
+              "test_id": "TC-ACC-034",
+              "title": "Period API — missing first-day-of-month validation on approve period",
+              "preconditions": "API access with accountant/admin token.",
+              "steps": "1. Via API — PATCH /api/ttt/v1/{officeId}/periods/approve with start=2026-03-15 (not first of month)\n2. Verify: does the request succeed? (BUG: missing validation)\n3. If succeeds: verify DB has 2026-03-15 as approve period start\n4. If fails: verify proper 400 error with clear message\n5. Compare with report period: PATCH /api/ttt/v1/{officeId}/periods/report with start=2026-03-15\n6. Verify report period correctly validates first-of-month (getDayOfMonth() != 1 check)\nCLEANUP: If bug confirmed, restore valid period via PATCH",
+              "expected_result": "Approve period should reject non-first-of-month dates. Report period already validates correctly.",
+              "priority": "High",
+              "type": "Hybrid",
+              "requirement_ref": "BUG-PERIOD-1 missing validation",
+              "module_component": "accounting/api",
+              "notes": "BUG-PERIOD-1 (HIGH): Approve period missing first-day-of-month validation at line 104. Report period has the check.",
+              "classified_type": "API",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-ACC-035",
+              "title": "Period API — NPE on null start (BUG-PERIOD-2)",
+              "preconditions": "API access with accountant/admin token.",
+              "steps": "1. Via API — PATCH /api/ttt/v1/{officeId}/periods/approve with body: {}\n2. Verify: does the request return 500 NullPointerException?\n3. If 500: confirm BUG-PERIOD-2 (missing null check on start field)\n4. If 400: bug is fixed with proper validation\n5. Repeat for report period with empty body\nCLEANUP: No changes made (read-only test)",
+              "expected_result": "Empty body should return 400 (validation error), not 500 (NPE).",
+              "priority": "High",
+              "type": "Hybrid",
+              "requirement_ref": "BUG-PERIOD-2 NPE",
+              "module_component": "accounting/api",
+              "notes": "BUG-PERIOD-2 (HIGH): PATCH with {} → 500 NullPointerException. Missing null check on request.getStart().",
+              "classified_type": "API",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-ACC-036",
+              "title": "Period API — stack trace leakage (BUG-PERIOD-3)",
+              "preconditions": "API access.",
+              "steps": "1. Via API — PATCH /api/ttt/v1/{officeId}/periods/approve with start='invalid-date'\n2. Check response body for Java stack traces\n3. If stack trace present: confirm BUG-PERIOD-3\n4. Verify: error response should be a clean JSON error, not raw exception details\n5. Repeat with other invalid inputs: start='null', start=12345",
+              "expected_result": "Invalid date format returns clean 400 error without exposing internal stack traces.",
+              "priority": "Medium",
+              "type": "Hybrid",
+              "requirement_ref": "BUG-PERIOD-3 stack trace",
+              "module_component": "accounting/api",
+              "notes": "BUG-PERIOD-3: Invalid date format returns full Java trace. Security: stack traces expose internal implementation details.",
+              "classified_type": "API",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-ACC-037",
+              "title": "Period API — permission inconsistency (BUG-PERIOD-4)",
+              "preconditions": "API access with multiple token types.",
+              "steps": "1. Via API — GET /api/ttt/v1/periods/report/offices/min — note: requires JWT only\n2. Via API — GET /api/ttt/v1/periods/approve/offices/min — note: accepts JWT AND API token\n3. Verify the permission difference: report min/max requires JWT only; approve min/max accepts both\n4. Document the inconsistency\n5. Test with API token only (no JWT): verify report min/max fails, approve min/max succeeds",
+              "expected_result": "Document permission inconsistency between report and approve period endpoints.",
+              "priority": "Medium",
+              "type": "Hybrid",
+              "requirement_ref": "BUG-PERIOD-4 permission inconsistency",
+              "module_component": "accounting/api",
+              "notes": "BUG-PERIOD-4: inconsistent auth requirements between report and approve period min/max endpoints.",
+              "classified_type": "API",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-ACC-038",
+              "title": "Vacation day correction API — negative value handling (AV-dependent)",
+              "preconditions": "API access. Employees in both AV=true and AV=false offices.",
+              "steps": "1. For AV=false employee: POST /api/vacation/v1/vacationDays/{login}/correction with days=-5\n2. Verify: DB stores ≥0 (negative part lost) — AS-IS bug from #3283\n3. For AV=true employee: POST correction with days=-5\n4. Verify: DB correctly stores negative value\n5. Compare: manual correction vs automatic correction handling of negatives\n6. Check events feed: does the feed show the correct delta (including negative)?",
+              "expected_result": "AV=false: DB stores ≥0 (negative ignored). AV=true: DB correctly stores negative. Feed shows actual delta.",
+              "priority": "High",
+              "type": "Hybrid",
+              "requirement_ref": "#3283 negative handling",
+              "module_component": "accounting/api",
+              "notes": "#3283: DB stores ≥0 for manual, feed preserves negative. Automatic corrections DO write negatives to DB.",
+              "classified_type": "API",
+              "automation_status": "pending"
+            }
+          ]
+        }
+      }
+    },
     "day-off": {
       "xlsx_path": "test-docs/day-off/day-off.xlsx",
       "total": 121,
@@ -1752,7 +2314,7 @@
               "module_component": "planner/navigation",
               "notes": "URL uses hash-like route: /planner/TABS_ASSIGNMENTS_TASK",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-002",
@@ -1766,7 +2328,7 @@
               "module_component": "planner/navigation",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-003",
@@ -1780,7 +2342,7 @@
               "module_component": "planner/navigation",
               "notes": "currentDay stored in Redux plannerTasks slice, persisted to localStorage.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-004",
@@ -1794,7 +2356,7 @@
               "module_component": "planner/navigation",
               "notes": "react-select dropdown with CSS prefix selectbox__.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-005",
@@ -1808,7 +2370,7 @@
               "module_component": "planner/navigation",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-006",
@@ -1822,7 +2384,7 @@
               "module_component": "planner/navigation",
               "notes": "Placeholder text: 'My project / my task, ticket number or URL 1,5h'",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-007",
@@ -1836,7 +2398,7 @@
               "module_component": "planner/navigation",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-008",
@@ -1850,7 +2412,7 @@
               "module_component": "planner/navigation",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-009",
@@ -1864,7 +2426,7 @@
               "module_component": "planner/navigation",
               "notes": "Auto-reconnect delay: 500ms on disconnect.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-010",
@@ -1878,7 +2440,7 @@
               "module_component": "planner/navigation",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-011",
@@ -1892,7 +2454,7 @@
               "module_component": "planner/navigation",
               "notes": "Observed banners: norm exceeded, overdue day-off, non-working days reminder.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             }
           ]
         },
@@ -1910,7 +2472,7 @@
               "module_component": "planner/task-crud",
               "notes": "Search supports: project/task name, ticket number, tracker URL.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-013",
@@ -1924,7 +2486,7 @@
               "module_component": "planner/task-crud",
               "notes": "Editing triggers lock acquisition. Other users see cell as locked.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-014",
@@ -1938,7 +2500,7 @@
               "module_component": "planner/task-crud",
               "notes": "Comment cell has two buttons. Multi-line text supported.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-015",
@@ -1952,7 +2514,7 @@
               "module_component": "planner/task-crud",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-016",
@@ -1966,7 +2528,7 @@
               "module_component": "planner/task-crud",
               "notes": "Deletion is one-way — no un-delete mechanism (same as close-by-tag).",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-017",
@@ -1980,7 +2542,7 @@
               "module_component": "planner/task-crud",
               "notes": "readOnlyEmployee goes from true to false. WebSocket TaskAssignmentGenerateEvent published.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-018",
@@ -1994,7 +2556,7 @@
               "module_component": "planner/task-crud",
               "notes": "Per-employee editing can be toggled independently of global 'Open for editing'.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-019",
@@ -2008,7 +2570,7 @@
               "module_component": "planner/task-crud",
               "notes": "Status derived from tracker ticket info.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-020",
@@ -2022,7 +2584,7 @@
               "module_component": "planner/task-crud",
               "notes": "These Info values are what close-by-tag matches against.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             }
           ]
         },
@@ -2040,7 +2602,7 @@
               "module_component": "planner/dnd",
               "notes": "Dual ordering system: next_assignment (linked list) + position (index).",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-022",
@@ -2054,7 +2616,7 @@
               "module_component": "planner/dnd",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-023",
@@ -2068,7 +2630,7 @@
               "module_component": "planner/dnd",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "failed"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-024",
@@ -2082,7 +2644,7 @@
               "module_component": "planner/dnd",
               "notes": "Root cause identified: splice commented out with TODO. Regression test.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-025",
@@ -2096,7 +2658,7 @@
               "module_component": "planner/dnd",
               "notes": "Root cause: useEffect with .sort() triggers on every rowsMap change, disrupting DnD order.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-026",
@@ -2940,6 +3502,880 @@
         }
       }
     },
+    "reports": {
+      "xlsx_path": "test-docs/reports/reports.xlsx",
+      "total": 60,
+      "suites": {
+        "TS-Reports-CRUD": {
+          "test_cases": [
+            {
+              "test_id": "TC-RPT-001",
+              "title": "Create a time report — happy path",
+              "preconditions": "Employee with at least one active project and assigned task.\nQuery: SELECT DISTINCT e.login FROM ttt_backend.employee e JOIN ttt_backend.employee_project ep ON e.id = ep.employee_id JOIN ttt_backend.project p ON ep.project_id = p.id JOIN ttt_backend.task t ON t.project_id = p.id WHERE e.enabled = true AND p.status = 'ACTIVE' AND e.login != 'pvaynmaster' ORDER BY random() LIMIT 1",
+              "steps": "1. Login as the employee\n2. Navigate to My Tasks page (/report)\n3. Verify the weekly grid is displayed with task rows and day columns\n4. Click on an empty cell in the current week for an assigned task\n5. Verify an input field appears in the cell\n6. Type '4' (hours)\n7. Press Enter or click outside the cell\n8. Verify the cell displays '4' and the weekly/daily totals update\n9. Verify the cell background is white (REPORTED state)\nDB-CHECK: SELECT effort FROM ttt_backend.task_report WHERE executor_login = '<login>' AND task_id = <task_id> AND report_date = '<date>' — verify effort = 240 (minutes)",
+              "expected_result": "Report created with 4 hours (240 minutes). Cell shows '4'. Weekly row total and daily column total both increase by 4. Cell state is REPORTED (white background).",
+              "priority": "Critical",
+              "type": "UI",
+              "requirement_ref": "reports-business-rules-reference.md §1 Create Rules",
+              "module_component": "reports/crud",
+              "notes": "Effort stored in minutes in DB (×60). LockService prevents concurrent edits — cell shows lock icon if already being edited by another user.",
+              "classified_type": "UI",
+              "automation_status": "verified"
+            },
+            {
+              "test_id": "TC-RPT-002",
+              "title": "Edit existing report — change hours",
+              "preconditions": "Employee with an existing report in REPORTED state.\nSETUP: Via API — POST /api/ttt/v1/reports with effort=120 (2 hours).\nQuery: (same as TC-RPT-001)",
+              "steps": "SETUP: Via API — create a report for 2 hours on a weekday in the current open period\n1. Login as the employee\n2. Navigate to My Tasks (/report)\n3. Navigate to the week containing the setup report\n4. Find the cell showing '2'\n5. Click the cell to activate edit mode\n6. Clear and type '6'\n7. Press Enter\n8. Verify the cell now shows '6'\n9. Verify weekly/daily totals updated (+4)\n10. Verify cell background is white (edit resets to REPORTED state)\nCLEANUP: Via API — DELETE /api/ttt/v1/reports with the report ID",
+              "expected_result": "Report updated to 6 hours. State reset to REPORTED (even if was APPROVED before). Totals reflect change.",
+              "priority": "Critical",
+              "type": "UI",
+              "requirement_ref": "reports-business-rules-reference.md §1 Update Rules",
+              "module_component": "reports/crud",
+              "notes": "Any effort change resets state to REPORTED and clears approver. This is a key regression test (state should always reset).",
+              "classified_type": "hybrid",
+              "automation_status": "verified"
+            },
+            {
+              "test_id": "TC-RPT-003",
+              "title": "Delete report by setting hours to 0",
+              "preconditions": "Employee with an existing report.\nSETUP: Via API — create a report for 3 hours.",
+              "steps": "SETUP: Via API — POST /api/ttt/v1/reports with effort=180\n1. Login as the employee\n2. Navigate to My Tasks (/report)\n3. Find the cell showing '3'\n4. Click the cell, clear content, type '0'\n5. Press Enter\n6. Verify the cell is now empty (report deleted)\n7. Verify weekly/daily totals decreased by 3\nDB-CHECK: SELECT COUNT(*) FROM ttt_backend.task_report WHERE executor_login = '<login>' AND report_date = '<date>' AND task_id = <task_id> — verify 0 (deleted)",
+              "expected_result": "Setting effort to 0 deletes the report. Cell empty, totals decreased. No DB record exists.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "reports-business-rules-reference.md §1 Effort=0",
+              "module_component": "reports/crud",
+              "notes": "Effort=0 triggers deletion, not update to zero. This is an important behavioral detail.",
+              "classified_type": "hybrid",
+              "automation_status": "verified"
+            },
+            {
+              "test_id": "TC-RPT-004",
+              "title": "Report in closed period — blocked",
+              "preconditions": "Employee in a salary office where report period is ahead of the target date.\nQuery: SELECT e.login, op.start AS period_start FROM ttt_backend.employee e JOIN ttt_backend.office_period op ON e.salary_office_id = op.office_id WHERE op.type = 'REPORT' AND e.enabled = true AND e.login != 'pvaynmaster' ORDER BY random() LIMIT 1",
+              "steps": "1. Login as the employee\n2. Navigate to My Tasks (/report)\n3. Navigate to a week before the office report period start date\n4. Verify cells for dates before the period start are NOT editable (grayed out or no input)\n5. Attempt to click a closed-period cell\n6. Verify no input field appears or input is rejected",
+              "expected_result": "Cells before report period start date are read-only. No editing possible for closed periods.",
+              "priority": "Critical",
+              "type": "UI",
+              "requirement_ref": "reports-business-rules-reference.md §4 Report Period Rules",
+              "module_component": "reports/crud",
+              "notes": "Period check: reportDate < office report period start → blocked. Extended period can override for individual employees.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-005",
+              "title": "Add new task on My Tasks page",
+              "preconditions": "Employee assigned to a project with available (unselected) tasks.\nQuery: SELECT DISTINCT e.login FROM ttt_backend.employee e JOIN ttt_backend.employee_project ep ON e.id = ep.employee_id JOIN ttt_backend.project p ON ep.project_id = p.id JOIN ttt_backend.task t ON t.project_id = p.id WHERE e.enabled = true AND p.status = 'ACTIVE' ORDER BY random() LIMIT 1",
+              "steps": "1. Login as the employee\n2. Navigate to My Tasks (/report)\n3. Click 'Add task' button (or '+' icon)\n4. In the task selection dropdown/dialog, search for an available task\n5. Select the task\n6. Verify the task appears as a new row in the weekly grid\n7. Verify the row has empty cells ready for reporting",
+              "expected_result": "New task row added to the grid. Task name displayed. Empty cells available for time entry.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "modules/frontend-report-module.md",
+              "module_component": "reports/crud",
+              "notes": "Task visibility depends on employee-project assignment. Pinned tasks always appear.",
+              "classified_type": "UI",
+              "automation_status": "failed"
+            },
+            {
+              "test_id": "TC-RPT-006",
+              "title": "Pin/unpin task",
+              "preconditions": "Employee with at least one visible task.\nQuery: (same as TC-RPT-005)",
+              "steps": "1. Login as the employee\n2. Navigate to My Tasks (/report)\n3. Locate a task row in the grid\n4. Click the pin icon (📌) on the task row\n5. Verify pin icon becomes active/highlighted\n6. Navigate to a different week\n7. Verify the pinned task still appears even if no reports exist in that week\n8. Navigate back, click the pin icon again to unpin\n9. Verify task disappears from weeks where it has no reports\nDB-CHECK: SELECT * FROM ttt_backend.pinned_employee_task WHERE employee_login = '<login>' AND task_id = <task_id>",
+              "expected_result": "Pinned task visible on all weeks. Unpinned task only visible on weeks with existing reports.",
+              "priority": "Medium",
+              "type": "UI",
+              "requirement_ref": "reports-business-rules-reference.md Pin endpoints",
+              "module_component": "reports/crud",
+              "notes": "POST /v1/reports/pin/{taskId}/employees/{login} to pin, DELETE to unpin.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-007",
+              "title": "Rename task on My Tasks page",
+              "preconditions": "Employee with a task that they can rename.\nSETUP: Via API — ensure employee has at least one task.",
+              "steps": "1. Login as the employee\n2. Navigate to My Tasks (/report)\n3. Right-click (or click context menu) on a task name\n4. Select 'Rename' option\n5. In the rename popup, enter a new name\n6. Select 'for all time' option\n7. Click 'Save'\n8. Verify task name updates in the grid",
+              "expected_result": "Task name updated. All employees see the new name.",
+              "priority": "Medium",
+              "type": "UI",
+              "requirement_ref": "#3278 rename bugs",
+              "module_component": "reports/crud",
+              "notes": "Bug #3278: rename in Confirmation popup triggers 400 'Employee login not found'. Verify rename works on My Tasks (should work).",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-008",
+              "title": "Week navigation — arrow buttons",
+              "preconditions": "Logged-in employee with tasks.",
+              "steps": "1. Login as the employee\n2. Navigate to My Tasks (/report)\n3. Note the current displayed week (Mon-Sun dates in header)\n4. Click the right arrow (→) to advance one week\n5. Verify the header updates to next week's dates\n6. Verify task rows update with that week's data\n7. Click the left arrow (←) twice\n8. Verify navigating to the previous week's data\n9. Verify totals recalculate per week",
+              "expected_result": "Week navigation arrows advance/retreat by one week. Header dates, cell data, and totals all update correctly.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "modules/frontend-report-module.md",
+              "module_component": "reports/crud",
+              "notes": "6 week tabs visible. Navigation beyond visible range shifts the tab set.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-009",
+              "title": "Batch create reports — multiple cells in one week",
+              "preconditions": "Employee with multiple tasks.\nQuery: SELECT e.login FROM ttt_backend.employee e JOIN ttt_backend.employee_project ep ON e.id = ep.employee_id JOIN ttt_backend.project p ON ep.project_id = p.id JOIN ttt_backend.task t ON t.project_id = p.id WHERE e.enabled = true AND p.status = 'ACTIVE' GROUP BY e.login HAVING COUNT(DISTINCT t.id) >= 2 ORDER BY random() LIMIT 1",
+              "steps": "1. Login as the employee\n2. Navigate to My Tasks (/report)\n3. Click empty cell on Task 1, Monday — type '4', press Tab\n4. Verify cursor moves to next cell (Tuesday)\n5. Type '4', press Tab\n6. Navigate to Task 2, Monday — type '2'\n7. Press Enter\n8. Verify all three cells saved correctly\n9. Verify daily totals for Monday show 6 (4+2)\n10. Verify weekly total for Task 1 shows 8\nCLEANUP: Via API — DELETE all created reports",
+              "expected_result": "Multiple reports created efficiently. Tab key navigates between cells. All totals calculate correctly.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "reports-business-rules-reference.md §1 Batch Operations",
+              "module_component": "reports/crud",
+              "notes": "PUT /v1/reports batch endpoint used for multi-cell saves. Tab navigation is a key UX feature.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-010",
+              "title": "Report with decimal hours (e.g., 1.5)",
+              "preconditions": "Employee with a task and open period.\nQuery: (same as TC-RPT-001)",
+              "steps": "1. Login as the employee\n2. Navigate to My Tasks (/report)\n3. Click empty cell, type '1.5'\n4. Press Enter\n5. Verify cell displays '1.5'\n6. Verify totals include 1.5 in calculation\nDB-CHECK: SELECT effort FROM ttt_backend.task_report — verify effort = 90 (minutes)\nCLEANUP: Via API — DELETE",
+              "expected_result": "Decimal hours accepted. 1.5 hours stored as 90 minutes. Display shows '1.5'. Totals correct.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "reports-business-rules-reference.md §1",
+              "module_component": "reports/crud",
+              "notes": "Decimal separator depends on user's office settings (dot or comma). Check config: decimalSeparator.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-011",
+              "title": "TAB key stacking bug (regression #3398)",
+              "preconditions": "Employee on My Tasks page.\nQuery: (same as TC-RPT-001)",
+              "steps": "1. Login as the employee\n2. Navigate to My Tasks (/report)\n3. Click on an empty cell\n4. Verify single input field appears\n5. Press TAB key without entering a value\n6. Verify cursor moves to next cell cleanly\n7. Repeat TAB 3-4 more times rapidly\n8. Verify NO duplicate/stacked input fields appear\n9. Verify the grid remains visually clean",
+              "expected_result": "Tab navigation between cells does not create stacked/duplicate input fields. Each cell has at most one input.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "#3398 stacked inputs",
+              "module_component": "reports/crud",
+              "notes": "Bug #3398: production report of duplicate input fields on TAB. If still present, document as known issue.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-012",
+              "title": "Report comment — add and view",
+              "preconditions": "Employee with an existing report.\nSETUP: Via API — create a report.",
+              "steps": "SETUP: Via API — create report for 4 hours\n1. Login as the employee\n2. Navigate to My Tasks (/report)\n3. Find the cell with the report\n4. Hover over or click the cell to see options\n5. Click comment icon (or right-click context menu)\n6. Enter a comment: 'Code review for feature X'\n7. Save the comment\n8. Hover over the cell\n9. Verify comment tooltip shows 'Code review for feature X'\nCLEANUP: Via API — DELETE the report",
+              "expected_result": "Comment saved and visible on hover. Comment persists across page reloads.",
+              "priority": "Medium",
+              "type": "UI",
+              "requirement_ref": "reports-business-rules-reference.md §1 PATCH",
+              "module_component": "reports/crud",
+              "notes": "Comments are stored via PATCH on the report entity. stateComment field on the task_report.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-013",
+              "title": "Cell locking — concurrent edit prevention",
+              "preconditions": "Two accounts: employee and a manager who can report on their behalf.\nQuery: SELECT e.login AS employee, m.login AS manager FROM ttt_backend.employee e JOIN ttt_backend.employee m ON m.enabled = true WHERE e.enabled = true AND e.login != m.login AND EXISTS (SELECT 1 FROM ttt_backend.employee_project ep WHERE ep.employee_id = e.id) ORDER BY random() LIMIT 1",
+              "steps": "1. Login as the employee in Browser 1\n2. Navigate to My Tasks, click a cell to start editing\n3. Login as the manager in Browser 2\n4. Navigate to the employee's report page (/report/<employee_login>)\n5. Attempt to click the same cell\n6. Verify a lock icon or 'cell locked' message appears\n7. Verify the manager cannot edit the locked cell\n8. In Browser 1, save or cancel the edit\n9. In Browser 2, verify the cell becomes editable",
+              "expected_result": "Cell shows lock icon when another user is editing. HTTP 423 Locked returned for concurrent edit attempts. Lock released after save/cancel.",
+              "priority": "Medium",
+              "type": "UI",
+              "requirement_ref": "reports-business-rules-reference.md §1 Cell locking",
+              "module_component": "reports/crud",
+              "notes": "LockService uses in-memory map. Batch PUT skips locking. Lock timeout not documented.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-014",
+              "title": "View another employee's report page (manager)",
+              "preconditions": "Manager with REPORTS_VIEW permission and a subordinate.\nQuery: SELECT m.login AS manager, e.login AS employee FROM ttt_backend.employee m JOIN ttt_backend.employee e ON e.enabled = true WHERE m.enabled = true AND EXISTS (SELECT 1 FROM ttt_backend.employee_role er JOIN ttt_backend.role r ON er.role_id = r.id WHERE er.employee_id = m.id AND r.name IN ('ROLE_PROJECT_MANAGER', 'ROLE_ADMIN')) AND m.login != e.login ORDER BY random() LIMIT 1",
+              "steps": "1. Login as the manager\n2. Navigate to /report/<employee_login>\n3. Verify the employee's report page loads\n4. Verify the header shows the employee's name\n5. Verify the weekly grid shows the employee's tasks and hours\n6. Verify the manager can edit cells (if REPORTS_EDIT permission exists)",
+              "expected_result": "Manager can view and potentially edit employee's report page. Same grid layout with employee's data.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "reports-business-rules-reference.md §8",
+              "module_component": "reports/crud",
+              "notes": "Contractor report page has known bug #3150: infinite spinner when opened from Statistics/Admin links.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-015",
+              "title": "Contractor report page — spinner bug (regression #3150)",
+              "preconditions": "A contractor employee and a manager/admin.\nQuery: SELECT e.login FROM ttt_backend.employee e JOIN ttt_backend.employee_role er ON e.id = er.employee_id JOIN ttt_backend.role r ON er.role_id = r.id WHERE r.name = 'ROLE_CONTRACTOR' AND e.enabled = true ORDER BY random() LIMIT 1",
+              "steps": "1. Login as an admin/manager\n2. Navigate to Statistics > Employee reports\n3. Find the contractor in the table\n4. Click the contractor's name to open their report page\n5. Verify the page loads without infinite spinner\n6. If spinner occurs: note the error in console (global error expected)\n7. Try direct navigation to /report/<contractor_login>\n8. Note if the behavior differs between Statistics link and direct URL",
+              "expected_result": "Contractor's report page loads successfully from all entry points. No infinite spinner or global error.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "#3150 contractor spinner",
+              "module_component": "reports/crud",
+              "notes": "Bug #3150 (OPEN since Nov 2024): Global error and spinner on contractor report from Statistics/Admin. Does NOT occur on contractor's own My Tasks page.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            }
+          ]
+        },
+        "TS-Reports-Confirmation": {
+          "test_cases": [
+            {
+              "test_id": "TC-RPT-016",
+              "title": "Approve hours — By Projects tab, single task",
+              "preconditions": "Manager with REPORTS_APPROVE permission. Employee with REPORTED hours in current approval period.\nSETUP: Via API — create a report for the employee.\nQuery: SELECT m.login AS manager, e.login AS employee, t.id AS task_id FROM ttt_backend.employee m JOIN ttt_backend.employee_project mp ON m.id = mp.employee_id JOIN ttt_backend.project p ON mp.project_id = p.id JOIN ttt_backend.task t ON t.project_id = p.id JOIN ttt_backend.employee_project ep ON ep.project_id = p.id JOIN ttt_backend.employee e ON ep.employee_id = e.id WHERE m.enabled = true AND e.enabled = true AND m.login != e.login AND EXISTS (SELECT 1 FROM ttt_backend.employee_role er JOIN ttt_backend.role r ON er.role_id = r.id WHERE er.employee_id = m.id AND r.name IN ('ROLE_PROJECT_MANAGER', 'ROLE_SENIOR_MANAGER', 'ROLE_ADMIN')) ORDER BY random() LIMIT 1",
+              "steps": "SETUP: Via API — POST /api/ttt/v1/reports with executor=employee, task=task_id, effort=480 (8h), date=today\n1. Login as the manager\n2. Navigate to Confirmation page (/approve)\n3. Click 'By Projects' tab\n4. Select the project from the Project dropdown\n5. Navigate to the week containing the report\n6. Find the employee's row and the task with 8 hours\n7. Click the approve (✓) button on the task row for the specific week\n8. Verify success notification or visual state change (green background)\n9. Verify the cell shows green/approved background color\nDB-CHECK: SELECT state FROM ttt_backend.task_report WHERE id = <report_id> — verify 'APPROVED'\nCLEANUP: Via API — PATCH report state back to REPORTED, then DELETE",
+              "expected_result": "Hours approved. Cell shows green (APPROVED) background. DB state is APPROVED. Approver login recorded.",
+              "priority": "Critical",
+              "type": "UI",
+              "requirement_ref": "reports-business-rules-reference.md §2 Approve Rules",
+              "module_component": "reports/confirmation",
+              "notes": "Approve sets state=APPROVED and records approverLogin. PROJECT_MANAGER type projects cannot be approved.",
+              "classified_type": "hybrid",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-017",
+              "title": "Approve hours — By Employee tab",
+              "preconditions": "Same as TC-RPT-016.\nSETUP: Via API — create a report.",
+              "steps": "SETUP: Via API — create a report for the employee\n1. Login as the manager\n2. Navigate to Confirmation page (/approve)\n3. Click 'By Employee' tab (default)\n4. Select the employee from the Employee dropdown\n5. Navigate to the week containing the report\n6. Find the task row with hours\n7. Click the approve button\n8. Verify approval succeeds\n9. Verify Approve button behavior after approval (should not advance to next user — #3368 bug)\nCLEANUP: Via API — DELETE the report",
+              "expected_result": "Hours approved via By Employee tab. Cell shows green background.",
+              "priority": "Critical",
+              "type": "UI",
+              "requirement_ref": "#3368 By Employee bugs",
+              "module_component": "reports/confirmation",
+              "notes": "Bug #3368: Approve button on 'By Employee' doesn't switch to next user or change work week (unlike By Projects).",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-018",
+              "title": "Reject hours with comment",
+              "preconditions": "Manager with a report to approve.\nSETUP: Via API — create a report.",
+              "steps": "SETUP: Via API — create a report for the employee\n1. Login as the manager\n2. Navigate to Confirmation page (/approve)\n3. Select 'By Projects' tab, choose the project\n4. Find the employee's report cell\n5. Click the reject (✗) button\n6. Verify rejection tooltip/popup appears with a textarea\n7. Type a comment: 'Please split by subtasks'\n8. Click confirm/reject button in the tooltip\n9. Verify cell shows red/rejected background\n10. Verify the comment is stored\nDB-CHECK: SELECT r.description FROM ttt_backend.reject r JOIN ttt_backend.task_report tr ON tr.reject_id = r.id WHERE tr.id = <report_id>\nCLEANUP: Via API — DELETE the report",
+              "expected_result": "Hours rejected with comment. Cell shows red (REJECTED) background. Reject record created in DB with the comment.",
+              "priority": "Critical",
+              "type": "UI",
+              "requirement_ref": "reports-business-rules-reference.md §2 Reject Rules",
+              "module_component": "reports/confirmation",
+              "notes": "Comment optional in API but UI shows textarea. Reject creates a separate 'reject' table record.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-019",
+              "title": "Re-report after rejection — clears rejected state",
+              "preconditions": "Employee with a REJECTED report.\nSETUP: Via API — create report, then reject it via PATCH state=REJECTED.",
+              "steps": "SETUP: Via API — create report (4h), then PATCH state to REJECTED with stateComment='Fix'\n1. Login as the employee\n2. Navigate to My Tasks (/report)\n3. Find the cell with rejected report (red background)\n4. Verify rejection indicator visible (red background or icon)\n5. Click the cell, change hours from 4 to 6\n6. Press Enter\n7. Verify cell reverts to white background (REPORTED state)\n8. Verify rejection indicator disappears\nDB-CHECK: SELECT state, reject_id FROM ttt_backend.task_report WHERE id = <report_id> — verify state='REPORTED', reject_id=NULL\nDB-CHECK: SELECT COUNT(*) FROM ttt_backend.reject WHERE id = <old_reject_id> — verify 0 (deleted)\nCLEANUP: Via API — DELETE the report",
+              "expected_result": "Re-reporting deletes the reject record and resets state to REPORTED. No rejection history preserved.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "reports-business-rules-reference.md §1 Re-reporting",
+              "module_component": "reports/confirmation",
+              "notes": "Critical: reject record is DELETED (not archived). No history of the previous rejection remains.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-020",
+              "title": "Bulk approve — 'Approve all' header button",
+              "preconditions": "Manager with multiple employees having REPORTED hours.\nSETUP: Via API — create reports for 2+ employees.",
+              "steps": "SETUP: Via API — create 2h reports for Employee A and Employee B on same day/task\n1. Login as the manager\n2. Navigate to Confirmation page (/approve)\n3. Select 'By Projects', choose the project\n4. Navigate to the week with the setup reports\n5. Click the 'Approve all' button in the week header\n6. Verify confirmation dialog appears ('Approve all active tasks for this week?')\n7. Confirm\n8. Verify all REPORTED cells turn green (APPROVED)\n9. Verify no APPROVED cells were double-processed\nCLEANUP: Via API — DELETE all created reports",
+              "expected_result": "All REPORTED hours in the week approved in one action. Already APPROVED hours unaffected.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "#3354 approval granularity",
+              "module_component": "reports/confirmation",
+              "notes": "Granularity levels per #3354: per-cell, per-line (task), all active tasks, 'Approve all' header. Each should handle manual and auto-rejected hours identically.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-021",
+              "title": "Confirmation — 'By Employee' vs 'By Projects' data parity",
+              "preconditions": "Manager with employees having various report states.\nSETUP: Via API — create reports with mixed states (REPORTED, APPROVED, REJECTED).",
+              "steps": "SETUP: Via API — create 3 reports for same employee: one REPORTED, one APPROVED, one REJECTED\n1. Login as the manager\n2. Navigate to Confirmation (/approve)\n3. On 'By Projects' tab: select the project, note all cells/states for the employee\n4. Switch to 'By Employee' tab: select the same employee\n5. Compare: same tasks, same hours, same states visible?\n6. Verify both tabs show identical data for the same employee/week\n7. Check over/under-reporting notification appears on both tabs (#3368)\n8. Note any discrepancies",
+              "expected_result": "Both tabs show identical report data for the same employee. Over/under notifications consistent.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "#3368 notification parity",
+              "module_component": "reports/confirmation",
+              "notes": "Known issue #3368: 'By Employee' doesn't call statistic/report/employees endpoint → missing over/under notification. Multiple sub-bugs documented.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-022",
+              "title": "Confirmation — orange dot on week tabs with pending items",
+              "preconditions": "Manager with reports to approve in specific weeks.\nSETUP: Via API — create reports in different weeks.",
+              "steps": "SETUP: Via API — create REPORTED hours in Week 1 and Week 3 (skip Week 2)\n1. Login as the manager\n2. Navigate to Confirmation (/approve)\n3. Select 'By Projects' tab, choose the project\n4. Observe the 6 week tabs at top\n5. Verify Week 1 and Week 3 tabs show an orange dot indicator\n6. Verify Week 2 tab has NO orange dot\n7. Click Week 1 tab → verify pending reports visible\n8. Click Week 2 tab → verify no pending reports\nCLEANUP: Via API — DELETE the reports",
+              "expected_result": "Orange dots appear only on week tabs with pending (REPORTED) items. Empty weeks have no indicator.",
+              "priority": "Medium",
+              "type": "UI",
+              "requirement_ref": "reports-business-rules-reference.md §2 UI Confirmation Page",
+              "module_component": "reports/confirmation",
+              "notes": "Orange dot is the visual indicator for weeks needing attention.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-023",
+              "title": "Rename task in Confirmation — bug regression (#3278)",
+              "preconditions": "Manager on Confirmation page with a task to rename.\nSETUP: Via API — create a report.",
+              "steps": "SETUP: Via API — create a report for the employee\n1. Login as the manager\n2. Navigate to Confirmation (/approve) > By Projects\n3. Find a task name in the confirmation grid\n4. Click the task name or right-click for context menu\n5. Select 'Rename'\n6. In the rename popup, enter a new name\n7. For scope, select 'For all employees' (all checked)\n8. Click 'Save'\n9. Verify rename succeeds WITHOUT HTTP 400 error\n10. Verify task name updated in the grid\n11. Repeat with 'For this employee only' (uncheck 'all')\n12. On 'By Projects' tab: verify rename works (was broken per #3278)\nCLEANUP: Via API — DELETE the report",
+              "expected_result": "Rename succeeds without errors on both tabs and for both scopes.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "#3278 rename 400 error",
+              "module_component": "reports/confirmation",
+              "notes": "Bug #3278: rename in Confirmation triggered 400 'Employee login not found'. Also: rename for single employee on By Projects closes popup without effect.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-024",
+              "title": "Confirmation — employee dropdown update after approve all (#3267)",
+              "preconditions": "Manager with employee having REPORTED hours.\nSETUP: Via API — create reports for the employee.",
+              "steps": "SETUP: Via API — create multiple REPORTED hours for the employee across the week\n1. Login as the manager\n2. Navigate to Confirmation (/approve) > By Projects\n3. Verify employee appears in the employee dropdown\n4. Approve ALL hours for the employee (via Approve All or individual cells)\n5. Via API (in separate tab): create a new REPORTED report for the same employee in the same period\n6. Return to Confirmation page\n7. Refresh or re-select the project\n8. Verify the employee still appears in the dropdown\n9. Verify the new REPORTED hours are visible\n10. Verify the 'Confirm' button is active\nCLEANUP: Via API — DELETE all created reports",
+              "expected_result": "Employee remains in dropdown after new reports submitted. Red dot returns. Confirm button active.",
+              "priority": "Medium",
+              "type": "UI",
+              "requirement_ref": "#3267 dropdown disappear",
+              "module_component": "reports/confirmation",
+              "notes": "Bug #3267: after confirming ALL hours, new reports caused employee to disappear from dropdown. Was attributed to backend glitch.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-025",
+              "title": "Over/under-reporting notification on Confirmation page",
+              "preconditions": "Employee who has reported significantly more or less than their norm.\nSETUP: Via API — create reports totaling >110% of monthly norm.\nQuery: SELECT e.login, sr.month_norm FROM ttt_backend.statistic_report sr JOIN ttt_backend.employee e ON sr.employee_login = e.login WHERE sr.report_date >= DATE_TRUNC('month', CURRENT_DATE) AND sr.month_norm > 0 ORDER BY random() LIMIT 1",
+              "steps": "SETUP: Via API — create enough REPORTED hours to exceed 110% of the employee's monthly norm\n1. Login as a manager with REPORTS_APPROVE permission\n2. Navigate to Confirmation (/approve) > By Projects\n3. Select the project containing the over-reporting employee\n4. Verify a non-dismissible banner appears at the top\n5. Verify the employee's name is highlighted in red (over-reporting)\n6. Click or hover on the clock icon next to the name\n7. Verify tooltip shows: deviation %, month, DM, projects with PM names\n8. Switch to 'By Employee' tab\n9. Verify the same over-reporting notification appears (#3368 known issue)\nCLEANUP: Via API — DELETE the excess reports",
+              "expected_result": "Over-reporting banner visible on both tabs. Employee name highlighted red. Tooltip shows detailed deviation info.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "#3368, reports-business-rules-reference.md §6",
+              "module_component": "reports/confirmation",
+              "notes": "Bug #3368: 'By Employee' missing over/under notification. Also: period-dependent bug — approve month < current month AND report month = current month → missing on By Employee.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-026",
+              "title": "Reject notification — rejected hours banner on My Tasks (#3321, #3268)",
+              "preconditions": "Employee with REJECTED reports.\nSETUP: Via API — create report, then reject it.",
+              "steps": "SETUP: Via API — create report (4h), PATCH state=REJECTED with stateComment='Incorrect task'\n1. Login as the employee\n2. Navigate to My Tasks (/report)\n3. Verify a rejection notification banner appears at the top of the page\n4. Verify banner text indicates which task has rejected hours\n5. Verify the rejection comment is visible (hover or click)\n6. Click the link/button in the banner to navigate to the rejected week\n7. Verify the rejected cell is highlighted (red background)\n8. Verify no HTTP 400 'Period should be less than two months' error in console\nCLEANUP: Via API — DELETE the report",
+              "expected_result": "Rejection banner visible. Comment accessible. Navigation link works. No API errors.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "#3321, #3268 rejected notification",
+              "module_component": "reports/confirmation",
+              "notes": "Bug #3268: backend 2-month sampling restriction caused 400 on notification API. Bug #3321: no notification when report month closed but confirmation open.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-027",
+              "title": "Approve hours in closed report period (confirmation still open)",
+              "preconditions": "Manager approving hours where report period is closed but approve period is still open.\nQuery: SELECT op_r.start AS report_start, op_a.start AS approve_start, op_r.office_id FROM ttt_backend.office_period op_r JOIN ttt_backend.office_period op_a ON op_r.office_id = op_a.office_id WHERE op_r.type = 'REPORT' AND op_a.type = 'APPROVE' AND op_a.start < op_r.start",
+              "steps": "1. Login as the manager\n2. Navigate to Confirmation (/approve)\n3. Select the salary office/project where report period is ahead of approve period\n4. Navigate to a week in the gap (between approve period start and report period start)\n5. Find REPORTED hours in this period\n6. Approve them\n7. Verify approval succeeds (report period closed doesn't block approval)\nCLEANUP: Via API — revert state if needed",
+              "expected_result": "Approval succeeds for hours in the approve period even when report period is closed. The two periods are independent.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "reports-business-rules-reference.md §4 Dual Period Model",
+              "module_component": "reports/confirmation",
+              "notes": "Key distinction: approve period controls confirmation, report period controls data entry. They are NOT the same.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            }
+          ]
+        },
+        "TS-Reports-Periods": {
+          "test_cases": [
+            {
+              "test_id": "TC-RPT-028",
+              "title": "Advance report period by 1 month — happy path",
+              "preconditions": "Accountant or admin with access to Accounting > Changing periods page.\nQuery: SELECT DISTINCT e.login FROM ttt_backend.employee e JOIN ttt_backend.employee_role er ON e.id = er.employee_id JOIN ttt_backend.role r ON er.role_id = r.id WHERE r.name IN ('ROLE_ACCOUNTANT', 'ROLE_CHIEF_ACCOUNTANT', 'ROLE_ADMIN') AND e.enabled = true ORDER BY random() LIMIT 1",
+              "steps": "1. Login as the accountant/admin\n2. Navigate to Accounting > Changing periods page\n3. Select a salary office from the dropdown\n4. Note the current Report period month\n5. Click 'Edit' button for the Report period\n6. In the period selection popup, select the next month (+1)\n7. Click 'Save'\n8. Verify the report period advances by 1 month\n9. Verify success notification appears\n10. Verify the new period is displayed",
+              "expected_result": "Report period advanced by 1 month. New period saved and displayed. Old period dates become read-only on My Tasks.",
+              "priority": "Critical",
+              "type": "UI",
+              "requirement_ref": "reports-business-rules-reference.md §4 Report Period Rules",
+              "module_component": "reports/periods",
+              "notes": "Report period must be first of month. Must be >= approve period.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-029",
+              "title": "Advance approve period by 1 month",
+              "preconditions": "Accountant or admin. Approve period is at least 1 month behind report period.\nQuery: (same as TC-RPT-028)",
+              "steps": "1. Login as the accountant/admin\n2. Navigate to Accounting > Changing periods\n3. Select a salary office\n4. Note current Approve period and Report period\n5. Click 'Edit' for the Approve period\n6. Select next month (+1) — must still be <= report period\n7. Click 'Save'\n8. Verify approve period advances\n9. Verify PeriodChangedEvent side effects:\n   - Auto-reject of unapproved hours (if feature enabled)\n   - Vacation recalculation triggered",
+              "expected_result": "Approve period advanced. Side effects triggered (auto-reject, vacation recalc). Cannot exceed report period.",
+              "priority": "Critical",
+              "type": "UI",
+              "requirement_ref": "#3350 1-month max delta",
+              "module_component": "reports/periods",
+              "notes": "Bug cluster #3350: max 1-month delta enforced (both directions). Validation uses SAVED values, not dynamic.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-030",
+              "title": "Period — 2+ month jump blocked (#3350)",
+              "preconditions": "Accountant on Changing periods page.\nQuery: (same as TC-RPT-028)",
+              "steps": "1. Login as the accountant/admin\n2. Navigate to Accounting > Changing periods\n3. Select a salary office\n4. Click 'Edit' for the Report period\n5. Attempt to select a month that is 2+ months ahead of current saved value\n6. Verify the month is DISABLED in the calendar picker (not selectable)\n7. If selectable: click 'Save' and verify 400 error from backend\n8. Repeat for Approve period: attempt 2+ month jump\n9. Verify both periods enforce 1-month max delta",
+              "expected_result": "Months more than 1 ahead/behind the SAVED value are disabled in the UI picker. If somehow submitted, backend returns 400.",
+              "priority": "Critical",
+              "type": "UI",
+              "requirement_ref": "#3350 max 1-month delta",
+              "module_component": "reports/periods",
+              "notes": "Bug #3350 QA bugs: UI used DYNAMIC values instead of SAVED values. Partial saves possible. Sequential saves required for multi-month changes.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-031",
+              "title": "Period — saved vs dynamic value validation (#3350 bug 4)",
+              "preconditions": "Accountant on Changing periods page.\nQuery: (same as TC-RPT-028)",
+              "steps": "1. Login as the accountant/admin\n2. Navigate to Accounting > Changing periods\n3. Select a salary office\n4. Click 'Edit' for Report period\n5. Select 1 month forward — do NOT save yet\n6. Click 'Edit' for Approve period\n7. Verify: available months for Approve period are calculated from the SAVED report period, not the unsaved selection\n8. If dynamic values are used (bug): the approve period allows months it shouldn't\n9. Save Report period first, then verify Approve period options update",
+              "expected_result": "Period validation uses SAVED values. Unsaved changes to one period do not affect the other period's validation.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "#3350 bug 4 — dynamic vs saved",
+              "module_component": "reports/periods",
+              "notes": "Key QA finding from #3350: popup used DYNAMIC (unsaved) values instead of SAVED values for available months.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-032",
+              "title": "Report period preceding approve period — disabled (#3365)",
+              "preconditions": "Accountant on Changing periods page.\nQuery: (same as TC-RPT-028)",
+              "steps": "1. Login as the accountant/admin\n2. Navigate to Accounting > Changing periods\n3. Select a salary office\n4. Click 'Edit' for the Report period\n5. Verify months BEFORE the saved approve period are DISABLED\n6. Attempt to select a month before approve period\n7. Verify it cannot be selected\n8. If selectable: save and verify 400 error\n9. Close without saving",
+              "expected_result": "Report period months before approve period are disabled. Constraint: report period >= approve period.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "#3365 report month not disabled",
+              "module_component": "reports/periods",
+              "notes": "Bug #3365 (OPEN): Month preceding saved confirmation period not disabled for report period selection. Partially fixed.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-033",
+              "title": "Extended report period — grant to individual employee",
+              "preconditions": "Accountant/admin. Employee whose office report period is already closed for a specific month.",
+              "steps": "1. Login as the accountant/admin\n2. Navigate to Accounting > Changing periods\n3. Select the salary office\n4. Find the employee who needs an extension\n5. Click 'Extend' or 'Grant extended period' for the employee\n6. Select the month to extend\n7. Save the extension\n8. Login as the employee\n9. Navigate to My Tasks (/report)\n10. Navigate to the extended period month\n11. Verify cells in the extended period are EDITABLE (not locked)\n12. Enter a report value\n13. Verify report saved successfully",
+              "expected_result": "Extended period granted. Employee can report in the otherwise-closed period. Extension visible in admin view.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "reports-business-rules-reference.md §4 Extended Report Period",
+              "module_component": "reports/periods",
+              "notes": "PUT /v1/periods/report/employees/{login}. Auto-cleaned by ExtendedPeriodScheduler every 5 minutes. Blocks approve period advancement.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-034",
+              "title": "Extended period blocks approve period advancement",
+              "preconditions": "Accountant/admin. At least one employee with active extended period in the salary office.",
+              "steps": "SETUP: Via API — PUT /v1/periods/report/employees/{login} to grant extended period\n1. Login as the accountant/admin\n2. Navigate to Accounting > Changing periods\n3. Select the salary office with the extended period\n4. Attempt to advance the Approve period\n5. Verify the advance is BLOCKED with an error message\n6. Verify the error indicates which employee has the extended period\n7. Remove the extended period (via admin or wait for auto-cleanup)\n8. Re-attempt approve period advancement\n9. Verify it now succeeds",
+              "expected_result": "Approve period cannot advance while extended periods exist. Error message identifies the blocking employee.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "reports-business-rules-reference.md §4 Extended periods block",
+              "module_component": "reports/periods",
+              "notes": "ExtendedPeriodScheduler auto-cleans every 5 minutes. Manual removal also possible.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-035",
+              "title": "Period — partial save prevention (#3350 bug 4)",
+              "preconditions": "Accountant on Changing periods page.\nQuery: (same as TC-RPT-028)",
+              "steps": "1. Login as the accountant/admin\n2. Navigate to Accounting > Changing periods\n3. Select a salary office\n4. Click 'Edit' for Report period — select +1 month\n5. Click 'Edit' for Approve period — select a value that would become invalid if report period saves first\n6. Click 'Save' (whichever save button is available)\n7. Verify BOTH periods are validated together\n8. If one saves and the other fails: this is a partial save bug\n9. Verify that a failed save for one period does NOT save the other",
+              "expected_result": "Both periods validated as a pair. No partial saves — either both succeed or both fail.",
+              "priority": "Medium",
+              "type": "UI",
+              "requirement_ref": "#3350 bug 4 — partial saves",
+              "module_component": "reports/periods",
+              "notes": "Known issue: one period may save while the other's validation fails. Result: inconsistent state.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            }
+          ]
+        },
+        "TS-Reports-AutoReject": {
+          "test_cases": [
+            {
+              "test_id": "TC-RPT-036",
+              "title": "Auto-reject — unapproved hours rejected on approve period close",
+              "preconditions": "Accountant. Employee with REPORTED (unapproved) hours in the month being closed.\nSETUP: Via API — create REPORTED hours, verify approve period is 1 month behind.\nNote: Auto-reject feature was DISABLED (reverted) — this test verifies current behavior.",
+              "steps": "SETUP: Via API — create REPORTED hours for the employee in the approve period month\n1. Login as the accountant\n2. Navigate to Accounting > Changing periods\n3. Select the salary office\n4. Note REPORTED hours exist for the closing month (verify via Confirmation page)\n5. Advance the Approve period by 1 month (closing the current month)\n6. After save, navigate to Confirmation page\n7. Check if REPORTED hours in the closed month are now REJECTED (auto-reject triggered)\n8. Or: check if they remain REPORTED (auto-reject disabled)\n9. Login as the employee\n10. Navigate to My Tasks — check for auto-rejection notification banner\nDB-CHECK: SELECT state FROM ttt_backend.task_report WHERE executor_login = '<login>' AND report_date IN (closed period)",
+              "expected_result": "If auto-reject is active: REPORTED hours become REJECTED with 'auto.reject.state' comment. Notification banner on My Tasks. If disabled: hours remain REPORTED.",
+              "priority": "Critical",
+              "type": "UI",
+              "requirement_ref": "#2698 auto-reject, reports-business-rules-reference.md §3",
+              "module_component": "reports/autoreject",
+              "notes": "Feature reverted from release/2.1 (#3285). Code exists but may be disabled. Test to verify current state. If active, triggers on approve period change (not report period).",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-037",
+              "title": "Auto-reject ONLY triggers on approve period change (not report period)",
+              "preconditions": "Reports exist in REPORTED state. Both periods can be changed.\nSETUP: Via API — create REPORTED hours.",
+              "steps": "SETUP: Via API — create REPORTED hours in the month between approve and report period\n1. Login as accountant\n2. Advance the REPORT period by 1 month\n3. Check: REPORTED hours in the gap → should remain REPORTED (not auto-rejected)\n4. Verify no auto-rejection notification sent to employee\n5. Now advance the APPROVE period by 1 month\n6. Check: if auto-reject is active, REPORTED hours in the newly closed approve month → REJECTED\n7. Confirm the trigger is approve period, NOT report period",
+              "expected_result": "Report period closure does NOT trigger auto-reject. Only approve period closure triggers it.",
+              "priority": "Critical",
+              "type": "UI",
+              "requirement_ref": "#3285 wrong trigger",
+              "module_component": "reports/autoreject",
+              "notes": "Bug #3285: auto-reject was incorrectly triggered on REPORT period closure. The bug was reverted. This test verifies it's fixed.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-038",
+              "title": "Auto-reject — notification banner on My Tasks",
+              "preconditions": "Employee with auto-rejected hours (if feature is active).\nSETUP: Must trigger auto-reject first (requires approve period advancement).",
+              "steps": "1. Trigger auto-reject by advancing approve period (see TC-RPT-036)\n2. Login as the affected employee\n3. Navigate to My Tasks (/report)\n4. Verify notification banner at top: 'Unconfirmed hours for task {name} were automatically rejected upon month closure'\n5. Click 'Go to the report page' link in the banner\n6. Verify navigation to the first week with rejected hours\n7. Click the X button to dismiss the banner\n8. Navigate away and return\n9. Verify banner does NOT reappear (dismissed via localStorage)\n10. Clear browser data and reload\n11. Verify banner reappears (#2698 known edge case)",
+              "expected_result": "Auto-reject banner visible with task name. 'Go to report' link navigates correctly. Dismiss persists via localStorage.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "#2698 banner behavior",
+              "module_component": "reports/autoreject",
+              "notes": "AutoRejectedReportsContainer on ReportPage. localStorage key: 'hiddenAutoRejectWarnings'. Banner reappears after site data clear.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-039",
+              "title": "Auto-reject — reopen period and re-confirm/edit (#3367)",
+              "preconditions": "Approve period was advanced (auto-reject triggered), then accountant reopens period.\nSETUP: Requires full cycle: create reports → close period → auto-reject → reopen.",
+              "steps": "SETUP: Create REPORTED hours → advance approve period (triggers auto-reject) → revert approve period (reopen)\n1. Login as the manager\n2. Navigate to Confirmation page\n3. Find auto-rejected hours in the reopened period\n4. Attempt to approve the auto-rejected hours\n5. Verify approval succeeds WITHOUT HTTP 500 error\n6. Login as the employee\n7. Navigate to My Tasks for the reopened period\n8. Attempt to edit an auto-rejected cell\n9. Verify editing works WITHOUT HTTP 500 error\n10. Verify re-reporting clears the auto-reject state",
+              "expected_result": "After period reopen: confirmation and editing of auto-rejected hours works. No 500 errors.",
+              "priority": "Critical",
+              "type": "UI",
+              "requirement_ref": "#3367 500 on reopen",
+              "module_component": "reports/autoreject",
+              "notes": "Bug #3367 (CLOSED): after period close→auto-reject→reopen, confirmation failed with 500. Fix in MR !5095.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-040",
+              "title": "Auto-reject vs manual reject — identical behavior (#3354)",
+              "preconditions": "Reports in both auto-rejected and manually rejected states.\nSETUP: Create reports, auto-reject some via period close, manually reject others.",
+              "steps": "SETUP: Create 4 reports. Close approve period (auto-rejects 2). Manually reject 2 others via Confirmation.\n1. Reopen the approve period\n2. Login as manager\n3. On Confirmation page, attempt to approve an auto-rejected report\n4. Verify behavior identical to approving a manually rejected report\n5. Login as employee\n6. On My Tasks, attempt to re-report on an auto-rejected cell\n7. Verify behavior identical to re-reporting on a manually rejected cell\n8. Compare: both types clear the reject record, reset to REPORTED state",
+              "expected_result": "Auto-rejected and manually rejected reports behave identically for all operations: approve, re-report, edit.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "#3354 share settings",
+              "module_component": "reports/autoreject",
+              "notes": "Requirement from #3354: auto-rejected hours MUST behave identically to manually rejected ones after period reopening.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            }
+          ]
+        },
+        "TS-Reports-Statistics": {
+          "test_cases": [
+            {
+              "test_id": "TC-RPT-041",
+              "title": "Statistics — Employee reports table basic view",
+              "preconditions": "User with access to Statistics (ADMIN, CHIEF_ACCOUNTANT, OFFICE_DIRECTOR, ACCOUNTANT, DM, or TECH_LEAD).\nQuery: SELECT DISTINCT e.login FROM ttt_backend.employee e JOIN ttt_backend.employee_role er ON e.id = er.employee_id JOIN ttt_backend.role r ON er.role_id = r.id WHERE r.name IN ('ROLE_ADMIN', 'ROLE_CHIEF_ACCOUNTANT', 'ROLE_OFFICE_DIRECTOR', 'ROLE_ACCOUNTANT') AND e.enabled = true ORDER BY random() LIMIT 1",
+              "steps": "1. Login as a user with statistics access\n2. Navigate to Statistics > Employee reports\n3. Verify the table loads with columns: Employee, Reported hours, Monthly norm, Personal norm, Budget norm, Deviation %, Manager, Comment\n4. Verify data is populated for the current month\n5. Verify pagination works if >20 employees\n6. Verify sorting by clicking column headers",
+              "expected_result": "Statistics table displays employee report data for current month. All columns present and populated.",
+              "priority": "Critical",
+              "type": "UI",
+              "requirement_ref": "reports-business-rules-reference.md §6",
+              "module_component": "reports/statistics",
+              "notes": "Access matrix: ADMIN/CHIEF_ACCOUNTANT see all, OFFICE_DIRECTOR/ACCOUNTANT see office, DM/TECH_LEAD see subordinates, EMPLOYEE cannot access.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-042",
+              "title": "Budget norm display — with/without admin vacation (#3381)",
+              "preconditions": "Employee with administrative vacation in the current month AND employee without.\nQuery: SELECT sr.employee_login, sr.month_norm, sr.budget_norm FROM ttt_backend.statistic_report sr WHERE sr.report_date >= DATE_TRUNC('month', CURRENT_DATE) AND sr.budget_norm IS NOT NULL AND sr.budget_norm != sr.month_norm LIMIT 5",
+              "steps": "1. Login as admin/accountant\n2. Navigate to Statistics > Employee reports\n3. Find an employee with admin vacation: norm column shows '{individual} ({budget})'\n4. Find an employee without admin vacation: norm column shows just '{budget}'\n5. Verify the format matches #3381 spec\n6. Hover over the 'Norm' column header\n7. Verify info icon tooltip explains budget norm concept",
+              "expected_result": "Budget norm displayed differently based on admin vacation presence. Format: '{individual} ({budget})' when different, just '{budget}' when equal.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "#3381 budget norm",
+              "module_component": "reports/statistics",
+              "notes": "Budget norm = individual norm + administrative vacation hours. Deviation % calculated from budget norm.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-043",
+              "title": "Individual norm — partial-month employee (#3353)",
+              "preconditions": "Employee whose first working day is NOT the 1st of a month (or has a last working day mid-month).\nQuery: SELECT e.login, e.first_working_day FROM ttt_backend.employee e WHERE e.first_working_day IS NOT NULL AND EXTRACT(DAY FROM e.first_working_day) > 1 AND e.enabled = true ORDER BY random() LIMIT 1",
+              "steps": "1. Login as admin\n2. Navigate to Statistics > Employee reports\n3. Find the partial-month employee\n4. Note their 'Personal norm' value\n5. Compare with a full-month employee in the same office\n6. Verify partial-month employee's personal norm is LESS than full-month (prorated)\n7. Via API — GET /api/ttt/v1/employees/{login}/work-periods\n8. Verify work period dates match employee's start/end dates\n9. On My Tasks page: verify non-working days before employee start date are marked orange",
+              "expected_result": "Partial-month employee has prorated personal norm. Work periods endpoint returns correct date ranges.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "#3353 individual norm",
+              "module_component": "reports/statistics",
+              "notes": "#3353: new /work-periods endpoint. Non-working days orange on My Tasks, Confirmation, Planner. Re-hired employees have gap periods.",
+              "classified_type": "hybrid",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-044",
+              "title": "Vacation impact on personal norm (#3380)",
+              "preconditions": "Employee with a vacation (paid or unpaid) in the current month.\nQuery: SELECT e.login FROM ttt_vacation.employee e JOIN ttt_vacation.vacation v ON e.id = v.employee_id WHERE v.start_date >= DATE_TRUNC('month', CURRENT_DATE) AND v.start_date < DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month' AND v.status IN ('APPROVED', 'NEW') AND e.enabled = true ORDER BY random() LIMIT 1",
+              "steps": "1. Login as admin\n2. Navigate to Statistics > Employee reports\n3. Find the employee with a vacation this month\n4. Note their 'Personal norm' value\n5. Calculate expected norm: office monthly norm − vacation hours\n6. Verify personal norm reflects the vacation deduction\n7. Compare with My Tasks page norm display for the same employee\n8. If discrepancy exists: note bug #3380",
+              "expected_result": "Personal norm reduced by vacation hours. Consistent between Statistics and My Tasks pages.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "#3380 vacation norm impact",
+              "module_component": "reports/statistics",
+              "notes": "Bug #3380 (OPEN): vacation doesn't reduce personal monthly norm on My Tasks or Employee Reports. Discrepancy between qa-2 and stage.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-045",
+              "title": "Over-the-limit toggle (#3306)",
+              "preconditions": "Statistics page with employees having various deviation percentages.\nParameters: notification.reporting.over and notification.reporting.under in TTT Parameters.",
+              "steps": "1. Login as admin\n2. Navigate to Statistics > Employee reports\n3. Note all employees currently displayed\n4. Toggle 'Only over the limit' switcher ON\n5. Verify the table filters to show only employees exceeding the over/under thresholds\n6. Verify the threshold values match TTT Parameters configuration\n7. Toggle OFF\n8. Verify all employees return to the table\n9. Verify the switcher has immediate effect (no page reload needed)",
+              "expected_result": "Toggle filters employees by reporting deviation thresholds. ON: only over-limit shown. OFF: all shown.",
+              "priority": "Medium",
+              "type": "UI",
+              "requirement_ref": "#3306 toggle bug",
+              "module_component": "reports/statistics",
+              "notes": "Bug #3306 (CLOSED): toggle had no effect. Should now work. Default thresholds: over=10%, under=30%.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-046",
+              "title": "DM field and Comment field on statistics (#3309)",
+              "preconditions": "Statistics page with employee data.\nQuery: (same as TC-RPT-041)",
+              "steps": "1. Login as admin\n2. Navigate to Statistics > Employee reports\n3. Verify 'Manager' column exists with DM names\n4. Click a manager name — verify it links to CS profile\n5. Verify 'Comment' column exists\n6. Click the comment field for an employee\n7. Type 'Monthly review note'\n8. Click outside to save (or press Enter)\n9. Verify comment is saved\n10. Change month in the date filter\n11. Verify the comment field shows the comment for THAT specific month (per-employee per-month)\n12. Return to original month — verify original comment still there",
+              "expected_result": "Manager column with CS links. Comment field inline-editable, stored per employee per month.",
+              "priority": "Medium",
+              "type": "UI",
+              "requirement_ref": "#3309 DM and Comment fields",
+              "module_component": "reports/statistics",
+              "notes": "QA bugs from #3309: font size should be 13px, spelling error in column title, comments aggregated incorrectly.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-047",
+              "title": "Future/dismissed employee exclusion (#3320)",
+              "preconditions": "Statistics page. Ideally an employee with a future start date or recent dismissal exists.",
+              "steps": "1. Login as admin\n2. Navigate to Statistics > Employee reports\n3. Verify NO employees with future start dates appear in the table\n4. Verify employees with future start dates don't show negative deviation %\n5. Check the employee search dropdown\n6. Verify dismissed employees are NOT in the search dropdown\n7. If dismissed employees appear in the table: verify they are NOT searchable in dropdown (#3320)\nDB-CHECK: SELECT login, first_working_day FROM ttt_backend.employee WHERE first_working_day > CURRENT_DATE AND enabled = true",
+              "expected_result": "Future employees excluded from statistics. Dismissed employees not searchable. No false under-reports.",
+              "priority": "Medium",
+              "type": "UI",
+              "requirement_ref": "#3320 future employees",
+              "module_component": "reports/statistics",
+              "notes": "Bug #3320: future employees shown with false negative deviation. Fix: switched to vacation statistic endpoint.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-048",
+              "title": "Deviation percentage calculation and display",
+              "preconditions": "Employee with known reported hours and budget norm.\nQuery: SELECT sr.employee_login, sr.reported_effort, sr.budget_norm, CASE WHEN sr.budget_norm > 0 THEN ROUND((sr.reported_effort * 60 - sr.budget_norm)::numeric / sr.budget_norm * 100, 1) ELSE NULL END AS deviation FROM ttt_backend.statistic_report sr WHERE sr.report_date >= DATE_TRUNC('month', CURRENT_DATE) AND sr.budget_norm > 0 ORDER BY ABS(sr.reported_effort * 60 - sr.budget_norm) DESC LIMIT 5",
+              "steps": "1. Login as admin\n2. Navigate to Statistics > Employee reports\n3. Find the employee from the query\n4. Verify the Deviation % column shows the calculated value\n5. Check formatting: integer except (-1,+1) range → 1 decimal place\n6. Check color coding: positive (red/over), negative (purple/under), zero (neutral)\n7. Check N/A display: employees with 0 budget norm → '+N/A%'\n8. Verify N/A sorts to top of the table",
+              "expected_result": "Deviation % formula: (reported - budgetNorm) / budgetNorm × 100%. Display formatting matches spec.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "reports-business-rules-reference.md §6 Deviation Formula",
+              "module_component": "reports/statistics",
+              "notes": "ExcessStatus enum: HIGH (>0%), LOW (<0%), NEUTRAL (==0%), NA (budgetNorm=0). N/A sorts to top.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            }
+          ]
+        },
+        "TS-Reports-Notifications": {
+          "test_cases": [
+            {
+              "test_id": "TC-RPT-049",
+              "title": "Forgotten reports notification trigger",
+              "preconditions": "Employee with less than 90% of monthly norm reported.\nSETUP: Via test API — trigger forgotten notifications.\nQuery: SELECT sr.employee_login FROM ttt_backend.statistic_report sr WHERE sr.report_date >= DATE_TRUNC('month', CURRENT_DATE) AND sr.budget_norm > 0 AND sr.reported_effort * 60 < sr.budget_norm * 0.9 LIMIT 5",
+              "steps": "SETUP: Via test endpoint — POST /api/ttt/test/v1/notifications/reports-forgotten to trigger\n1. Verify the endpoint returns 200\n2. Check email inbox of under-reporting employees\n3. Verify notification email received with correct details\n4. Verify email contains: employee name, reported hours, norm, deficit\nDB-CHECK: SELECT * FROM ttt_backend.notification WHERE type = 'REPORTS_FORGOTTEN' ORDER BY created_time DESC LIMIT 5",
+              "expected_result": "Forgotten report notifications sent to employees below 90% norm threshold.",
+              "priority": "High",
+              "type": "Hybrid",
+              "requirement_ref": "reports-business-rules-reference.md §7 sendReportsForgottenNotifications",
+              "module_component": "reports/notifications",
+              "notes": "Normal schedule: Mon/Fri 16:00. Test endpoint triggers immediately. Threshold: 90% of personal norm.",
+              "classified_type": "API",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-050",
+              "title": "Reports changed notification trigger",
+              "preconditions": "Manager who has reported on behalf of an employee.\nSETUP: Via API — create report as API token owner for another employee.",
+              "steps": "SETUP: Via API — POST /api/ttt/v1/reports with executor=<employee_login> (as API token owner)\nSETUP: Via test endpoint — POST /api/ttt/test/v1/notifications/reports-changed to trigger\n1. Verify the endpoint returns 200\n2. Verify employee receives notification that someone reported on their behalf\n3. Check email content: reporter name, task, hours, date",
+              "expected_result": "Employee notified when manager/other user reports on their behalf.",
+              "priority": "Medium",
+              "type": "Hybrid",
+              "requirement_ref": "reports-business-rules-reference.md §7 sendReportsChangedNotifications",
+              "module_component": "reports/notifications",
+              "notes": "Normal schedule: Daily 07:50. Cross-employee reporting is a known permission gap (BUG-REPORT-4).",
+              "classified_type": "API",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-051",
+              "title": "Reject notification — 5-minute scheduler",
+              "preconditions": "Employee with a recently rejected report.\nSETUP: Via API — create report and reject it.",
+              "steps": "SETUP: Via API — create report, PATCH state=REJECTED with comment\nSETUP: Via test endpoint — POST /api/ttt/test/v1/notifications/reject to trigger\n1. Verify the endpoint returns 200\n2. Check employee email for rejection notification\n3. Verify email contains: task name, rejection comment, link to report\n4. Verify reject record marked as notified\nDB-CHECK: SELECT executor_notified FROM ttt_backend.reject WHERE id = <reject_id> — verify true",
+              "expected_result": "Reject notification email sent to employee. Reject record marked executor_notified=true.",
+              "priority": "High",
+              "type": "Hybrid",
+              "requirement_ref": "reports-business-rules-reference.md §7 sendRejectNotifications",
+              "module_component": "reports/notifications",
+              "notes": "Runs every 5 minutes normally. executor_notified=false until sent. Bug #3321: no notification when report month closed.",
+              "classified_type": "API",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-052",
+              "title": "Accounting report notifications — budget exceeded",
+              "preconditions": "Accountant. Employee with over-reported hours exceeding budget norm.\nSETUP: Reports exceeding budget norm must exist.",
+              "steps": "1. Login as accountant\n2. Navigate to Statistics > Employee reports or accounting notifications area\n3. Verify over-reporting employees are flagged\n4. Via API — POST /api/ttt/v1/reports/accounting/notifications to send accounting-level notifications\n5. Verify notification sent to relevant accountants/managers\n6. Verify notification content: employee name, excess hours, projects",
+              "expected_result": "Accounting notifications triggered for budget exceedance. Relevant stakeholders notified.",
+              "priority": "Medium",
+              "type": "Hybrid",
+              "requirement_ref": "reports-business-rules-reference.md §8 POST /accounting/notifications",
+              "module_component": "reports/notifications",
+              "notes": "Only AUTH_USER required for this endpoint (no specific permission check).",
+              "classified_type": "hybrid",
+              "automation_status": "pending"
+            }
+          ]
+        },
+        "TS-Reports-Permissions": {
+          "test_cases": [
+            {
+              "test_id": "TC-RPT-053",
+              "title": "Regular employee — My Tasks access only",
+              "preconditions": "Regular employee with ROLE_EMPLOYEE only.\nQuery: SELECT e.login FROM ttt_backend.employee e JOIN ttt_backend.employee_role er ON e.id = er.employee_id JOIN ttt_backend.role r ON er.role_id = r.id WHERE r.name = 'ROLE_EMPLOYEE' AND e.enabled = true AND NOT EXISTS (SELECT 1 FROM ttt_backend.employee_role er2 JOIN ttt_backend.role r2 ON er2.role_id = r2.id WHERE er2.employee_id = e.id AND r2.name != 'ROLE_EMPLOYEE') ORDER BY random() LIMIT 1",
+              "steps": "1. Login as the regular employee\n2. Navigate to My Tasks (/report) — verify access\n3. Attempt to navigate to Confirmation (/approve)\n4. Verify access denied or redirect\n5. Attempt to navigate to Statistics (/statistics)\n6. Verify access denied or redirect\n7. Attempt to navigate to Accounting routes\n8. Verify access denied or redirect",
+              "expected_result": "Regular employee can access My Tasks only. No access to Confirmation, Statistics, or Accounting.",
+              "priority": "Critical",
+              "type": "UI",
+              "requirement_ref": "reports-business-rules-reference.md §8 Permission Matrix",
+              "module_component": "reports/permissions",
+              "notes": "Permission: REPORTS_VIEW allows GET /reports. REPORTS_EDIT allows POST/PATCH/DELETE. REPORTS_APPROVE for confirmation.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-054",
+              "title": "Manager — Confirmation page access",
+              "preconditions": "Employee with PROJECT_MANAGER or SENIOR_MANAGER role.\nQuery: SELECT e.login FROM ttt_backend.employee e JOIN ttt_backend.employee_role er ON e.id = er.employee_id JOIN ttt_backend.role r ON er.role_id = r.id WHERE r.name IN ('ROLE_PROJECT_MANAGER', 'ROLE_SENIOR_MANAGER') AND e.enabled = true ORDER BY random() LIMIT 1",
+              "steps": "1. Login as the manager\n2. Navigate to Confirmation (/approve)\n3. Verify page loads with By Employee and By Projects tabs\n4. Verify the manager can see employees from their projects\n5. Verify the manager can approve/reject hours\n6. Navigate to Statistics — verify access\n7. Verify Statistics scope: only their subordinates/projects visible",
+              "expected_result": "Manager has full Confirmation access. Statistics shows only their scope (subordinates/projects).",
+              "priority": "Critical",
+              "type": "UI",
+              "requirement_ref": "reports-business-rules-reference.md §6 Access Matrix",
+              "module_component": "reports/permissions",
+              "notes": "REPORTS_APPROVE permission grants confirmation page access.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-055",
+              "title": "Self-approval via API — no check (BUG-REPORT-2)",
+              "preconditions": "Employee who is also a manager on a project.\nQuery: (same as TC-RPT-054)",
+              "steps": "SETUP: Via API — create a report as the manager (on their own task)\n1. Via API — PATCH /api/ttt/v1/reports/{id} with state=APPROVED (using same user's token)\n2. Verify the request succeeds (HTTP 200)\n3. Verify the report is now APPROVED with approverLogin = executorLogin\n4. Note: there is NO executor≠approver validation — self-approval is possible\nDB-CHECK: SELECT executor_login, approver_login FROM ttt_backend.task_report WHERE id = <id> — verify both are the same",
+              "expected_result": "Self-approval succeeds via API. No validation preventing approver = executor. This is a known bug.",
+              "priority": "High",
+              "type": "Hybrid",
+              "requirement_ref": "BUG-REPORT-2 self-approval",
+              "module_component": "reports/permissions",
+              "notes": "BUG-REPORT-2 (HIGH): No executor≠approver check in API. UI may prevent this by not showing own reports in Confirmation.",
+              "classified_type": "hybrid",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-056",
+              "title": "Direct create-as-APPROVED bypass (BUG-REPORT-3)",
+              "preconditions": "User with REPORTS_EDIT and REPORTS_APPROVE permissions.\nQuery: (same as TC-RPT-054)",
+              "steps": "1. Via API — POST /api/ttt/v1/reports with state=APPROVED in the request body\n2. Verify the request succeeds\n3. Verify the report is created directly in APPROVED state\n4. Note: this bypasses the REPORTED → APPROVED workflow entirely\nDB-CHECK: SELECT state FROM ttt_backend.task_report WHERE id = <id> — verify 'APPROVED'\nCLEANUP: Via API — DELETE the report",
+              "expected_result": "Report created directly as APPROVED, bypassing normal workflow. No validation prevents this.",
+              "priority": "High",
+              "type": "Hybrid",
+              "requirement_ref": "BUG-REPORT-3 direct approve",
+              "module_component": "reports/permissions",
+              "notes": "BUG-REPORT-3 (HIGH): POST accepts state=APPROVED. Should only allow REPORTED on create.",
+              "classified_type": "API",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-057",
+              "title": "No upper bound on effort (BUG-REPORT-1)",
+              "preconditions": "Employee with a task.\nQuery: (same as TC-RPT-001)",
+              "steps": "1. Via API — POST /api/ttt/v1/reports with effort=90000 (1500 hours = 25 hours/day × 60 days)\n2. Verify the request succeeds (no max validation)\n3. Check: does the UI display this correctly on My Tasks?\n4. Via API — try effort=999999\n5. Verify response (should accept due to no upper bound)\nCLEANUP: Via API — DELETE the report",
+              "expected_result": "Unreasonably high effort values accepted by API. No upper bound validation exists.",
+              "priority": "Medium",
+              "type": "Hybrid",
+              "requirement_ref": "BUG-REPORT-1 no max effort",
+              "module_component": "reports/permissions",
+              "notes": "BUG-REPORT-1 (HIGH): Only minimum (≥1 minute) validated. 25h (1500 min) accepted. No daily/weekly cap.",
+              "classified_type": "API",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-058",
+              "title": "Unauthenticated access to /effort and /employee-projects (BUG-REPORT-6)",
+              "preconditions": "No authentication required for this test.",
+              "steps": "1. Via curl (no auth header) — GET /api/ttt/v1/reports/effort\n2. Verify the response — if 200 with data, confirms missing @PreAuthorize\n3. Via curl (no auth header) — GET /api/ttt/v1/reports/employee-projects\n4. Verify the response — if 200, confirms missing @PreAuthorize\n5. Compare with authenticated access — verify same data returned",
+              "expected_result": "If bug exists: both endpoints return data without authentication. Should require at minimum AUTH_USER.",
+              "priority": "Medium",
+              "type": "Hybrid",
+              "requirement_ref": "BUG-REPORT-6 missing auth",
+              "module_component": "reports/permissions",
+              "notes": "BUG-REPORT-6 (LOW): Missing @PreAuthorize annotation on /effort and /employee-projects endpoints.",
+              "classified_type": "API",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-059",
+              "title": "Cross-employee reporting via API (BUG-REPORT-4)",
+              "preconditions": "API token owner.\nQuery: SELECT e.login FROM ttt_backend.employee e WHERE e.enabled = true AND e.login != 'pvaynmaster' ORDER BY random() LIMIT 1",
+              "steps": "1. Via API — POST /api/ttt/v1/reports with executorLogin = <another_employee_login>\n2. Verify the report is created under the OTHER employee's name\n3. Check: does this require any specific permission beyond AUTH_USER?\n4. Verify the 'Reports changed' notification is generated for the target employee\nCLEANUP: Via API — DELETE the report",
+              "expected_result": "API token owner can report for any employee. No executor validation beyond auth check.",
+              "priority": "Medium",
+              "type": "Hybrid",
+              "requirement_ref": "BUG-REPORT-4 cross-employee",
+              "module_component": "reports/permissions",
+              "notes": "BUG-REPORT-4: any authenticated user can create reports for any other employee via API.",
+              "classified_type": "hybrid",
+              "automation_status": "pending"
+            },
+            {
+              "test_id": "TC-RPT-060",
+              "title": "Approved status removed after tracker import (#3296)",
+              "preconditions": "PM with an employee having APPROVED hours. External tracker configured.\nQuery: SELECT e.login FROM ttt_backend.employee e JOIN ttt_backend.employee_project ep ON e.id = ep.employee_id JOIN ttt_backend.project p ON ep.project_id = p.id WHERE p.status = 'ACTIVE' AND e.enabled = true AND EXISTS (SELECT 1 FROM ttt_backend.employee_role er JOIN ttt_backend.role r ON er.role_id = r.id WHERE er.employee_id = e.id AND r.name = 'ROLE_PROJECT_MANAGER') ORDER BY random() LIMIT 1",
+              "steps": "SETUP: Via API — create report, approve it\n1. Login as the PM\n2. Navigate to Planner > Projects or Tasks\n3. Find the approved report cell (green background)\n4. Import from external tracker (if tracker configured)\n5. After import: verify the cell value changed\n6. Verify the green APPROVED background is REMOVED\n7. Verify state reset to REPORTED (white background)\n8. If background persists: document as #3296 regression\nCLEANUP: Via API — DELETE the report",
+              "expected_result": "Any hour change after approval removes APPROVED status. Green background removed. State = REPORTED.",
+              "priority": "High",
+              "type": "UI",
+              "requirement_ref": "#3296 approved status persist",
+              "module_component": "reports/permissions",
+              "notes": "Bug #3296 (OPEN): after tracker import, value changes but green APPROVED background persists on Planner.",
+              "classified_type": "UI",
+              "automation_status": "pending"
+            }
+          ]
+        }
+      }
+    },
     "t2724": {
       "xlsx_path": "test-docs/t2724/t2724.xlsx",
       "total": 38,
@@ -2958,7 +4394,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "POST /v1/projects/{projectId}/close-tags returns HTTP 200 (not 201). Immediate save, no confirmation needed.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-002",
@@ -2972,7 +4408,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Backend uses REQUIRES_NEW transaction; on unique constraint violation, catches and returns existing tag.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-003",
@@ -2986,7 +4422,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Backend validates @NotBlank on tag field. Frontend may also have client-side validation.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-004",
@@ -3000,7 +4436,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Inline editing uses PlannerTag.js component. Escape should cancel without saving.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-005",
@@ -3014,7 +4450,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-006",
@@ -3028,7 +4464,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "No-op optimization: if new tag equals existing tag, returns without saving.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-007",
@@ -3042,7 +4478,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Deletion is immediate — no confirmation prompt (consistent with tag creation).",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-008",
@@ -3056,7 +4492,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-009",
@@ -3070,7 +4506,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "PlannerCloseTagPermissionService checks: isAdmin, managerId, seniorManagerId, ownerId.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-010",
@@ -3084,7 +4520,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Permission check: current.getId().equals(project.getManagerId())",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-011",
@@ -3098,7 +4534,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-012",
@@ -3112,7 +4548,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Tested on qa-1 S72: returns 400 with ValidationException.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-013",
@@ -3126,7 +4562,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Tested on qa-1 S72: Unicode accepted. No HTML sanitization — potential XSS if rendered unsafely.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-014",
@@ -3140,7 +4576,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Known discrepancy: Confluence 200 chars vs DB 255 chars. No frontend validation found.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-015",
@@ -3154,7 +4590,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "No pagination on GET /close-tags — returns all tags. No max count enforced.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             }
           ]
         },
@@ -3172,7 +4608,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "POST /v1/projects/{projectId}/close-tags/apply with {date}. Requires the apply endpoint to be deployed.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-017",
@@ -3186,7 +4622,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Core safety rule: reported hours are never hidden by close-by-tag.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-018",
@@ -3200,7 +4636,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-019",
@@ -3214,7 +4650,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Known false positive risk: short tags can match unintended text.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-020",
@@ -3228,7 +4664,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Stakeholders explicitly acknowledged this corner case.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-021",
@@ -3242,7 +4678,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Frontend sends currentDay from Redux store. Backend uses section.date or section.startDate.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-022",
@@ -3256,7 +4692,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Guard added in !5341. Critical for projects without close-by-tag configuration.",
               "classified_type": "hybrid",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-023",
@@ -3270,7 +4706,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "window.location.reload() is a blunt approach. The finally block (stopLoading + closeModal) is dead code since page reloads.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-024",
@@ -3284,7 +4720,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Design side effect: user who only changed Project Members still triggers close-tags apply.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-025",
@@ -3298,7 +4734,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Silent failure: if createForCloseByTag throws, error is swallowed with log.debug() only.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-026",
@@ -3312,7 +4748,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Both features are date-scoped and use currentDay from Redux.",
               "classified_type": "UI",
-              "automation_status": "automated"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-027",
@@ -3326,7 +4762,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "OR logic: assignment closed if it matches any one of the project's tags.",
               "classified_type": "UI",
-              "automation_status": "automated"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-028",
@@ -3340,7 +4776,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Code: if ticketInfo is blank, skip.",
               "classified_type": "UI",
-              "automation_status": "automated"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-029",
@@ -3354,7 +4790,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Apply endpoint added in !5335. Requires deployment verification.",
               "classified_type": "UI",
-              "automation_status": "automated"
+              "automation_status": "pending"
             }
           ]
         },
@@ -3372,7 +4808,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Regression: this was a reported bug — now 'by design'. Verify it remains consistent.",
               "classified_type": "UI",
-              "automation_status": "automated"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-031",
@@ -3386,7 +4822,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Both EN and RU affected in original bug.",
               "classified_type": "UI",
-              "automation_status": "automated"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-032",
@@ -3400,7 +4836,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "automated"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-033",
@@ -3414,7 +4850,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Not reproducible on small-data projects (e.g., Diablocom-AI). Specific to large projects.",
               "classified_type": "UI",
-              "automation_status": "automated"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-034",
@@ -3428,7 +4864,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "automated"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-035",
@@ -3442,7 +4878,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Close-by-tag publishes TaskAssignmentPatchEvent/GenerateEvent which may trigger the #3314 re-sort bug.",
               "classified_type": "UI",
-              "automation_status": "automated"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-036",
@@ -3456,7 +4892,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "automated"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-037",
@@ -3470,7 +4906,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Known req/code mismatch. No frontend validation found in code analysis.",
               "classified_type": "UI",
-              "automation_status": "automated"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-038",
@@ -3484,7 +4920,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Both frontend (catch→devLog) and backend (catch→log.debug) silently swallow errors.",
               "classified_type": "UI",
-              "automation_status": "automated"
+              "automation_status": "pending"
             }
           ]
         }

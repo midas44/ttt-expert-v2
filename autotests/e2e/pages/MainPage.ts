@@ -464,9 +464,28 @@ export class MyTasksPage {
     return row;
   }
 
-  /** Fills search and clicks "Add a task" to add a task. */
-  async addTask(searchTerm: string): Promise<void> {
+  /**
+   * Adds a task via autocomplete:
+   * 1. Fills search with the term
+   * 2. Waits for autocomplete suggestions to appear
+   * 3. Clicks the suggestion matching suggestionFilter (or first if omitted)
+   * 4. Clicks "Add a task" button
+   */
+  async addTask(
+    searchTerm: string,
+    suggestionFilter?: string | RegExp,
+  ): Promise<void> {
     await this.fillSearch(searchTerm);
+    const allSuggestions = this.page.locator(
+      "[class*='autosuggest'] li, ul[role='listbox'] li",
+    );
+    await allSuggestions.first().waitFor({ state: "visible", timeout: 5000 });
+    if (suggestionFilter) {
+      const match = allSuggestions.filter({ hasText: suggestionFilter });
+      await match.first().click();
+    } else {
+      await allSuggestions.first().click();
+    }
     await this.clickAddTask();
   }
 
