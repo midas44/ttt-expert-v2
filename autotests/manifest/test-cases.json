@@ -1752,7 +1752,7 @@
               "module_component": "planner/navigation",
               "notes": "URL uses hash-like route: /planner/TABS_ASSIGNMENTS_TASK",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-PLN-002",
@@ -1766,7 +1766,7 @@
               "module_component": "planner/navigation",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-PLN-003",
@@ -1780,7 +1780,7 @@
               "module_component": "planner/navigation",
               "notes": "currentDay stored in Redux plannerTasks slice, persisted to localStorage.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-PLN-004",
@@ -1794,7 +1794,7 @@
               "module_component": "planner/navigation",
               "notes": "react-select dropdown with CSS prefix selectbox__.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-PLN-005",
@@ -1808,7 +1808,7 @@
               "module_component": "planner/navigation",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-PLN-006",

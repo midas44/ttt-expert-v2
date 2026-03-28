@@ -87,4 +87,73 @@ export class PlannerPage {
       .first()
       .isVisible();
   }
+
+  /** Returns the search bar input locator. */
+  searchBar(): Locator {
+    return this.page.getByRole("combobox").first();
+  }
+
+  /** Returns the search bar wrapper with placeholder text. */
+  searchBarWrapper(): Locator {
+    return this.page.locator("[class*='planner__search']");
+  }
+
+  /** Clicks the next-day (right) button beside the date header. */
+  async navigateDateForward(): Promise<void> {
+    const dateHeader = this.page.locator(".planner__header-day");
+    // Next-day button is the sibling button AFTER the date text
+    const parent = dateHeader.locator("..");
+    await parent.locator("button").last().click();
+  }
+
+  /** Clicks the prev-day (left) button beside the date header. */
+  async navigateDateBackward(): Promise<void> {
+    const dateHeader = this.page.locator(".planner__header-day");
+    // Prev-day button is the sibling button BEFORE the date text
+    const parent = dateHeader.locator("..");
+    await parent.locator("button").first().click();
+  }
+
+  /** Returns the current date text displayed in the table header. */
+  async getDateHeaderTexts(): Promise<string[]> {
+    const headers = this.page.locator("table thead th");
+    const count = await headers.count();
+    const texts: string[] = [];
+    for (let i = 0; i < count; i++) {
+      const text = await headers.nth(i).textContent();
+      if (text) texts.push(text.trim());
+    }
+    return texts;
+  }
+
+  /** Returns the date display text (e.g., "Fri\n28.03") from the planner header. */
+  async getDateDisplayText(): Promise<string> {
+    return (
+      (await this.page.locator(".planner__header-day").textContent()) ?? ""
+    );
+  }
+
+  /** Returns the locator for the "Total" row at the bottom of the table. */
+  totalRow(): Locator {
+    return this.page.locator("tr").filter({ hasText: /^Total/ });
+  }
+
+  /** Returns the project name shown in the project selector dropdown. */
+  async getSelectedProjectName(): Promise<string> {
+    const singleValue = this.page
+      .locator("[class*='planner__project-select'] [class*='singleValue']");
+    return (await singleValue.textContent()) ?? "";
+  }
+
+  /** Returns the project select dropdown wrapper. */
+  projectSelectDropdown(): Locator {
+    return this.page.locator("[class*='planner__project-select']");
+  }
+
+  /** Returns the combobox inside the project select dropdown. */
+  projectSelectCombobox(): Locator {
+    return this.page
+      .locator("[class*='planner__project-select']")
+      .getByRole("combobox");
+  }
 }
