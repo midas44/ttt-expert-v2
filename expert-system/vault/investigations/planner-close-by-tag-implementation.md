@@ -7,13 +7,16 @@ tags:
   - '2724'
   - backend
   - frontend
+  - apply-endpoint
 created: '2026-03-16'
-updated: '2026-03-16'
+updated: '2026-03-27'
 status: active
 related:
   - '[[modules/planner-assignment-backend]]'
   - '[[modules/frontend-planner-module]]'
   - '[[modules/pm-tool-integration-deep-dive]]'
+  - '[[exploration/tickets/t2724-investigation]]'
+  - '[[exploration/ui-flows/planner-project-settings-pages]]'
 ---
 # Planner Close-by-Tag Implementation (#2724)
 
@@ -21,8 +24,9 @@ related:
 Sprint 15 CRITICAL feature. Solves planner performance degradation caused by uncontrollable growth of task assignments (e.g., DirectEnergie-ODC project: ~10 new assignments/employee/day, never cleaned up). Allows managers to configure per-project labels that automatically close matching assignments during Refresh/Load-from-tracker.
 
 **Tickets:** #2724 (main), related #2408, #3375
-**Status:** Ready to Test (4 MRs merged to release/2.1: !5293, !5299, !5301, !5303)
+**Status:** Ready to Test (6 MRs merged to release/2.1: !5289, !5293/!5299, !5301, !5313, !5335, !5339, !5341)
 **Migration:** V2.1.27 — `V2_1_27_20260301000000__create_planner_close_tag_table.sql`
+**Deep investigation:** [[exploration/tickets/t2724-investigation]]
 
 ## Database Schema
 
@@ -55,6 +59,12 @@ Key constraints:
 | POST | `/v1/projects/{projectId}/close-tags` | `create()` | `PlannerCloseTagDTO` (HTTP 200, not 201) | CREATE |
 | PATCH | `/v1/projects/{projectId}/close-tags/{tagId}` | `update()` | `PlannerCloseTagDTO` | EDIT |
 | DELETE | `/v1/projects/{projectId}/close-tags/{tagId}` | `delete()` | void | DELETE |
+
+**Apply endpoint (added in !5335):**
+
+| Method | Path | Handler | Response | Permission |
+|--------|------|---------|----------|------------|
+| POST | `/v1/projects/{projectId}/close-tags/apply` | `apply()` | void | CREATE (?) |
 
 **Note:** POST returns HTTP 200, not 201 — unconventional for create endpoint.
 
@@ -114,7 +124,7 @@ Key constraints:
 
 ## Core Logic — CloseByTagServiceImpl (267 lines)
 
-**Entry point:** `apply(PlannerSectionBO section)` — called during Refresh and Load-from-tracker flows.
+**Entry point:** `apply(PlannerSectionBO section)` — called during Refresh and Load-from-tracker flows, AND now from the dedicated apply endpoint (!5335).
 
 ### Flow
 1. **Guard checks:** null section → return; `hasApplicableContext` checks for projectId or employeeLogin
@@ -133,6 +143,7 @@ StringUtils.containsIgnoreCase(ticketInfo, tag)
 - Blank tags are filtered out
 - Blank ticket_info is skipped
 - Projects without close tags are skipped entirely
+- **Known false positive risk:** tag "Done" can match "Anna Donetskaya" — acknowledged and accepted by stakeholders
 
 ### Assignment Closing — Two Paths
 
@@ -153,8 +164,10 @@ StringUtils.containsIgnoreCase(ticketInfo, tag)
 2. Assignment with report stays visible even when closed — report data preserved
 3. Close-by-tag runs AFTER tracker sync / refresh, not during
 4. WebSocket events enable real-time UI updates without page reload
+5. **"Open for editing" status may affect propagation** — if true on a date, may interrupt closing to future dates (per design discussion, exact behavior needs verification)
+6. **Apply is per-date:** the apply endpoint takes a `{ date }` parameter — only affects the selected date
 
-## Frontend Implementation (!5301)
+## Frontend Implementation (Final State after !5341)
 
 ### UI Changes
 - "Project employees" tooltip/popup renamed to **"Project settings"** (RU: "Настройки проекта")
@@ -162,16 +175,39 @@ StringUtils.containsIgnoreCase(ticketInfo, tag)
   - **"Project members"** (existing employee management)
   - **"Tasks closing"** (new tag management) (RU: "Закрытие задач")
 
-### New Components
+### Components
 - `PlannerTagsAdd.js` — form with text field + add button (Formik)
 - `PlannerTagsList.js` — tag list table with new-item highlighting + scroll-to-new
 - `PlannerTag.js` — inline-editable tag cell (click to edit, Enter to save, Escape to cancel)
 - `PlannerModalDelete.js` — generalized delete button (renamed from PlannerEmployeeDelete)
 
 ### Tags Tab Content
-1. Explanatory text about auto-closing behavior
+1. Explanatory text: "Project tickets containing added values in the Info column will be automatically removed from the list on days when there are no more reports for them"
 2. Add tag form (text input + "Add" button)
 3. Tag list table with inline editing and delete buttons
+
+### OK Button / Apply Flow (final state, !5335 + !5339 + !5341)
+
+**Both tabs now use the same OK button handler:**
+
+1. User clicks OK on either tab (Project Members or Tasks Closing)
+2. `handleCloseTagsApplyOnClick` dispatches `closeTagsApplyAndCloseModal()` action
+3. Also dispatches synthetic `Event('input', { bubbles: true })` on `fakeEventRef` — **hack for Dialog dirty-state detection**
+4. Saga `handleCloseTagsApply()`:
+   - Reads `projectTags` from Redux store
+   - **Empty-tags guard:** if `projectTags.length === 0`, returns immediately (no API call)
+   - Shows loading spinner (`startLoadingEmployeeModal`)
+   - Calls `POST /v1/projects/{projectId}/close-tags/apply` with `{ date: currentDay }`
+   - Calls `window.location.reload()` on success — **blunt-force refresh**
+   - In `finally`: stops loading + closes modal
+
+**Design concerns:**
+- Both tabs' OK buttons call apply — if user only changed members (not tags), apply is still called (unless tags list is empty)
+- `window.location.reload()` is a blunt approach vs surgical Redux state update
+- Synthetic DOM event is a fragile hack for Dialog component behavior
+
+### Refresh Refactor (!5313)
+`fetchProjectTasksRefresh` saga refactored to read `currentDay` and `currentProjectId` from Redux store via selectors, instead of from action payload. Fixes stale-data bugs.
 
 ### New-Item Highlighting
 - Green left border (5px) on new items via `.new-item::before` CSS
@@ -214,78 +250,186 @@ End-to-end test with WireMock (GitLab tracker) and mocked PM Tool:
 6. **No audit trail** — no logging of who created/modified/deleted tags
 7. **Manager role only via project role** — department manager not checked in permissions
 8. **No bulk operations** — no endpoint to delete all tags or create multiple at once
-9. **No pagination on tag list** — GET returns all tags, could be large for projects with many tags
+9. **No pagination on tag list** — GET returns all tags, could be large
 10. **Race condition on update** — `saveAndFlush` catches duplicate but no optimistic locking
+11. **Both tabs trigger apply** — Project Members OK button also calls close-tags apply (mitigated by empty-tags guard)
+12. **window.location.reload()** — blunt page refresh instead of selective state update
+13. **Synthetic DOM event hack** — fragile workaround for Dialog dirty-state
+
+## Live Testing Results (timemachine, S74)
+
+16 API tests run. Key results:
+- CRUD (GET, POST, DELETE): all pass
+- PATCH: failed with 500 — **root cause: PATCH commit not in deployed build** (deployment timing issue, not code bug)
+- Idempotent create: confirmed
+- Validation (blank, whitespace, non-existent project): all pass
+- Cross-project access check: passes
+- Special characters stored raw — **no HTML sanitization** (XSS concern)
+
+### PATCH 500 Root Cause
+Not a gateway routing bug — the PATCH endpoint was added in commit `dbdb6c9663` (v3, 2026-03-12), ~29 hours AFTER the deployed build `2.1.26-SNAPSHOT.290209` (2026-03-11). Current release/2.1 HEAD includes PATCH. Re-test after redeployment.
+
+### RestErrorHandler Issue
+`RestErrorHandler` (`@RestControllerAdvice`) has catch-all `@ExceptionHandler(Exception.class)` → maps ALL unhandled exceptions to 500 instead of correct HTTP codes (e.g., 405 for `HttpRequestMethodNotSupportedException`).
+
+## QA Bug Summary (from ticket #2724 comments)
+
+| Bug | Description | Status |
+|-----|-------------|--------|
+| Bug 1 | Can't close popup after changes — only OK button works | FIXED (!5313) — by design |
+| Bug 2 | Performance on heavy projects | CAN'T REPRODUCE — improved |
+| Bug 3 | Wrong column header in Tasks Closing tab | FIXED (!5313) |
+| Bug 4 | OK button missing from Tasks Closing tab | FIXED (!5313) |
+| Bug 5 | DnD not implemented | NOT A BUG — intentionally excluded |
+| Bug 6 | Can't reopen popup on heavy data (DirectEnergie-ODC) | **OPEN** |
+| Bug 7 | Closing requires tracker sync — testability concern | **DESIGN ISSUE** — partially addressed by apply endpoint |
+| Bug 8 | No auto-refresh after closing | FIXED (!5335) — window.location.reload() |
 
 
-## Live Testing Results (S74 — Timemachine)
+## Live Testing Results (qa-1, Session 72)
 
-**Environment:** timemachine, build 2.1.26-SNAPSHOT.290209 (March 11, 2026)
-**Test project:** Administration (id=145), DirectEnergie-ODC (id=1225)
+### CRUD API Testing — Full Suite
 
-### API CRUD Testing (16 tests)
+**Authentication:** `?token=` query parameter works; `Bearer` and `X-Auth-Token` headers do NOT work for close-tag endpoints.
 
-| # | Test | Method | Expected | Actual | Status |
-|---|------|--------|----------|--------|--------|
-| 1 | Create tag `[closed]` | POST | 201, tag created | **200**, tag created `{"id":1,"projectId":145,"tag":"[closed]"}` | PASS (HTTP code issue noted) |
-| 2 | List tags | GET | Array with 1 tag | `[{"id":1,"projectId":145,"tag":"[closed]"}]` | PASS |
-| 3 | Create second tag `done` | POST | Tag created | `{"id":2,"projectId":145,"tag":"done"}` | PASS |
-| 4 | Idempotent create (duplicate `[closed]`) | POST | Returns existing | `{"id":1,...}`, HTTP 200 | PASS — idempotent confirmed |
-| 5 | Update tag via PATCH | PATCH | Tag updated | **500 HttpRequestMethodNotSupportedException** | **FAIL — CRITICAL BUG** |
-| 6 | Verify list after update attempt | GET | 2 tags unchanged | `[{id:1, "[closed]"}, {id:2, "done"}]` | PASS |
-| 7 | Update tag via PUT | PUT | Tag updated | **500 HttpRequestMethodNotSupportedException** | FAIL — same bug |
-| 8 | Delete tag id=2 | DELETE | 200, tag removed | 200, empty response | PASS |
-| 9 | Create blank tag `""` | POST | 400 validation | 400, `"Tag must not be blank"` | PASS |
-| 10 | Create whitespace tag `"   "` | POST | 400 validation | 400, `@NotBlank` triggered | PASS |
-| 11 | Create on non-existent project 999999 | POST | 400 not found | 400, `"Project id not found"` | PASS |
-| 12 | Delete non-existent tag id=999 | DELETE | 404 | 404, `"exception.plannerclosetag.not.found"` | PASS |
-| 13 | Cross-project delete (tag from project 145, via project 3146) | DELETE | 400 ownership | 400, `"does not belong to project 3146"` | PASS |
-| 14 | Special chars `won't fix / закрыто <script>` | POST | Created (but sanitized?) | 200, stored raw — **no HTML sanitization** | CONCERN |
-| 15 | Cleanup: delete all test tags | DELETE | 200 | 200 | PASS |
-| 16 | Verify empty after cleanup | GET | `[]` | `[]` | PASS |
+| Test | Method | Input | Result | HTTP | Notes |
+|------|--------|-------|--------|------|-------|
+| List empty | GET /close-tags | project 29 | `[]` | 200 | Clean state confirmed |
+| Create tag | POST /close-tags | `{"tag":"test-close-tag"}` | `{id:1, tag:"test-close-tag"}` | 200 | Returns DTO (not 201) |
+| Duplicate create | POST /close-tags | same tag | `{id:1, tag:"test-close-tag"}` | 200 | **Idempotent** — returns existing (id=1, not new id) |
+| Create second | POST /close-tags | `{"tag":"[closed]"}` | `{id:3}` | 200 | Note: id skipped to 3 (seq consumed by duplicate attempt) |
+| Create third | POST /close-tags | `{"tag":"Done"}` | `{id:4}` | 200 | Works |
+| List all | GET /close-tags | — | 3 tags | 200 | Ordered by creation |
+| Blank tag | POST /close-tags | `{"tag":""}` | NotBlank error | 400 | `"Tag must not be blank"` |
+| Whitespace tag | POST /close-tags | `{"tag":"   "}` | NotBlank error | 400 | Spaces treated as blank |
+| Special chars | POST /close-tags | `{"tag":"Done / Résolu"}` | `{id:5, tag:"Done / Résolu"}` | 200 | Unicode accepted |
+| Delete tag | DELETE /close-tags/1 | — | (empty body) | 200 | Works |
+| Delete again | DELETE /close-tags/1 | — | NotFoundException | 404 | **NOT idempotent** (unlike create) |
+| Cross-project list | GET /projects/2/close-tags | — | `[]` | 200 | Correctly scoped |
+| Cross-project delete | DELETE /projects/2/close-tags/3 | — | ValidationException | 400 | `"Planner close tag does not belong to project 2"` |
+| Non-existent project | GET /projects/999999/close-tags | — | ProjectIdExists error | 400 | Custom validator |
+| **PATCH update** | PATCH /close-tags/6 | `{"tag":"updated"}` | `{id:6, tag:"updated"}` | 200 | **WORKS on qa-1** (unlike timemachine 500) |
+| PATCH blank | PATCH /close-tags/6 | `{"tag":""}` | NotBlank error | 400 | Same validation as create |
+| PATCH non-existent | PATCH /close-tags/999999 | `{"tag":"x"}` | NotFoundException | 404 | `"id = 999999"` |
 
-### CRITICAL BUG: PATCH Endpoint Not Routed
+### Apply Endpoint — NOT DEPLOYED on qa-1
 
-**Swagger spec confirms PATCH is missing:** Only GET, POST (collection) and DELETE (item) are registered in `/v2/api-docs?group=api`. The `@PatchMapping("/{tagId}")` on `PlannerCloseTagController.update()` is not exposed through the API gateway.
+| Test | Method | Input | Result | HTTP |
+|------|--------|-------|--------|------|
+| POST /apply | POST /close-tags/apply | `date=2026-03-27` | HttpRequestMethodNotSupportedException | 500 |
+| PUT /apply | PUT /close-tags/apply | same | HttpRequestMethodNotSupportedException | 500 |
+| GET /apply | GET /close-tags/apply | same | HttpRequestMethodNotSupportedException | 500 |
+| PATCH /apply | PATCH /close-tags/apply | same | MethodArgumentTypeMismatchException | 400 |
 
-**Impact:** Tag editing is completely impossible via API. The frontend "Tasks closing" tab's inline edit feature will also fail once deployed, as it calls PATCH.
+**Root cause:** The `POST /apply` endpoint (added in MR !5335, merged 2026-03-25) is NOT in the deployed qa-1 build. Spring routes `POST /close-tags/apply` → `DELETE /{tagId}` handler (treats "apply" as tagId string) → "POST not supported". PATCH hits the `PATCH /{tagId}` handler → can't parse "apply" as Long → NumberFormatException.
 
-**Probable cause:** API gateway route predicates may not include PATCH method for the `/v1/projects/{projectId}/close-tags/**` path pattern. This is a gateway configuration issue, not a controller code issue (the controller has the mapping, but requests never reach it).
+**Timemachine status:** Returns 401 (empty body) — endpoint also not deployed there.
 
-### XSS Concern
+**Impact:** Cannot test the full close-by-tag flow (create tags → apply → verify assignments closed) on either testing environment until redeployment.
 
-Tags containing `<script>` content are stored without sanitization. If the frontend renders tag text via `innerHTML` or without React's default escaping, this is exploitable. React's JSX escaping should protect by default, but worth verifying once frontend is deployed.
+### PATCH Works on qa-1 (Upgrade from timemachine)
 
-### Frontend Deployment Status
+PATCH endpoint `PlannerCloseTagController.update()` works correctly on qa-1, unlike timemachine where it returned 500. This confirms the PATCH fix (from MR !5301 commit `dbdb6c9663`, 2026-03-12) IS deployed on qa-1 but was NOT deployed on timemachine during session 74 testing.
 
-Build 2.1.26-SNAPSHOT.290209 (March 11, 2026) does **not** include !5301 frontend changes. The "Project settings" modal with "Tasks closing" tab is not yet available in the UI. Backend API is deployed and functional. Frontend verification deferred until new build deployed.
+## Confluence Requirements (Fetched Session 72)
 
-### Database Verification
+**Source:** https://projects.noveogroup.com/x/A4rFBw (page 130386435, version 19)
+**Title:** "Planner / Планировщик"
 
-- `planner_close_tag` table exists on timemachine (V2.1.27 migration applied)
-- Table was empty before testing (no close tags configured on any project)
-- Schema confirmed: `id BIGINT PK, project_id BIGINT FK, tag VARCHAR(255)`, UNIQUE(project_id, tag)
+### Requirement Sections (Summarized)
 
+**§1-4: Assignments model**
+- "Generated" assignments: added manually in Planner or opened for editing; persist indefinitely
+- "Non-generated" assignments: appear only on report dates; auto-disappear next day
 
-## S74 Root Cause Update — PATCH 500 Explained
+**§5: Task ordering (Planner > Tasks)**
+- 5.1. Projects sorted alphabetically (A→Z, then Cyrillic)
+- 5.2. New task added to TOP of list within project
+- 5.3. Use `generate` with `projectId` to preserve per-project ordering
 
-**Root cause: PATCH endpoint not deployed, NOT a gateway routing bug.**
+**§6: Planner > Projects**
+- 6.1. (#3375) Employee ordering must match "Project Settings > Project Members" order
+- 6.2. Task ordering per employee must match Planner > Tasks ordering
+- 6.3. [NEW] Rename tooltip from "Add/remove employees" to "Project settings"
 
-### Timeline
-1. **2026-03-10 23:34 UTC** — Commit `7b764c0a7b` ("Feature/2724 snavrockiy v2") merged to `release/2.1`. This version had **only GET, POST, DELETE**. No `@PatchMapping` existed.
-2. **2026-03-11 03:08 UTC** — Build `2.1.26-SNAPSHOT.290209` created from a commit that includes `7b764c0a7b` but NOT the PATCH commit.
-3. **2026-03-12 08:44 UTC** — Commit `dbdb6c9663` ("Feature/2724 snavrockiy v3") added the PATCH endpoint: `update()` method, `@PatchMapping("/{tagId}")`, `PlannerCloseTagUpdateRequestDTO`. This landed ~29 hours AFTER the deployed build.
+**§7: "Project Settings" popup** [ALL NEW for #2724]
+- 7.1. Title: "Employees on project" → "Project Settings"
+- 7.2. Two tabs: "Project Members" / "Tasks closing"
+- 7.3. Project Members tab:
+  - 7.3.1. Employee dropdown (required, placeholder "Select an employee")
+  - 7.3.2. Project role field (optional, placeholder "Add a role")
+  - 7.3.3. Add button (+) on same row
+  - 7.3.4. Table with DnD reorder, inline role editing, delete icon with tooltip
+  - 7.3.5. Changes saved IMMEDIATELY on click, with notification banner "Changes saved"
+  - 7.3.5.1. Banner positioned 40px from top edge if default position is off-screen
+- 7.4. Tasks closing tab:
+  - 7.4.1. Informational text below tabs
+  - 7.4.2. Input field "Tag for closing tasks" (required, placeholder "Add a tag", 200 char limit)
+  - 7.4.3. + button adds tag to table
+  - 7.4.4. Table: "Tags for closing tasks" column, inline editing, delete icon. ~~DnD~~ (strikethrough = removed). Green highlight on new items, auto-scroll
+  - 7.4.5. Adding/deleting tags is IMMEDIATE with "Changes saved" notification
+  - 7.4.5.2. Tags themselves don't change planner table — only "Update tickets" applies them
+  - 7.4.6. [NEW BACKEND] On "Update tickets": sync with tracker, then remove assignments containing listed tags
+  - 7.4.6.1. Both stages happen regardless of user role (manager or member)
+- 7.5. OK button closes popup
+  - 7.5.1. If Tasks closing tab has tags: check planner table, remove matching tasks without reports, show loading overlay, then reload page
 
-### Evidence
-- OPTIONS response: `Allow: DELETE,OPTIONS` — no PATCH registered at runtime
-- `git merge-base --is-ancestor dbdb6c9663 2e4c42723b` → false (PATCH commit not in deployed build)
-- Deployed controller: 107 lines (GET/POST/DELETE only). Current release/2.1: 129 lines (includes PATCH).
+**§8: Task ordering rules** (common for both tabs)
+- 8.1. Non-generated above generated (before Open for editing)
+- 8.2. Order preserved when opening for editing
+- 8.3. DnD reorder persisted for generated assignments
+- 8.4. New task at TOP of project list
+- 8.5. 5-second green highlight on new task
+- 8.6. Auto-scroll to addition point
 
-### Bonus Design Issue: RestErrorHandler Catch-All
-`RestErrorHandler` (`@RestControllerAdvice`) has `@ExceptionHandler(Exception.class)` that maps ALL unhandled exceptions to `HttpStatus.INTERNAL_SERVER_ERROR` (500). No specific handler for `HttpRequestMethodNotSupportedException` → returns 500 instead of correct 405.
+**§9: UI changes in tables** (#3258)
+- 9.1. 16px side padding
+- 9.2. Standard 13px font (13 semibold for headers)
+- 9.3. Left alignment in all columns except date/hours
 
-### Resolution
-Deploy a new build from current `release/2.1` HEAD (includes commits `dbdb6c9663` v3 and `215f325186` v4). PATCH will work. No code changes needed.
+### Key Discrepancies: Requirements vs Code vs Live App
 
-### TC-PLN-101 Reclassification
-TC-PLN-101 should be reclassified from "Bug Verification" to "Deployment Verification" — the PATCH endpoint exists in code but wasn't in the deployed build. After next deployment, re-test to verify PATCH works correctly.
+| Aspect | Confluence Req | Code/Live | Status |
+|--------|---------------|-----------|--------|
+| Tag char limit | 200 chars (§7.4.2) | VARCHAR(255) in DB, no frontend validation | **MISMATCH** — DB allows 255, Confluence says 200 |
+| DnD on tags | ~~Strikethrough~~ (removed) | Not implemented | OK — correctly excluded |
+| "Changes saved" banner on tag add/delete | Required (§7.4.5) | Implemented (notification after add/delete) | OK |
+| Banner position 40px from top | Required (§7.3.5.1, §7.4.5.1) | Unclear if implemented | **NEEDS VERIFICATION** |
+| Employee field placeholder | "Select an employee" (§7.3.1) | Need to verify | **NEEDS VERIFICATION** |
+| Role field placeholder | "Add a role" (§7.3.2) | Need to verify | **NEEDS VERIFICATION** |
+| Delete tooltip | "Delete" (§7.3.4) | Need to verify | **NEEDS VERIFICATION** |
+| Inline editing of tags | Required (§7.4.4, Figma shows click-to-edit) | PATCH endpoint exists | **NEEDS UI VERIFICATION** |
+| OK button behavior | Close popup + apply if tags exist (§7.5.1) | Both tabs use apply handler + reload | OK (slightly different: both tabs trigger, guarded by empty-tags check) |
+
+## Figma Design Specs (Fetched Session 72)
+
+**File:** `H2aXBseq7Ui60zlh5vhyjy` (Noveo-TTT), Node: `44604:89145`
+**Section title:** "#2424 Planner / Projects / Project Settings"
+
+### Modal Design
+- Width: 600px (560px content + 20px padding each side)
+- Title: "Настройки проекта" (Project Settings)
+- 2 tabs: "Участники проекта" / "Закрытие задач"
+- Only **OK** button visible (Cancel/Delete/Save hidden)
+- Green success toaster: "Изменения сохранены" ("Changes saved")
+
+### Tab 2: Tasks Closing (design details)
+- Description text below tabs explaining auto-closing behavior
+- Tag input: 490px wide text field + 50px "+" button
+- Tag table: 2 columns — "Теги для закрытия задач" (440px) + "Действия" (120px)
+- Example tags: `[closed]`, `finished`
+- New item highlighted (green row)
+- Click-to-edit on existing tag values (cursor hand in design)
+- Delete icon (trash) per row
+
+### Design Annotations
+- Access: only current manager + senior manager can open Project Settings
+- Employee DnD ordering: reorder display order in planner table (ticket #1622)
+- Hover on role → placeholder "Click to add role", click for inline edit
+- Post-add: employee appears in planner with project tasks; already-added employees filtered from dropdown
+
+### Screenshots
+- `artefacts/figma/planner-tasks-closing-tab-flat.png`
+- `artefacts/figma/planner-project-members-tab-flat.png`
+- `artefacts/figma/planner-project-settings-section-flat.png`
+- `artefacts/figma/planner-member-add-variants-flat.png`

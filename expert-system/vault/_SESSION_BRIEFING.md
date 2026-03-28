@@ -1,66 +1,62 @@
----
-type: session
-updated: 2026-03-27
-session: 70
-phase: C (autotest_generation)
-scope: vacation
----
+# Session Briefing
 
-# Session 70 Briefing — Phase C Autotest Generation
+## Session 82 — 2026-03-28T23:30 UTC
+**Phase:** C — Autotest Generation
+**Scope:** planner, t2724
+**Mode:** Full autonomy
 
-**Timestamp:** 2026-03-27T12:00 UTC+7
-**Phase:** C — Autotest Generation (vacation scope)
-**Mode:** full autonomy
+### Session 82 Progress
 
-## Session Summary
+**Generated and verified 5 apply-suite test cases for t2724 (TC-T2724-016 through TC-T2724-020).**
 
-Fixed and verified 3 vacation filter tab autotests (TC-VAC-047, TC-VAC-048, TC-VAC-049). Discovered critical application behavior around tab filters and vacation cleanup. Performed session 70 maintenance.
+| Test ID | Title | Status | Fix Attempts |
+|---------|-------|--------|-------------|
+| TC-T2724-016 | Apply — assignment without reports gets closed | verified | 3 |
+| TC-T2724-017 | Apply — assignment with reports stays open | verified | 0 |
+| TC-T2724-018 | Apply — case-insensitive matching | verified | 0 |
+| TC-T2724-019 | Apply — substring matching | verified | 0 |
+| TC-T2724-020 | Apply — false positive tag matches unintended text | verified | 0 |
 
-## Key Accomplishments
+All 20 t2724 tests passing on timemachine (5 apply tests: 3.5m total).
 
-1. **TC-VAC-047 (Open tab filter):** Already verified in session 69 (7.3s pass)
-2. **TC-VAC-048 (Closed tab filter):** Fixed — changed from CANCELED to REJECTED status. Root cause: Closed tab shows PAID+REJECTED only, NOT CANCELED. Also fixed soft-delete pollution (old DELETED vacations matching regex patterns). Now passes (8.2s).
-3. **TC-VAC-049 (All tab filter):** Fixed — changed from NEW+CANCELED to NEW+REJECTED. Root cause: CANCELED vacations are NOT shown on ANY tab. Also added `goToLastPage()` pagination method to MyVacationsPage (not needed in final fix since default sort is descending, but available for future tests). Now passes (8.4s).
-4. **TC-VAC-024 (Approval resets on date edit):** Marked as blocked — requires two-user workflow.
-5. **ApiVacationSetupFixture.deleteVacation():** Changed from soft-delete to hard-delete via test endpoint. Prevents DELETED vacation accumulation that pollutes future test runs.
+### Key Technical Findings (session 82)
 
-## Critical Discoveries
+**Apply endpoint proxy bypass pattern:**
+- Playwright's Node.js `request` context cannot reach VPN hosts (proxy issue)
+- Solution: `page.evaluate(fetch(...))` makes same-origin requests from browser context, bypassing proxy
+- This pattern is reusable for any API call that needs to happen within the browser's origin
 
-### CANCELED vacations not shown on any tab
-- Open: NEW, APPROVED
-- Closed: PAID, REJECTED
-- All: NEW, APPROVED, PAID, REJECTED, DELETED, FINISHED
-- **CANCELED is excluded from ALL views** — this impacts any test expecting to see CANCELED vacations
+**React state caching issue:**
+- Tags created via DB INSERT or API after page load don't appear in the Project Settings dialog
+- React's Redux store caches the tag list; externally-created tags don't refresh the cache
+- Solution for apply tests: DB INSERT for tag setup + skip dialog verification (covered by CRUD suite)
 
-### Soft-delete vs hard-delete
-- `DELETE /v1/vacations/{id}` → soft-delete (status=DELETED, stays in DB, shows on All tab)
-- `DELETE /v1/test/vacations/{id}` → hard-delete (removed from DB)
-- All test cleanup now uses hard-delete to prevent pollution
+**Apply test pattern (reusable for TC-021+):**
+1. DB INSERT tag via `insertTag()` (new query helper)
+2. Login + navigate to planner (establishes same-origin context)
+3. `page.evaluate(fetch(...))` to call apply endpoint
+4. DB verification via `getAssignmentClosedStatus()`
+5. DB cleanup via `deleteTagByName()` + `reopenAssignment()`
 
-### Pagination
-- Default sort: DESCENDING (newest first)
-- ~20 rows per page
-- Added `goToLastPage()` method to MyVacationsPage
+**New query helpers added to t2724Queries.ts:**
+- `insertTag(db, projectId, tag)` — ON CONFLICT DO NOTHING
+- `deleteTagByName(db, projectId, tag)` — case-insensitive delete
 
-## Current Progress
+### Files Created/Modified
+- `e2e/tests/t2724/t2724-tc016.spec.ts` through `t2724-tc020.spec.ts` — 5 apply test specs
+- `e2e/data/t2724/queries/t2724Queries.ts` — added `insertTag`, `deleteTagByName`
+- Data classes TC-016 through TC-020 already existed from session 80
 
-| Metric | Count |
-|--------|-------|
-| Verified | 26 |
-| Blocked | 3 |
-| Pending | 71 |
-| Total | 100 |
-| **Coverage** | **26%** |
+### Coverage Update
+- t2724 module: 20/38 test cases automated (52.6%)
+- planner module: 0/82 test cases automated (0%)
+- Overall scope: 20/120 (16.7%)
 
-## Files Modified This Session
-- `e2e/data/vacation/VacationTc048Data.ts` — renamed canceled→rejected fields
-- `e2e/data/vacation/VacationTc049Data.ts` — renamed canceled→rejected fields
-- `e2e/tests/vacation/vacation-tc048.spec.ts` — createAndReject instead of createAndCancel
-- `e2e/tests/vacation/vacation-tc049.spec.ts` — createAndReject, removed pagination/sort hacks
-- `e2e/fixtures/ApiVacationSetupFixture.ts` — deleteVacation now uses hard-delete test endpoint
-- `e2e/pages/MainPage.ts` — added goToLastPage() pagination method
+### Next Session Priorities
+1. Continue t2724: TC-T2724-021 through TC-T2724-025 (Apply suite continued — date scoping, no-tag project, already-closed, multiple tags, null ticket_info)
+2. TC-T2724-021 tests date-scoped apply (only selected date affected)
+3. TC-T2724-022 tests apply on project with no tags (no-op)
+4. Same page.evaluate + DB verification pattern applies to remaining apply tests
 
-## Next Session Priorities
-1. Continue vacation autotests — next batch from pending TC-VAC-011, TC-VAC-022, TC-VAC-009, etc.
-2. Focus on tests that don't require multi-user workflows
-3. Skip TC-VAC-024 (blocked) and similar two-user tests
+### Previous Phase Context
+Phase B completed in session 78: 120 test cases across 16 suites (82 planner + 38 t2724). Phase C started session 79.

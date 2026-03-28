@@ -136,6 +136,7 @@
 - [[exploration/ui-flows/sick-leave-ui-verification]] — My Sick Leaves vs Accounting columns
 - [[exploration/ui-flows/sick-leave-crud-lifecycle]] — Full CRUD, validation, status transitions
 - [[exploration/ui-flows/dayoff-manager-approval-flow]] — **[S47]** Manager approval: 5 sub-tabs, 4 action buttons, WeekendDetailsModal, redirect dialog, optional approvers edit, 15 selectors
+- [[exploration/ui-flows/planner-project-settings-selectors]] — **[S79]** Phase C selectors: role filter, project dropdown, settings icon, tag CRUD, inline edit
 
 ## Exploration — API Findings
 - [[exploration/api-findings/vacation-crud-api-testing]] — Full CRUD, 6 bugs (3 HIGH NPEs)
@@ -216,25 +217,32 @@
 - [[debt/vacation-service-debt]] — 4 bugs, 2 security, schema debt
 - [[debt/planner-ordering-debt]] — Dual ordering, 9 issues
 
-## Phase B v3 — Generated Test Documentation (Current)
-- **Vacation** (S64): `vacation/vacation.xlsx` (13 tabs, 100 cases) — 10 suites, UI-first, SETUP/CLEANUP steps, SQL query hints
-  - TS-Vacation-CRUD (14), TS-Vac-Approval (10), TS-Vac-Payment (9), TS-Vac-Validation (13)
-  - TS-Vac-Filters (10), TS-Vacation-AV (7), TS-Vac-Notif (7), TS-Vac-Regression (14)
-  - TS-Vac-Perms (6), TS-Vac-API (10)
+## Phase B — Generated Test Documentation
 
-## Phase B v2 — Generated Test Documentation (Archived)
-- **Vacation** (S30): `vacation/vacation.xlsx` superseded by v3 above
-- **Day-Off** (S48+S49): `day-off/day-off.xlsx` (11 tabs, 121 cases) — 8 suites, UI-first test steps
-  - TS-DayOff-Lifecycle (17), TS-DayOff-Approval (20), TS-DayOff-CalendarConflict (11)
-  - TS-DayOff-Search (12), TS-DayOff-Validation (12), TS-DayOff-Permissions (9)
-  - TS-DayOff-Notifications (11), TS-DayOff-Regression (29)
+### Current (v3)
+- **Vacation** (S64): `vacation/vacation.xlsx` — 13 tabs, 100 cases, 10 suites
+- **Day-Off** (S48+S49): `day-off/day-off.xlsx` — 11 tabs, 121 cases, 8 suites
+- **t2724 Close-by-Tag** (S76): `t2724/t2724.xlsx` — 6 tabs, 38 cases, 3 suites (CRUD, Apply, Regression)
+- **Planner** (S77): `planner/planner.xlsx` — 16 tabs, 82 cases, 13 suites (Nav, CRUD, DnD, Lock, Tracker, Members, Reports, Valid, RT, Copy, BugReg, TrkAdv, Settings)
 
 ## Exploration — Tickets (GitLab Mining)
-- [[exploration/tickets/day-off-ticket-findings]] — **[S46]** 25+ tickets mined, 20+ bugs, 6 categories: calendar cascade, transfer bugs, UI display, availability chart, cross-feature, feature design
-- [[exploration/tickets/t3404-investigation]] — **[S59]** #3404: Day-off transfer approve period changes, 2 bugs (ST-1 boundary, ST-3 incomplete)
-- [[exploration/tickets/vacation-ticket-findings]] — **[S62]** 250+ tickets searched, 55+ relevant, 11 OPEN bugs, 30+ regression test candidates
-- [[exploration/tickets/vacation-ticket-3092-advance-vacation]] — **[S62]** #3092: AV=True implementation, 14 sub-bugs, 7 design decisions, 12 edge cases
-- [[exploration/tickets/vacation-ticket-3015-accrued-days-validation]] — **[S62]** #3015: Accrued days validation, 31 sub-bugs, conversion logic edge cases
-- [[exploration/tickets/vacation-ticket-3014-form-changes]] — **[S62]** #3014: Form redesign, 35 sub-bugs, first 3 months restriction, dynamic validation
-- [[exploration/tickets/vacation-open-bugs-verification]] — **[S63]** 11 open bugs: #3374 confirmed (last_date sync), #3297 confirmed (search ignores param), #3369 not reproduced
-- [[exploration/api-findings/vacation-notification-templates]] — **[S63]** 50+ vacation email templates cataloged across 10 categories (create, status change, edit, delete, approver, recovered, auto-delete, calendar, reminders, accruals)
+- [[exploration/tickets/day-off-ticket-findings]] — **[S46]** 25+ tickets mined, 20+ bugs, 6 categories
+- [[exploration/tickets/t3404-investigation]] — **[S59]** #3404: Day-off transfer approve period changes
+- [[exploration/tickets/vacation-ticket-findings]] — **[S62]** 250+ tickets searched, 55+ relevant, 11 OPEN bugs
+- [[exploration/tickets/vacation-ticket-3092-advance-vacation]] — **[S62]** #3092: AV=True implementation
+- [[exploration/tickets/vacation-ticket-3015-accrued-days-validation]] — **[S62]** #3015: Accrued days validation
+- [[exploration/tickets/vacation-ticket-3014-form-changes]] — **[S62]** #3014: Form redesign
+- [[exploration/tickets/vacation-open-bugs-verification]] — **[S63]** 11 open bugs verified
+- [[exploration/api-findings/vacation-notification-templates]] — **[S63]** 50+ vacation email templates
+- [[exploration/tickets/t2724-investigation]] — **[S71]** #2724: Close-by-tag deep dive, 6 MRs, 8 QA bugs
+- [[exploration/ui-flows/planner-project-settings-pages]] — **[S71]** Planner Project Settings selectors
+- [[exploration/tickets/planner-ticket-findings]] — **[S71]** 130+ planner tickets mined
+- [[exploration/data-findings/planner-data-model]] — **[S72]** Planner DB schema: 7 tables
+- [[exploration/tickets/planner-dnd-bugs-analysis]] — **[S73]** #3332 + #3314 root causes
+- [[exploration/ui-flows/planner-lock-mechanism]] — **[S74]** Lock system: Caffeine cache 60s TTL
+- [[exploration/data-findings/planner-assignment-ordering]] — **[S74]** Dual ordering mechanism
+- [[exploration/ui-flows/planner-ui-exploration-session74]] — **[S74]** Tasks/Projects tabs, selectors
+- [[exploration/tickets/planner-2914-validation-bypass]] — **[S74]** #2914: 36h warning-only
+- [[exploration/ui-flows/planner-tracker-integration]] — **[S75]** 7 tracker types, command pattern
+- [[exploration/ui-flows/planner-websocket-stomp-system]] — **[S75]** 12 event types, 5 topics
+- [[exploration/data-findings/planner-redux-state-architecture]] — **[S75]** 9 slices, ~240 actions

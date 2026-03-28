@@ -1,52 +1,76 @@
----
-type: agenda
-updated: 2026-03-27
-phase: C (autotest_generation)
----
-
 # Investigation Agenda — Phase C (Autotest Generation)
 
-## P0 — Immediate (Next Session)
-- [ ] Continue vacation autotests — pick 5 from pending (avoid multi-user tests)
-- [ ] TC-VAC-011: Yearly breakdown tooltip
-- [ ] TC-VAC-022: Approval resets on date edit — may be blocked (two-user)
-- [ ] TC-VAC-009: View vacation details dialog
-- [ ] TC-VAC-040-046: Table sorting/filtering tests (pagination-aware)
-- [ ] TC-VAC-050+: Remaining filter and view tests
+## Scope: planner, t2724
 
-## P1 — Framework & Infrastructure
-- [ ] Extract `toPeriodPattern` into shared utility (duplicated in 7+ data classes now)
-- [ ] Add `cleanupPvaynmasterVacations()` pre-test hook for resilience
-- [ ] Investigate JWT-based auth for creating vacations as arbitrary employees
-- [x] Fix `deleteVacation` to use hard-delete test endpoint (done session 70)
-- [x] Add `goToLastPage()` pagination method to MyVacationsPage (done session 70)
+### P0 — Immediate (next session)
+- [ ] Continue t2724: TC-T2724-011 through TC-T2724-015 (senior mgr CRUD, cross-project, special chars, long tags, multiple tags)
+- [ ] TC-T2724-011 needs query for senior_manager login on a project
+- [ ] TC-T2724-013 (Unicode/Cyrillic) and TC-T2724-014 (VARCHAR 255) are fast — no new page objects needed
+- [ ] TC-T2724-015 (multiple tags) creates 5+ tags sequentially, verifies order
 
-## P2 — Knowledge Gaps Found
-- [ ] Document which vacation statuses appear on which tabs comprehensively
-- [ ] Investigate CANCELED status — why it's excluded from all tabs
-- [ ] Map pagination behavior across different tab types
+### P1 — Near-term (sessions 82-85)
+- [ ] Complete t2724 Apply suite: TC-T2724-016 through TC-T2724-028 (tag application to tasks, auto-close behavior)
+- [ ] Apply suite requires new page objects for assignment viewing and apply button
+- [ ] TC-T2724-029 (API direct call) is a hybrid test — uses request context
+- [ ] Begin t2724 Regression suite: TC-T2724-030 through TC-T2724-038
 
-## Completed (Sessions 65-70)
-- [x] TC-VAC-001-008, 010, 015-021, 023, 025 verified (sessions 65-69)
-- [x] TC-VAC-034-038 verified (session 69)
-- [x] TC-VAC-047 (Open tab filter) verified (session 69)
-- [x] TC-VAC-048 (Closed tab filter) verified — changed CANCELED→REJECTED (session 70)
-- [x] TC-VAC-049 (All tab filter) verified — changed CANCELED→REJECTED (session 70)
-- [x] TC-VAC-024 marked blocked (two-user workflow) (session 70)
-- [x] ApiVacationSetupFixture: hard-delete cleanup (session 70)
-- [x] Discovered: CANCELED vacations not shown on any tab (session 70)
-- [x] Session 70 maintenance (§9.4)
+### P2 — Planner autotest generation (sessions 86-95+)
+- [ ] Begin planner autotest generation: TS-PLN-Nav (TC-PLN-001 through TC-PLN-011)
+- [ ] Create data classes for planner employees, projects, assignments
+- [ ] Generate planner editing tests (TS-PLN-Edit, TS-PLN-DnD)
+- [ ] Generate planner tracker tests (TS-PLN-Tracker, TS-PLN-TrkAdv)
+- [ ] Generate planner settings and copy-table tests
+- [ ] Generate bug regression tests (TS-PLN-BugReg)
+- [ ] Generate planner report period tests (TS-PLN-Reports)
+
+### P3 — Polish
+- [ ] Fix flaky tests, improve selector resilience
+- [ ] Verify all tests pass in headless mode on qa-1
+- [ ] Phase C completion report
 
 <details>
-<summary>Completed from Previous Phases</summary>
+<summary>Completed Phase C Items (Sessions 79-80)</summary>
 
-### Phase B (Sessions 59-64)
-- [x] Vacation XLSX: 100 test cases across 7 suites
-- [x] Deep-dive vault enrichment for vacation module (3000+ words)
-- [x] GitLab ticket mining (all history, descriptions + comments)
-- [x] UI exploration via Playwright for all vacation pages
+- [x] Parse XLSX manifest: `parse_xlsx.py` for planner + t2724
+- [x] Verify autotests/ framework dependencies installed
+- [x] Initialize `autotest_tracking` SQLite table
+- [x] Generate + verify TC-T2724-001: Create tag happy path
+- [x] Generate + verify TC-T2724-002: Duplicate tag idempotent
+- [x] Generate + verify TC-T2724-003: Blank tag validation
+- [x] Generate + verify TC-T2724-004: Inline edit happy path
+- [x] Generate + verify TC-T2724-005: Inline edit Escape cancels
+- [x] Generate + verify TC-T2724-006: Edit tag to duplicate — validation error
+- [x] Generate + verify TC-T2724-007: Delete tag happy path
+- [x] Generate + verify TC-T2724-008: List tags empty state
+- [x] Generate + verify TC-T2724-009: Permission — employee cannot access tag mgmt
+- [x] Generate + verify TC-T2724-010: PM can CRUD tags full cycle
+- [x] Created PlannerPage page object (selectRoleFilter, selectProject, clickProjectSettingsIcon, isProjectSettingsIconVisible)
+- [x] Created ProjectSettingsDialog page object (tag CRUD + inline edit + delete methods)
+- [x] Created t2724Queries.ts (findProjectWithManager, findProjectWithNoTags, findProjectWithPlainMember, listCloseTags, tagExists)
+- [x] Wrote selector discoveries to vault (planner-project-settings-selectors.md)
+- [x] Discovered: project_member table (not planner_assignment), permission model exclusions
 
-### Phase A (Sessions 1-58)
-- [x] Full knowledge acquisition across all modules
-- [x] Day-off and t3404 autotest generation (previous Phase C scopes)
+</details>
+
+<details>
+<summary>Completed Phase B Items (Sessions 76-78)</summary>
+
+- [x] Phase A→B transition (session 76)
+- [x] Designed and generated t2724.xlsx: 38 cases, 3+ suites
+- [x] Designed and generated planner.xlsx: 82 cases, 13 suites
+- [x] Cross-validated all 120 cases against Qase — zero duplication
+- [x] Phase B→C transition: config.yaml updated, readiness report written
+
+</details>
+
+<details>
+<summary>Completed Phase A Items (Sessions 67-75)</summary>
+
+- [x] t2724 GitLab ticket deep-dive: 33 comments, 8 QA bugs, 6 MRs
+- [x] Planner close-by-tag implementation analysis (23K+ words)
+- [x] Planner data model: 7 DB tables mapped
+- [x] 130+ GitLab tickets cataloged for planner module
+- [x] API testing on qa-1: 16 close-by-tag tests
+- [x] Confluence + Figma specs verified against implementation
+
 </details>

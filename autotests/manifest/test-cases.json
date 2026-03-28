@@ -3172,7 +3172,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "POST /v1/projects/{projectId}/close-tags/apply with {date}. Requires the apply endpoint to be deployed.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-T2724-017",
@@ -3186,7 +3186,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Core safety rule: reported hours are never hidden by close-by-tag.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-T2724-018",
@@ -3200,7 +3200,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-T2724-019",
@@ -3214,7 +3214,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Known false positive risk: short tags can match unintended text.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-T2724-020",
@@ -3228,7 +3228,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Stakeholders explicitly acknowledged this corner case.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-T2724-021",

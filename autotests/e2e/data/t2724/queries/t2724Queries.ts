@@ -123,6 +123,128 @@ export async function findTwoProjectsWithDifferentManagers(
   );
 }
 
+// --------------- Apply suite support ---------------
+
+interface ApplyTargetRow {
+  project_id: number;
+  project_name: string;
+  manager_login: string;
+  assignment_id: number;
+  assignment_date: string;
+  task_id: number;
+  task_name: string;
+  ticket_info: string;
+}
+
+/**
+ * Finds a project + assignment with ticket_info and NO reports on the date.
+ * Suitable for apply-close-by-tag tests where the assignment should be closed.
+ * Prefers recent dates (last 7 days) to increase planner visibility.
+ */
+export async function findApplyTargetNoReports(
+  db: DbClient,
+): Promise<ApplyTargetRow> {
+  return db.queryOne<ApplyTargetRow>(
+    `SELECT t.project AS project_id, p.name AS project_name,
+            e.login AS manager_login,
+            ta.id AS assignment_id, ta.date::text AS assignment_date,
+            t.id AS task_id, t.name AS task_name, t.ticket_info
+     FROM ttt_backend.task_assignment ta
+     JOIN ttt_backend.task t ON ta.task = t.id
+     JOIN ttt_backend.project p ON t.project = p.id
+     JOIN ttt_backend.employee e ON p.manager = e.id
+     WHERE p.status = 'ACTIVE'
+       AND e.enabled = true AND e.login IS NOT NULL
+       AND t.ticket_info IS NOT NULL AND t.ticket_info != ''
+       AND ta.closed = false
+       AND ta.date BETWEEN CURRENT_DATE - 30 AND CURRENT_DATE
+       AND NOT EXISTS (
+         SELECT 1 FROM ttt_backend.task_report tr
+         WHERE tr.task = t.id AND tr.executor = ta.assignee AND tr.report_date = ta.date
+       )
+     ORDER BY ABS(ta.date - CURRENT_DATE), random()
+     LIMIT 1`,
+  );
+}
+
+/**
+ * Finds a project + assignment with ticket_info AND existing reports on the date.
+ * Used to verify apply does NOT close assignments with reported hours.
+ */
+export async function findApplyTargetWithReports(
+  db: DbClient,
+): Promise<ApplyTargetRow> {
+  return db.queryOne<ApplyTargetRow>(
+    `SELECT t.project AS project_id, p.name AS project_name,
+            e.login AS manager_login,
+            ta.id AS assignment_id, ta.date::text AS assignment_date,
+            t.id AS task_id, t.name AS task_name, t.ticket_info
+     FROM ttt_backend.task_assignment ta
+     JOIN ttt_backend.task t ON ta.task = t.id
+     JOIN ttt_backend.project p ON t.project = p.id
+     JOIN ttt_backend.employee e ON p.manager = e.id
+     JOIN ttt_backend.task_report tr
+       ON tr.task = t.id AND tr.executor = ta.assignee AND tr.report_date = ta.date
+     WHERE p.status = 'ACTIVE'
+       AND e.enabled = true AND e.login IS NOT NULL
+       AND t.ticket_info IS NOT NULL AND t.ticket_info != ''
+       AND ta.closed = false
+       AND ta.date BETWEEN CURRENT_DATE - 30 AND CURRENT_DATE
+     ORDER BY ABS(ta.date - CURRENT_DATE), random()
+     LIMIT 1`,
+  );
+}
+
+/** Returns the closed status of a specific task assignment. */
+export async function getAssignmentClosedStatus(
+  db: DbClient,
+  assignmentId: number,
+): Promise<boolean> {
+  const row = await db.queryOne<{ closed: boolean }>(
+    `SELECT closed FROM ttt_backend.task_assignment WHERE id = $1`,
+    [assignmentId],
+  );
+  return row.closed;
+}
+
+/** Reopens a closed assignment (sets closed=false). Used for test cleanup. */
+export async function reopenAssignment(
+  db: DbClient,
+  assignmentId: number,
+): Promise<void> {
+  await db.query(
+    `UPDATE ttt_backend.task_assignment SET closed = false WHERE id = $1`,
+    [assignmentId],
+  );
+}
+
+/** Inserts a close tag for a project. Used for test setup. */
+export async function insertTag(
+  db: DbClient,
+  projectId: number,
+  tag: string,
+): Promise<void> {
+  await db.query(
+    `INSERT INTO ttt_backend.planner_close_tag (project_id, tag)
+     VALUES ($1, $2)
+     ON CONFLICT DO NOTHING`,
+    [projectId, tag],
+  );
+}
+
+/** Deletes a close tag by project + tag name (case-insensitive). Used for test cleanup. */
+export async function deleteTagByName(
+  db: DbClient,
+  projectId: number,
+  tag: string,
+): Promise<void> {
+  await db.query(
+    `DELETE FROM ttt_backend.planner_close_tag
+     WHERE project_id = $1 AND LOWER(tag) = LOWER($2)`,
+    [projectId, tag],
+  );
+}
+
 /** Finds an ACTIVE project with a PM but no existing close tags. */
 export async function findProjectWithNoTags(
   db: DbClient,
