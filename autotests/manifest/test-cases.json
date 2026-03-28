@@ -1822,7 +1822,7 @@
               "module_component": "planner/navigation",
               "notes": "Placeholder text: 'My project / my task, ticket number or URL 1,5h'",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-PLN-007",
@@ -1836,7 +1836,7 @@
               "module_component": "planner/navigation",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-PLN-008",
@@ -1850,7 +1850,7 @@
               "module_component": "planner/navigation",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-PLN-009",
@@ -1864,7 +1864,7 @@
               "module_component": "planner/navigation",
               "notes": "Auto-reconnect delay: 500ms on disconnect.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-PLN-010",
@@ -1878,7 +1878,7 @@
               "module_component": "planner/navigation",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-PLN-011",

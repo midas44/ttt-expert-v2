@@ -156,4 +156,127 @@ export class PlannerPage {
       .locator("[class*='planner__project-select']")
       .getByRole("combobox");
   }
+
+  // --- Open for editing ---
+
+  /** Returns the "Open for editing" button (visible when readonly assignments exist). */
+  openForEditingButton(): Locator {
+    return this.page.getByRole("button", { name: "Open for editing" });
+  }
+
+  /**
+   * Clicks "Open for editing" if the button is visible, then waits for it
+   * to disappear (the API call generates assignments with DB IDs,
+   * causing hasReadonlyAssignment to become false and SearchContainer to render).
+   */
+  async openForEditingIfNeeded(): Promise<void> {
+    const btn = this.openForEditingButton();
+    if (await btn.isVisible({ timeout: 3_000 }).catch(() => false)) {
+      await btn.click();
+      await btn.waitFor({ state: "hidden", timeout: 15_000 });
+    }
+  }
+
+  // --- Search bar methods ---
+
+  /** Returns the main search/autosuggest input (top-level search bar, not per-row inputs). */
+  searchInput(): Locator {
+    return this.page.locator("input[name='TASK_NAME']");
+  }
+
+  /** Types text into the search input (autosuggest) with debounce wait. */
+  async typeInSearch(text: string): Promise<void> {
+    const input = this.searchInput();
+    await input.click();
+    await input.fill(text);
+  }
+
+  /** Returns the open suggestions container. */
+  suggestionsDropdown(): Locator {
+    return this.page.locator(
+      "[class*='react-autosuggest__suggestions-container--open']",
+    );
+  }
+
+  /** Returns individual suggestion items. */
+  suggestionItems(): Locator {
+    return this.page.locator("[class*='react-autosuggest__suggestion']");
+  }
+
+  /** Clears the search input by clicking the X button. */
+  async clearSearch(): Promise<void> {
+    await this.page
+      .locator("[class*='react-autosuggest__clear']")
+      .click();
+  }
+
+  // --- Collapse/Expand methods ---
+
+  /** Returns all expand/collapse buttons in the table. */
+  expandButtons(): Locator {
+    return this.page.locator("[class*='row-expand-icon']");
+  }
+
+  /** Clicks the expand/collapse button at the given index (0-based). */
+  async clickExpandButton(index: number): Promise<void> {
+    await this.expandButtons().nth(index).click();
+  }
+
+  /** Returns all project group header rows (rows containing an expand button). */
+  projectGroupRows(): Locator {
+    return this.page
+      .locator("tr")
+      .filter({ has: this.page.locator("[class*='row-expand-icon']") });
+  }
+
+  // --- WebSocket indicator methods ---
+
+  /** Returns the socket manager wrapper (socket-manager--position). */
+  socketManagerWrapper(): Locator {
+    return this.page.locator("[class*='socket-manager--position']");
+  }
+
+  /**
+   * Returns the inner socket-manager status container.
+   * This is the SocketManagerWrapper div with status modifier classes
+   * (--connected, --connecting, --disconnected), inside the position wrapper.
+   */
+  socketManagerContainer(): Locator {
+    return this.page
+      .locator("[class*='socket-manager--position'] > div")
+      .first();
+  }
+
+  // --- Task/Ticket view toggle methods ---
+
+  /**
+   * Returns the table header cell containing the Task/Ticket toggle.
+   * Contains "Task" and "Ticket" links separated by "/".
+   */
+  taskTicketHeaderCell(): Locator {
+    return this.page
+      .locator("th")
+      .filter({ hasText: /Task/ })
+      .filter({ hasText: /Ticket/ });
+  }
+
+  /**
+   * Clicks the "Ticket" link to switch to TICKET view.
+   * In TASK view (default), "Ticket" is a clickable link (role=button).
+   */
+  async switchToTicketView(): Promise<void> {
+    await this.taskTicketHeaderCell()
+      .getByRole("button", { name: /Ticket/i })
+      .click();
+  }
+
+  /**
+   * Clicks the "Task" link to switch to TASK view.
+   * In TICKET view, "Task" is a clickable link (role=button).
+   */
+  async switchToTaskView(): Promise<void> {
+    await this.taskTicketHeaderCell()
+      .getByRole("button", { name: /Task/i })
+      .click();
+  }
 }

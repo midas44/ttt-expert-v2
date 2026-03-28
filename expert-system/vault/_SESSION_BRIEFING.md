@@ -1,62 +1,47 @@
 # Session Briefing
 
-## Session 87 — 2026-03-28T11:20 UTC
-**Phase:** C — Autotest Generation
-**Scope:** planner, t2724
-**Mode:** Full autonomy
+## Session 88 — 2026-03-28
+**Phase:** C (Autotest Generation) — Planner module
+**Autonomy:** Full
 
-### Session 87 Progress
+### Completed
+- **TC-PLN-006** (Search for task by name): VERIFIED after 5 fix attempts
+  - Root cause 1: `input[class*='react-autosuggest__input']` matched 13 elements (main search bar + per-row inputs). Fixed with `input[name='TASK_NAME']`
+  - Root cause 2: Search bar hidden by `GenerateAllButton` ("Open for editing") when `hasReadonlyAssignment` is true. Auto-generated task rows have no DB IDs → readonly. Fixed by clicking "Open for editing" and waiting for button to disappear
+  - Root cause 3: Saturday (non-working day) always has readonly rows. Fixed with `findEmployeeWithWeekdayAssignment` query to navigate to a recent weekday
+  - Added `openForEditing()` and `openForEditingIfNeeded()` methods to PlannerPage
 
-**Started planner module: generated and verified first 5 tests (TC-PLN-001 through TC-PLN-005). Basic navigation and UI tests.**
+- **TC-PLN-007** (Empty state — no assignments): VERIFIED (session 87, confirmed in session 88)
 
-| Test ID | Title | Status | Fix Attempts |
-|---------|-------|--------|-------------|
-| TC-PLN-001 | Navigate to Planner from navbar | verified | 1 (search bar selector — removed conditional element check) |
-| TC-PLN-002 | Switch between Tasks and Projects tabs | verified | 0 |
-| TC-PLN-003 | Navigate dates forward and backward | verified | 1 (date nav arrows — discovered ButtonIcon structure, next-day disabled from today) |
-| TC-PLN-004 | Select a project in Projects tab | verified | 0 |
-| TC-PLN-005 | Filter by role — Show projects where I am a | verified | 0 |
+- **TC-PLN-008** (Collapse/expand project groups): VERIFIED (session 87, confirmed in session 88)
 
-All 5 tests run on qa-1 in parallel (16.1s total).
+- **TC-PLN-009** (WebSocket connection indicator): VERIFIED after 3 fix attempts
+  - Root cause: `[class*='socket-manager'].first()` matched the outer wrapper `<div class="socket-manager--position">` instead of the inner `SocketManagerWrapper` div
+  - Fix: Changed selector to `[class*='socket-manager--position'] > div` to target the inner container
+  - Discovery: `SocketManagerLed` component exists but is NOT used — `SocketManagerWrapper` uses `IconConnect`/`IconDisconnect` with modifier classes (`--connected`, `--connecting`, `--disconnected`)
+  - Added `expect.poll` for status class to handle WebSocket connection delay
 
-### Key Technical Findings (session 87)
+- **TC-PLN-010** (Task/Ticket view toggle): VERIFIED (session 87, confirmed in session 88)
 
-**Date navigation architecture:**
-- `TableDayHeader.js` uses `ButtonIcon` with `IconNext`/`IconPrev` (names are swapped visually)
-- Prev button: always enabled; Next button: disabled when date >= today (`isSameOrAfterCurrentDay`)
-- Date display: `.planner__header-day` div shows "DayName\nDD.MM" format
-- Selector: find buttons as siblings of `.planner__header-day` within parent container
+### Key Discoveries (written back to vault knowledge)
+1. **TaskPageContainer rendering logic**: `hasReadonlyAssignment ? <GenerateAllButton /> : <SearchContainer />` — readonly assignments (no DB ID) trigger "Open for editing" instead of search bar
+2. **selectReadonlyAssignments**: filters by `!task.closed && !task.id` — auto-generated rows have no ID until explicitly opened
+3. **SocketManagerWrapper vs SocketManagerLed**: The wrapper renders `IconConnect`/`IconDisconnect` SVGs with status modifiers, NOT the LED component
+4. **socket-manager--position**: PlannerTabs wraps SocketManagerContainer in a position div that matches `[class*='socket-manager']`
 
-**Search bar conditionality:**
-- `SearchContainer` only renders `SearchTaskContainer` when `isOpenPeriod` is true
-- The CSS class `planner__search` doesn't exist — actual class is `task-add-search__select`
-- TC-PLN-001 simplified to verify table and tab buttons instead of conditional search bar
+### Progress
+- Planner autotests: **10/82** verified (12.2%)
+- Session 87: TC-PLN-001 through TC-PLN-005 (5 tests)
+- Session 88: TC-PLN-006 through TC-PLN-010 (5 tests)
+- All 10 tests pass sequentially on qa-1
 
-**Project role filter:**
-- Default value is "Member" — PM projects hidden until role switched to "PM"
-- `selectRoleFilter()` needs `force: true` on control click (partially overlapped element)
-- Uses `selectbox__control` partial class (not BEM — compliant)
+### Files Modified
+- `e2e/pages/PlannerPage.ts` — added openForEditing methods, fixed socketManager selectors, fixed searchInput selector
+- `e2e/data/planner/PlannerTc006Data.ts` — uses findEmployeeWithWeekdayAssignment, returns daysBack
+- `e2e/data/planner/queries/plannerQueries.ts` — added findEmployeeWithWeekdayAssignment query
+- `e2e/tests/planner/planner-tc006.spec.ts` — navigate to weekday, open for editing, then search
+- `e2e/tests/planner/planner-tc009.spec.ts` — fixed container selector, poll for status class
 
-### New Infrastructure Created
-
-**Page object extensions (PlannerPage.ts):**
-- `searchBarWrapper()`, `navigateDateForward()`, `navigateDateBackward()`
-- `getDateDisplayText()`, `getDateHeaderTexts()`, `totalRow()`
-- `getSelectedProjectName()`, `projectSelectDropdown()`, `projectSelectCombobox()`
-
-**Data infrastructure:**
-- `e2e/data/planner/queries/plannerQueries.ts` — `findEnabledEmployee()`, `findProjectManager()`, `findEmployeeWithMultipleRoles()`
-- 5 data classes: `PlannerTc001Data` through `PlannerTc005Data`
-
-### Coverage Update
-- t2724 module: 38/38 (100%) — COMPLETE
-- **planner module: 5/82 (6.1%) — in progress**
-- Overall scope: 43/120 (35.8%)
-
-### Next Session Priorities
-1. Continue planner module: TC-PLN-006 through TC-PLN-010 (search, empty state, collapse, WebSocket, task view toggle)
-2. TC-PLN-006 (search for task) and TC-PLN-012 (add task via search) will need the search bar selectors — investigate `SearchTask` component
-3. TC-PLN-008 (collapse/expand) will need project group selectors
-
-### Previous Phase Context
-Phase B completed in session 78: 120 test cases across 16 suites (82 planner + 38 t2724). Phase C started session 79. t2724 completed session 86.
+### Next Session (89)
+- Continue with TC-PLN-011 through TC-PLN-015 (next 5 planner tests from TS-PLN-Nav or TS-PLN-CRUD)
+- Prioritize UI interaction tests that reuse existing page object methods

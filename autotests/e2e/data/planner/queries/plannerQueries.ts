@@ -48,6 +48,123 @@ interface MultiRoleEmployeeRow {
   member_project_name: string;
 }
 
+interface EmployeeWithAssignmentRow {
+  login: string;
+  project_name: string;
+}
+
+/** Finds an employee with at least one open task assignment in an active project. */
+export async function findEmployeeWithAssignment(
+  db: DbClient,
+): Promise<EmployeeWithAssignmentRow> {
+  return db.queryOne<EmployeeWithAssignmentRow>(
+    `SELECT e.login, p.name AS project_name
+     FROM ttt_backend.employee e
+     JOIN ttt_backend.task_assignment ta ON ta.assignee = e.id
+     JOIN ttt_backend.task t ON ta.task = t.id
+     JOIN ttt_backend.project p ON t.project = p.id
+     WHERE e.enabled = true
+       AND p.status = 'ACTIVE'
+       AND e.login IS NOT NULL
+       AND ta.closed = false
+     ORDER BY random()
+     LIMIT 1`,
+  );
+}
+
+interface EmployeeWithWeekdayAssignmentRow {
+  login: string;
+  project_name: string;
+  days_back: number;
+}
+
+/**
+ * Finds an employee with a task_assignment on a recent weekday (Mon-Fri).
+ * Returns daysBack so the test can navigate to that specific date.
+ * Having an existing DB assignment ensures the row is NOT readonly
+ * and the search bar renders instead of "Open for editing".
+ */
+export async function findEmployeeWithWeekdayAssignment(
+  db: DbClient,
+): Promise<EmployeeWithWeekdayAssignmentRow> {
+  return db.queryOne<EmployeeWithWeekdayAssignmentRow>(
+    `SELECT e.login,
+            p.name AS project_name,
+            (CURRENT_DATE - ta.date) AS days_back
+     FROM ttt_backend.employee e
+     JOIN ttt_backend.task_assignment ta ON ta.assignee = e.id
+     JOIN ttt_backend.task t ON ta.task = t.id
+     JOIN ttt_backend.project p ON t.project = p.id
+     WHERE e.enabled = true
+       AND p.status = 'ACTIVE'
+       AND e.login IS NOT NULL
+       AND ta.closed = false
+       AND ta.date >= CURRENT_DATE - 7
+       AND ta.date <= CURRENT_DATE
+       AND EXTRACT(DOW FROM ta.date) BETWEEN 1 AND 5
+     ORDER BY ta.date DESC, random()
+     LIMIT 1`,
+  );
+}
+
+interface MultiProjectEmployeeRow {
+  login: string;
+}
+
+/** Finds an employee with open task assignments in at least 2 different active projects. */
+export async function findEmployeeWithMultipleProjectAssignments(
+  db: DbClient,
+): Promise<MultiProjectEmployeeRow> {
+  return db.queryOne<MultiProjectEmployeeRow>(
+    `SELECT e.login
+     FROM ttt_backend.employee e
+     JOIN ttt_backend.task_assignment ta ON ta.assignee = e.id
+     JOIN ttt_backend.task t ON ta.task = t.id
+     JOIN ttt_backend.project p ON t.project = p.id
+     WHERE e.enabled = true
+       AND p.status = 'ACTIVE'
+       AND e.login IS NOT NULL
+       AND ta.closed = false
+     GROUP BY e.id, e.login
+     HAVING COUNT(DISTINCT p.id) >= 2
+     ORDER BY random()
+     LIMIT 1`,
+  );
+}
+
+interface EmptyDateEmployeeRow {
+  login: string;
+  days_back: number;
+}
+
+/**
+ * Finds an employee and a recent weekend date (within 7 days)
+ * where they have no task assignments — for empty state testing.
+ */
+export async function findEmployeeWithEmptyWeekend(
+  db: DbClient,
+): Promise<EmptyDateEmployeeRow> {
+  return db.queryOne<EmptyDateEmployeeRow>(
+    `SELECT e.login,
+            (CURRENT_DATE - d.target_date) AS days_back
+     FROM ttt_backend.employee e
+     CROSS JOIN (
+       SELECT CURRENT_DATE - i AS target_date
+       FROM generate_series(0, 13) i
+       WHERE EXTRACT(DOW FROM CURRENT_DATE - i) IN (0, 6)
+     ) d
+     WHERE e.enabled = true
+       AND e.login IS NOT NULL
+       AND NOT EXISTS (
+         SELECT 1 FROM ttt_backend.task_assignment ta
+         WHERE ta.assignee = e.id
+           AND ta.date = d.target_date
+       )
+     ORDER BY d.target_date DESC, random()
+     LIMIT 1`,
+  );
+}
+
 /**
  * Finds an employee who is PM on one project and a plain member on another.
  * Used for role filter tests.
