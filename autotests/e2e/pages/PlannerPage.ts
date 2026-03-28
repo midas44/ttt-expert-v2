@@ -29,11 +29,15 @@ export class PlannerPage {
     const combobox = this.page
       .locator("[class*='planner__project-select']")
       .getByRole("combobox");
+    await combobox.waitFor({ state: "visible", timeout: 15_000 });
     await combobox.click();
     await combobox.fill(projectName);
-    await this.page
-      .getByRole("option", { name: projectName, exact: true })
-      .click();
+    const option = this.page.getByRole("option", {
+      name: projectName,
+      exact: true,
+    });
+    await option.waitFor({ state: "visible", timeout: 15_000 });
+    await option.click();
   }
 
   /** Changes the role filter dropdown ("Show projects where I am a ..."). */
@@ -462,5 +466,182 @@ export class PlannerPage {
     await this.taskTicketHeaderCell()
       .getByRole("button", { name: /Task/i })
       .click();
+  }
+
+  // --- DnD-specific methods ---
+
+  /**
+   * Enters editing mode for all visible employees on the Projects tab.
+   * Waits for "Open for editing" buttons, clicks them all,
+   * then waits for DnD handles. Returns true if editing mode was activated.
+   */
+  async enterProjectsEditMode(): Promise<boolean> {
+    const openBtns = this.page.getByRole("button", {
+      name: "Open for editing",
+    });
+
+    // Wait for buttons to appear (table might still be loading)
+    try {
+      await openBtns.first().waitFor({ state: "visible", timeout: 10_000 });
+    } catch {
+      // No button found — check if DnD handles already exist
+      if ((await this.allDndHandles().count()) > 0) return true;
+      return false;
+    }
+
+    // Click all enabled "Open for editing" buttons (max 10 iterations safety)
+    let maxClicks = 10;
+    while (maxClicks > 0) {
+      // Find enabled (not disabled) "Open for editing" buttons
+      const enabledBtns = openBtns.filter({
+        hasNot: this.page.locator("[disabled]"),
+      });
+      const btnCount = await enabledBtns.count();
+      if (btnCount === 0) break;
+      try {
+        await enabledBtns.first().click({ timeout: 5_000 });
+      } catch {
+        break; // Button became disabled or detached during click
+      }
+      await this.page.waitForLoadState("networkidle");
+      await this.page.waitForTimeout(1_000);
+      maxClicks--;
+    }
+
+    // Wait for DnD handles to appear
+    try {
+      await this.allDndHandles().first().waitFor({
+        state: "visible",
+        timeout: 15_000,
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /** Returns all visible DnD handle buttons ('::' text) in the table. */
+  allDndHandles(): Locator {
+    return this.page.getByRole("button", { name: "::" });
+  }
+
+  /**
+   * Returns data rows that contain planner__cel cells — the reliable selector
+   * for actual task data rows, excluding datepicker/header/total rows.
+   * Session 90 discovery: this is the ONLY way to find real planner data rows.
+   */
+  plannerDataRows(): Locator {
+    return this.page
+      .locator("tr")
+      .filter({ has: this.page.locator("[class*='planner__cel']") });
+  }
+
+  /** Returns only data rows that have DnD handles (editable rows in current editing session). */
+  dndEditableRows(): Locator {
+    return this.page.locator("tr").filter({
+      has: this.page.getByRole("button", { name: "::" }),
+    });
+  }
+
+  /** Gets the task/ticket name text from a data row's 4th column (index 3). */
+  async getTaskNameFromRow(taskRow: Locator): Promise<string> {
+    const cell = taskRow.locator("td").nth(3);
+    try {
+      return (await cell.textContent({ timeout: 5_000 }))?.trim() ?? "";
+    } catch {
+      return "";
+    }
+  }
+
+  /**
+   * Returns task names from the first N DnD-editable rows.
+   * Use this on the Projects tab to avoid iterating 400+ rows.
+   */
+  async getFirstDndRowTaskNames(limit: number = 10): Promise<string[]> {
+    const rows = this.dndEditableRows();
+    const total = await rows.count();
+    const count = Math.min(total, limit);
+    const names: string[] = [];
+    for (let i = 0; i < count; i++) {
+      const name = await this.getTaskNameFromRow(rows.nth(i));
+      if (name) names.push(name);
+    }
+    return names;
+  }
+
+  /**
+   * Performs mouse-based DnD to move sourceRow to the position of targetRow.
+   * Works with react-beautiful-dnd by slowly dragging the handle with proper delays.
+   */
+  async dragTaskWithMouse(
+    sourceRow: Locator,
+    targetRow: Locator,
+  ): Promise<void> {
+    const sourceHandle = this.getDndHandle(sourceRow);
+    const targetHandle = this.getDndHandle(targetRow);
+
+    await sourceHandle.scrollIntoViewIfNeeded();
+    await targetHandle.scrollIntoViewIfNeeded();
+
+    const sourceBbox = await sourceHandle.boundingBox();
+    const targetBbox = await targetHandle.boundingBox();
+    if (!sourceBbox || !targetBbox)
+      throw new Error("Cannot get DnD handle bounding boxes");
+
+    const sx = sourceBbox.x + sourceBbox.width / 2;
+    const sy = sourceBbox.y + sourceBbox.height / 2;
+    const tx = targetBbox.x + targetBbox.width / 2;
+    const ty = targetBbox.y + targetBbox.height / 2;
+
+    // Hover over source first, then mouse-down
+    await this.page.mouse.move(sx, sy);
+    await this.page.waitForTimeout(100);
+    await this.page.mouse.down();
+    // Wait for react-beautiful-dnd drag detection (~150ms debounce)
+    await this.page.waitForTimeout(250);
+    // Move past the drag distance threshold (5px)
+    await this.page.mouse.move(sx, sy + 8, { steps: 5 });
+    await this.page.waitForTimeout(300);
+    // Slowly drag to target position
+    await this.page.mouse.move(tx, ty, { steps: 30 });
+    await this.page.waitForTimeout(500);
+    // Drop
+    await this.page.mouse.up();
+    await this.page.waitForTimeout(800);
+  }
+
+  /**
+   * Performs keyboard-based DnD to move a task UP by N positions.
+   * Uses react-beautiful-dnd keyboard controls: Space (lift) → ArrowUp×N → Space (drop).
+   * Best for small movements (1-3 positions).
+   */
+  async dragTaskUp(taskRow: Locator, positions: number = 1): Promise<void> {
+    const handle = this.getDndHandle(taskRow);
+    await handle.focus();
+    await this.page.keyboard.press("Space");
+    await this.page.waitForTimeout(400);
+    for (let i = 0; i < positions; i++) {
+      await this.page.keyboard.press("ArrowUp");
+      await this.page.waitForTimeout(300);
+    }
+    await this.page.keyboard.press("Space");
+    await this.page.waitForTimeout(600);
+  }
+
+  /**
+   * Performs keyboard-based DnD to move a task DOWN by N positions.
+   * Best for small movements (1-3 positions).
+   */
+  async dragTaskDown(taskRow: Locator, positions: number = 1): Promise<void> {
+    const handle = this.getDndHandle(taskRow);
+    await handle.focus();
+    await this.page.keyboard.press("Space");
+    await this.page.waitForTimeout(400);
+    for (let i = 0; i < positions; i++) {
+      await this.page.keyboard.press("ArrowDown");
+      await this.page.waitForTimeout(300);
+    }
+    await this.page.keyboard.press("Space");
+    await this.page.waitForTimeout(600);
   }
 }

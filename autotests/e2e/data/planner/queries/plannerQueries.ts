@@ -346,6 +346,108 @@ export async function findEmployeeWithEmptyWeekend(
   );
 }
 
+interface PMWithDndReadyEmployeeRow {
+  login: string;
+  project_id: number;
+  project_name: string;
+  employee_login: string;
+  employee_name: string;
+  days_back: number;
+}
+
+/**
+ * Finds a PM whose project has an employee with 3+ open task assignments
+ * on the same recent weekday — suitable for DnD reorder tests.
+ */
+export async function findPMWithDndReadyEmployee(
+  db: DbClient,
+): Promise<PMWithDndReadyEmployeeRow> {
+  return db.queryOne<PMWithDndReadyEmployeeRow>(
+    `SELECT e_pm.login,
+            p.id AS project_id,
+            p.name AS project_name,
+            e_member.login AS employee_login,
+            e_member.name AS employee_name,
+            (CURRENT_DATE - ta.date)::int AS days_back
+     FROM ttt_backend.project p
+     JOIN ttt_backend.employee e_pm ON p.manager = e_pm.id
+     JOIN ttt_backend.project_member pm ON pm.project = p.id
+     JOIN ttt_backend.employee e_member ON pm.employee = e_member.id
+     JOIN ttt_backend.task_assignment ta ON ta.assignee = e_member.id
+     JOIN ttt_backend.task t ON ta.task = t.id AND t.project = p.id
+     WHERE e_pm.enabled = true
+       AND e_member.enabled = true
+       AND p.status = 'ACTIVE'
+       AND ta.closed = false
+       AND ta.date >= CURRENT_DATE - 14
+       AND ta.date <= CURRENT_DATE
+       AND EXTRACT(DOW FROM ta.date) BETWEEN 1 AND 5
+       AND e_pm.id != e_member.id
+     GROUP BY e_pm.login, p.id, p.name, e_member.login, e_member.name, ta.date
+     HAVING COUNT(DISTINCT ta.id) >= 3
+     ORDER BY random()
+     LIMIT 1`,
+  );
+}
+
+interface PMWithTwoEmployeesRow {
+  login: string;
+  project_id: number;
+  project_name: string;
+  employee_a_name: string;
+  employee_b_name: string;
+  days_back: number;
+}
+
+/**
+ * Finds a PM whose project has 2 different employees each with 2+ open task assignments
+ * on the same recent weekday — for DnD order preservation across employee editing toggle.
+ */
+export async function findPMWithTwoEmployees(
+  db: DbClient,
+): Promise<PMWithTwoEmployeesRow> {
+  return db.queryOne<PMWithTwoEmployeesRow>(
+    `WITH emp_counts AS (
+       SELECT e_pm.id AS pm_id, e_pm.login AS pm_login,
+              p.id AS project_id, p.name AS project_name,
+              e_member.name AS member_name,
+              ta.date AS assignment_date,
+              (CURRENT_DATE - ta.date)::int AS days_back,
+              COUNT(DISTINCT ta.id) AS cnt
+       FROM ttt_backend.project p
+       JOIN ttt_backend.employee e_pm ON p.manager = e_pm.id
+       JOIN ttt_backend.project_member pm ON pm.project = p.id
+       JOIN ttt_backend.employee e_member ON pm.employee = e_member.id
+       JOIN ttt_backend.task_assignment ta ON ta.assignee = e_member.id
+       JOIN ttt_backend.task t ON ta.task = t.id AND t.project = p.id
+       WHERE e_pm.enabled = true
+         AND e_member.enabled = true
+         AND p.status = 'ACTIVE'
+         AND ta.closed = false
+         AND ta.date >= CURRENT_DATE - 14
+         AND ta.date <= CURRENT_DATE
+         AND EXTRACT(DOW FROM ta.date) BETWEEN 1 AND 5
+         AND e_pm.id != e_member.id
+       GROUP BY e_pm.id, e_pm.login, p.id, p.name, e_member.name, ta.date
+       HAVING COUNT(DISTINCT ta.id) >= 2
+     )
+     SELECT a.pm_login AS login,
+            a.project_id,
+            a.project_name,
+            a.member_name AS employee_a_name,
+            b.member_name AS employee_b_name,
+            a.days_back
+     FROM emp_counts a
+     JOIN emp_counts b ON a.pm_id = b.pm_id
+       AND a.project_id = b.project_id
+       AND a.assignment_date = b.assignment_date
+       AND a.member_name < b.member_name
+     WHERE a.cnt >= 3
+     ORDER BY random()
+     LIMIT 1`,
+  );
+}
+
 /**
  * Finds an employee who is PM on one project and a plain member on another.
  * Used for role filter tests.

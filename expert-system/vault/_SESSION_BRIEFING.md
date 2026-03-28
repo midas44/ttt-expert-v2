@@ -1,46 +1,37 @@
 # Session Briefing
 
-## Session 90 — 2026-03-28
-**Phase:** C (Autotest Generation) | **Scope:** planner, t2724 | **Env:** qa-1
+## Last Session: 91 — 2026-03-28
+**Phase:** C (Autotest Generation)
+**Scope:** planner
+**Mode:** full autonomy
 
 ### Completed
-- **TC-PLN-016 to TC-PLN-020** — all 5 verified on qa-1 (chrome-headless)
-  - TC-PLN-016: Project selector dropdown filtering — 18.7s
-  - TC-PLN-017: Open for editing generates assignments — passed
-  - TC-PLN-018: Edit hours in Projects tab — 35.8s (9 attempts to solve datepicker/table selector ambiguity)
-  - TC-PLN-019: Color coding blocked/done — passed (with 14-day backward navigation)
-  - TC-PLN-020: Info column tracker priority tags — passed first run
-- **Session 90 maintenance (§9.4):** SQLite audit clean, no duplicates, agenda refined, key discovery written to vault
+- **TC-PLN-021 to TC-PLN-025 (TS-PLN-DnD suite)** — DnD reorder tests for Projects tab
+  - TC-PLN-021: Drag task to reorder — **verified** (37.3s)
+  - TC-PLN-022: DnD handles only in editing mode — **verified** (2.1m)
+  - TC-PLN-024: Bug #3332 no duplicate rows after DnD — **verified** (1.8m)
+  - TC-PLN-025: Bug #3314 order preserved after toggle — **verified** (1.7m)
+  - TC-PLN-023: DnD order persists after reload — **failed** (genuine finding)
 
-### Key Discovery — Planner Table Architecture
-**Critical for all future planner tests:**
-1. **Loading state is perpetual** — `datasheet__loading--active` CSS class never clears (WebSocket sync). Never use `waitForTableLoaded()`.
-2. **Datepicker table nested inside datasheet thead** — `tbody tr` selectors match hidden datepicker rows.
-3. **Definitive row selector:** `page.locator("tr").filter({ has: page.locator("[class*='planner__cel']") })` — the ONLY reliable way to find planner data rows.
-4. **Color coding classes confirmed:** `planner__cel--color-blocked` (red), `planner__cel--color-done` (green).
+### Key Findings
+- **TC-PLN-023 reveals real issue:** DnD task reorder does NOT persist after page reload. The order reverts to default sort. This indicates the DnD reorder is client-side only, or the backend save/re-read is broken. This is the behavior the test was designed to detect.
+- **PlannerPage.ts enhanced** with 8+ new DnD methods: `enterProjectsEditMode()`, `allDndHandles()`, `dndEditableRows()`, `getFirstDndRowTaskNames()`, `dragTaskWithMouse()`, `dragTaskUp()`, `dragTaskDown()`, `getEmployeeHeaderRow()`, `getEmployeeOpenForEditingButton()`
+- **enterProjectsEditMode()** fixed to skip disabled "Open for editing" buttons (some dates have disabled buttons)
+- **getTaskNameFromRow()** made fault-tolerant with 5s timeout + try/catch
+- **selectProject()** improved with explicit waitFor before option click
+- **plannerQueries.ts** — added `findPMWithDndReadyEmployee` and `findPMWithTwoEmployees` query functions
 
-### Page Object Updates (PlannerPage.ts)
-| Method | Added/Modified | Purpose |
-|--------|---------------|---------|
-| `waitForTableLoaded()` | s90 | Exists but SHOULD NOT BE USED — loading class is perpetual |
-| `dataTable()` | s90 | Returns `table[class*='datasheet__table']` |
-| `dataTableRows()` | s90 | Direct `> tbody > tr` — unreliable due to datepicker nesting |
-| `blockedCells()` | s90 | `[class*='planner__cel--color-blocked']` |
-| `doneCells()` | s90 | `[class*='planner__cel--color-done']` |
-| `getEmployeeHeaderRow()` | s90 | Projects tab employee group header |
-| `getEmployeeOpenForEditingButton()` | s90 | Per-employee editing button |
+### Infrastructure Improvements
+- Mouse-based DnD for react-beautiful-dnd requires: 250ms after mousedown, 300ms threshold wait, 30-step slow drag, 500ms pre-drop, 800ms post-drop
+- Projects tab can have 400-700+ DnD rows across all employees — must scope operations to limited row sets
+- "Open for editing" buttons can be disabled on certain dates — filtering for enabled-only is required
+- Project dropdown after page reload needs explicit waitFor on option visibility
 
-### Progress Summary
-| Module | Verified | Total | Coverage |
-|--------|----------|-------|----------|
-| t2724 | 38 | 38 | 100% |
-| planner | 20 | 82 | 24.4% |
-| vacation | 26 | 100 | 26.0% |
-| day-off | 25 | 28 | 89.3% |
-| t3404 | 21 | 24 | 87.5% |
-| **Total** | **130** | **272** | **47.8%** |
+### Progress
+- Planner: 24 verified, 1 failed, 57 pending (25/82 = 30.5% covered)
+- Next: TS-PLN-Lock suite (TC-PLN-026 to TC-PLN-030)
 
-### Next Session (91)
-- TC-PLN-021 to TC-PLN-025: Projects tab search, add task, delete task, DnD, task/ticket toggle
-- Use `planner__cel` filter pattern for all row locators
-- Skip `waitForTableLoaded()` — use content-specific waits instead
+### State for Next Session
+- Continue with session 92, next batch from TS-PLN-Lock suite
+- All DnD page object methods are in place and working
+- `enterProjectsEditMode()` handles disabled buttons correctly

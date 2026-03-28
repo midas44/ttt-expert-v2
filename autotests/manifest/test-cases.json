@@ -2040,7 +2040,7 @@
               "module_component": "planner/dnd",
               "notes": "Dual ordering system: next_assignment (linked list) + position (index).",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-PLN-022",
@@ -2054,7 +2054,7 @@
               "module_component": "planner/dnd",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-PLN-023",
@@ -2068,7 +2068,7 @@
               "module_component": "planner/dnd",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "failed"
             },
             {
               "test_id": "TC-PLN-024",
@@ -2082,7 +2082,7 @@
               "module_component": "planner/dnd",
               "notes": "Root cause identified: splice commented out with TODO. Regression test.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-PLN-025",
@@ -2096,7 +2096,7 @@
               "module_component": "planner/dnd",
               "notes": "Root cause: useEffect with .sort() triggers on every rowsMap change, disrupting DnD order.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-PLN-026",
