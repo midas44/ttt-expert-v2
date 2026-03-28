@@ -115,6 +115,16 @@ export class ProjectSettingsDialog {
     await this.okButton().click();
   }
 
+  /** Returns the informational text element on the Tasks closing tab (.tags_text div). */
+  infoText(): Locator {
+    return this.dialog.locator(".tags_text");
+  }
+
+  /** Returns the maxlength attribute of the tag input (null if absent). */
+  async getTagInputMaxLength(): Promise<string | null> {
+    return this.tagInput().getAttribute("maxlength");
+  }
+
   /** Checks if the dialog is visible. */
   async isVisible(): Promise<boolean> {
     return this.dialog.isVisible();

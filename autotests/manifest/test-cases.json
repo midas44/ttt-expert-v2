@@ -3456,7 +3456,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "automated"
             },
             {
               "test_id": "TC-T2724-037",
@@ -3470,7 +3470,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Known req/code mismatch. No frontend validation found in code analysis.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "automated"
             },
             {
               "test_id": "TC-T2724-038",
@@ -3484,7 +3484,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Both frontend (catch→devLog) and backend (catch→log.debug) silently swallow errors.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "automated"
             }
           ]
         }
