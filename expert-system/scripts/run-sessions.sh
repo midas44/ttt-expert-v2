@@ -165,6 +165,9 @@ parse_config() {
     PHASE_SCOPE=$(normalize_scope "$(read_yaml 'phase.scope' 2>/dev/null || echo 'all')")
     AUTOTEST_SCOPE=$(normalize_scope "$(read_yaml 'autotest.scope' 2>/dev/null || echo 'all')")
 
+    # Scheduled auto-stop (UTC datetime)
+    STOP_AT=$(read_yaml "stop_at" 2>/dev/null || echo "")
+
     # Peak hours — avoid autonomous execution during high-rate pricing hours
     PEAK_ENABLED=$(read_yaml "peak_hours.enabled" 2>/dev/null || echo "false")
     PEAK_RANGE=$(read_yaml "peak_hours.range_utc" 2>/dev/null || echo "")
@@ -579,6 +582,17 @@ check_stop_conditions() {
         return 1
     fi
 
+    # 4. Scheduled auto-stop (UTC datetime)
+    if [[ -n "$STOP_AT" ]]; then
+        local now_epoch stop_epoch
+        now_epoch=$(date -u +%s)
+        stop_epoch=$(date -u -d "$STOP_AT" +%s 2>/dev/null || echo "0")
+        if [[ "$stop_epoch" -gt 0 && "$now_epoch" -ge "$stop_epoch" ]]; then
+            log "Scheduled stop reached (stop_at: $STOP_AT UTC)"
+            return 1
+        fi
+    fi
+
     return 0
 }
 
@@ -763,6 +777,9 @@ print(sum(1 for x in s['sessions'] if x.get('phase') == 'autotest_generation'))
     if [[ "$PEAK_ENABLED" == "True" || "$PEAK_ENABLED" == "true" ]]; then
         log "Peak hours: pause during ${PEAK_RANGE} UTC (weekdays only: ${PEAK_WEEKDAYS_ONLY}), buffer: ${PEAK_BUFFER}min"
     fi
+    if [[ -n "$STOP_AT" ]]; then
+        log "Scheduled stop: $STOP_AT UTC"
+    fi
 
     local stop_reason="unknown"
 
@@ -865,6 +882,8 @@ print(sum(1 for x in s['sessions'] if x.get('phase') == 'autotest_generation'))
         stop_reason="max sessions reached ($MAX_SESSIONS)"
     elif [[ "$(get_state_field 'consecutive_failures')" -ge "$CONSECUTIVE_FAILURE_LIMIT" ]]; then
         stop_reason="consecutive failure limit ($CONSECUTIVE_FAILURE_LIMIT)"
+    elif [[ -n "$STOP_AT" ]] && [[ $(date -u +%s) -ge $(date -u -d "$STOP_AT" +%s 2>/dev/null || echo "0") ]]; then
+        stop_reason="scheduled stop (stop_at: $STOP_AT UTC)"
     else
         stop_reason="all sessions completed"
     fi
