@@ -3,18 +3,11 @@
 ## Scope: planner, t2724
 
 ### P0 — Immediate (next session)
-- [ ] Continue t2724: TC-T2724-011 through TC-T2724-015 (senior mgr CRUD, cross-project, special chars, long tags, multiple tags)
-- [ ] TC-T2724-011 needs query for senior_manager login on a project
-- [ ] TC-T2724-013 (Unicode/Cyrillic) and TC-T2724-014 (VARCHAR 255) are fast — no new page objects needed
-- [ ] TC-T2724-015 (multiple tags) creates 5+ tags sequentially, verifies order
+- [ ] Complete t2724: TC-T2724-036 (info text), TC-T2724-037 (200 char limit), TC-T2724-038 (error handling) — 3 remaining
+- [ ] TC-036 and TC-037 are Low priority UI tests, run on qa-1
+- [ ] TC-038 (silent error handling) needs timemachine — verify frontend swallows apply errors gracefully
 
-### P1 — Near-term (sessions 82-85)
-- [ ] Complete t2724 Apply suite: TC-T2724-016 through TC-T2724-028 (tag application to tasks, auto-close behavior)
-- [ ] Apply suite requires new page objects for assignment viewing and apply button
-- [ ] TC-T2724-029 (API direct call) is a hybrid test — uses request context
-- [ ] Begin t2724 Regression suite: TC-T2724-030 through TC-T2724-038
-
-### P2 — Planner autotest generation (sessions 86-95+)
+### P1 — Begin planner module (sessions 86-95+)
 - [ ] Begin planner autotest generation: TS-PLN-Nav (TC-PLN-001 through TC-PLN-011)
 - [ ] Create data classes for planner employees, projects, assignments
 - [ ] Generate planner editing tests (TS-PLN-Edit, TS-PLN-DnD)
@@ -23,32 +16,26 @@
 - [ ] Generate bug regression tests (TS-PLN-BugReg)
 - [ ] Generate planner report period tests (TS-PLN-Reports)
 
-### P3 — Polish
+### P2 — Polish
 - [ ] Fix flaky tests, improve selector resilience
 - [ ] Verify all tests pass in headless mode on qa-1
 - [ ] Phase C completion report
 
 <details>
-<summary>Completed Phase C Items (Sessions 79-80)</summary>
+<summary>Completed Phase C Items (Sessions 79-85)</summary>
 
 - [x] Parse XLSX manifest: `parse_xlsx.py` for planner + t2724
 - [x] Verify autotests/ framework dependencies installed
 - [x] Initialize `autotest_tracking` SQLite table
-- [x] Generate + verify TC-T2724-001: Create tag happy path
-- [x] Generate + verify TC-T2724-002: Duplicate tag idempotent
-- [x] Generate + verify TC-T2724-003: Blank tag validation
-- [x] Generate + verify TC-T2724-004: Inline edit happy path
-- [x] Generate + verify TC-T2724-005: Inline edit Escape cancels
-- [x] Generate + verify TC-T2724-006: Edit tag to duplicate — validation error
-- [x] Generate + verify TC-T2724-007: Delete tag happy path
-- [x] Generate + verify TC-T2724-008: List tags empty state
-- [x] Generate + verify TC-T2724-009: Permission — employee cannot access tag mgmt
-- [x] Generate + verify TC-T2724-010: PM can CRUD tags full cycle
-- [x] Created PlannerPage page object (selectRoleFilter, selectProject, clickProjectSettingsIcon, isProjectSettingsIconVisible)
-- [x] Created ProjectSettingsDialog page object (tag CRUD + inline edit + delete methods)
-- [x] Created t2724Queries.ts (findProjectWithManager, findProjectWithNoTags, findProjectWithPlainMember, listCloseTags, tagExists)
-- [x] Wrote selector discoveries to vault (planner-project-settings-selectors.md)
-- [x] Discovered: project_member table (not planner_assignment), permission model exclusions
+- [x] Generate + verify TC-T2724-001 through TC-T2724-010 (CRUD + permissions, sessions 79-80)
+- [x] Generate + verify TC-T2724-011 through TC-T2724-015 (SPM, cross-project, Unicode, VARCHAR, multi-tag, session 81)
+- [x] Generate + verify TC-T2724-016 through TC-T2724-020 (close-by-tag apply core, session 82)
+- [x] Generate + verify TC-T2724-021 through TC-T2724-025 (date-scoped, no-tags, reload, settings dialog, generated assignments, session 83)
+- [x] Generate + verify TC-T2724-026 through TC-T2724-030 (open-for-editing, multi-tag, blank-info, API, popup regression, session 84)
+- [x] Generate + verify TC-T2724-031 through TC-T2724-035 (column header EN+RU, OK button, heavy data project, auto-refresh, task order, session 85)
+- [x] Created PlannerPage, ProjectSettingsDialog page objects
+- [x] Created t2724Queries.ts with 20+ query helpers
+- [x] t2724 coverage: 35/38 (92.1%)
 
 </details>
 

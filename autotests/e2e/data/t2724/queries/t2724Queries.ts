@@ -560,6 +560,107 @@ export async function findBlankTicketInfoAssignment(
   );
 }
 
+// --------------- TC-033: Heavy data project ---------------
+
+interface HeavyDataProjectRow {
+  project_id: number;
+  project_name: string;
+  manager_login: string;
+  assignment_count: number;
+}
+
+/** Finds the ACTIVE project with the most task assignments (for heavy-data tests). */
+export async function findHeavyDataProject(
+  db: DbClient,
+): Promise<HeavyDataProjectRow> {
+  return db.queryOne<HeavyDataProjectRow>(
+    `SELECT p.id AS project_id, p.name AS project_name,
+            e.login AS manager_login,
+            COUNT(ta.id)::int AS assignment_count
+     FROM ttt_backend.project p
+     JOIN ttt_backend.employee e ON p.manager = e.id
+     JOIN ttt_backend.task t ON t.project = p.id
+     JOIN ttt_backend.task_assignment ta ON ta.task = t.id
+     WHERE p.status = 'ACTIVE'
+       AND e.enabled = true AND e.login IS NOT NULL
+     GROUP BY p.id, p.name, e.login
+     ORDER BY COUNT(ta.id) DESC
+     LIMIT 1`,
+  );
+}
+
+// --------------- TC-035: Assignment order preservation ---------------
+
+interface ApplyTargetWithAssigneeRow {
+  project_id: number;
+  project_name: string;
+  manager_login: string;
+  assignment_id: number;
+  assignment_date: string;
+  task_id: number;
+  task_name: string;
+  ticket_info: string;
+  assignee_id: number;
+}
+
+/**
+ * Finds a closable assignment (ticket_info, no reports, unclosed) plus its assignee.
+ * Same as findApplyTargetNoReports but also returns the assignee ID for position checks.
+ */
+export async function findApplyTargetWithAssignee(
+  db: DbClient,
+): Promise<ApplyTargetWithAssigneeRow> {
+  return db.queryOne<ApplyTargetWithAssigneeRow>(
+    `SELECT t.project AS project_id, p.name AS project_name,
+            pm.login AS manager_login,
+            ta.id AS assignment_id, ta.date::text AS assignment_date,
+            t.id AS task_id, t.name AS task_name, t.ticket_info,
+            ta.assignee AS assignee_id
+     FROM ttt_backend.task_assignment ta
+     JOIN ttt_backend.task t ON ta.task = t.id
+     JOIN ttt_backend.project p ON t.project = p.id
+     JOIN ttt_backend.employee pm ON p.manager = pm.id
+     WHERE p.status = 'ACTIVE'
+       AND pm.enabled = true AND pm.login IS NOT NULL
+       AND t.ticket_info IS NOT NULL AND t.ticket_info != ''
+       AND ta.closed = false
+       AND ta.date BETWEEN CURRENT_DATE - 30 AND CURRENT_DATE
+       AND NOT EXISTS (
+         SELECT 1 FROM ttt_backend.task_report tr
+         WHERE tr.task = t.id AND tr.executor = ta.assignee AND tr.report_date = ta.date
+       )
+     ORDER BY ABS(ta.date - CURRENT_DATE), random()
+     LIMIT 1`,
+  );
+}
+
+interface AssignmentPositionRow {
+  assignment_id: number;
+  task_name: string;
+  position: number;
+  closed: boolean;
+  date: string;
+}
+
+/** Gets all assignments for an employee in a project with their positions. */
+export async function getAssignmentPositions(
+  db: DbClient,
+  projectId: number,
+  assigneeId: number,
+): Promise<AssignmentPositionRow[]> {
+  return db.query<AssignmentPositionRow>(
+    `SELECT ta.id AS assignment_id, t.name AS task_name,
+            COALESCE(ta.position, 0) AS position,
+            ta.closed, ta.date::text AS date
+     FROM ttt_backend.task_assignment ta
+     JOIN ttt_backend.task t ON ta.task = t.id
+     WHERE t.project = $1 AND ta.assignee = $2
+       AND ta.date BETWEEN CURRENT_DATE - 30 AND CURRENT_DATE
+     ORDER BY ta.date, ta.position, ta.id`,
+    [projectId, assigneeId],
+  );
+}
+
 /** Finds an ACTIVE project with a PM and a separate plain member (not PM/SPM/admin). */
 export async function findProjectWithPlainMember(
   db: DbClient,

@@ -1,48 +1,48 @@
-# Autotest Generation Progress
+# Autotest Progress — Phase C
 
-## Overall Coverage (Phase C)
+## Coverage Summary (Session 85)
 
-| Module | Total Cases | Automated | Pending | Coverage |
-|--------|------------|-----------|---------|----------|
-| t2724 | 38 | 30 | 8 | 78.9% |
-| planner | 82 | 0 | 82 | 0.0% |
-| **Total** | **120** | **30** | **90** | **25.0%** |
+| Module | Total | Verified | Pending | Coverage |
+|--------|-------|----------|---------|----------|
+| t2724 | 38 | 35 | 3 | 92.1% |
+| planner | 82 | 0 | 82 | 0% |
+| **Total** | **120** | **35** | **85** | **29.2%** |
 
-## t2724 Coverage by Suite
+## t2724 Detailed Breakdown
 
-| Suite | Total | Automated | Coverage |
-|-------|-------|-----------|----------|
-| TS-T2724-CRUD | 7 | 7 | 100% |
-| TS-T2724-Permission | 4 | 4 | 100% |
-| TS-T2724-Edge | 4 | 4 | 100% |
-| TS-T2724-CloseByTag | 10 | 10 | 100% |
-| TS-T2724-Apply | 10 | 5 | 50% |
-| TS-T2724-Regress | 3 | 0 | 0% |
+### TS-T2724-CRUD (10 tests) — 100% complete
+TC-T2724-001 through TC-T2724-010: tag CRUD, permissions, edge cases
 
-**Note:** TS-T2724-Apply and TS-T2724-Regress overlap — TC-T2724-026..029 are apply tests, TC-T2724-030 is regression. All 5 verified in session 84.
+### TS-T2724-Advanced (10 tests) — 100% complete
+TC-T2724-011 through TC-T2724-020: SPM, cross-project, Unicode, VARCHAR, multi-tag, close-by-tag
 
-## Session History
+### TS-T2724-Apply (10 tests) — 100% complete
+TC-T2724-021 through TC-T2724-025, TC-T2724-034, TC-T2724-035: date-scoped, no-tags, reload, generated assignments, auto-refresh, task order
+
+### TS-T2724-Regression (8 tests) — 62.5% complete
+TC-T2724-026 through TC-T2724-033: open-for-editing, multi-tag, blank-info, API, popup regression, column header, OK button, heavy data
+- **Remaining:** TC-T2724-036 (info text), TC-T2724-037 (char limit), TC-T2724-038 (error handling)
+
+## Session-by-Session Progress
 
 | Session | Tests Generated | Tests Verified | Cumulative |
-|---------|----------------|---------------|------------|
-| 79 | TC-T2724-001..005 | 5/5 | 5/38 |
-| 80 | TC-T2724-006..010 | 5/5 | 10/38 |
-| 81 | TC-T2724-011..015 | 5/5 | 15/38 |
-| 82 | TC-T2724-016..020 | 5/5 | 20/38 |
-| 83 | TC-T2724-021..025 | 5/5 | 25/38 |
-| 84 | TC-T2724-026..030 | 5/5 | 30/38 |
+|---------|----------------|----------------|------------|
+| 79-80 | 10 (TC-001—010) | 10 | 10/38 (26.3%) |
+| 81 | 5 (TC-011—015) | 5 | 15/38 (39.5%) |
+| 82 | 5 (TC-016—020) | 5 | 20/38 (52.6%) |
+| 83 | 5 (TC-021—025) | 5 | 25/38 (65.8%) |
+| 84 | 5 (TC-026—030) | 5 | 30/38 (78.9%) |
+| 85 | 5 (TC-031—035) | 5 | 35/38 (92.1%) |
 
-## Remaining t2724 Tests (8 pending)
+## Environment Notes
+- TC-031, TC-032: qa-1 (no apply endpoint needed)
+- TC-033, TC-034, TC-035: timemachine (apply endpoint required)
+- All tests 001-020: qa-1
+- All tests 021-030: timemachine
+- ttt.yml always restored to qa-1 after timemachine runs
 
-| Test ID | Title | Priority |
-|---------|-------|----------|
-| TC-T2724-031 | Bug 3 regression — correct column header in Tasks Closing tab | High |
-| TC-T2724-032 | Bug 4 regression — OK button present in Tasks Closing tab | High |
-| TC-T2724-033 | Bug 6 — cannot reopen popup on heavy data project | Medium |
-| TC-T2724-034 | Bug 8 regression — auto-refresh after closing | Medium |
-| TC-T2724-035 | Task order not disrupted after close-by-tag apply | Medium |
-| TC-T2724-036 | Informational text on Tasks Closing tab | Medium |
-| TC-T2724-037 | Confluence discrepancy — 200 char limit not enforced | Low |
-| TC-T2724-038 | Apply error handling — silent failure on backend error | Medium |
-
-Last updated: 2026-03-28 session 84
+## Framework Artifacts Created
+- **Page objects:** PlannerPage.ts, ProjectSettingsDialog.ts
+- **Data classes:** T2724Tc001Data through T2724Tc035Data (35 classes)
+- **Queries:** t2724Queries.ts (20+ helper functions)
+- **No new fixtures needed** (LoginFixture, MainFixture, LogoutFixture, VerificationFixture reused)

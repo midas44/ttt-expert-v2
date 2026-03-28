@@ -3386,7 +3386,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Both EN and RU affected in original bug.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "automated"
             },
             {
               "test_id": "TC-T2724-032",
@@ -3400,7 +3400,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "automated"
             },
             {
               "test_id": "TC-T2724-033",
@@ -3414,7 +3414,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Not reproducible on small-data projects (e.g., Diablocom-AI). Specific to large projects.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "automated"
             },
             {
               "test_id": "TC-T2724-034",
@@ -3428,7 +3428,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "automated"
             },
             {
               "test_id": "TC-T2724-035",
@@ -3442,7 +3442,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Close-by-tag publishes TaskAssignmentPatchEvent/GenerateEvent which may trigger the #3314 re-sort bug.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "automated"
             },
             {
               "test_id": "TC-T2724-036",

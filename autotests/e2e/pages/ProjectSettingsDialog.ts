@@ -98,9 +98,21 @@ export class ProjectSettingsDialog {
     await row.locator("button").click();
   }
 
+  /** Returns the text of the first column header in the tags table. */
+  async getTagColumnHeaderText(): Promise<string> {
+    return (
+      (await this.tagsTable().locator("thead th").first().textContent())?.trim() ?? ""
+    );
+  }
+
+  /** Returns the OK button locator. */
+  okButton(): Locator {
+    return this.dialog.getByRole("button", { name: "OK" });
+  }
+
   /** Clicks the OK button to close the dialog. */
   async clickOk(): Promise<void> {
-    await this.dialog.getByRole("button", { name: "OK" }).click();
+    await this.okButton().click();
   }
 
   /** Checks if the dialog is visible. */
