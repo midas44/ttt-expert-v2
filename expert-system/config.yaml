@@ -7,7 +7,7 @@ phase:
   current: autotest_generation
   generation_allowed: true
   coverage_override: -1
-  scope: planner,2724
+  scope: reports,accounting
 thresholds:
   knowledge_coverage_target: 0.8
   note_quality_min_links: 2
@@ -46,7 +46,7 @@ autotest:
   target_env: qa-1
   max_tests_per_session: 5
   auto_fix_attempts: 3
-  scope: planner
+  scope: reports,accounting
   priority_order:
   - vacation
   - sick-leave
