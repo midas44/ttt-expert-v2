@@ -1,8 +1,16 @@
-ticket_number = 3205
+ticket_number = 2724
+
 You need to test task https://gitlab.noveogroup.com/noveo-internal-tools/ttt-spring/-/issues/[ticket_number]; 
+
 Let's do in several stages. 
 Stage A: analyze new requirements (task specific) vs known state of application (use your knowledge base); 
 Stage B: analyze code changes commited/merged into branch under test (release/2.1), in other words do static testing, try to identify possible problems analitically; 
 Stage C: create test plan and testcases, save to subfolder tasks/[ticket_number]; 
 Stage D: do real testing (dynamic) on qa-1 test environment, report all found problems/issues (in md format with references to screenshots if necessary, save everything to tasks/[ticket_number]); 
+
+Note 1: there are already prepared testing documentation (test-docs/t[ticket_number]/*) and autotests (autotests/e2e/tests/t[ticket_number]/*) for this task. 
+Latest design and implementation can be slightly different though.
+
+Note 2: you can use stage test env with previous release version (without current task implementation) for reference. 
+
 Feel free to ask questions.
