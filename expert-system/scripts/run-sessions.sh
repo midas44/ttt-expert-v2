@@ -157,6 +157,9 @@ parse_config() {
     STOP=$(read_yaml "autonomy.stop")
     MODEL=$(read_yaml "autonomy.model")
     EFFORT=$(read_yaml "autonomy.effort")
+    EFFORT_A=$(read_yaml "autonomy.effort_phase_a" 2>/dev/null || echo "$EFFORT")
+    EFFORT_B=$(read_yaml "autonomy.effort_phase_b" 2>/dev/null || echo "$EFFORT")
+    EFFORT_C=$(read_yaml "autonomy.effort_phase_c" 2>/dev/null || echo "$EFFORT")
     DELAY_MINUTES=$(read_yaml "session.delay_minutes")
     DELAY_MINUTES_OFFHOURS=$(read_yaml "session.delay_minutes_offhours")
     OFFHOURS_UTC=$(read_yaml "session.offhours_utc")
@@ -768,7 +771,7 @@ print(sum(1 for x in s['sessions'] if x.get('phase') == 'autotest_generation'))
 
     log "Starting from session $session_num (max: $MAX_SESSIONS)"
     log "Phase A sessions: $phase_a_count, Phase B sessions: $phase_b_count, Phase C sessions: $phase_c_count"
-    log "Model: $MODEL, effort: $EFFORT"
+    log "Model: $MODEL, effort: A=$EFFORT_A / B=$EFFORT_B / C=$EFFORT_C (default: $EFFORT)"
     log "Phase: $PHASE"
     log "Log dir: $LOG_DIR"
     log "Stop flag: $STOP"
@@ -813,7 +816,7 @@ print(sum(1 for x in s['sessions'] if x.get('phase') == 'autotest_generation'))
             echo "$prompt"
             echo "---"
             log "[DRY RUN] Log file: $log_file"
-            log "[DRY RUN] Command: HTTP_PROXY=http://127.0.0.1:2080 HTTPS_PROXY=http://127.0.0.1:2080 timeout $((( MAX_DURATION_MINUTES + 30 ) * 60))s claude -p --output-format json --model $MODEL --effort $EFFORT --dangerously-skip-permissions"
+            log "[DRY RUN] Command: claude -p --model $MODEL --effort $session_effort --dangerously-skip-permissions"
             session_num=$((session_num + 1))
             continue
         fi
@@ -824,13 +827,21 @@ print(sum(1 for x in s['sessions'] if x.get('phase') == 'autotest_generation'))
         local exit_code=0
         local timeout_seconds=$(( (MAX_DURATION_MINUTES + 30) * 60 ))
 
+        # Select per-phase effort level
+        local session_effort="$EFFORT"
+        case "$PHASE" in
+            knowledge_acquisition) session_effort="$EFFORT_A" ;;
+            generation)            session_effort="$EFFORT_B" ;;
+            autotest_generation)   session_effort="$EFFORT_C" ;;
+        esac
+
         HTTP_PROXY=http://127.0.0.1:2080 \
         HTTPS_PROXY=http://127.0.0.1:2080 \
         timeout --signal=TERM --kill-after=60 "$timeout_seconds" \
             claude -p \
                 --output-format json \
                 --model "$MODEL" \
-                --effort "$EFFORT" \
+                --effort "$session_effort" \
                 --dangerously-skip-permissions \
                 "$prompt" \
                 < /dev/null > "$log_file" 2>"$stderr_file" || exit_code=$?

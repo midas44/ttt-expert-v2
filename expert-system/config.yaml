@@ -33,7 +33,10 @@ autonomy:
   log_dir: expert-system/logs
   stop: false
   model: opus
-  effort: max
+  effort: max                        # default effort level
+  effort_phase_a: max                # knowledge acquisition — deep reasoning
+  effort_phase_b: max                # test documentation — comprehensive analysis
+  effort_phase_c: high               # autotest generation — pattern-following
   allow_api_mutations: true
 stop_at: "2026-03-28 23:00"                          # Auto-stop at datetime (UTC), e.g. "2026-03-29 12:00". Empty = disabled.
 peak_hours:
