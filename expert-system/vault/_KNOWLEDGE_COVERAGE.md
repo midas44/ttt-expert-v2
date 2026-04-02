@@ -1,33 +1,40 @@
-# Knowledge Coverage — Phase C (Autotest Generation)
+---
+type: coverage
+updated: '2026-04-02'
+---
+# Knowledge Coverage — Phase A (Knowledge Deepening)
 
-## Overall Autotest Coverage: 49.6% (137/276 verified)
+## Scope: sick-leave, statistics, admin, security, cross-service
 
-| Module | Verified | Failed | Blocked | Pending | Total | Coverage |
-|--------|----------|--------|---------|---------|-------|----------|
-| day-off | 25 | 0 | 3 | 0 | 28 | 89.3% |
-| vacation | 26 | 0 | 3 | 71 | 100 | 26.0% |
-| t2724 | 38 | 0 | 0 | 0 | 38 | 100% |
-| t3404 | 21 | 0 | 3 | 0 | 24 | 87.5% |
-| planner | 24 | 1 | 0 | 57 | 82 | 29.3% |
-| reports | 3 | 1 | 0 | 0 | 4 | 75.0%* |
-| accounting | 0 | 0 | 0 | 0 | 0 | 0%** |
+## Module Coverage Assessment
 
-*Reports: 4 tracked out of ~60 total test cases — only CRUD suite started
-**Accounting: not yet started — 38 test cases in manifest
+| Module | Vault Notes | Deep-Dive Depth | Ticket Mining | API Surface | DB Analysis | Code Verification | Overall |
+|--------|------------|-----------------|---------------|-------------|-------------|-------------------|---------|
+| sick-leave | ✅ 3 notes + api-surface | ✅ 4700+ words + familyMember spec | ✅ 45+ tickets + Sprint 16 | ✅ 7 endpoints + DTOs documented | ✅ data patterns | ✅ code snippets | 92% |
+| statistics | ✅ 2 notes + api-surface | ✅ 4500+ words + 2000 Confluence spec | ✅ 180+ tickets + Sprint 15-16 | ✅ 23 endpoints + DTOs + Employee Reports spec | ✅ effective-bounds | ✅ budgetNorm + effectiveBounds code | 93% |
+| admin | ✅ 1 note | ✅ 3600+ words + Sprint 15-16 PM Tool | ✅ 120+ tickets + PM Tool | ✅ 23 endpoints (project+office) from spec | pending (agent) | ✅ PM Tool + calendar code | 87% |
+| security | ✅ 3 notes | ✅ 2200+ words | ✅ 85 tickets | ✅ 9 endpoints (auth+tokens) + error patterns | N/A | partial | 83% |
+| cross-service | ✅ 3 notes | ✅ 2500+ words + Sprint 15-16 | ✅ 75+ tickets | partial | ✅ office-sync | partial | 83% |
 
-## Current Scope: reports, accounting
-- Reports CRUD suite: 3 verified, 1 failed, ~12 remaining in suite
-- Reports total: ~60 test cases across 7 suites
-- Accounting total: ~38 test cases across 6 suites
+## Changes This Session (98)
+- **Statistics: 85%→93%** — Complete Confluence Employee Reports spec (2000+ words), full API surface from swagger (23 endpoints + DTOs with field names), Sprint 15-16 tickets
+- **Sick-leave: 88%→92%** — familyMember flag spec (#3408), full API surface (7 endpoints + DTOs), force parameter discovered
+- **Admin: 82%→87%** — Sprint 15-16 PM Tool tickets, admin API surface from spec
+- **Security: 78%→83%** — Security API endpoints (4 auth + 5 token CRUD), error response patterns (exception class exposure)
+- **Cross-service: 78%→83%** — Sprint 15-16 cross-service bugs and CS sync tickets
 
-## Completed Modules
-- t2724: 100% (38/38)
-- day-off: 89.3% (25/28, 3 blocked)
-- t3404: 87.5% (21/24, 3 blocked)
+## Remaining Gaps
+1. **DB schema deep-dive** — statistics and admin tables (agent launched, results pending)
+2. **Qase audit** — existing test coverage verification (agent launched, results pending)
+3. **Cross-env comparison** — qa-1 vs stage APIs not yet compared
+4. **Figma design comparison** — UI vs mockup verification deferred to Phase B
+5. **qa-1 frontend down** — UI exploration via Playwright blocked by 502
 
-## In Progress
-- reports: Phase C active (session 95+)
-- planner: 29.3% (24/82 verified, 57 pending — paused for reports scope)
-- vacation: 26.0% (26/100 verified, 71 pending — paused)
+## Estimated Overall Coverage: 87.6%
+Target: 80% before Phase B transition ✅ EXCEEDED
 
-Updated: 2026-03-28 (Session 95)
+**Progress:** 82% → 87.6% (+5.6% this session from Confluence spec, API surface analysis, Sprint 15-16 ticket mining)
+
+**Phase transition readiness:** Coverage ABOVE 80% target. All modules meet minimum depth requirements (1000+ words, tickets mined, 3+ methods). Sessions in focused scope: 3 (96-98). Recommend transition to Phase B in session 99 after incorporating agent results.
+
+Updated: 2026-04-02 (Session 98)

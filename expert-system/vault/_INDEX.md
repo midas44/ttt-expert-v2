@@ -1,6 +1,6 @@
 ---
 type: index
-updated: 2026-03-28
+updated: '2026-04-02'
 ---
 
 # Vault Index
@@ -9,24 +9,31 @@ updated: 2026-03-28
 - [[architecture-overview]]
 - [[frontend-architecture]]
 - [[backend-architecture]]
+- [[security-patterns]] — Auth mechanisms, filter chain, token model, API bypass patterns
+- [[auth-authorization-doc]] — Developer doc analysis, dual auth, @PreAuthorize patterns
 
 ## Modules
 - [[vacation-service-deep-dive]]
 - [[frontend-vacation-module]]
-- [[sick-leave-module]]
+- [[sick-leave-service-deep-dive]] — Dual status model, validation, permissions, lifecycle, familyMember flag (#3408)
 - [[day-off-module]]
 - [[reports-service-deep-dive]]
 - [[frontend-reports-module]]
 - [[accounting-service-deep-dive]]
 - [[frontend-accounting-module]]
 - [[planner-module]]
-- [[statistics-module]]
-- [[admin-module]]
+- [[frontend-statistics-module]] — Classic + Employee Reports, budgetNorm display, Confluence spec, permission matrix
+- [[statistics-service-implementation]] — Norm calc (personal/budget), cache sync, excess detection, code snippets
+- [[admin-panel-deep-dive]] — Project CRUD, PM Tool sync, calendar CRUD, CS sync, Sprint 15-16 tickets
+- [[cross-service-integration]] — CS sync (3 mechanisms), RabbitMQ, WebSocket, trackers, PM Tool, stability
 
 ## Patterns
 - [[notification-patterns]]
 - [[permission-model]]
 - [[period-management-pattern]]
+
+## Analysis
+- [[role-permission-matrix]]
 
 ## Exploration
 ### UI Flows
@@ -37,17 +44,23 @@ updated: 2026-03-28
 - [[vacation-api-testing]]
 - [[reports-api-testing]]
 - [[accounting-api-testing]]
+- [[statistics-api-surface]] — 23 statistic endpoints + Employee Reports DTOs (budgetNorm, excess, reportedStatus)
+- [[sick-leave-api-surface]] — 7 sick leave endpoints + DTOs, force param, dual status in API
 
 ### Data Findings
 - [[database-schema-overview]]
 
 ### Tickets
 - [[vacation-ticket-findings]]
-- [[sick-leave-ticket-findings]]
+- [[sick-leave-ticket-findings]] — 45+ tickets + Sprint 16 familyMember flag (#3408/#3409)
 - [[day-off-ticket-findings]]
 - [[reports-ticket-findings]]
 - [[accounting-ticket-findings]]
 - [[planner-ticket-findings]]
+- [[statistics-ticket-findings]] — 180+ tickets + Sprint 15-16: Employee Reports, budgetNorm, partial-month norm
+- [[admin-ticket-findings]] — 120+ tickets + Sprint 15-16: PM Tool integration, calendar validation
+- [[security-ticket-findings]] — 85 tickets: API bypass pattern, cross-office leakage, JWT lifecycle
+- [[cross-service-ticket-findings]] — 75+ tickets + Sprint 15-16: confirmation-statistics gap, CS sync
 
 ## External
 - [[confluence-requirements]]
@@ -57,3 +70,5 @@ updated: 2026-03-28
 ## Decisions
 - [[business-rules-reference]]
 - [[reports-business-rules-reference]]
+
+- [[qase-coverage-audit]] — 258 suites/1116 cases total. Statistics=0, Security=0, Cross-service=1 (critical gaps)

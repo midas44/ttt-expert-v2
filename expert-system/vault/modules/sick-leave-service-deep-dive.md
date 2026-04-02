@@ -474,3 +474,115 @@ Three notification types:
 9. **Force flag required on create (@NotNull)**: Must explicitly set force=true or force=false. But on patch, force comes from inherited CreateDTO fields — NPE risk if not set.
 
 10. **Shared VacationSecurityException**: PM access check and accountant check throw VacationSecurityException (not SickLeaveSecurityException) — error code `exception.vacation.no.permission` for sick leave operations.
+
+
+## 15. Ticket-Derived Bug Patterns and Edge Cases (Session 97 Enrichment)
+
+### Rejection Order Dependency (#2973 — CRITICAL)
+The order of state transitions matters for norm calculation propagation:
+- **Case 1 (OK):** create → close → reject = norm correctly reverts
+- **Case 2 (BUG):** create → reject → close = norm INCORRECTLY includes sick leave hours
+
+**Root cause:** The `updateStatus()` method in §1 above resets status to OPEN when accountingStatus returns to NEW/PROCESSING. But the norm recalculation event is only triggered on specific transitions, and the reject→close sequence triggers events in a different order than close→reject.
+
+**Testing requirements established from #2973:**
+1. Employee CANNOT edit in "Rejected" state (but accountant can)
+2. Close action only for "Open" and "Overdue" states (closing "Rejected" was a bug)
+3. Overlap notification should NOT fire for "Rejected" or "Deleted" sick leaves
+4. DM/TL: same restrictions apply as employee
+5. Closing "Planned" sick leave IS allowed (design decision)
+
+### Norm Recalculation Propagation Failures (8 tickets #2778-#2915)
+
+After ANY sick leave state change (create, delete, reject, close), ALL of these pages must update correctly:
+
+| Page | What Must Update | Known Bug |
+|------|-----------------|-----------|
+| My Tasks | Day colors (orange→black on delete/reject), norm tooltip values, cell input availability | #2778: deleted SL still shows, #2863: rejected SL colors days |
+| Planner | Day marking (red for sick leave) | #2792: deleted SL still marks days red (multiple fix attempts) |
+| Availability Chart | Copy-to-clipboard data | #2812: rejected SL included in copied data |
+| Confirmation page | Both "By Employees" and "By Projects" views | #2819: 4 sub-bugs — weekend hours, deleted SL displayed, day-off transfer, sick leave missing from "By Employees" view |
+| Statistics | Norm calculation | #2915: daily norm tooltip (second value after slash) wrong |
+
+**Root pattern:** Frontend caching is aggressive — page components cache absence data and don't invalidate on state changes from OTHER pages. The event system publishes domain events but the frontend doesn't have a unified invalidation mechanism.
+
+**Day-off interaction (#2901):** Moving a day-off during an overlapping sick leave doesn't trigger norm recalculation. Steps: create calendar event → verify norm → create overlapping sick leave → move day-off outside range → norm not reduced by moved day-off.
+
+### Production Visibility Bugs (Security-Critical)
+
+**#3213 (HIGH):** ALL employees could see EVERYONE's sick leaves on "My Sick Leaves" page. Production bug. Root cause: MRs #3211 and #3190 were reverted to fix this. Regression test essential.
+
+**#2524 (HotFix):** Intermittent "flickering bug" — one employee sees another's sick leave. Root cause: frontend sends request WITHOUT `employeeLogin` parameter on page refresh → API returns ALL sick leaves for all employees. Reproduction: login → open My Sick Leaves → refresh page.
+
+**#3012:** `/accounting/sick-leaves` route accessible to regular employees. Root cause: checked `VACATIONS` permission with `VIEW` instead of `SICK_LEAVE_ACCOUNTING_VIEW`. Fix: added new permission `SICK_LEAVE_ACCOUNTING_VIEW`.
+
+### DM/TL/PM Permission Tabs (#2622, #2873)
+
+Three tabs with role-based scoping:
+- **"My Department"** tab: DM and TL see their subordinates
+- **"My Projects"** tab: PM sees employees on their projects (view only — no edit/create)
+- **Personal** tab: all employees see their own
+
+**Bugs found during testing:**
+- Tab badge counter was per-page (not total count) → added API response field
+- State filter had "Deleted" option visible (should be hidden for non-accountant roles)
+- No validation error when no employee selected during creation → "employee cannot be null"
+- Filters not resetting when switching tabs
+- DM/TL can create and edit for their employees
+- SPM role also returns employee sick leaves (by design)
+- API endpoint returned 568 employees instead of expected 16 for PM scope (#2873)
+
+### Upcoming: familyMember Flag (#3408, Sprint 16)
+- New `familyMember` boolean flag (default `false`)
+- Splits sick leaves into: own illness vs. family member care
+- Adds checkbox "Caring for a family member" to create/edit dialog
+- Affects both "My Sick Leaves" and "Sick Leave Records" accounting page
+- All existing sick leaves default to `familyMember = false`
+- **Depends on #3409:** budgetNorm calculation changes — family-member sick leaves included in budgetNorm, own sick leaves excluded
+
+### Working During Sick Leave (#2803 — Unresolved)
+Real case: Cyprus employee, 5-day sick leave, worked 3 days + 2 weekends. System compensated 5 vacation days instead of 2 (counted ALL sick leave days as non-working, not just the days the employee actually missed). No resolution — open analytical task.
+
+### Date Overlap Exclusion Rules
+From tickets #2636, #2973:
+- Overlap check (`findCrossingSickLeaves()`) must SKIP: Rejected, Deleted sick leaves
+- Email notification (ID_105) must EXCLUDE: Deleted sick leaves
+- Only check against: Open, Planned, Overdue, Closed sick leaves
+
+### Full State × Action × Role Matrix (from §7 + tickets)
+
+| State | Acc. Status | Employee Actions | DM/TL Actions | Accountant Actions |
+|-------|-------------|-----------------|---------------|-------------------|
+| Open | New | edit, delete | edit, create for subordinate | edit, change acc. status |
+| Open | Processing | edit, delete | edit | edit, change acc. status |
+| Planned | New | edit, delete, close | edit | edit, change acc. status |
+| Overdue | New | edit, delete, close | edit | edit, change acc. status |
+| Rejected | Any | view only (#2973) | view only | edit, change acc. status |
+| Closed | Non-Paid | edit, delete | edit | edit, change acc. status |
+| Closed | Paid | view only | view only | edit (admin/chief/office accountant only) |
+| Deleted | Any | view only | view only | edit accountantComment only |
+
+**PM role exception:** PM can VIEW sick leaves for employees on their projects but CANNOT create, edit, or delete. §7 `checkIfCurrentEmployeeIsNotPM()` enforces this.
+
+
+## Upcoming: familyMember Flag (#3408, Sprint 16)
+
+A new `familyMember` boolean flag will split sick leaves into two types:
+- `familyMember = false` (default) — employee's own sick leave. Deducts from individual norm.
+- `familyMember = true` — caring for a family member. Does NOT deduct from individual norm; instead added to budgetNorm (like admin vacations).
+
+**Impact:**
+- All historical sick leaves retroactively set to `familyMember = false`
+- UI: new checkbox in create/edit dialog: "По уходу за членом семьи" / "Caring for a family member"
+- Calendar display: must differentiate the two types
+- Accounting > sick leave accounting: updated display
+- Statistics budgetNorm formula changes (#3409): `Nb = Ni + admin_vac_hrs + familyMember_SL_hrs`
+- API: `v1/statistic/report/employees` must include updated budgetNorm
+
+**Key test scenarios for familyMember:**
+1. Create sick leave with default familyMember=false → verify norm decreases
+2. Create sick leave with familyMember=true → verify norm does NOT decrease, budgetNorm shows both values  
+3. Toggle familyMember on existing sick leave → verify norm recalculation
+4. Verify calendar shows different indicators for own vs family sick leave
+5. Verify accounting page includes familyMember in display/filter
+6. Verify budgetNorm tooltip text updated per #3409
