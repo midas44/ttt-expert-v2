@@ -1,13 +1,13 @@
 session:
   delay_minutes: 30
-  delay_minutes_offhours: 60
+  delay_minutes_offhours: 45
   offhours_utc: 15:00-03:00
   max_duration_minutes: 90
 phase:
-  current: autotest_generation
+  current: knowledge_acquisition
   generation_allowed: true
   coverage_override: -1
-  scope: reports,accounting
+  scope: sick-leave,statistics,admin,security,cross-service
 thresholds:
   knowledge_coverage_target: 0.8
   note_quality_min_links: 2
@@ -36,9 +36,9 @@ autonomy:
   effort: max                        # default effort level
   effort_phase_a: max                # knowledge acquisition — deep reasoning
   effort_phase_b: max                # test documentation — comprehensive analysis
-  effort_phase_c: high               # autotest generation — pattern-following
+  effort_phase_c: max               # autotest generation — pattern-following
   allow_api_mutations: true
-stop_at: "2026-03-28 23:00"                          # Auto-stop at datetime (UTC), e.g. "2026-03-29 12:00". Empty = disabled.
+stop_at: "2026-04-03 21:00"                          # Auto-stop at datetime (UTC), e.g. "2026-03-29 12:00". Empty = disabled.
 peak_hours:
   enabled: true
   range_utc: 12:00-19:00
