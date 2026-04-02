@@ -1,10 +1,10 @@
 session:
   delay_minutes: 45
-  delay_minutes_offhours: 60
+  delay_minutes_offhours: 30
   offhours_utc: 15:00-03:00
   max_duration_minutes: 90
 phase:
-  current: knowledge_acquisition
+  current: generation
   generation_allowed: true
   coverage_override: -1
   scope: sick-leave,statistics,admin,security,cross-service

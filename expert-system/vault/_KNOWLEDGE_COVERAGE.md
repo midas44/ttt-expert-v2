@@ -2,39 +2,51 @@
 type: coverage
 updated: '2026-04-02'
 ---
-# Knowledge Coverage — Phase A (Knowledge Deepening)
+# Knowledge Coverage — Phase B Progress
 
-## Scope: sick-leave, statistics, admin, security, cross-service
+## Phase B: Test Documentation Generation
 
-## Module Coverage Assessment
+### XLSX Generation Progress (Scope: sick-leave, statistics, admin, security, cross-service)
 
-| Module | Vault Notes | Deep-Dive Depth | Ticket Mining | API Surface | DB Analysis | Code Verification | Overall |
-|--------|------------|-----------------|---------------|-------------|-------------|-------------------|---------|
-| sick-leave | ✅ 3 notes + api-surface | ✅ 4700+ words + familyMember spec | ✅ 45+ tickets + Sprint 16 | ✅ 7 endpoints + DTOs documented | ✅ data patterns | ✅ code snippets | 92% |
-| statistics | ✅ 2 notes + api-surface | ✅ 4500+ words + 2000 Confluence spec | ✅ 180+ tickets + Sprint 15-16 | ✅ 23 endpoints + DTOs + Employee Reports spec | ✅ effective-bounds | ✅ budgetNorm + effectiveBounds code | 93% |
-| admin | ✅ 1 note | ✅ 3600+ words + Sprint 15-16 PM Tool | ✅ 120+ tickets + PM Tool | ✅ 23 endpoints (project+office) from spec | pending (agent) | ✅ PM Tool + calendar code | 87% |
-| security | ✅ 3 notes | ✅ 2200+ words | ✅ 85 tickets | ✅ 9 endpoints (auth+tokens) + error patterns | N/A | partial | 83% |
-| cross-service | ✅ 3 notes | ✅ 2500+ words + Sprint 15-16 | ✅ 75+ tickets | partial | ✅ office-sync | partial | 83% |
+| Module | Phase A Coverage | XLSX Status | Test Cases | Session |
+|--------|-----------------|-------------|------------|---------|
+| **sick-leave** | 92% | **DONE** | 71 (10 suites) | 101 |
+| **statistics** | 93% | **DONE** | 76 (8 suites) | 102 |
+| **admin** | 87% | **DONE** | 84 (8 suites) | 103 |
+| security | 83% | Pending | — | 104 |
+| cross-service | 83% | Pending | — | 105 |
 
-## Changes This Session (98)
-- **Statistics: 85%→93%** — Complete Confluence Employee Reports spec (2000+ words), full API surface from swagger (23 endpoints + DTOs with field names), Sprint 15-16 tickets
-- **Sick-leave: 88%→92%** — familyMember flag spec (#3408), full API surface (7 endpoints + DTOs), force parameter discovered
-- **Admin: 82%→87%** — Sprint 15-16 PM Tool tickets, admin API surface from spec
-- **Security: 78%→83%** — Security API endpoints (4 auth + 5 token CRUD), error response patterns (exception class exposure)
-- **Cross-service: 78%→83%** — Sprint 15-16 cross-service bugs and CS sync tickets
+### Prior Phase B Completions (before current scope)
 
-## Remaining Gaps
-1. **DB schema deep-dive** — statistics and admin tables (agent launched, results pending)
-2. **Qase audit** — existing test coverage verification (agent launched, results pending)
-3. **Cross-env comparison** — qa-1 vs stage APIs not yet compared
-4. **Figma design comparison** — UI vs mockup verification deferred to Phase B
-5. **qa-1 frontend down** — UI exploration via Playwright blocked by 502
+| Module | Test Cases | Status |
+|--------|-----------|--------|
+| day-off | 121 | exported |
+| vacation | 100 | drafted |
+| planner | 82 | exported |
+| reports | 60 | drafted |
+| accounting | 38 | drafted |
+| t2724 | 38 | exported |
+| t3404 | 24 | drafted |
 
-## Estimated Overall Coverage: 87.6%
-Target: 80% before Phase B transition ✅ EXCEEDED
+### Totals
+- **Scope modules completed:** 3/5 (sick-leave, statistics, admin)
+- **Scope test cases:** 231 (71 + 76 + 84)
+- **Overall test cases:** 694 across 10 modules
+- **Overall XLSX files:** 10 workbooks
 
-**Progress:** 82% → 87.6% (+5.6% this session from Confluence spec, API surface analysis, Sprint 15-16 ticket mining)
+### Admin Coverage Detail
+- **Suites:** Projects (13), Calendars (12), Employees (9), Settings (8), Account (7), Permissions (10), PMTool (10), Regression (15)
+- **Priority:** Critical=17, High=35, Medium=29, Low=3
+- **Type:** UI=63 (75%), Hybrid=21 (25%)
+- **Knowledge sources:** 8 vault notes, 120+ tickets mined, role-permission matrix
+- **Key areas covered:** 7 admin pages, 3 project action dialogs, PM Tool sync (rate limit, field mapping, sales filter, missing employee), calendar CRUD (events, SO mapping, year logic), 10 permission roles tested, 15 regression bugs from tickets, tracker config per type, accounting period validation, CS sync issues
 
-**Phase transition readiness:** Coverage ABOVE 80% target. All modules meet minimum depth requirements (1000+ words, tickets mined, 3+ methods). Sessions in focused scope: 3 (96-98). Recommend transition to Phase B in session 99 after incorporating agent results.
+### Statistics Coverage Detail
+- **Suites:** ClassicGeneral (12), EmployeeReports (14), NormExcess (10), ExportWSR (10), Permissions (8), HourSum (6), CacheSync (6), Regression (10)
+- **Priority:** Critical=13, High=40, Medium=20, Low=3
+- **Type:** UI=62 (82%), Hybrid=14 (18%)
 
-Updated: 2026-04-02 (Session 98)
+### Sick-Leave Coverage Detail
+- **Suites:** CRUD (12), Lifecycle (8), Accounting (6), Manager (6), Permissions (6), Validation (7), Regression (10), Notifications (5), FamilyMember (6), CrossPage (5)
+- **Priority:** Critical=20, High=30, Medium=18, Low=3
+- **Type:** UI=55 (77%), Hybrid=16 (23%)

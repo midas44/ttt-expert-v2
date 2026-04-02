@@ -2,53 +2,56 @@
 type: agenda
 updated: '2026-04-02'
 ---
-# Investigation Agenda — Phase A (Knowledge Deepening)
+# Investigation Agenda — Phase B (Test Documentation Generation)
 
 ## Scope: sick-leave, statistics, admin, security, cross-service
 
-### P0 — Next Session (99) — Transition Preparation
-- [ ] **Incorporate agent results** — Swagger live API testing results (statistics + admin), PostgreSQL schema deep-dive findings, Qase test coverage audit results
-- [ ] **Final gap assessment** — identify any remaining depth gaps after agent integration
-- [ ] **Phase B transition** — if all gaps addressed, update config.yaml: `phase.current: "generation"`, `phase.generation_allowed: true`. Reset control files per Phase Reset Protocol.
+### P0 — Next Session (104) — Security XLSX
 
-### P1 — If Gaps Remain (Session 100)
-- [ ] **Qase audit** — verify existing test coverage gaps (if agent didn't complete)
-- [ ] **Database schema** — statistics and admin tables (if agent didn't complete)
-- [ ] **Cross-env comparison** — qa-1 vs stage for statistics and admin APIs
-- [ ] **Security penetration testing** — verify API bypass patterns against live environment
+- [ ] **Knowledge enrichment** — re-read security-patterns, role-permission-matrix, JWT auth, API token model, OWASP-relevant patterns
+- [ ] **Qase check** — verify 0 existing security cases
+- [ ] **Define test suites** — plan TS-Security-AuthModel, TS-Security-RoleMatrix, TS-Security-APIBypass, TS-Security-CrossOffice, TS-Security-TokenPerms
+- [ ] **Write generator** — `expert-system/generators/security/generate.py`
+- [ ] **Generate XLSX** — `test-docs/security/security.xlsx`
+- [ ] **Track cases** — insert into test_case_tracking
 
-### P2 — Backlog (carry to Phase B as enrichment)
-- [ ] **Figma design comparison** — verify implemented UI against Figma designs for statistics and admin
-- [ ] **Frontend code analysis** — complexity, dead code, duplication for statistics and admin modules
-- [ ] **Integration test analysis** — existing backend test coverage
+### P1 — Session 105 — Cross-Service XLSX
+
+- [ ] **Knowledge enrichment** — CS sync divergence, MQ events, data model discrepancies, office sync across 3 services
+- [ ] **Define test suites** — plan TS-CrossService-CSSync, TS-CrossService-DataDivergence, TS-CrossService-EventPropagation
+- [ ] **Write generator** — `expert-system/generators/cross-service/generate.py`
+- [ ] **Generate XLSX** — `test-docs/cross-service/cross-service.xlsx`
+- [ ] **Track cases** — insert into test_case_tracking
+
+### P2 — Phase B Completion Check (Session 105-106)
+
+- [ ] Review all 12+ XLSX workbooks for completeness
+- [ ] Verify all modules in scope have coverage
+- [ ] Log Phase B readiness report to _SESSION_BRIEFING.md
+- [ ] If auto_phase_transition: transition to Phase C for autotest.scope modules
 
 <details>
-<summary>Completed Items (Sessions 96-98)</summary>
+<summary>Completed Items (Phase B, Sessions 101-103)</summary>
 
-**Session 96:**
-- [x] Phase reset: control files reset for Phase A (C→A transition)
-- [x] Statistics ticket mining: 180+ tickets, comprehensive findings note created
-- [x] Admin ticket mining: 120+ tickets, comprehensive findings note created
-- [x] Sick-leave ticket mining: 45 tickets, findings note created
-- [x] Security ticket mining: 85 tickets, findings note created
-- [x] Cross-service ticket mining: 75 tickets, findings note created
-- [x] Module health table: populated for all 5 modules
+**Session 103:**
+- [x] Admin context: vault notes read (8 key sources), Qase check (0 cases), 120+ tickets already mined
+- [x] Admin UI verified on qa-1 via Playwright (logged in as pvaynmaster)
+- [x] 8 test suites defined: Projects, Calendars, Employees, Settings, Account, Permissions, PMTool, Regression
+- [x] Generator written: `expert-system/generators/admin/generate.py`
+- [x] XLSX generated: `test-docs/admin/admin.xlsx` — 84 test cases
+- [x] SQLite tracked: 84 records in test_case_tracking
 
-**Session 97:**
-- [x] Knowledge depth verification: all 5 module deep-dive notes assessed
-- [x] Statistics notes enrichment: frontend (800→2500 words), service (550→2000 words)
-- [x] Admin note enrichment: +1500 words with PM Tool bugs, calendar validation
-- [x] Sick-leave note enrichment: +1200 words with rejection order, norm propagation
-- [x] Cross-service integration note created: 2500 words
-- [x] Security patterns enrichment: +500 words
-- [x] Vault index updated
+**Session 102:**
+- [x] Statistics: 8 suites, 76 test cases in `test-docs/statistics/statistics.xlsx`
 
-**Session 98:**
-- [x] Confluence requirements: Statistics Employee Reports full spec (2000+ words from page 119244531)
-- [x] Sprint 15-16 tickets: 65+ new tickets, 9 critical documented (#3409, #3408, #3356, #3380, #3368, etc.)
-- [x] API surface analysis: statistics (23 endpoints + DTOs), sick-leave (7 endpoints + DTOs), security (9 endpoints), admin (23 endpoints) from swagger specs
-- [x] Vault notes enriched: 6 existing + 2 new (api-surface notes)
-- [x] Coverage assessment: 87.6% weighted average
-- [ ] Background agents: Swagger live testing, DB schema, Qase audit — results pending
+**Session 101:**
+- [x] Sick-leave: 10 suites, 71 test cases in `test-docs/sick-leave/sick-leave.xlsx`
+
+</details>
+
+<details>
+<summary>Completed Items (Phase A, Sessions 96-100)</summary>
+
+**Session 96-100:** Phase A knowledge acquisition for all 5 modules — 87.6% coverage, 500+ tickets mined, cross-env comparison, SQLite maintenance. See session 100 briefing for details.
 
 </details>
