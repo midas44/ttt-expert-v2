@@ -217,6 +217,85 @@ All 21 t3404 autotests were executed via `npx playwright test e2e/tests/t3404/ -
 - **Impact:** Low probability (holidays rarely fall on the 1st of the month), but wrong behavior when they do.
 - **Evidence:** Screenshot `13-GAP1-boundary-bug-mar1-no-edit.png` — created a test holiday on March 1 and confirmed the edit icon is missing.
 
+---
+
+## D.10 Fix Verification & Final Acceptance Testing — 2026-03-31
+
+### Fix Deployed
+**MR !5350** merged 2026-03-30 into `release/2.1` (squash commit `3fcf0e8d`). Two changes:
+
+1. **`useWeekendTableHeaders.tsx` line 113:** `>` changed to `>=` — fixes boundary condition for edit icon visibility
+2. **`TransferDaysoffModal.tsx` lines 129-131:** Removed `.subtract(1, 'd')` from minDate — fixes off-by-one in datepicker lower bound
+
+**Build on qa-1:** 2.1.26-SNAPSHOT.LOCAL | Build date: 31.03.2026 — fix is live.
+
+### Static Code Analysis of Fix
+
+**useWeekendTableHeaders.tsx:**
+```typescript
+const isDayOffAfterCurrentDate =
+  lastApprovedDate >= moment(approvePeriod).format('YYYY-MM-DD') ||
+  lastApprovedDate === moment().format('YYYY-MM-DD');
+```
+- `>=` correctly includes the boundary date ✓
+- The `=== moment()` fallback is redundant but harmless ✓
+- `approvePeriod` in useMemo dependency array ✓
+
+**TransferDaysoffModal.tsx:**
+```typescript
+minDate={isMinCurrentDay ? moment(approvePeriod) : moment(originalDate)}
+```
+- Removed `.subtract(1, 'd')` — minDate is now the approve period start itself ✓
+- `isMinCurrentDay` logic (today > originalDate) correctly differentiates past vs future holidays ✓
+
+**No issues found in code review.**
+
+### Dynamic Test Results — Fix Verification
+
+| TC | Description | Result | Evidence |
+|----|-------------|--------|----------|
+| **FIX-01** | `>=` boundary: created holiday on Mar 1 (approve period start), checked edit icon | **INCONCLUSIVE** | March 1 is a Sunday — `isWeekend` check independently hides the edit icon. The `>=` fix is confirmed via code review. Screenshot: `14-aprikupets-daysoff-boundary.png` |
+| **FIX-02** | minDate fix: datepicker for past holiday (Mar 30), navigate to February | **PASS** | ALL February dates disabled. Feb 27 (Friday) click had no effect. Screenshot: `16-datepicker-feb-mindate-verify.png` |
+| **FIX-03** | minDate fix: March 2 (first working day of approve period) selectable | **PASS** | Selected March 2, dialog shows `30.03.2026 → 02.03.2026`, OK enabled. Screenshot: `17-select-march2-boundary-ok.png` |
+
+### Dynamic Test Results — Complex Acceptance Tests
+
+**User: aprikupets (Венера office, Cyprus calendar 6, EN mode)**
+
+| TC | Description | Result | Evidence |
+|----|-------------|--------|----------|
+| **ACC-01** | Closed months (Jan, Feb) — no edit icons | **PASS** | Jan 1, Jan 29, Feb 23 — all have empty Actions column |
+| **ACC-02** | Past weekday in open month (Mar 30) — edit icon visible | **PASS** | Greek Independence Day row has edit icon |
+| **ACC-03** | Future holiday with NEW transfer (Good Friday Apr 10→Apr 28) — edit + cancel icons | **PASS** | Both edit (pencil) and cancel (X) icons present |
+| **ACC-04** | Future holiday datepicker: minDate = originalDate (NOT approvePeriod) | **PASS** | Opened datepicker for Good Friday, navigated to March — ALL March dates disabled. minDate correctly uses Apr 10. Screenshot: `19-future-holiday-march-all-disabled.png` |
+| **ACC-05** | Future holiday datepicker: April dates before original disabled | **PASS** | Apr 1-9 greyed, Apr 14+ enabled. Screenshot: `18-future-holiday-good-friday-datepicker.png` |
+| **ACC-06** | Tooltip text EN: "Reschedule event" | **PASS** | Verified on hover |
+| **ACC-07** | Dialog title EN: "Reschedule event" | **PASS** | Multiple dialogs opened, all show correct title |
+| **ACC-08** | Backward transfer: Mar 30 → Mar 2 (earlier date), OK enabled | **PASS** | Dialog shows `30.03.2026 → 02.03.2026`. Screenshot: `17-select-march2-boundary-ok.png` |
+| **ACC-09** | Non-selectable date click (Feb 27) — no effect | **PASS** | Clicked Feb 27, dialog date unchanged, OK stayed disabled |
+
+### Updated Screenshots Index (Session 3)
+
+| File | Description |
+|------|-------------|
+| `14-aprikupets-daysoff-boundary.png` | aprikupets table: Mar 1 (Su) no icon, Mar 30+ has icons |
+| `15-datepicker-march-mindate-fix.png` | March datepicker for Mar 30: Feb dates disabled, Mar 2+ enabled |
+| `16-datepicker-feb-mindate-verify.png` | February datepicker: ALL dates disabled (minDate fix confirmed) |
+| `17-select-march2-boundary-ok.png` | Selected Mar 2 for Mar 30 transfer: `30.03 → 02.03`, OK enabled |
+| `18-future-holiday-good-friday-datepicker.png` | Good Friday (Apr 10→28): Apr 14+ enabled, Apr 1-9 disabled |
+| `19-future-holiday-march-all-disabled.png` | Good Friday datepicker on March: ALL disabled (minDate=Apr 10) |
+
+### Final Verdict (Updated 2026-03-31)
+
+**PASS — Bug fix verified, all acceptance tests pass.**
+
+- **MR !5350 fix confirmed:** Both changes (`>=` and `.subtract(1,'d')` removal) are correct
+- **`>=` boundary:** Cannot test dynamically (Mar 1 is Sunday, caught by `isWeekend`), but confirmed via code review
+- **minDate fix:** Feb dates correctly disabled, Mar 2 (first working day) correctly selectable
+- **Future holiday regression:** Old behavior preserved — minDate uses originalDate, not approvePeriod
+- **No new defects found**
+- **Ticket can be closed**
+
 ### Autotest Suite
 **21/21 PASS** (after fixing test code regex for Russian status text).
 

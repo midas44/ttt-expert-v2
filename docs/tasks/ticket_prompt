@@ -1,4 +1,4 @@
-ticket_number = 2724
+ticket_number = 3404
 
 You need to test task https://gitlab.noveogroup.com/noveo-internal-tools/ttt-spring/-/issues/[ticket_number]; 
 
@@ -14,3 +14,9 @@ Latest design and implementation can be slightly different though.
 Note 2: you can use stage test env with previous release version (without current task implementation) for reference. 
 
 Feel free to ask questions.
+
+
+----------------------
+
+Please test fix of reported bug; also test general functionality of this ticket (static code analysis and dynamically with playwright) 
+with different data and more complex testcases on your descretion as final acceptance testing
