@@ -550,6 +550,137 @@ export class MyTasksPage {
     return floatingEditor.first();
   }
 
+  // ── Week Navigation ──────────────────────────────────────────
+
+  /** Returns the displayed week date range (e.g. "23.03.2026 – 29.03.2026"). */
+  async getWeekRangeText(): Promise<string> {
+    const range = this.page.locator("[class*='week-navigation'] span, [class*='weekNavigation'] span").first();
+    try {
+      await range.waitFor({ state: "visible", timeout: 3000 });
+      return (await range.textContent())?.trim() ?? "";
+    } catch {
+      // Fallback: look for date range pattern in any visible element near nav
+      const dateRange = this.page.getByText(/\d{2}\.\d{2}\.\d{4}\s*[–—-]\s*\d{2}\.\d{2}\.\d{4}/);
+      return (await dateRange.first().textContent())?.trim() ?? "";
+    }
+  }
+
+  /** Clicks the previous-week arrow button (left arrow). */
+  async navigateToPreviousWeek(): Promise<void> {
+    const candidates = [
+      this.page.locator("button[class*='prev'], button[class*='Prev']"),
+      this.page.locator("[class*='week-navigation'] button:first-child, [class*='weekNavigation'] button:first-child"),
+      this.page.locator("button:has(img[alt*='prev']), button:has(img[alt*='left'])"),
+      this.page.locator("button:has(img)").first(),
+    ];
+    const btn = await resolveFirstVisible(candidates, { timeout: 5000 });
+    await btn.click();
+  }
+
+  /** Clicks the next-week arrow button (right arrow). */
+  async navigateToNextWeek(): Promise<void> {
+    const candidates = [
+      this.page.locator("button[class*='next'], button[class*='Next']"),
+      this.page.locator("[class*='week-navigation'] button:last-child, [class*='weekNavigation'] button:last-child"),
+      this.page.locator("button:has(img[alt*='next']), button:has(img[alt*='right'])"),
+    ];
+    const btn = await resolveFirstVisible(candidates, { timeout: 5000 });
+    await btn.click();
+  }
+
+  /** Clicks the "Current week" button. */
+  async goToCurrentWeek(): Promise<void> {
+    await this.page.getByRole("button", { name: /current week/i }).click();
+  }
+
+  /** Returns all visible week tab labels (date ranges). */
+  async getVisibleWeekTabs(): Promise<string[]> {
+    const tabs = this.page.locator("button").filter({
+      hasText: /\d{2}\.\d{2}\s*[–—-]\s*\d{2}\.\d{2}/,
+    });
+    const count = await tabs.count();
+    const labels: string[] = [];
+    for (let i = 0; i < count; i++) {
+      const text = await tabs.nth(i).textContent();
+      if (text) labels.push(text.trim());
+    }
+    return labels;
+  }
+
+  /**
+   * Checks if a day cell in a task row is editable.
+   * Returns true if double-clicking opens an input, false otherwise.
+   */
+  async isCellEditable(row: Locator, dateLabel: string): Promise<boolean> {
+    const cell = await this.dayCell(row, dateLabel);
+    await cell.dblclick();
+    const inlineInput = cell.locator("input, textarea");
+    try {
+      await inlineInput.first().waitFor({ state: "visible", timeout: 2000 });
+      // Close the editor by pressing Escape
+      await inlineInput.first().press("Escape");
+      return true;
+    } catch {
+      // Check floating editor
+      const floatingEditor = this.page.locator(
+        ".timesheet-reporting__input input, .timesheet-reporting__input textarea",
+      );
+      try {
+        await floatingEditor.first().waitFor({ state: "visible", timeout: 1000 });
+        await floatingEditor.first().press("Escape");
+        return true;
+      } catch {
+        return false;
+      }
+    }
+  }
+
+  // ── Task Pin/Rename ──────────────────────────────────────────
+
+  /** Returns task names in their current display order (top to bottom). */
+  async getTaskNamesInOrder(): Promise<string[]> {
+    const rows = this.taskTable.locator("tbody tr");
+    const count = await rows.count();
+    const names: string[] = [];
+    for (let i = 0; i < count; i++) {
+      const firstCell = rows.nth(i).locator("td").first();
+      const text = await firstCell.textContent();
+      if (text?.trim()) names.push(text.trim());
+    }
+    return names;
+  }
+
+  /** Hovers over a task row and clicks the pin/unpin toggle icon. */
+  async toggleTaskPin(row: Locator): Promise<void> {
+    const taskCell = row.locator("td").first();
+    await taskCell.hover();
+    await this.page.waitForTimeout(500);
+    const pinBtn = await resolveFirstVisible(
+      [
+        taskCell.locator("[class*='task-pin']"),
+        taskCell.locator("button:has(svg)"),
+        taskCell.locator("button:has(img)"),
+      ],
+      { timeout: 3000 },
+    );
+    await pinBtn.click();
+    await this.page.waitForLoadState("networkidle");
+  }
+
+  /** Clicks the task name text to trigger the rename modal. */
+  async clickTaskName(row: Locator): Promise<void> {
+    const taskCell = row.locator("td").first();
+    const nameEl = await resolveFirstVisible(
+      [
+        taskCell.locator("span[class*='task-name']"),
+        taskCell.locator("a"),
+        taskCell.locator("span").first(),
+      ],
+      { timeout: 3000 },
+    );
+    await nameEl.click();
+  }
+
   /**
    * Constructs a RegExp matching date column headers in various formats.
    * Input: "dd.mm" → matches dd.mm, dd/mm, etc.

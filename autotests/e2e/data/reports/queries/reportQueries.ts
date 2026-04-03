@@ -168,6 +168,114 @@ export async function findTaskToAdd(
   };
 }
 
+// ─── Phase C: TC-RPT-004..011 ───────────────────────────────
+
+interface EmployeeWithMultipleTasksRow {
+  login: string;
+  task1_name: string;
+  task2_name: string;
+}
+
+/**
+ * Finds an employee with at least 2 pinned tasks (via fixed_task) on their
+ * My Tasks grid, where the current week is in the open report period.
+ */
+export async function findEmployeeWithMultipleTasks(
+  db: DbClient,
+): Promise<{ login: string; task1Name: string; task2Name: string }> {
+  const row = await db.queryOne<EmployeeWithMultipleTasksRow>(
+    `SELECT e.login,
+            (array_agg(
+              CASE WHEN t.name LIKE p.name || ' / %'
+                   THEN substring(t.name from length(p.name) + 4)
+                   ELSE t.name END
+              ORDER BY t.id
+            ))[1] AS task1_name,
+            (array_agg(
+              CASE WHEN t.name LIKE p.name || ' / %'
+                   THEN substring(t.name from length(p.name) + 4)
+                   ELSE t.name END
+              ORDER BY t.id
+            ))[2] AS task2_name
+     FROM ttt_backend.employee e
+     JOIN ttt_backend.fixed_task ft ON ft.employee = e.id
+     JOIN ttt_backend.task t ON ft.task = t.id
+     JOIN ttt_backend.project p ON t.project = p.id
+     JOIN ttt_backend.office_period op
+       ON e.salary_office = op.office AND op.type = 'REPORT'
+     WHERE e.enabled = true
+       AND (e.is_contractor IS NULL OR e.is_contractor = false)
+       AND e.login != 'pvaynmaster'
+       AND p.status = 'ACTIVE'
+       AND CURRENT_DATE >= op.start_date
+     GROUP BY e.login
+     HAVING COUNT(DISTINCT t.id) >= 2
+     ORDER BY random()
+     LIMIT 1`,
+  );
+  return {
+    login: row.login,
+    task1Name: row.task1_name,
+    task2Name: row.task2_name,
+  };
+}
+
+// ─── Phase C: TC-RPT-014,015 ──────────────────────────────────
+
+interface ManagerAndEmployeeRow {
+  manager_login: string;
+  employee_login: string;
+}
+
+/** Finds a manager (PM/ADMIN) and a random employee with pinned tasks. */
+export async function findManagerAndEmployee(
+  db: DbClient,
+): Promise<{ managerLogin: string; employeeLogin: string }> {
+  const row = await db.queryOne<ManagerAndEmployeeRow>(
+    `SELECT m.login AS manager_login, e.login AS employee_login
+     FROM ttt_backend.employee m
+     JOIN ttt_backend.employee_global_roles mr ON mr.employee = m.id
+     JOIN ttt_backend.employee e ON e.enabled = true AND e.id != m.id
+     WHERE m.enabled = true
+       AND mr.role_name IN ('ROLE_PROJECT_MANAGER', 'ROLE_ADMIN')
+       AND (e.is_contractor IS NULL OR e.is_contractor = false)
+       AND e.login != 'pvaynmaster'
+       AND EXISTS (
+         SELECT 1 FROM ttt_backend.fixed_task ft
+         JOIN ttt_backend.task t ON ft.task = t.id
+         JOIN ttt_backend.project p ON t.project = p.id
+         WHERE ft.employee = e.id AND p.status = 'ACTIVE'
+       )
+     ORDER BY random()
+     LIMIT 1`,
+  );
+  return { managerLogin: row.manager_login, employeeLogin: row.employee_login };
+}
+
+interface ContractorAndAdminRow {
+  contractor_login: string;
+  admin_login: string;
+}
+
+/** Finds a contractor employee and an admin user. */
+export async function findContractorAndAdmin(
+  db: DbClient,
+): Promise<{ contractorLogin: string; adminLogin: string }> {
+  const row = await db.queryOne<ContractorAndAdminRow>(
+    `SELECT c.login AS contractor_login,
+            (SELECT a.login FROM ttt_backend.employee a
+             JOIN ttt_backend.employee_global_roles ar ON ar.employee = a.id
+             WHERE a.enabled = true AND ar.role_name = 'ROLE_ADMIN'
+             ORDER BY random() LIMIT 1) AS admin_login
+     FROM ttt_backend.employee c
+     WHERE c.enabled = true
+       AND c.is_contractor = true
+     ORDER BY random()
+     LIMIT 1`,
+  );
+  return { contractorLogin: row.contractor_login, adminLogin: row.admin_login };
+}
+
 /**
  * Returns a weekday in the current week as "dd.mm" and "yyyy-mm-dd" formats.
  * @param dayOffset 0=Mon, 1=Tue, 2=Wed(default), 3=Thu, 4=Fri
