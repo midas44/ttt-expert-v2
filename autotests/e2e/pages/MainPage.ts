@@ -278,6 +278,42 @@ export class MyVacationsPage {
     return match ? parseInt(match[1], 10) : 0;
   }
 
+  // --- Vacation Events Feed Dialog ---
+
+  /** Opens the "Vacation events feed" dialog. */
+  async openEventsFeed(): Promise<Locator> {
+    await this.page
+      .getByRole("button", { name: "Vacation events feed" })
+      .click();
+    const dialog = this.page.getByRole("dialog", {
+      name: /Vacation events feed/i,
+    });
+    await dialog.waitFor({ state: "visible" });
+    return dialog;
+  }
+
+  /** Returns event rows from the open events feed dialog. */
+  async getEventsFeedRows(
+    dialog: Locator,
+  ): Promise<{ date: string; event: string }[]> {
+    const rows = dialog.locator("table tbody tr");
+    const count = await rows.count();
+    const result: { date: string; event: string }[] = [];
+    for (let i = 0; i < count; i++) {
+      const cells = rows.nth(i).locator("td");
+      const date = ((await cells.nth(0).textContent()) ?? "").trim();
+      const event = ((await cells.nth(1).textContent()) ?? "").trim();
+      if (date && event) result.push({ date, event });
+    }
+    return result;
+  }
+
+  /** Closes the events feed dialog via Escape. */
+  async closeEventsFeedDialog(dialog: Locator): Promise<void> {
+    await this.page.keyboard.press("Escape");
+    await dialog.waitFor({ state: "detached" });
+  }
+
   /** Clicks the "All" filter tab. */
   async clickAllTab(): Promise<void> {
     await this.page.getByRole("button", { name: /^All$/i }).click();
