@@ -1,52 +1,49 @@
 ---
 type: coverage
-updated: '2026-04-02'
+updated: '2026-04-03'
 ---
-# Knowledge Coverage — Phase B Progress
+# Knowledge Coverage — Phase C (Autotest Generation)
 
-## Phase B: Test Documentation Generation
+## Phase C: Autotest Generation Progress
 
-### XLSX Generation Progress (Scope: sick-leave, statistics, admin, security, cross-service)
+### Target Modules (autotest.scope: reports, accounting)
 
-| Module | Phase A Coverage | XLSX Status | Test Cases | Session |
-|--------|-----------------|-------------|------------|---------|
-| **sick-leave** | 92% | **DONE** | 71 (10 suites) | 101 |
-| **statistics** | 93% | **DONE** | 76 (8 suites) | 102 |
-| **admin** | 87% | **DONE** | 84 (8 suites) | 103 |
-| security | 83% | Pending | — | 104 |
-| cross-service | 83% | Pending | — | 105 |
+| Module | XLSX Cases | Tracked | Verified | Failed | Blocked | Pending | Coverage |
+|--------|-----------|---------|----------|--------|---------|---------|----------|
+| reports | 60 | 60 | 8 | 1 | 0 | 51 | 13.3% |
+| accounting | 38 | 0 | 0 | 0 | 0 | 0 | 0% |
 
-### Prior Phase B Completions (before current scope)
+### Reports Breakdown by Suite
 
-| Module | Test Cases | Status |
-|--------|-----------|--------|
-| day-off | 121 | exported |
-| vacation | 100 | drafted |
-| planner | 82 | exported |
-| reports | 60 | drafted |
-| accounting | 38 | drafted |
-| t2724 | 38 | exported |
-| t3404 | 24 | drafted |
+| Suite | Total | Verified | Remaining |
+|-------|-------|----------|-----------|
+| TS-Reports-CRUD | 15 | 7 | 8 |
+| TS-Reports-Confirmation | 12 | 0 | 12 |
+| TS-Reports-Periods | 8 | 0 | 8 |
+| TS-Reports-AutoReject | 5 | 0 | 5 |
+| TS-Reports-Statistics | 8 | 0 | 8 |
+| TS-Reports-Notifications | 4 | 0 | 4 |
+| TS-Reports-Permissions | 8 | 0 | 8 |
 
-### Totals
-- **Scope modules completed:** 3/5 (sick-leave, statistics, admin)
-- **Scope test cases:** 231 (71 + 76 + 84)
-- **Overall test cases:** 694 across 10 modules
-- **Overall XLSX files:** 10 workbooks
+### Session 106 Generated (5 new, all verified)
+- TC-RPT-004: Report in closed period — blocked (Critical, UI)
+- TC-RPT-008: Week navigation arrows (High, UI)
+- TC-RPT-009: Batch create multiple cells (High, UI)
+- TC-RPT-010: Decimal hours 1.5 (High, UI)
+- TC-RPT-011: TAB stacking bug #3398 (High, UI)
 
-### Admin Coverage Detail
-- **Suites:** Projects (13), Calendars (12), Employees (9), Settings (8), Account (7), Permissions (10), PMTool (10), Regression (15)
-- **Priority:** Critical=17, High=35, Medium=29, Low=3
-- **Type:** UI=63 (75%), Hybrid=21 (25%)
-- **Knowledge sources:** 8 vault notes, 120+ tickets mined, role-permission matrix
-- **Key areas covered:** 7 admin pages, 3 project action dialogs, PM Tool sync (rate limit, field mapping, sales filter, missing employee), calendar CRUD (events, SO mapping, year logic), 10 permission roles tested, 15 regression bugs from tickets, tracker config per type, accounting period validation, CS sync issues
+### Prior Phase C Progress (other modules)
 
-### Statistics Coverage Detail
-- **Suites:** ClassicGeneral (12), EmployeeReports (14), NormExcess (10), ExportWSR (10), Permissions (8), HourSum (6), CacheSync (6), Regression (10)
-- **Priority:** Critical=13, High=40, Medium=20, Low=3
-- **Type:** UI=62 (82%), Hybrid=14 (18%)
+| Module | Cases | Verified | Failed | Blocked | Pending | Coverage |
+|--------|-------|----------|--------|---------|---------|----------|
+| t2724 | 38 | 38 | 0 | 0 | 0 | 100% |
+| vacation | 100 | 26 | 0 | 3 | 71 | 26% |
+| day-off | 121 | 25 | 0 | 3 | 0 | 21% |
+| planner | 82 | 24 | 1 | 0 | 57 | 29% |
+| t3404 | 24 | 21 | 0 | 3 | 0 | 88% |
 
-### Sick-Leave Coverage Detail
-- **Suites:** CRUD (12), Lifecycle (8), Accounting (6), Manager (6), Permissions (6), Validation (7), Regression (10), Notifications (5), FamilyMember (6), CrossPage (5)
-- **Priority:** Critical=20, High=30, Medium=18, Low=3
-- **Type:** UI=55 (77%), Hybrid=16 (23%)
+### Phase C Goals
+- Generate and verify autotest specs for all 60 reports test cases
+- Generate and verify autotest specs for all 38 accounting test cases
+- Write-back discovered selectors and patterns to vault
+- Target: 80%+ verified rate per module

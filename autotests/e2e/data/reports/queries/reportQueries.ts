@@ -276,6 +276,169 @@ export async function findContractorAndAdmin(
   return { contractorLogin: row.contractor_login, adminLogin: row.admin_login };
 }
 
+// ─── Phase C: TC-RPT-016..020 (Confirmation suite) ──────────
+
+interface ConfirmationSetupRow {
+  manager_login: string;
+  employee_login: string;
+  employee_name: string;
+  project_name: string;
+  task_name: string;
+  task_id: number;
+}
+
+/**
+ * Finds a manager (PM/ADMIN) and an employee on the same project with a task,
+ * where the target date is within both REPORT and APPROVE open periods
+ * and no report exists for the employee+task+date.
+ *
+ * Used by TC-RPT-016..019 (confirmation page tests).
+ */
+export async function findManagerProjectEmployeeForConfirmation(
+  db: DbClient,
+  targetDate: string,
+): Promise<{
+  managerLogin: string;
+  employeeLogin: string;
+  employeeName: string;
+  projectName: string;
+  taskName: string;
+  taskId: number;
+}> {
+  const row = await db.queryOne<ConfirmationSetupRow>(
+    `SELECT
+       m.login  AS manager_login,
+       e.login  AS employee_login,
+       e.latin_first_name || ' ' || e.latin_last_name AS employee_name,
+       p.name   AS project_name,
+       t.name   AS task_name,
+       t.id     AS task_id
+     FROM ttt_backend.employee m
+     JOIN ttt_backend.employee_global_roles mr ON mr.employee = m.id
+     JOIN ttt_backend.project_member mpm ON mpm.employee = m.id
+     JOIN ttt_backend.project p   ON p.id = mpm.project
+     JOIN ttt_backend.task t      ON t.project = p.id
+     JOIN ttt_backend.project_member epm ON epm.project = p.id
+     JOIN ttt_backend.employee e  ON epm.employee = e.id
+     JOIN ttt_backend.fixed_task ft ON ft.employee = e.id AND ft.task = t.id
+     JOIN ttt_backend.office_period rp
+       ON e.salary_office = rp.office AND rp.type = 'REPORT'
+     JOIN ttt_backend.office_period ap
+       ON e.salary_office = ap.office AND ap.type = 'APPROVE'
+     WHERE m.enabled = true
+       AND e.enabled = true
+       AND m.id != e.id
+       AND mr.role_name IN ('ROLE_PROJECT_MANAGER', 'ROLE_ADMIN')
+       AND p.status = 'ACTIVE'
+       AND upper(COALESCE(mpm.role, '')) IN ('PM', 'DM', 'PO')
+       AND (e.is_contractor IS NULL OR e.is_contractor = false)
+       AND e.login != 'pvaynmaster'
+       AND $1::date >= rp.start_date
+       AND $1::date >= ap.start_date
+       AND NOT EXISTS (
+         SELECT 1 FROM ttt_backend.task_report tr
+         WHERE tr.executor = e.id
+           AND tr.task = t.id
+           AND tr.report_date = $1::date
+       )
+     ORDER BY random()
+     LIMIT 1`,
+    [targetDate],
+  );
+  return {
+    managerLogin: row.manager_login,
+    employeeLogin: row.employee_login,
+    employeeName: row.employee_name,
+    projectName: row.project_name,
+    taskName: row.task_name,
+    taskId: row.task_id,
+  };
+}
+
+/**
+ * Strips the "ProjectName / " prefix from a task name.
+ * The My Tasks page with "Group by project" enabled displays tasks
+ * without the project prefix (e.g., "QA: Android Host" instead of
+ * "WiseMoGuest / QA: Android Host").
+ */
+export function stripProjectPrefix(
+  taskName: string,
+  projectName: string,
+): string {
+  const prefix = `${projectName} / `;
+  return taskName.startsWith(prefix)
+    ? taskName.slice(prefix.length)
+    : taskName;
+}
+
+/**
+ * Same as findManagerProjectEmployeeForConfirmation but ensures no reports
+ * exist on TWO dates (for bulk approve test TC-RPT-020).
+ */
+export async function findManagerProjectEmployeeForBulkApprove(
+  db: DbClient,
+  targetDate1: string,
+  targetDate2: string,
+): Promise<{
+  managerLogin: string;
+  employeeLogin: string;
+  employeeName: string;
+  projectName: string;
+  taskName: string;
+  taskId: number;
+}> {
+  const row = await db.queryOne<ConfirmationSetupRow>(
+    `SELECT
+       m.login  AS manager_login,
+       e.login  AS employee_login,
+       e.latin_first_name || ' ' || e.latin_last_name AS employee_name,
+       p.name   AS project_name,
+       t.name   AS task_name,
+       t.id     AS task_id
+     FROM ttt_backend.employee m
+     JOIN ttt_backend.employee_global_roles mr ON mr.employee = m.id
+     JOIN ttt_backend.project_member mpm ON mpm.employee = m.id
+     JOIN ttt_backend.project p   ON p.id = mpm.project
+     JOIN ttt_backend.task t      ON t.project = p.id
+     JOIN ttt_backend.project_member epm ON epm.project = p.id
+     JOIN ttt_backend.employee e  ON epm.employee = e.id
+     JOIN ttt_backend.fixed_task ft ON ft.employee = e.id AND ft.task = t.id
+     JOIN ttt_backend.office_period rp
+       ON e.salary_office = rp.office AND rp.type = 'REPORT'
+     JOIN ttt_backend.office_period ap
+       ON e.salary_office = ap.office AND ap.type = 'APPROVE'
+     WHERE m.enabled = true
+       AND e.enabled = true
+       AND m.id != e.id
+       AND mr.role_name IN ('ROLE_PROJECT_MANAGER', 'ROLE_ADMIN')
+       AND p.status = 'ACTIVE'
+       AND upper(COALESCE(mpm.role, '')) IN ('PM', 'DM', 'PO')
+       AND (e.is_contractor IS NULL OR e.is_contractor = false)
+       AND e.login != 'pvaynmaster'
+       AND $1::date >= rp.start_date
+       AND $1::date >= ap.start_date
+       AND $2::date >= rp.start_date
+       AND $2::date >= ap.start_date
+       AND NOT EXISTS (
+         SELECT 1 FROM ttt_backend.task_report tr
+         WHERE tr.executor = e.id
+           AND tr.task = t.id
+           AND tr.report_date IN ($1::date, $2::date)
+       )
+     ORDER BY random()
+     LIMIT 1`,
+    [targetDate1, targetDate2],
+  );
+  return {
+    managerLogin: row.manager_login,
+    employeeLogin: row.employee_login,
+    employeeName: row.employee_name,
+    projectName: row.project_name,
+    taskName: row.task_name,
+    taskId: row.task_id,
+  };
+}
+
 /**
  * Returns a weekday in the current week as "dd.mm" and "yyyy-mm-dd" formats.
  * @param dayOffset 0=Mon, 1=Tue, 2=Wed(default), 3=Thu, 4=Fri

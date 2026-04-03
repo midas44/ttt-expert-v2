@@ -4,10 +4,10 @@ session:
   offhours_utc: 15:00-03:00
   max_duration_minutes: 90
 phase:
-  current: generation
+  current: autotest_generation
   generation_allowed: true
   coverage_override: -1
-  scope: sick-leave,statistics,admin,security,cross-service
+  scope: vacation,day-off
 thresholds:
   knowledge_coverage_target: 0.8
   note_quality_min_links: 2
@@ -33,12 +33,12 @@ autonomy:
   log_dir: expert-system/logs
   stop: false
   model: opus
-  effort: max                        # default effort level
-  effort_phase_a: max                # knowledge acquisition — deep reasoning
-  effort_phase_b: max                # test documentation — comprehensive analysis
-  effort_phase_c: max               # autotest generation — pattern-following
+  effort: max
+  effort_phase_a: max
+  effort_phase_b: max
+  effort_phase_c: max
   allow_api_mutations: true
-stop_at: "2026-04-03 21:00"                          # Auto-stop at datetime (UTC), e.g. "2026-03-29 12:00". Empty = disabled.
+stop_at: ""
 peak_hours:
   enabled: true
   range_utc: 12:00-19:00
@@ -49,7 +49,7 @@ autotest:
   target_env: qa-1
   max_tests_per_session: 5
   auto_fix_attempts: 3
-  scope: reports,accounting
+  scope: vacation,day-off
   priority_order:
   - vacation
   - sick-leave

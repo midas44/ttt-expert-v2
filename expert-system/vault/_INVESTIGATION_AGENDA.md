@@ -1,57 +1,62 @@
 ---
 type: agenda
-updated: '2026-04-02'
+updated: '2026-04-03'
 ---
-# Investigation Agenda — Phase B (Test Documentation Generation)
+# Investigation Agenda — Phase C (Autotest Generation)
 
-## Scope: sick-leave, statistics, admin, security, cross-service
+## Scope: reports, accounting (`autotest.scope`)
 
-### P0 — Next Session (104) — Security XLSX
+### P0 — Session 107 Immediate
 
-- [ ] **Knowledge enrichment** — re-read security-patterns, role-permission-matrix, JWT auth, API token model, OWASP-relevant patterns
-- [ ] **Qase check** — verify 0 existing security cases
-- [ ] **Define test suites** — plan TS-Security-AuthModel, TS-Security-RoleMatrix, TS-Security-APIBypass, TS-Security-CrossOffice, TS-Security-TokenPerms
-- [ ] **Write generator** — `expert-system/generators/security/generate.py`
-- [ ] **Generate XLSX** — `test-docs/security/security.xlsx`
-- [ ] **Track cases** — insert into test_case_tracking
+- [ ] Reports CRUD remaining: TC-RPT-006 (pin/unpin), TC-RPT-007 (rename), TC-RPT-012 (comment), TC-RPT-013 (cell locking), TC-RPT-014 (manager view)
+- [ ] Re-attempt TC-RPT-005 (add task — failed in prior session)
+- [ ] Build ConfirmationPage object for confirmation suite
 
-### P1 — Session 105 — Cross-Service XLSX
+### P1 — Reports Confirmation Suite (12 cases)
 
-- [ ] **Knowledge enrichment** — CS sync divergence, MQ events, data model discrepancies, office sync across 3 services
-- [ ] **Define test suites** — plan TS-CrossService-CSSync, TS-CrossService-DataDivergence, TS-CrossService-EventPropagation
-- [ ] **Write generator** — `expert-system/generators/cross-service/generate.py`
-- [ ] **Generate XLSX** — `test-docs/cross-service/cross-service.xlsx`
-- [ ] **Track cases** — insert into test_case_tracking
+- [ ] TC-RPT-016..027: Confirmation page tests (approve, reject, bulk approve, tabs)
+- [ ] Requires new ConfirmationPage page object
+- [ ] Selectors available in reports-pages.md vault note
 
-### P2 — Phase B Completion Check (Session 105-106)
+### P2 — Reports Periods, AutoReject, Statistics, Notifications, Permissions
 
-- [ ] Review all 12+ XLSX workbooks for completeness
-- [ ] Verify all modules in scope have coverage
-- [ ] Log Phase B readiness report to _SESSION_BRIEFING.md
-- [ ] If auto_phase_transition: transition to Phase C for autotest.scope modules
+- [ ] Periods suite (8 cases) — needs Accounting page object
+- [ ] AutoReject suite (5 cases) — depends on Periods
+- [ ] Statistics suite (8 cases) — needs Statistics page navigation
+- [ ] Notifications suite (4 cases) — API-only
+- [ ] Permissions suite (8 cases) — multi-role testing
+
+### P3 — Accounting Module (38 cases)
+
+- [ ] After reports module is sufficiently covered
+- [ ] Parse accounting XLSX and register cases
+
+### P4 — Knowledge Write-Back (ongoing)
+
+- [ ] Document discovered selectors in vault
+- [ ] Update UI flow notes with confirmed patterns
+- [ ] Log data patterns for test data generation
 
 <details>
-<summary>Completed Items (Phase B, Sessions 101-103)</summary>
+<summary>Completed Items (Session 106)</summary>
 
-**Session 103:**
-- [x] Admin context: vault notes read (8 key sources), Qase check (0 cases), 120+ tickets already mined
-- [x] Admin UI verified on qa-1 via Playwright (logged in as pvaynmaster)
-- [x] 8 test suites defined: Projects, Calendars, Employees, Settings, Account, Permissions, PMTool, Regression
-- [x] Generator written: `expert-system/generators/admin/generate.py`
-- [x] XLSX generated: `test-docs/admin/admin.xlsx` — 84 test cases
-- [x] SQLite tracked: 84 records in test_case_tracking
-
-**Session 102:**
-- [x] Statistics: 8 suites, 76 test cases in `test-docs/statistics/statistics.xlsx`
-
-**Session 101:**
-- [x] Sick-leave: 10 suites, 71 test cases in `test-docs/sick-leave/sick-leave.xlsx`
+- [x] Phase B→C transition: config.yaml updated, vault control files reset
+- [x] Manifest refreshed: 845 cases, 60 reports cases
+- [x] All 60 reports cases registered in autotest_tracking
+- [x] TC-RPT-004: Report in closed period — verified
+- [x] TC-RPT-008: Week navigation arrows — verified
+- [x] TC-RPT-009: Batch create multiple cells — verified
+- [x] TC-RPT-010: Decimal hours (1.5) — verified
+- [x] TC-RPT-011: TAB stacking bug #3398 — verified
+- [x] MyTasksPage: 6 new week navigation + editability methods
+- [x] reportQueries.ts: findEmployeeWithMultipleTasks query
+- [x] Vault write-back: reports-pages.md updated with selectors
 
 </details>
 
 <details>
-<summary>Completed Items (Phase A, Sessions 96-100)</summary>
+<summary>Completed Items (Phase B, Sessions 101-105)</summary>
 
-**Session 96-100:** Phase A knowledge acquisition for all 5 modules — 87.6% coverage, 500+ tickets mined, cross-env comparison, SQLite maintenance. See session 100 briefing for details.
+- [x] Phase B total: 845 cases across 12 modules (sick-leave, statistics, admin, security, cross-service + prior)
 
 </details>
