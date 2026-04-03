@@ -389,3 +389,35 @@ await requestsPage.waitForRequestRowToDisappear(data.employeeName, data.periodPa
 - Column: `days` (NOT `annual_leave_days`)
 - FK: `office` (NOT `office_id`)
 - Join: `office_annual_leave oal ON oal.office = o.id`
+
+
+## Calendar Schema for Holiday Day-Count (discovered Session 117)
+
+The "Number of days" field in the vacation creation dialog uses the employee's office-specific production calendar to exclude holidays from the working day count.
+
+**Schema join path (from test data class to calendar_days):**
+```
+ttt_vacation.employee.office_id
+  → ttt_calendar.office_calendar.office_id
+  → ttt_calendar.office_calendar.calendar_id
+  → ttt_calendar.calendar.id
+  → ttt_calendar.calendar_days.calendar_id
+```
+
+**Key schema facts:**
+- Table: `ttt_calendar.calendar_days` (PLURAL, not `calendar_day`)
+- Date column: `calendar_date` (not `event_date`)
+- Duration: `0` = holiday, `7` = short day (7h)
+- `ttt_calendar.calendar` has NO `office_id` — must join through `office_calendar`
+- Vacation and calendar schemas share the same office IDs (`ttt_vacation.office.id = ttt_calendar.office.id`)
+
+**Query for finding holidays affecting a Mon-Fri range:**
+```sql
+SELECT COUNT(*)::text AS cnt
+FROM ttt_calendar.calendar_days cd
+JOIN ttt_calendar.calendar c ON cd.calendar_id = c.id
+JOIN ttt_calendar.office_calendar oc ON oc.calendar_id = c.id
+WHERE oc.office_id = $1::bigint
+  AND cd.calendar_date BETWEEN $2::date AND $3::date
+  AND cd.duration = 0
+```
