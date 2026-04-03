@@ -11224,7 +11224,7 @@
               "module_component": "vacation/payment",
               "notes": "Sum validation: regularDaysPayed + administrativeDaysPayed must equal vacation.days.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-028",
@@ -11238,7 +11238,7 @@
               "module_component": "vacation/payment",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-029",
@@ -11252,7 +11252,7 @@
               "module_component": "vacation/payment",
               "notes": "NON_EDITABLE_STATUSES = {CANCELED, PAID}. Permission service returns empty set for PAID.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-030",
@@ -11280,7 +11280,7 @@
               "module_component": "vacation/payment",
               "notes": "Bug #3379 (fixed): was using Report period instead of Approval period.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-032",
@@ -11308,7 +11308,7 @@
               "module_component": "vacation/payment",
               "notes": "OPEN bug. Regression test — should catch if the 500 changes to a proper validation error.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             }
           ]
         },

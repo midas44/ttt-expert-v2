@@ -74,6 +74,7 @@ export class ApiVacationSetupFixture {
       login: this.tokenOwner,
       startDate,
       endDate,
+      days: vacation.days ?? undefined,
     };
   }
 
@@ -150,6 +151,68 @@ export class ApiVacationSetupFixture {
     return { ...vacation, status: "REJECTED" };
   }
 
+  /** Pay a vacation via API. Returns the pay response. */
+  async payVacation(
+    vacationId: number,
+    regularDays: number,
+    adminDays: number,
+  ): Promise<void> {
+    const url = `${this.baseUrl}/pay/${vacationId}`;
+    const resp = await this.request.put(url, {
+      headers: this.headers,
+      data: {
+        regularDaysPayed: regularDays,
+        administrativeDaysPayed: adminDays,
+      },
+    });
+    if (!resp.ok()) {
+      const body = await resp.text();
+      throw new Error(
+        `Failed to pay vacation ${vacationId}: ${resp.status()} ${body}`,
+      );
+    }
+  }
+
+  /** Create → Approve → Pay a vacation as token owner. Returns the paid vacation.
+   *  Uses the vacation's working day count for payment split. */
+  async createApproveAndPay(
+    startDate: string,
+    endDate: string,
+    paymentType = "REGULAR",
+  ): Promise<VacationApiResult> {
+    const vacation = await this.createVacation(startDate, endDate, paymentType);
+    await this.approveVacation(vacation.id);
+    const days = vacation.days ?? 5;
+    const regular = paymentType === "ADMINISTRATIVE" ? 0 : days;
+    const admin = paymentType === "ADMINISTRATIVE" ? days : 0;
+    await this.payVacation(vacation.id, regular, admin);
+    return { ...vacation, status: "PAID" };
+  }
+
+  /** Make a raw PUT request and return the response (for testing error cases). */
+  async rawPut(
+    urlPath: string,
+    data?: Record<string, unknown>,
+  ): Promise<{ status: number; body: any }> {
+    const url = `${this.tttConfig.appUrl}${urlPath}`;
+    const resp = await this.request.put(url, {
+      headers: this.headers,
+      ...(data ? { data } : {}),
+    });
+    const body = await resp.json().catch(() => resp.text());
+    return { status: resp.status(), body };
+  }
+
+  /** Make a raw DELETE request and return the response (for testing error cases). */
+  async rawDelete(
+    urlPath: string,
+  ): Promise<{ status: number; body: any }> {
+    const url = `${this.tttConfig.appUrl}${urlPath}`;
+    const resp = await this.request.delete(url, { headers: this.headers });
+    const body = await resp.json().catch(() => resp.text());
+    return { status: resp.status(), body };
+  }
+
   /** Create → Cancel a vacation as token owner. Returns the canceled vacation. */
   async createAndCancel(
     startDate: string,
@@ -211,4 +274,5 @@ export interface VacationApiResult {
   login: string;
   startDate: string;
   endDate: string;
+  days?: number;
 }

@@ -1,67 +1,62 @@
----
-type: briefing
-updated: '2026-04-03'
----
 # Session Briefing — Phase C (Autotest Generation)
 
-## Last Session: 108 (2026-04-03)
+## Last Session: 109 (2026-04-03)
 **Phase:** C — Autotest Generation
-**Scope:** reports, accounting (`autotest.scope`)
+**Scope:** vacation, day-off (`autotest.scope`)
 **Target Env:** qa-1
 **Mode:** Full autonomy
 
-## Session 108 Accomplishments
+## Session 109 Accomplishments
 
-### 5 Reports Confirmation Suite Tests — All Verified
+### 5 Vacation Payment Suite Tests — All Verified
 | Test ID | Title | Type | Priority | Status | Attempts |
 |---------|-------|------|----------|--------|----------|
-| TC-RPT-016 | Approve hours — By Projects tab | UI | High | verified | 1 |
-| TC-RPT-017 | Approve hours — By Employee tab | UI | High | verified | 4 |
-| TC-RPT-018 | Reject hours with comment | UI | High | verified | 1 |
-| TC-RPT-019 | Re-report after rejection clears rejected state | UI | High | verified | 2 |
-| TC-RPT-020 | Bulk approve — Approve all button | UI | High | verified | 1 |
+| TC-VAC-029 | PAID vacation — terminal state, no further transitions | API | Critical | verified | 3 |
+| TC-VAC-027 | Payment validation — wrong day sum rejected | API | High | verified | 1 |
+| TC-VAC-028 | Cannot pay NEW vacation | API | High | verified | 1 |
+| TC-VAC-031 | Payment month validation — closed period blocked | UI | High | verified | 1 |
+| TC-VAC-033 | Error 500 on AV=true negative balance payment (#3363) | API | High | verified | 2 |
 
 ### New Artifacts Created
-- **ConfirmationPage** (`e2e/pages/ConfirmationPage.ts`) — full page object for /approve page with both tabs, dropdown selection, week navigation, approve/reject/bulk-approve actions, reject comment flow
-- **ApiReportSetupFixture** (`e2e/fixtures/ApiReportSetupFixture.ts`) — API fixture for creating/deleting/rejecting reports via REST API with API_SECRET_TOKEN auth
-- **reportQueries.ts** additions:
-  - `findManagerProjectEmployeeForConfirmation()` — finds manager+employee pair on same project with pinned task, PM-level project role, open report+approve periods
-  - `findManagerProjectEmployeeForBulkApprove()` — same but for 2 dates without existing reports
-  - `stripProjectPrefix()` — strips "Project / " prefix from task names for My Tasks page display
-- **5 data classes**: ReportsTc016Data through ReportsTc020Data
+- **ApiVacationSetupFixture** — extended with `payVacation()`, `createApproveAndPay()`, `rawPut()`, `rawDelete()` methods; `VacationApiResult` now includes optional `days` field
+- **5 data classes**: VacationTc027Data through VacationTc033Data
+- **5 spec files**: vacation-tc027..tc033.spec.ts
 
 ### Key Discoveries & Fixes
-1. **Employee dropdown searches by full name** (latin_first_name + latin_last_name), not login — fixed TC-017 query to return `employeeName`
-2. **Project-level PM role required** — Confirmation page only shows employees from projects where the manager has `project_member.role IN ('PM', 'DM', 'PO')`, not just global ROLE_PROJECT_MANAGER — added to query
-3. **Task pinning required** — tasks must be in `fixed_task` table to appear on By Employees tab — added JOIN to query
-4. **"Group by project" strips prefix** — My Tasks page displays "QA: Android Host" not "WiseMoGuest / QA: Android Host" — added `stripProjectPrefix()` helper, used in TC-019
+1. **PAID vacation permission model**: cancel/reject return 403 (not 400) — permission service returns empty set for PAID status
+2. **Update endpoint returns 405**: PUT to `/api/vacation/v1/vacations` with existing vacation body returns Method Not Allowed
+3. **Ghost conflict bug**: server's crossing validation counts DELETED/CANCELED vacations, but `hasVacationConflict()` query excludes them — must use high week offsets (45+) to avoid dense areas of test detritus
+4. **Same-user parallel execution**: tests sharing pvaynmaster cannot run in parallel due to employee_vacation row contention — must use `--workers=1` when testing payment suite together
 
-### Reports Module Autotest Progress
-- Total tracked: 60 cases
-- Verified: 17 (TC-RPT-001..004, 006, 008..012, 014..020)
-- Failed: 2 (TC-RPT-005, TC-RPT-007)
-- Pending: 41
-- Coverage: 28.3%
+### Vacation Module Autotest Progress
+- Total tracked: 100 cases
+- Verified: 31 (TC-VAC-001..011, 015..023, 025..029, 031, 033..038, 047..053)
+- Blocked: 3
+- Pending: 66
+- Coverage: 31.0%
+
+### Day-off Module Autotest Progress
+- Total tracked: 28 cases
+- Verified: 25
+- Blocked: 3
+- Pending: 0
+- Coverage: 89.3% (fully covered minus blocked)
 
 ### Overall Autotest Progress
 - Total: 332 cases
-- Verified: 151
+- Verified: 156
 - Failed: 3
 - Blocked: 9
-- Pending: 169
-- Coverage: 45.5%
-
-### Knowledge Write-Back
-- Updated `exploration/ui-flows/reports-pages.md` with confirmed confirmation page selectors, dropdown behavior, PM role discovery, task pinning requirement, and "Group by project" prefix stripping
+- Pending: 164
+- Coverage: 47.0%
 
 ### Next Session Priority
-1. Continue reports Confirmation suite: TC-RPT-021..027 (more approve/reject edge cases, week navigation, filtering)
-2. Re-attempt TC-RPT-007 (rename task) with dropdown-selection approach
-3. Consider TC-RPT-013 (cell locking — needs 2 browsers)
-4. Start accounting module if reports confirmation suite complete
+1. Continue vacation payment/transition tests: TC-VAC-030 (delete PAID+EXACT), TC-VAC-032 (auto-pay cron)
+2. Vacation day balance tests: TC-VAC-057..063 (AV=true/false balance, FIFO, corrections)
+3. Vacation notification tests: TC-VAC-064..070
+4. Vacation regression tests: TC-VAC-071..084
 
 ## State
-- Branch: dev34
-- Config: `phase.current: "autotest_generation"`, `autotest.enabled: true`
-- All 17 verified reports tests pass reliably
-- QMD: should re-embed after significant vault updates
+- Branch: dev35
+- Config: `phase.current: "autotest_generation"`, `autotest.scope: "vacation,day-off"`
+- All 31 verified vacation tests + 25 day-off tests pass reliably

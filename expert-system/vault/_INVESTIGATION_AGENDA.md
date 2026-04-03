@@ -1,35 +1,28 @@
----
-type: agenda
-updated: '2026-04-03'
----
 # Investigation Agenda — Phase C (Autotest Generation)
 
-## Scope: reports, accounting (`autotest.scope`)
+## Scope: vacation, day-off (`autotest.scope`)
 
-### P0 — Session 107 Immediate
+### P0 — Next Session Immediate
 
-- [ ] Reports CRUD remaining: TC-RPT-006 (pin/unpin), TC-RPT-007 (rename), TC-RPT-012 (comment), TC-RPT-013 (cell locking), TC-RPT-014 (manager view)
-- [ ] Re-attempt TC-RPT-005 (add task — failed in prior session)
-- [ ] Build ConfirmationPage object for confirmation suite
+- [ ] Vacation payment/transition remaining: TC-VAC-030 (delete PAID+EXACT API), TC-VAC-032 (auto-pay cron API)
+- [ ] Vacation day balance: TC-VAC-057 (AV=true full year), TC-VAC-058 (AV=true negative), TC-VAC-059 (AV=false monthly)
+- [ ] Vacation FIFO: TC-VAC-060 (earliest year first), TC-VAC-061 (redistribution on cancel)
 
-### P1 — Reports Confirmation Suite (12 cases)
+### P1 — Vacation Notifications & Regression (High Priority)
 
-- [ ] TC-RPT-016..027: Confirmation page tests (approve, reject, bulk approve, tabs)
-- [ ] Requires new ConfirmationPage page object
-- [ ] Selectors available in reports-pages.md vault note
+- [ ] TC-VAC-064..070: Notification tests (create→approver, approve→employee, reject, cancel, also-notify, wrong payment month, auto-conversion)
+- [ ] TC-VAC-071..084: Regression tests (overlapping not blocked, payment month edit, edit shows 0 available, redirect status, ghost conflicts, etc.)
 
-### P2 — Reports Periods, AutoReject, Statistics, Notifications, Permissions
+### P2 — Vacation Permissions & Advanced
 
-- [ ] Periods suite (8 cases) — needs Accounting page object
-- [ ] AutoReject suite (5 cases) — depends on Periods
-- [ ] Statistics suite (8 cases) — needs Statistics page navigation
-- [ ] Notifications suite (4 cases) — API-only
-- [ ] Permissions suite (8 cases) — multi-role testing
+- [ ] TC-VAC-085..090: Permission tests (owner edit, non-approver, ReadOnly, accountant, canBeCancelled guard)
+- [ ] TC-VAC-039..046: Date and validation tests (next year, 3-month restriction, payment month range, holiday impact)
+- [ ] TC-VAC-050..054: Table/filter tests (column filter, sort, footer, availability chart)
 
-### P3 — Accounting Module (38 cases)
+### P3 — Vacation API & Edge Cases
 
-- [ ] After reports module is sufficiently covered
-- [ ] Parse accounting XLSX and register cases
+- [ ] TC-VAC-091..100: API error handling (empty body, invalid type, missing fields, exception leakage, deadlock)
+- [ ] TC-VAC-013 (delete PAID+NON-EXACT), TC-VAC-014 (soft delete), TC-VAC-022 (approval resets on edit)
 
 ### P4 — Knowledge Write-Back (ongoing)
 
@@ -38,25 +31,22 @@ updated: '2026-04-03'
 - [ ] Log data patterns for test data generation
 
 <details>
-<summary>Completed Items (Session 106)</summary>
+<summary>Completed Items (Session 109)</summary>
 
-- [x] Phase B→C transition: config.yaml updated, vault control files reset
-- [x] Manifest refreshed: 845 cases, 60 reports cases
-- [x] All 60 reports cases registered in autotest_tracking
-- [x] TC-RPT-004: Report in closed period — verified
-- [x] TC-RPT-008: Week navigation arrows — verified
-- [x] TC-RPT-009: Batch create multiple cells — verified
-- [x] TC-RPT-010: Decimal hours (1.5) — verified
-- [x] TC-RPT-011: TAB stacking bug #3398 — verified
-- [x] MyTasksPage: 6 new week navigation + editability methods
-- [x] reportQueries.ts: findEmployeeWithMultipleTasks query
-- [x] Vault write-back: reports-pages.md updated with selectors
+- [x] TC-VAC-029: PAID vacation terminal state — verified (3 attempts, fixed status code expectations)
+- [x] TC-VAC-027: Payment validation wrong day sum — verified (1 attempt)
+- [x] TC-VAC-028: Cannot pay NEW vacation — verified (1 attempt)
+- [x] TC-VAC-031: Payment month closed period blocked — verified (1 attempt)
+- [x] TC-VAC-033: Error 500 AV=true negative balance — verified (2 attempts, ghost conflict fix)
+- [x] ApiVacationSetupFixture: added payVacation, createApproveAndPay, rawPut, rawDelete
 
 </details>
 
 <details>
-<summary>Completed Items (Phase B, Sessions 101-105)</summary>
+<summary>Completed Items (Sessions 106-108, reports scope)</summary>
 
-- [x] Phase B total: 845 cases across 12 modules (sick-leave, statistics, admin, security, cross-service + prior)
+- [x] Reports CRUD: TC-RPT-001..004, 006, 008..012, 014..020 — 17 verified
+- [x] ConfirmationPage, ApiReportSetupFixture, reportQueries — all created
+- [x] Phase B total: 845 cases across 12 modules
 
 </details>

@@ -350,3 +350,23 @@ await requestsPage.waitForRequestRowToDisappear(data.employeeName, data.periodPa
 - Table rows: `table.user-vacations tbody tr, table tbody tr`
 - Sort button: inside `table thead th` filtered by column label, `getByRole("button", { name: columnLabel })`
 - Column filter button: second button inside the `th` (after sort button)
+
+
+## Payment API Behavior (discovered during Phase C Session 109)
+
+### Terminal State (PAID) Response Codes
+- `PUT /cancel/{id}` on PAID → **403 Forbidden** (not 400) — permission service returns empty action set
+- `PUT /reject/{id}` on PAID → **403 Forbidden**
+- `PUT /vacations` (update body with PAID id) → **405 Method Not Allowed**
+- `DELETE /{id}` on PAID+EXACT → **403 Forbidden**
+- Hard-delete via `DELETE /test/vacations/{id}` always works (bypasses checks)
+
+### Payment Validation
+- Wrong day sum (`regularDaysPayed + administrativeDaysPayed != vacation.days`) → 400, errorCode: `exception.vacation.pay.days.not.equal`
+- Pay NEW vacation → 400 (status must be APPROVED)
+- `createApproveAndPay()` workflow: create → approve → read `days` from response → pay with correct split
+
+### Ghost Conflict Issue
+- Server crossing validation includes DELETED/CANCELED vacations (ghost conflicts)
+- `hasVacationConflict()` in vacationQueries.ts excludes those statuses
+- Workaround: use high week offsets (45+) for payment tests to avoid dense test data regions
