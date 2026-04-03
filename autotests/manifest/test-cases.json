@@ -1,5 +1,5 @@
 {
-  "generated": "2026-04-03T01:00:34.705682+00:00",
+  "generated": "2026-04-03T22:12:09.611367+00:00",
   "total_cases": 845,
   "modules": {
     "accounting": {
@@ -2814,7 +2814,7 @@
               "module_component": "day-off/employee-view",
               "notes": "Duration: 0 = day-off (debit), 8 = worked holiday (credit), 7 = half-day",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-DO-002",
@@ -2828,7 +2828,7 @@
               "module_component": "day-off/navigation",
               "notes": "Known navigation bug: Days off tab sometimes redirects to /sick-leave/my. Verify this does NOT happen.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-DO-003",
@@ -2842,7 +2842,7 @@
               "module_component": "day-off/lifecycle",
               "notes": "TransferDaysoffModal: minDate=originalDate for future dates. maxDate=end of next year.",
               "classified_type": "hybrid",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-DO-004",
@@ -2856,7 +2856,7 @@
               "module_component": "day-off/lifecycle",
               "notes": "Only personalDate is changeable via PATCH. Optional approvers stay ASKED after edit.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-DO-005",
@@ -2870,7 +2870,7 @@
               "module_component": "day-off/lifecycle",
               "notes": "UI uses DELETE endpoint, not PUT /cancel. Cancel X only visible on NEW status rows.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-DO-006",
@@ -2884,7 +2884,7 @@
               "module_component": "day-off/employee-view",
               "notes": "BUG-DO-32: No calendar events before 2024 reported. Verify this is fixed.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-DO-007",
@@ -2898,7 +2898,7 @@
               "module_component": "day-off/employee-view",
               "notes": "Russia typically has the most holidays. Exact count depends on year and working-weekend transfers.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-DO-008",
@@ -2912,7 +2912,7 @@
               "module_component": "day-off/employee-view",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-DO-009",
@@ -2926,7 +2926,7 @@
               "module_component": "day-off/display",
               "notes": "Date format: DD.MM.YYYY (abbreviated weekday), e.g., '01.05.2026 (fr)'",
               "classified_type": "hybrid",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-DO-010",
@@ -2940,7 +2940,7 @@
               "module_component": "day-off/display",
               "notes": "",
               "classified_type": "hybrid",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-DO-011",
@@ -2954,7 +2954,7 @@
               "module_component": "day-off/lifecycle",
               "notes": "Edit button logic: NOT weekend AND duration=0 AND lastApprovedDate >= today",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-DO-012",
@@ -2968,7 +2968,7 @@
               "module_component": "day-off/lifecycle",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-DO-013",
@@ -2982,7 +2982,7 @@
               "module_component": "day-off/validation",
               "notes": "Frontend: minDate = moment(originalDate) when original date is in the future",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-DO-014",
@@ -2996,7 +2996,7 @@
               "module_component": "day-off/validation",
               "notes": "Frontend: maxDate = moment(originalDate).add(1, 'year').endOf('year')",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-DO-015",
@@ -3038,7 +3038,7 @@
               "module_component": "day-off/validation",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             }
           ]
         },
@@ -3056,7 +3056,7 @@
               "module_component": "day-off/approval",
               "notes": "Inline button: getByTestId('daysoff-request-action-approve')",
               "classified_type": "hybrid",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-DO-019",
@@ -3070,7 +3070,7 @@
               "module_component": "day-off/approval",
               "notes": "Modal: getByRole('dialog', { name: 'Request details' }), Button: getByRole('button', { name: 'Approve' })",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-DO-020",
@@ -3084,7 +3084,7 @@
               "module_component": "day-off/approval",
               "notes": "BUG-DO-6: Ledger is NOT reverted on rejection. Orphaned entries accumulate.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-DO-021",
@@ -3098,7 +3098,7 @@
               "module_component": "day-off/approval",
               "notes": "Dialog: getByRole('dialog', { name: 'Redirect the rescheduling request' })",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-DO-022",
@@ -3112,7 +3112,7 @@
               "module_component": "day-off/approval",
               "notes": "Test IDs: daysoff-request-action-approve, -reject, -redirect, -info",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-DO-023",
@@ -3126,7 +3126,7 @@
               "module_component": "day-off/approval",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-DO-024",
@@ -3140,7 +3140,7 @@
               "module_component": "day-off/approval",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-DO-025",
@@ -3154,7 +3154,7 @@
               "module_component": "day-off/approval",
               "notes": "Edit mode disables Reject/Approve/Redirect buttons. This is a key UX safety mechanism.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-DO-026",
@@ -3168,7 +3168,7 @@
               "module_component": "day-off/approval",
               "notes": "",
               "classified_type": "hybrid",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-DO-027",
@@ -3182,7 +3182,7 @@
               "module_component": "day-off/approval",
               "notes": "Prevents accidentally approving/rejecting while editing optional approvers",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-DO-028",
@@ -3196,7 +3196,7 @@
               "module_component": "day-off/approval",
               "notes": "Approvable statuses: NEW, REJECTED. BUG-DO-6: Ledger not reverted on reject — test verifies this accumulation.",
               "classified_type": "hybrid",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-DO-029",
@@ -3210,7 +3210,7 @@
               "module_component": "day-off/approval",
               "notes": "Rejectable statuses: NEW, APPROVED (when personalDate >= report period start)",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-DO-030",
@@ -3224,7 +3224,7 @@
               "module_component": "day-off/approval",
               "notes": "CPO self-approval bypasses normal approval chain",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-DO-031",
@@ -4546,7 +4546,7 @@
               "module_component": "planner/navigation",
               "notes": "URL uses hash-like route: /planner/TABS_ASSIGNMENTS_TASK",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-002",
@@ -4560,7 +4560,7 @@
               "module_component": "planner/navigation",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-003",
@@ -4574,7 +4574,7 @@
               "module_component": "planner/navigation",
               "notes": "currentDay stored in Redux plannerTasks slice, persisted to localStorage.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-004",
@@ -4588,7 +4588,7 @@
               "module_component": "planner/navigation",
               "notes": "react-select dropdown with CSS prefix selectbox__.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-005",
@@ -4602,7 +4602,7 @@
               "module_component": "planner/navigation",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-006",
@@ -4616,7 +4616,7 @@
               "module_component": "planner/navigation",
               "notes": "Placeholder text: 'My project / my task, ticket number or URL 1,5h'",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-007",
@@ -4630,7 +4630,7 @@
               "module_component": "planner/navigation",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-008",
@@ -4644,7 +4644,7 @@
               "module_component": "planner/navigation",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-009",
@@ -4658,7 +4658,7 @@
               "module_component": "planner/navigation",
               "notes": "Auto-reconnect delay: 500ms on disconnect.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-010",
@@ -4672,7 +4672,7 @@
               "module_component": "planner/navigation",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-011",
@@ -4686,7 +4686,7 @@
               "module_component": "planner/navigation",
               "notes": "Observed banners: norm exceeded, overdue day-off, non-working days reminder.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             }
           ]
         },
@@ -4704,7 +4704,7 @@
               "module_component": "planner/task-crud",
               "notes": "Search supports: project/task name, ticket number, tracker URL.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-013",
@@ -4718,7 +4718,7 @@
               "module_component": "planner/task-crud",
               "notes": "Editing triggers lock acquisition. Other users see cell as locked.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-014",
@@ -4732,7 +4732,7 @@
               "module_component": "planner/task-crud",
               "notes": "Comment cell has two buttons. Multi-line text supported.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-015",
@@ -4746,7 +4746,7 @@
               "module_component": "planner/task-crud",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-016",
@@ -4760,7 +4760,7 @@
               "module_component": "planner/task-crud",
               "notes": "Deletion is one-way — no un-delete mechanism (same as close-by-tag).",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-017",
@@ -4774,7 +4774,7 @@
               "module_component": "planner/task-crud",
               "notes": "readOnlyEmployee goes from true to false. WebSocket TaskAssignmentGenerateEvent published.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-018",
@@ -4788,7 +4788,7 @@
               "module_component": "planner/task-crud",
               "notes": "Per-employee editing can be toggled independently of global 'Open for editing'.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-019",
@@ -4802,7 +4802,7 @@
               "module_component": "planner/task-crud",
               "notes": "Status derived from tracker ticket info.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-020",
@@ -4816,7 +4816,7 @@
               "module_component": "planner/task-crud",
               "notes": "These Info values are what close-by-tag matches against.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             }
           ]
         },
@@ -4834,7 +4834,7 @@
               "module_component": "planner/dnd",
               "notes": "Dual ordering system: next_assignment (linked list) + position (index).",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-022",
@@ -4848,7 +4848,7 @@
               "module_component": "planner/dnd",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-023",
@@ -4862,7 +4862,7 @@
               "module_component": "planner/dnd",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "failed"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-024",
@@ -4876,7 +4876,7 @@
               "module_component": "planner/dnd",
               "notes": "Root cause identified: splice commented out with TODO. Regression test.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-025",
@@ -4890,7 +4890,7 @@
               "module_component": "planner/dnd",
               "notes": "Root cause: useEffect with .sort() triggers on every rowsMap change, disrupting DnD order.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-PLN-026",
@@ -5752,7 +5752,7 @@
               "module_component": "reports/crud",
               "notes": "Effort stored in minutes in DB (×60). LockService prevents concurrent edits — cell shows lock icon if already being edited by another user.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-RPT-002",
@@ -5766,7 +5766,7 @@
               "module_component": "reports/crud",
               "notes": "Any effort change resets state to REPORTED and clears approver. This is a key regression test (state should always reset).",
               "classified_type": "hybrid",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-RPT-003",
@@ -5780,7 +5780,7 @@
               "module_component": "reports/crud",
               "notes": "Effort=0 triggers deletion, not update to zero. This is an important behavioral detail.",
               "classified_type": "hybrid",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-RPT-004",
@@ -5794,7 +5794,7 @@
               "module_component": "reports/crud",
               "notes": "Period check: reportDate < office report period start → blocked. Extended period can override for individual employees.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-RPT-005",
@@ -5808,7 +5808,7 @@
               "module_component": "reports/crud",
               "notes": "Task visibility depends on employee-project assignment. Pinned tasks always appear.",
               "classified_type": "UI",
-              "automation_status": "failed"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-RPT-006",
@@ -5822,7 +5822,7 @@
               "module_component": "reports/crud",
               "notes": "POST /v1/reports/pin/{taskId}/employees/{login} to pin, DELETE to unpin.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-RPT-007",
@@ -5836,7 +5836,7 @@
               "module_component": "reports/crud",
               "notes": "Bug #3278: rename in Confirmation popup triggers 400 'Employee login not found'. Verify rename works on My Tasks (should work).",
               "classified_type": "UI",
-              "automation_status": "failed"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-RPT-008",
@@ -5850,7 +5850,7 @@
               "module_component": "reports/crud",
               "notes": "6 week tabs visible. Navigation beyond visible range shifts the tab set.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-RPT-009",
@@ -5864,7 +5864,7 @@
               "module_component": "reports/crud",
               "notes": "PUT /v1/reports batch endpoint used for multi-cell saves. Tab navigation is a key UX feature.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-RPT-010",
@@ -5878,7 +5878,7 @@
               "module_component": "reports/crud",
               "notes": "Decimal separator depends on user's office settings (dot or comma). Check config: decimalSeparator.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-RPT-011",
@@ -5892,7 +5892,7 @@
               "module_component": "reports/crud",
               "notes": "Bug #3398: production report of duplicate input fields on TAB. If still present, document as known issue.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-RPT-012",
@@ -5906,7 +5906,7 @@
               "module_component": "reports/crud",
               "notes": "Comments are stored via PATCH on the report entity. stateComment field on the task_report.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-RPT-013",
@@ -5934,7 +5934,7 @@
               "module_component": "reports/crud",
               "notes": "Contractor report page has known bug #3150: infinite spinner when opened from Statistics/Admin links.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-RPT-015",
@@ -5948,7 +5948,7 @@
               "module_component": "reports/crud",
               "notes": "Bug #3150 (OPEN since Nov 2024): Global error and spinner on contractor report from Statistics/Admin. Does NOT occur on contractor's own My Tasks page.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             }
           ]
         },
@@ -5966,7 +5966,7 @@
               "module_component": "reports/confirmation",
               "notes": "Approve sets state=APPROVED and records approverLogin. PROJECT_MANAGER type projects cannot be approved.",
               "classified_type": "hybrid",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-RPT-017",
@@ -5980,7 +5980,7 @@
               "module_component": "reports/confirmation",
               "notes": "Bug #3368: Approve button on 'By Employee' doesn't switch to next user or change work week (unlike By Projects).",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-RPT-018",
@@ -5994,7 +5994,7 @@
               "module_component": "reports/confirmation",
               "notes": "Comment optional in API but UI shows textarea. Reject creates a separate 'reject' table record.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-RPT-019",
@@ -6008,7 +6008,7 @@
               "module_component": "reports/confirmation",
               "notes": "Critical: reject record is DELETED (not archived). No history of the previous rejection remains.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-RPT-020",
@@ -6022,7 +6022,7 @@
               "module_component": "reports/confirmation",
               "notes": "Granularity levels per #3354: per-cell, per-line (task), all active tasks, 'Approve all' header. Each should handle manual and auto-rejected hours identically.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-RPT-021",
@@ -9940,7 +9940,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "POST /v1/projects/{projectId}/close-tags returns HTTP 200 (not 201). Immediate save, no confirmation needed.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-002",
@@ -9954,7 +9954,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Backend uses REQUIRES_NEW transaction; on unique constraint violation, catches and returns existing tag.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-003",
@@ -9968,7 +9968,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Backend validates @NotBlank on tag field. Frontend may also have client-side validation.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-004",
@@ -9982,7 +9982,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Inline editing uses PlannerTag.js component. Escape should cancel without saving.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-005",
@@ -9996,7 +9996,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-006",
@@ -10010,7 +10010,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "No-op optimization: if new tag equals existing tag, returns without saving.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-007",
@@ -10024,7 +10024,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Deletion is immediate — no confirmation prompt (consistent with tag creation).",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-008",
@@ -10038,7 +10038,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-009",
@@ -10052,7 +10052,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "PlannerCloseTagPermissionService checks: isAdmin, managerId, seniorManagerId, ownerId.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-010",
@@ -10066,7 +10066,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Permission check: current.getId().equals(project.getManagerId())",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-011",
@@ -10080,7 +10080,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-012",
@@ -10094,7 +10094,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Tested on qa-1 S72: returns 400 with ValidationException.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-013",
@@ -10108,7 +10108,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Tested on qa-1 S72: Unicode accepted. No HTML sanitization — potential XSS if rendered unsafely.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-014",
@@ -10122,7 +10122,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Known discrepancy: Confluence 200 chars vs DB 255 chars. No frontend validation found.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-015",
@@ -10136,7 +10136,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "No pagination on GET /close-tags — returns all tags. No max count enforced.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             }
           ]
         },
@@ -10154,7 +10154,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "POST /v1/projects/{projectId}/close-tags/apply with {date}. Requires the apply endpoint to be deployed.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-017",
@@ -10168,7 +10168,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Core safety rule: reported hours are never hidden by close-by-tag.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-018",
@@ -10182,7 +10182,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-019",
@@ -10196,7 +10196,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Known false positive risk: short tags can match unintended text.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-020",
@@ -10210,7 +10210,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Stakeholders explicitly acknowledged this corner case.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-021",
@@ -10224,7 +10224,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Frontend sends currentDay from Redux store. Backend uses section.date or section.startDate.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-022",
@@ -10238,7 +10238,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Guard added in !5341. Critical for projects without close-by-tag configuration.",
               "classified_type": "hybrid",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-023",
@@ -10252,7 +10252,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "window.location.reload() is a blunt approach. The finally block (stopLoading + closeModal) is dead code since page reloads.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-024",
@@ -10266,7 +10266,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Design side effect: user who only changed Project Members still triggers close-tags apply.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-025",
@@ -10280,7 +10280,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Silent failure: if createForCloseByTag throws, error is swallowed with log.debug() only.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-026",
@@ -10294,7 +10294,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Both features are date-scoped and use currentDay from Redux.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-027",
@@ -10308,7 +10308,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "OR logic: assignment closed if it matches any one of the project's tags.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-028",
@@ -10322,7 +10322,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Code: if ticketInfo is blank, skip.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-029",
@@ -10336,7 +10336,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Apply endpoint added in !5335. Requires deployment verification.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             }
           ]
         },
@@ -10354,7 +10354,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Regression: this was a reported bug — now 'by design'. Verify it remains consistent.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-031",
@@ -10368,7 +10368,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Both EN and RU affected in original bug.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-032",
@@ -10382,7 +10382,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-033",
@@ -10396,7 +10396,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Not reproducible on small-data projects (e.g., Diablocom-AI). Specific to large projects.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-034",
@@ -10410,7 +10410,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-035",
@@ -10424,7 +10424,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Close-by-tag publishes TaskAssignmentPatchEvent/GenerateEvent which may trigger the #3314 re-sort bug.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-036",
@@ -10438,7 +10438,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-037",
@@ -10452,7 +10452,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Known req/code mismatch. No frontend validation found in code analysis.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T2724-038",
@@ -10466,7 +10466,7 @@
               "module_component": "planner/close-by-tag",
               "notes": "Both frontend (catch→devLog) and backend (catch→log.debug) silently swallow errors.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             }
           ]
         }
@@ -10490,7 +10490,7 @@
               "module_component": "calendar-dayoff",
               "notes": "Translation key: vacation.weekends.rescheduleAnEvent",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T3404-002",
@@ -10504,7 +10504,7 @@
               "module_component": "calendar-dayoff",
               "notes": "Same i18n key used for both tooltip and dialog title.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T3404-003",
@@ -10518,7 +10518,7 @@
               "module_component": "calendar-dayoff",
               "notes": "Regression check — RU translation should not be affected.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             }
           ]
         },
@@ -10536,7 +10536,7 @@
               "module_component": "calendar-dayoff",
               "notes": "Baseline check — this behavior existed before #3404.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T3404-005",
@@ -10550,7 +10550,7 @@
               "module_component": "calendar-dayoff",
               "notes": "CORE TEST — previously edit icon was hidden for past day-offs.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T3404-006",
@@ -10564,7 +10564,7 @@
               "module_component": "calendar-dayoff",
               "notes": "Critical negative test — closed months must not be editable.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T3404-007",
@@ -10578,7 +10578,7 @@
               "module_component": "calendar-dayoff",
               "notes": "Tests ST-1 boundary bug. useWeekendTableHeaders.tsx:113 uses strict > instead of >=. On qa-1, March 1 is a Sunday (no holiday). May 1 is a better candidate.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T3404-008",
@@ -10592,7 +10592,7 @@
               "module_component": "calendar-dayoff",
               "notes": "Boundary: last actionable day of a closed month.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T3404-009",
@@ -10606,7 +10606,7 @@
               "module_component": "calendar-dayoff",
               "notes": "Regression — previous year should never be editable.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             }
           ]
         },
@@ -10624,7 +10624,7 @@
               "module_component": "calendar-dayoff",
               "notes": "minDate is set to approvePeriod - 1 day. January is below minDate, so entire month should be unreachable or disabled.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T3404-011",
@@ -10638,7 +10638,7 @@
               "module_component": "calendar-dayoff",
               "notes": "Feb 28 may be the actual minDate (approvePeriod 2026-03-01 minus 1 day). Feb 28 is Saturday — disabled by renderDay.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T3404-012",
@@ -10652,7 +10652,7 @@
               "module_component": "calendar-dayoff",
               "notes": "Positive test — dates in open period should be selectable.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T3404-013",
@@ -10666,7 +10666,7 @@
               "module_component": "calendar-dayoff",
               "notes": "Future months with open approve period should always work.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T3404-014",
@@ -10680,7 +10680,7 @@
               "module_component": "calendar-dayoff",
               "notes": "minDate = moment(approvePeriod).subtract(1, \"d\") = Feb 28. Feb 28 is Saturday → double-disabled.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T3404-015",
@@ -10694,7 +10694,7 @@
               "module_component": "calendar-dayoff",
               "notes": "March 1 is Sunday (disabled). March 2 is the practical minimum selectable date.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             }
           ]
         },
@@ -10712,7 +10712,7 @@
               "module_component": "calendar-dayoff",
               "notes": "CORE TEST — previously dates before the original date were disabled.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T3404-017",
@@ -10726,7 +10726,7 @@
               "module_component": "calendar-dayoff",
               "notes": "Lower boundary of selectable dates within the open month.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T3404-018",
@@ -10740,7 +10740,7 @@
               "module_component": "calendar-dayoff",
               "notes": "Negative test — must not allow transfer to closed months.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T3404-019",
@@ -10754,7 +10754,7 @@
               "module_component": "calendar-dayoff",
               "notes": "Tests ST-4 incomplete implementation. Code uses originalDate as minDate for future day-offs instead of startOf(month).",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             }
           ]
         },
@@ -10772,7 +10772,7 @@
               "module_component": "calendar-dayoff",
               "notes": "E2E test. Modifies data — needs cleanup. Tests the complete user journey.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T3404-021",
@@ -10786,7 +10786,7 @@
               "module_component": "calendar-dayoff",
               "notes": "Tests that the existing auto-rejection logic (unchanged per ticket) still works correctly for backward transfers.",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T3404-022",
@@ -10800,7 +10800,7 @@
               "module_component": "calendar-dayoff",
               "notes": "Regression test for P.3 requirement. Related bugs: #2833 (vacation not recalculated), #3223 (balance not updated).",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T3404-023",
@@ -10814,7 +10814,7 @@
               "module_component": "calendar-dayoff",
               "notes": "Regression — maxDate formula unchanged: moment(originalDate.format(\"YYYY\")).add(1,\"y\").subtract(1,\"d\").",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-T3404-024",
@@ -10828,7 +10828,7 @@
               "module_component": "calendar-dayoff",
               "notes": "Tests ST-5 design note. On qa-1, all offices have same period (2026-03-01) — may be untestable without admin manipulation.",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             }
           ]
         }
@@ -10852,7 +10852,7 @@
               "module_component": "vacation/crud",
               "notes": "Working days may be 4 instead of 5 if Mon-Fri range includes a public holiday.",
               "classified_type": "hybrid",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-002",
@@ -10866,7 +10866,7 @@
               "module_component": "vacation/crud",
               "notes": "ADMINISTRATIVE skips duration and availability checks. No minimum working day requirement enforced.",
               "classified_type": "hybrid",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-003",
@@ -10880,7 +10880,7 @@
               "module_component": "vacation/crud",
               "notes": "No character limit on comment field per DTO analysis.",
               "classified_type": "hybrid",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-004",
@@ -10894,7 +10894,7 @@
               "module_component": "vacation/crud",
               "notes": "GET /vacations/{id} does NOT include notifyAlso — verification via DB only. Note UI typo: 'Also notifty'.",
               "classified_type": "hybrid",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-005",
@@ -10908,7 +10908,7 @@
               "module_component": "vacation/crud",
               "notes": "PUT update requires 'id' in request body in addition to URL path parameter.",
               "classified_type": "hybrid",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-006",
@@ -10922,7 +10922,7 @@
               "module_component": "vacation/crud",
               "notes": "Bug #2640 was about this NOT resetting — now fixed. Regression test.",
               "classified_type": "hybrid",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-007",
@@ -10936,7 +10936,7 @@
               "module_component": "vacation/crud",
               "notes": "UI uses 'Delete' button for both cancel and delete actions. Status may show as 'Deleted'.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-008",
@@ -10950,7 +10950,7 @@
               "module_component": "vacation/crud",
               "notes": "canBeCancelled guard: REGULAR + APPROVED + reportPeriod after paymentDate → CANNOT cancel. Future vacations should pass.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-009",
@@ -10964,7 +10964,7 @@
               "module_component": "vacation/crud",
               "notes": "CANCELED is in FINAL_STATUSES but has explicit CANCELED→NEW transition in the map.",
               "classified_type": "hybrid",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-010",
@@ -10978,7 +10978,7 @@
               "module_component": "vacation/crud",
               "notes": "",
               "classified_type": "hybrid",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-011",
@@ -11052,7 +11052,7 @@
               "module_component": "vacation/approval",
               "notes": "Approve adjusts paymentDate if before approvePeriodStartDate.",
               "classified_type": "hybrid",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-016",
@@ -11066,7 +11066,7 @@
               "module_component": "vacation/approval",
               "notes": "Reject uses VACATIONS_DELETE permission — same as cancel and delete.",
               "classified_type": "hybrid",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-017",
@@ -11080,7 +11080,7 @@
               "module_component": "vacation/approval",
               "notes": "REJECTABLE_STATUSES = {NEW, APPROVED}. canBeCancelled guard also applies.",
               "classified_type": "hybrid",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-018",
@@ -11094,7 +11094,7 @@
               "module_component": "vacation/approval",
               "notes": "APPROVABLE_STATUSES = {NEW, REJECTED}. No edit required between reject and re-approve.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-019",
@@ -11108,7 +11108,7 @@
               "module_component": "vacation/approval",
               "notes": "CPO = ROLE_DEPARTMENT_MANAGER. pvaynmaster confirmed as CPO on qa-1. Status is NEW, not auto-APPROVED.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-020",
@@ -11122,7 +11122,7 @@
               "module_component": "vacation/approval",
               "notes": "Bug #2718 (OPEN): Redirected approved/rejected request doesn't reset status to NEW.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-021",
@@ -11136,7 +11136,7 @@
               "module_component": "vacation/approval",
               "notes": "Optional approval is informational — doesn't change vacation status. Only primary approver drives transitions.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-022",
@@ -11150,7 +11150,7 @@
               "module_component": "vacation/approval",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-023",
@@ -11164,7 +11164,7 @@
               "module_component": "vacation/approval",
               "notes": "Multiple rows may exist for same employee from previous test runs. Filter by employee + period.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-024",
@@ -11178,7 +11178,7 @@
               "module_component": "vacation/approval",
               "notes": "Rare case — most employees have managers. May not find a test user.",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             }
           ]
         },
@@ -11196,7 +11196,7 @@
               "module_component": "vacation/payment",
               "notes": "PAID+EXACT is terminal and undeletable. Creates permanent data in test environment.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-026",
@@ -11210,7 +11210,7 @@
               "module_component": "vacation/payment",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-027",
@@ -11224,7 +11224,7 @@
               "module_component": "vacation/payment",
               "notes": "Sum validation: regularDaysPayed + administrativeDaysPayed must equal vacation.days.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-028",
@@ -11238,7 +11238,7 @@
               "module_component": "vacation/payment",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-029",
@@ -11252,7 +11252,7 @@
               "module_component": "vacation/payment",
               "notes": "NON_EDITABLE_STATUSES = {CANCELED, PAID}. Permission service returns empty set for PAID.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-030",
@@ -11266,7 +11266,7 @@
               "module_component": "vacation/payment",
               "notes": "Guard: status==PAID && periodType==EXACT → throw.",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-031",
@@ -11280,7 +11280,7 @@
               "module_component": "vacation/payment",
               "notes": "Bug #3379 (fixed): was using Report period instead of Approval period.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-032",
@@ -11294,7 +11294,7 @@
               "module_component": "vacation/payment",
               "notes": "Test endpoint: POST /api/vacation/v1/test/vacations/pay-expired-approved. Needs timemachine env.",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-033",
@@ -11308,7 +11308,7 @@
               "module_component": "vacation/payment",
               "notes": "OPEN bug. Regression test — should catch if the 500 changes to a proper validation error.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             }
           ]
         },
@@ -11326,7 +11326,7 @@
               "module_component": "vacation/validation",
               "notes": "Missing i18n: error key displayed as raw string. Boundary at today (not tomorrow).",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-035",
@@ -11340,7 +11340,7 @@
               "module_component": "vacation/validation",
               "notes": "Non-short-circuiting: both past-date and order errors returned simultaneously if both fail.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-036",
@@ -11354,7 +11354,7 @@
               "module_component": "vacation/validation",
               "notes": "AV=false: red error, block submit. AV=true: Error 11.4. Frontend validation fires dynamically on field change.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-037",
@@ -11368,7 +11368,7 @@
               "module_component": "vacation/validation",
               "notes": "IMPORTANT: Crossing check counts DELETED records too (ghost conflicts). Soft-deleted vacations block date ranges permanently.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-038",
@@ -11382,7 +11382,7 @@
               "module_component": "vacation/validation",
               "notes": "Config: vacation.minimal-vacation-duration: 1 (not 5 as Javadoc says). Counts working days only.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-039",
@@ -11396,7 +11396,7 @@
               "module_component": "vacation/validation",
               "notes": "Needs timemachine env with clock set to January. Boundary: Jan 31 rejected, Feb 1 allowed.",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-040",
@@ -11410,7 +11410,7 @@
               "module_component": "vacation/validation",
               "notes": "Bug #3014-30: calculation was incorrect for employees hired before July 2024. Column: employee.first_date.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-041",
@@ -11424,7 +11424,7 @@
               "module_component": "vacation/validation",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-042",
@@ -11438,7 +11438,7 @@
               "module_component": "vacation/validation",
               "notes": "Error code: validation.vacation.dates.payment.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-043",
@@ -11452,7 +11452,7 @@
               "module_component": "vacation/validation",
               "notes": "Confirmed active on qa-1. NPE in correctPaymentMonth().",
               "classified_type": "API",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-044",
@@ -11466,7 +11466,7 @@
               "module_component": "vacation/validation",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-045",
@@ -11480,7 +11480,7 @@
               "module_component": "vacation/validation",
               "notes": "31 sub-bugs in #3015. Conversion order: chronological by payment month, select request with minimum X value.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-046",
@@ -11494,7 +11494,7 @@
               "module_component": "vacation/validation",
               "notes": "Different offices may have different holiday calendars. Day count is per-office.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             }
           ]
         },
@@ -11512,7 +11512,7 @@
               "module_component": "vacation/filters",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-048",
@@ -11526,7 +11526,7 @@
               "module_component": "vacation/filters",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-049",
@@ -11540,7 +11540,7 @@
               "module_component": "vacation/filters",
               "notes": "Clicking 'All' also resets any column-level filters.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-050",
@@ -11554,7 +11554,7 @@
               "module_component": "vacation/filters",
               "notes": "Filter applies in real-time while dropdown is open. No need to close dropdown first.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-051",
@@ -11568,7 +11568,7 @@
               "module_component": "vacation/filters",
               "notes": "Status checkboxes: All, New, Approved, Rejected, Paid, Finished, Deleted.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-052",
@@ -11582,7 +11582,7 @@
               "module_component": "vacation/filters",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-053",
@@ -11596,7 +11596,7 @@
               "module_component": "vacation/filters",
               "notes": "Total row is in <tfoot>, separate from data rows in <tbody>.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-054",
@@ -11638,7 +11638,7 @@
               "module_component": "vacation/filters",
               "notes": "DB columns: latin_first_name, latin_last_name (NOT first_name, last_name).",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             }
           ]
         },
@@ -11656,7 +11656,7 @@
               "module_component": "vacation/av-mode",
               "notes": "Formula: available = currentYearDays + pastYearDays + futureDays + editedDays.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-058",
@@ -11670,7 +11670,7 @@
               "module_component": "vacation/av-mode",
               "notes": "AV=false: NEVER negative (display 0). AV=true: negative allowed for current year.",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-059",
@@ -11684,7 +11684,7 @@
               "module_component": "vacation/av-mode",
               "notes": "Formula: available = (month × norm/12) + yearRemainder + priorYears − norm + futureDays + editedDays.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-060",
@@ -11698,7 +11698,7 @@
               "module_component": "vacation/av-mode",
               "notes": "Cross-year splits tracked in vacation_days_distribution (vacation_id + year → days).",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-061",
@@ -11712,7 +11712,7 @@
               "module_component": "vacation/av-mode",
               "notes": "Recalculation: returns ALL regular+exact days, then re-distributes. May convert if insufficient.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-062",
@@ -11726,7 +11726,7 @@
               "module_component": "vacation/av-mode",
               "notes": "OPEN bug. Regression test.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-063",
@@ -11740,7 +11740,7 @@
               "module_component": "vacation/av-mode",
               "notes": "Bug #3283: auto corrections can go negative even for AV=false. Manual edits correctly floor at 0.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             }
           ]
         },
@@ -11758,7 +11758,7 @@
               "module_component": "vacation/notifications",
               "notes": "Email templates catalog: 50+ templates across 10 categories.",
               "classified_type": "hybrid",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-065",
@@ -11772,7 +11772,7 @@
               "module_component": "vacation/notifications",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-066",
@@ -11786,7 +11786,7 @@
               "module_component": "vacation/notifications",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-067",
@@ -11800,7 +11800,7 @@
               "module_component": "vacation/notifications",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-068",
@@ -11860,7 +11860,7 @@
               "module_component": "vacation/regression",
               "notes": "3-way overlap check: start-in-range, end-in-range, enclosing.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-072",
@@ -11874,7 +11874,7 @@
               "module_component": "vacation/regression",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-073",
@@ -11888,7 +11888,7 @@
               "module_component": "vacation/regression",
               "notes": "VacationUpdateValidator adjusts limitations: adds back current vacation's consumed days.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-074",
@@ -11902,7 +11902,7 @@
               "module_component": "vacation/regression",
               "notes": "OPEN bug. 21% of vacations get redirected — high-impact issue.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-075",
@@ -11916,7 +11916,7 @@
               "module_component": "vacation/regression",
               "notes": "OPEN bug. Data integrity issue.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-076",
@@ -11944,7 +11944,7 @@
               "module_component": "vacation/regression",
               "notes": "OPEN bug. Related to #3370 (maternity user can't edit vacation).",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-078",
@@ -11972,7 +11972,7 @@
               "module_component": "vacation/regression",
               "notes": "DELETED should be excluded from crossing validation. Every test run that creates+deletes a vacation permanently blocks that date range.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-080",
@@ -12060,7 +12060,7 @@
               "module_component": "vacation/permissions",
               "notes": "Permission EDIT: Owner, status not PAID (always).",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-086",
@@ -12074,7 +12074,7 @@
               "module_component": "vacation/permissions",
               "notes": "NON_EDITABLE_STATUSES = {CANCELED, PAID}.",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-087",
@@ -12088,7 +12088,7 @@
               "module_component": "vacation/permissions",
               "notes": "MANAGER_ROLES = {PM, DM, CACC}. ROLE_ADMIN is NOT in MANAGER_ROLES (design issue).",
               "classified_type": "UI",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-088",
@@ -12102,7 +12102,7 @@
               "module_component": "vacation/permissions",
               "notes": "checkVacation(): if readOnly → throw VacationSecurityException (403).",
               "classified_type": "hybrid",
-              "automation_status": "verified"
+              "automation_status": "pending"
             },
             {
               "test_id": "TC-VAC-089",
@@ -12130,7 +12130,7 @@
               "module_component": "vacation/permissions",
               "notes": "Protects against canceling after accounting period closure. Needs timemachine env.",
               "classified_type": "UI",
-              "automation_status": "blocked"
+              "automation_status": "pending"
             }
           ]
         },
