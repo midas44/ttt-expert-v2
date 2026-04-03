@@ -12,21 +12,21 @@ updated: '2026-04-03'
 | t2724 | 38 | 38 | 100% | 0 |
 | day-off | 25 | 28 | 89.3% | 3 |
 | t3404 | 21 | 24 | 87.5% | 3 |
-| vacation | 35 | 100 | 35.0% | 4 |
+| vacation | 39 | 100 | 39.0% | 8 |
 | planner | 24 | 82 | 29.3% | 0 |
 | reports | 17 | 60 | 28.3% | 0 |
-| **Total** | **160** | **332** | **48.2%** | **10** |
+| **Total** | **164** | **332** | **49.4%** | **14** |
 
 ## Vacation Module
 
 | Metric | Value |
 |--------|-------|
 | Total test cases | 100 |
-| Verified | 35 |
-| Blocked | 4 |
+| Verified | 39 |
+| Blocked | 8 |
 | Failed | 0 |
-| Pending | 61 |
-| Coverage | 35.0% |
+| Pending | 53 |
+| Coverage | 39.0% |
 
 ### Verified Tests by Session
 
@@ -38,6 +38,10 @@ updated: '2026-04-03'
 
 **Session 110 (TC-VAC-030, 032, 057, 059):** PAID+EXACT deletion blocked (API), auto-pay cron endpoint (API), AV=true full year balance (UI), AV=false no-negative balance (UI). Added getAvailableDaysSigned() to MyVacationsPage. TC-VAC-058 blocked (can't exhaust 82-day balance within system limits).
 
+**Sessions 111-112 (TC-VAC-060..062):** FIFO balance consumption, redistribution on cancel, day correction basics. 3 verified.
+
+**Session 113 (TC-VAC-063):** Day correction AV=false prohibits negative balance (UI). Rewrote data class to use alphabetically-earliest employee for page-1 visibility. Rewrote spec to skip autocomplete search.
+
 ### Blocked Tests
 
 | Test ID | Reason |
@@ -46,6 +50,10 @@ updated: '2026-04-03'
 | TC-VAC-026 | Requires external calendar service mock |
 | TC-VAC-055 | Requires specific disabled employee data not on qa-1 |
 | TC-VAC-058 | Cannot exhaust AV=true balance within system limits (duration max ~5-7 days, date range ~6 months) |
+| TC-VAC-064 | QA-1 notification infra broken — CRUD events don't generate emails (RabbitMQ/EMAIL_ASYNC) |
+| TC-VAC-065 | Same — approve notification not generated |
+| TC-VAC-066 | Same — reject notification not generated |
+| TC-VAC-067 | Same — cancel notification not generated |
 
 ## Planner Module
 

@@ -1,5 +1,5 @@
 session:
-  delay_minutes: 45
+  delay_minutes: 60
   delay_minutes_offhours: 30
   offhours_utc: 15:00-03:00
   max_duration_minutes: 90

@@ -423,6 +423,31 @@ export class MyVacationsPage {
       return entries;
     });
   }
+
+  /**
+   * Returns yearly breakdown entries with automatic raw-text fallback.
+   * First tries structured DOM extraction; if empty, parses raw text
+   * for "YYYY N" / "YYYY: N" patterns.
+   */
+  async getYearlyBreakdownWithFallback(): Promise<
+    { year: string; days: string }[]
+  > {
+    let entries = await this.getYearlyBreakdownEntries();
+    if (entries.length > 0) return entries;
+
+    // Fallback: read tooltip raw text and parse year/days patterns
+    const rawText = await this.page
+      .locator('[class*="vacationDaysTooltip"], [class*="tooltip"]')
+      .first()
+      .textContent()
+      .catch(() => "");
+    const yearPattern = /(\d{4})\D+(\d+)/g;
+    let match: RegExpExecArray | null;
+    while ((match = yearPattern.exec(rawText ?? "")) !== null) {
+      entries.push({ year: match[1], days: match[2] });
+    }
+    return entries;
+  }
 }
 
 // ---------------------------------------------------------------------------

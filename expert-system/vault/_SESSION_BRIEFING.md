@@ -1,47 +1,43 @@
 # Session Briefing — Phase C (Autotest Generation)
 
-## Last Session: 110 (2026-04-03)
+## Last Session: 113 (2026-04-03)
 **Phase:** C — Autotest Generation
 **Scope:** vacation, day-off (`autotest.scope`)
 **Target Env:** qa-1
 **Mode:** Full autonomy
-**Maintenance:** Session 110 (multiple of 5) — maintenance completed
 
-## Session 110 Accomplishments
+## Session 113 Accomplishments
 
-### 4 Verified + 1 Blocked Vacation Tests
+### 1 Verified + 4 Blocked Vacation Tests
 | Test ID | Title | Type | Priority | Status | Attempts |
 |---------|-------|------|----------|--------|----------|
-| TC-VAC-030 | Delete PAID+EXACT vacation blocked | API | P1 | verified | 3 |
-| TC-VAC-032 | Auto-pay expired APPROVED vacations (cron) | API | P2 | verified | 1 |
-| TC-VAC-057 | AV=true full year balance display | UI | P1 | verified | 4 |
-| TC-VAC-059 | AV=false monthly accrual no negative balance | UI | P1 | verified | 2 |
-| TC-VAC-058 | AV=true negative balance allowed | UI | P1 | blocked | 4 |
+| TC-VAC-063 | Day correction AV=false prohibits negative balance | UI | P1 | verified | 3 |
+| TC-VAC-064 | Create vacation → notification to approver | API | P2 | blocked | 2 |
+| TC-VAC-065 | Approve vacation → notification to employee | API | P2 | blocked | 2 |
+| TC-VAC-066 | Reject vacation → notification to employee | API | P2 | blocked | 2 |
+| TC-VAC-067 | Cancel vacation → notification to approver | API | P2 | blocked | 2 |
 
 ### New Artifacts Created
-- **5 data classes**: VacationTc030Data, VacationTc032Data, VacationTc057Data, VacationTc058Data, VacationTc059Data
-- **5 spec files**: vacation-tc030, tc032, tc057, tc058, tc059.spec.ts
-- **MyVacationsPage** — added `getAvailableDaysSigned()` method for handling negative AV=true balances
+- **Shared utility**: `e2e/data/vacation/queries/vacationNotificationQueries.ts` — reusable queries for notification tests (findNotificationEmails, getEmployeeNotifInfo, getDbTimestamp, getServerDate, findAvailableWeekFromServer)
+- **4 data classes**: VacationTc064Data..VacationTc067Data — all use server clock date calculation via findAvailableWeekFromServer
+- **4 spec files**: vacation-tc064..tc067.spec.ts — API-based notification verification tests
+- **VacationTc063Data rewritten**: uses firstName/lastName fields, ORDER BY latin_last_name ASC for page-1 visibility
+- **vacation-tc063.spec.ts rewritten**: removed search/filter, finds employee directly on page 1
 
 ### Key Discoveries & Fixes
-1. **PAID+EXACT deletion returns 403 not 400**: Permission service returns empty permission set for PAID status → 403 Forbidden (same pattern as session 109's PAID cancel finding). Tests accept both [400, 403].
-2. **UI available days ≠ DB SUM**: `getAvailableDays()` value from UI is computed dynamically by the API endpoint (factors in approved/pending vacations, carry-over rules, prorating). It does NOT equal `SUM(employee_vacation.available_vacation_days)`. Tests must verify UI independently, not compare with raw DB values.
-3. **Yearly breakdown tooltip selectors**: `getYearlyBreakdownEntries()` CSS class selectors don't always match DOM. Added raw text fallback with regex `(\d{4})\D+(\d+)` extraction.
-4. **DB schema corrections**: `office_annual_leave` table uses `days` column (not `annual_leave_days`) and `office` FK (not `office_id`).
-5. **TC-VAC-058 BLOCKED**: Cannot exhaust pvaynmaster's 82-day balance within system limits — vacation creation capped at ~5-7 biz days duration AND ~6 months ahead. Would need 17+ slots but can't fit within allowed date range. No AV=true employee with near-zero balance exists on qa-1. Requires timemachine env with clock manipulation or direct DB balance modification.
-
-### Session 110 Maintenance (§9.4)
-- **SQLite audit**: 332 entries, no duplicates. 160 verified, 159 pending, 10 blocked, 3 failed.
-- **Spec file count**: 180 specs, 173 data classes. 7 t3404 specs share data classes (by design).
-- **No stale entries** or orphaned records found.
-- **TypeScript**: not a direct dependency (Playwright handles compilation internally).
+1. **TC-VAC-063 autocomplete search pitfall**: VacationDayCorrectionPage's filterByEmployee() uses autocomplete — typing without selecting a suggestion clears the table to "No data". Fix: skip search entirely, pick alphabetically earliest AV=false employee (ORDER BY latin_last_name ASC LIMIT 1) who appears on page 1.
+2. **TC-VAC-063 displayName format**: Page shows "LastName FirstName" format. Data class now stores firstName/lastName separately with computed displayName property.
+3. **QA-1 notification infrastructure broken**: Vacation CRUD events do NOT generate notification emails on QA-1. The `ttt_email.email` table receives no new records after vacation create/approve/reject/cancel. Likely cause: RabbitMQ/EMAIL_ASYNC infrastructure not running on QA-1. The `notify-about-vacation-using-pst` test endpoint only triggers scheduled reminders (last day before absence), not CRUD event notifications.
+4. **Email schema discovered**: `ttt_email.email` table: id(uuid), sender, receiver, cc, bcc, subject, body, status(NEW/SENT/FAILED/INVALID), error_message, add_time, sent_time. Subject format: `[QA1][TTT] <Russian text>`.
+5. **Payment month validation boundary**: Office "Персей" approval period starts 2026-05-01. Vacations before May fail with `validation.vacation.dates.payment`. Notification tests use weeksAhead 6-9 to push dates into May+.
+6. **Server clock for date calculation**: findAvailableWeekFromServer uses DB's CURRENT_DATE instead of local new Date() — critical for QA envs with manipulated test clocks.
 
 ### Vacation Module Autotest Progress
 - Total tracked: 100 cases
-- Verified: 35 (+4 this session)
-- Blocked: 4 (+1 this session)
-- Pending: 61
-- Coverage: 35.0%
+- Verified: 39 (+4 since session 110, +1 this session)
+- Blocked: 8 (+4 this session)
+- Pending: 53
+- Coverage: 39.0%
 
 ### Day-off Module Autotest Progress
 - Total tracked: 28 cases
@@ -52,19 +48,20 @@
 
 ### Overall Autotest Progress
 - Total: 332 cases
-- Verified: 160 (+4 this session)
+- Verified: 164
 - Failed: 3
-- Blocked: 10 (+1 this session)
-- Pending: 159
-- Coverage: 48.2%
+- Blocked: 14
+- Pending: 151
+- Coverage: 49.4%
 
 ### Next Session Priority
 1. Vacation FIFO balance tests: TC-VAC-060 (earliest year consumed first), TC-VAC-061 (redistribution on cancel)
-2. Vacation notifications: TC-VAC-064..070
+2. Vacation permissions: TC-VAC-085..090
 3. Vacation regression: TC-VAC-071..084
-4. Vacation permissions: TC-VAC-085..090
+4. Skip TC-VAC-068..070 (remaining notification tests — same QA-1 infra blocker)
 
 ## State
 - Branch: dev35
 - Config: `phase.current: "autotest_generation"`, `autotest.scope: "vacation,day-off"`
-- All 35 verified vacation tests + 25 day-off tests pass reliably
+- All 39 verified vacation tests + 25 day-off tests pass reliably
+- 4 notification tests (TC-VAC-064..067) have complete code but cannot verify on QA-1 — need RabbitMQ fix or timemachine env
