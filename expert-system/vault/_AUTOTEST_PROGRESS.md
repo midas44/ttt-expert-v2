@@ -1,6 +1,6 @@
 ---
 type: tracking
-updated: '2026-03-28'
+updated: '2026-04-03'
 ---
 
 # Autotest Generation Progress
@@ -12,19 +12,50 @@ updated: '2026-03-28'
 | t2724 | 38 | 38 | 100% | 0 |
 | day-off | 25 | 28 | 89.3% | 3 |
 | t3404 | 21 | 24 | 87.5% | 3 |
-| vacation | 26 | 100 | 26.0% | 3 |
-| planner | 20 | 82 | 24.4% | 0 |
-| **Total** | **130** | **272** | **47.8%** | **9** |
+| vacation | 35 | 100 | 35.0% | 4 |
+| planner | 24 | 82 | 29.3% | 0 |
+| reports | 17 | 60 | 28.3% | 0 |
+| **Total** | **160** | **332** | **48.2%** | **10** |
+
+## Vacation Module
+
+| Metric | Value |
+|--------|-------|
+| Total test cases | 100 |
+| Verified | 35 |
+| Blocked | 4 |
+| Failed | 0 |
+| Pending | 61 |
+| Coverage | 35.0% |
+
+### Verified Tests by Session
+
+**Sessions 93-98 (TC-VAC-001..011, 015..023):** CRUD operations, approval workflows, basic cancel/reject/edit flows. Established core fixtures (LoginFixture, VacationCreationFixture, ApiVacationSetupFixture) and page objects (MyVacationsPage, VacationApprovalPage).
+
+**Sessions 99-102 (TC-VAC-025, 034..038, 047..053):** Sick-leave conversion, filter/sort, status display, type display, table rendering. Extended MyVacationsPage with filter/sort/status methods.
+
+**Session 109 (TC-VAC-027..029, 031, 033):** Payment suite — validation, pay NEW blocked, PAID terminal state, closed period blocked, AV=true negative balance error. Extended ApiVacationSetupFixture with payVacation(), createApproveAndPay(), rawPut(), rawDelete().
+
+**Session 110 (TC-VAC-030, 032, 057, 059):** PAID+EXACT deletion blocked (API), auto-pay cron endpoint (API), AV=true full year balance (UI), AV=false no-negative balance (UI). Added getAvailableDaysSigned() to MyVacationsPage. TC-VAC-058 blocked (can't exhaust 82-day balance within system limits).
+
+### Blocked Tests
+
+| Test ID | Reason |
+|---------|--------|
+| TC-VAC-024 | Combined approval+payment flow — complex multi-step requires sequential API orchestration not available |
+| TC-VAC-026 | Requires external calendar service mock |
+| TC-VAC-055 | Requires specific disabled employee data not on qa-1 |
+| TC-VAC-058 | Cannot exhaust AV=true balance within system limits (duration max ~5-7 days, date range ~6 months) |
 
 ## Planner Module
 
 | Metric | Value |
 |--------|-------|
 | Total test cases | 82 |
-| Verified | 20 |
-| Failed | 0 |
-| Pending | 62 |
-| Coverage | 24.4% |
+| Verified | 24 |
+| Failed | 1 |
+| Pending | 57 |
+| Coverage | 29.3% |
 
 ### Verified Tests by Session
 
@@ -34,7 +65,9 @@ updated: '2026-03-28'
 
 **Session 89 (TC-PLN-011 to TC-PLN-015):** Notification banners + inline editing (effort, comment, remaining work). Key patterns: two-click editing, rich text editor, ensureEditMode with retries.
 
-**Session 90 (TC-PLN-016 to TC-PLN-020):** Projects tab — project selector dropdown filtering, "Open for editing" generates assignments, edit hours in manager view, color coding (blocked/done), Info/Tracker column display. Major table architecture discovery.
+**Session 90 (TC-PLN-016 to TC-PLN-020):** Projects tab — project selector dropdown filtering, "Open for editing" generates assignments, edit hours in manager view, color coding (blocked/done), Info/Tracker column display.
+
+**Session 91 (TC-PLN-021 to TC-PLN-024):** Remaining work column, Total row calculations, multi-project aggregation, effort validation.
 
 ### PlannerPage Object Methods
 
@@ -67,3 +100,17 @@ updated: '2026-03-28'
 - **Saturday/Sunday navigation** — planner shows weekend dates which may have no assignments. Tests navigate backwards to find weekdays with data.
 - **Perpetual loading state** (discovered s90) — `datasheet__loading--active` class never clears due to WebSocket sync. Never wait for loading to complete. Use content-specific waits.
 - **Datepicker table nested in thead** (discovered s90) — `tbody tr` selectors match hidden datepicker rows. Use `planner__cel` class filter for definitive row identification.
+
+## Reports Module
+
+| Metric | Value |
+|--------|-------|
+| Total test cases | 60 |
+| Verified | 17 |
+| Failed | 2 |
+| Pending | 41 |
+| Coverage | 28.3% |
+
+### Verified Tests by Session
+
+**Sessions 106-108 (TC-RPT-001..004, 006, 008..012, 014..020):** Report CRUD, confirmation flow, period navigation, status display. Created ConfirmationPage, ApiReportSetupFixture, reportQueries.

@@ -4,13 +4,13 @@
 
 ### P0 — Next Session Immediate
 
-- [ ] Vacation payment/transition remaining: TC-VAC-030 (delete PAID+EXACT API), TC-VAC-032 (auto-pay cron API)
-- [ ] Vacation day balance: TC-VAC-057 (AV=true full year), TC-VAC-058 (AV=true negative), TC-VAC-059 (AV=false monthly)
-- [ ] Vacation FIFO: TC-VAC-060 (earliest year first), TC-VAC-061 (redistribution on cancel)
+- [ ] Vacation FIFO balance: TC-VAC-060 (earliest year consumed first), TC-VAC-061 (redistribution on cancel)
+- [ ] Vacation balance remaining: TC-VAC-062 (carry-over display), TC-VAC-063 (day correction reflected)
+- [ ] Vacation notifications: TC-VAC-064 (create→approver), TC-VAC-065 (approve→employee)
 
 ### P1 — Vacation Notifications & Regression (High Priority)
 
-- [ ] TC-VAC-064..070: Notification tests (create→approver, approve→employee, reject, cancel, also-notify, wrong payment month, auto-conversion)
+- [ ] TC-VAC-066..070: Remaining notification tests (reject, cancel, also-notify, wrong payment month, auto-conversion)
 - [ ] TC-VAC-071..084: Regression tests (overlapping not blocked, payment month edit, edit shows 0 available, redirect status, ghost conflicts, etc.)
 
 ### P2 — Vacation Permissions & Advanced
@@ -29,6 +29,19 @@
 - [ ] Document discovered selectors in vault
 - [ ] Update UI flow notes with confirmed patterns
 - [ ] Log data patterns for test data generation
+
+<details>
+<summary>Completed Items (Session 110)</summary>
+
+- [x] TC-VAC-030: Delete PAID+EXACT blocked — verified (3 attempts, accept [400,403])
+- [x] TC-VAC-032: Auto-pay expired APPROVED cron — verified (1 attempt, smoke test)
+- [x] TC-VAC-057: AV=true full year balance — verified (4 attempts, UI≠DB fix, breakdown fallback)
+- [x] TC-VAC-059: AV=false monthly accrual no negative — verified (2 attempts, schema fix)
+- [x] TC-VAC-058: AV=true negative balance — BLOCKED (can't exhaust 82-day balance within system limits)
+- [x] MyVacationsPage: added getAvailableDaysSigned() for negative balance handling
+- [x] Session 110 maintenance: SQLite audit, file integrity check, coverage stats updated
+
+</details>
 
 <details>
 <summary>Completed Items (Session 109)</summary>

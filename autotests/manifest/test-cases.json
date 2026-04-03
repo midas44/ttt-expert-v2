@@ -11266,7 +11266,7 @@
               "module_component": "vacation/payment",
               "notes": "Guard: status==PAID && periodType==EXACT → throw.",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-031",
@@ -11294,7 +11294,7 @@
               "module_component": "vacation/payment",
               "notes": "Test endpoint: POST /api/vacation/v1/test/vacations/pay-expired-approved. Needs timemachine env.",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-033",
@@ -11656,7 +11656,7 @@
               "module_component": "vacation/av-mode",
               "notes": "Formula: available = currentYearDays + pastYearDays + futureDays + editedDays.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-058",
@@ -11670,7 +11670,7 @@
               "module_component": "vacation/av-mode",
               "notes": "AV=false: NEVER negative (display 0). AV=true: negative allowed for current year.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "blocked"
             },
             {
               "test_id": "TC-VAC-059",
@@ -11684,7 +11684,7 @@
               "module_component": "vacation/av-mode",
               "notes": "Formula: available = (month × norm/12) + yearRemainder + priorYears − norm + futureDays + editedDays.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-060",

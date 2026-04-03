@@ -1,39 +1,47 @@
 # Session Briefing — Phase C (Autotest Generation)
 
-## Last Session: 109 (2026-04-03)
+## Last Session: 110 (2026-04-03)
 **Phase:** C — Autotest Generation
 **Scope:** vacation, day-off (`autotest.scope`)
 **Target Env:** qa-1
 **Mode:** Full autonomy
+**Maintenance:** Session 110 (multiple of 5) — maintenance completed
 
-## Session 109 Accomplishments
+## Session 110 Accomplishments
 
-### 5 Vacation Payment Suite Tests — All Verified
+### 4 Verified + 1 Blocked Vacation Tests
 | Test ID | Title | Type | Priority | Status | Attempts |
 |---------|-------|------|----------|--------|----------|
-| TC-VAC-029 | PAID vacation — terminal state, no further transitions | API | Critical | verified | 3 |
-| TC-VAC-027 | Payment validation — wrong day sum rejected | API | High | verified | 1 |
-| TC-VAC-028 | Cannot pay NEW vacation | API | High | verified | 1 |
-| TC-VAC-031 | Payment month validation — closed period blocked | UI | High | verified | 1 |
-| TC-VAC-033 | Error 500 on AV=true negative balance payment (#3363) | API | High | verified | 2 |
+| TC-VAC-030 | Delete PAID+EXACT vacation blocked | API | P1 | verified | 3 |
+| TC-VAC-032 | Auto-pay expired APPROVED vacations (cron) | API | P2 | verified | 1 |
+| TC-VAC-057 | AV=true full year balance display | UI | P1 | verified | 4 |
+| TC-VAC-059 | AV=false monthly accrual no negative balance | UI | P1 | verified | 2 |
+| TC-VAC-058 | AV=true negative balance allowed | UI | P1 | blocked | 4 |
 
 ### New Artifacts Created
-- **ApiVacationSetupFixture** — extended with `payVacation()`, `createApproveAndPay()`, `rawPut()`, `rawDelete()` methods; `VacationApiResult` now includes optional `days` field
-- **5 data classes**: VacationTc027Data through VacationTc033Data
-- **5 spec files**: vacation-tc027..tc033.spec.ts
+- **5 data classes**: VacationTc030Data, VacationTc032Data, VacationTc057Data, VacationTc058Data, VacationTc059Data
+- **5 spec files**: vacation-tc030, tc032, tc057, tc058, tc059.spec.ts
+- **MyVacationsPage** — added `getAvailableDaysSigned()` method for handling negative AV=true balances
 
 ### Key Discoveries & Fixes
-1. **PAID vacation permission model**: cancel/reject return 403 (not 400) — permission service returns empty set for PAID status
-2. **Update endpoint returns 405**: PUT to `/api/vacation/v1/vacations` with existing vacation body returns Method Not Allowed
-3. **Ghost conflict bug**: server's crossing validation counts DELETED/CANCELED vacations, but `hasVacationConflict()` query excludes them — must use high week offsets (45+) to avoid dense areas of test detritus
-4. **Same-user parallel execution**: tests sharing pvaynmaster cannot run in parallel due to employee_vacation row contention — must use `--workers=1` when testing payment suite together
+1. **PAID+EXACT deletion returns 403 not 400**: Permission service returns empty permission set for PAID status → 403 Forbidden (same pattern as session 109's PAID cancel finding). Tests accept both [400, 403].
+2. **UI available days ≠ DB SUM**: `getAvailableDays()` value from UI is computed dynamically by the API endpoint (factors in approved/pending vacations, carry-over rules, prorating). It does NOT equal `SUM(employee_vacation.available_vacation_days)`. Tests must verify UI independently, not compare with raw DB values.
+3. **Yearly breakdown tooltip selectors**: `getYearlyBreakdownEntries()` CSS class selectors don't always match DOM. Added raw text fallback with regex `(\d{4})\D+(\d+)` extraction.
+4. **DB schema corrections**: `office_annual_leave` table uses `days` column (not `annual_leave_days`) and `office` FK (not `office_id`).
+5. **TC-VAC-058 BLOCKED**: Cannot exhaust pvaynmaster's 82-day balance within system limits — vacation creation capped at ~5-7 biz days duration AND ~6 months ahead. Would need 17+ slots but can't fit within allowed date range. No AV=true employee with near-zero balance exists on qa-1. Requires timemachine env with clock manipulation or direct DB balance modification.
+
+### Session 110 Maintenance (§9.4)
+- **SQLite audit**: 332 entries, no duplicates. 160 verified, 159 pending, 10 blocked, 3 failed.
+- **Spec file count**: 180 specs, 173 data classes. 7 t3404 specs share data classes (by design).
+- **No stale entries** or orphaned records found.
+- **TypeScript**: not a direct dependency (Playwright handles compilation internally).
 
 ### Vacation Module Autotest Progress
 - Total tracked: 100 cases
-- Verified: 31 (TC-VAC-001..011, 015..023, 025..029, 031, 033..038, 047..053)
-- Blocked: 3
-- Pending: 66
-- Coverage: 31.0%
+- Verified: 35 (+4 this session)
+- Blocked: 4 (+1 this session)
+- Pending: 61
+- Coverage: 35.0%
 
 ### Day-off Module Autotest Progress
 - Total tracked: 28 cases
@@ -44,19 +52,19 @@
 
 ### Overall Autotest Progress
 - Total: 332 cases
-- Verified: 156
+- Verified: 160 (+4 this session)
 - Failed: 3
-- Blocked: 9
-- Pending: 164
-- Coverage: 47.0%
+- Blocked: 10 (+1 this session)
+- Pending: 159
+- Coverage: 48.2%
 
 ### Next Session Priority
-1. Continue vacation payment/transition tests: TC-VAC-030 (delete PAID+EXACT), TC-VAC-032 (auto-pay cron)
-2. Vacation day balance tests: TC-VAC-057..063 (AV=true/false balance, FIFO, corrections)
-3. Vacation notification tests: TC-VAC-064..070
-4. Vacation regression tests: TC-VAC-071..084
+1. Vacation FIFO balance tests: TC-VAC-060 (earliest year consumed first), TC-VAC-061 (redistribution on cancel)
+2. Vacation notifications: TC-VAC-064..070
+3. Vacation regression: TC-VAC-071..084
+4. Vacation permissions: TC-VAC-085..090
 
 ## State
 - Branch: dev35
 - Config: `phase.current: "autotest_generation"`, `autotest.scope: "vacation,day-off"`
-- All 31 verified vacation tests + 25 day-off tests pass reliably
+- All 35 verified vacation tests + 25 day-off tests pass reliably

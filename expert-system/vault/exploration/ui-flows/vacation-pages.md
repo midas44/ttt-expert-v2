@@ -370,3 +370,22 @@ await requestsPage.waitForRequestRowToDisappear(data.employeeName, data.periodPa
 - Server crossing validation includes DELETED/CANCELED vacations (ghost conflicts)
 - `hasVacationConflict()` in vacationQueries.ts excludes those statuses
 - Workaround: use high week offsets (45+) for payment tests to avoid dense test data regions
+
+
+## Balance Display Selectors (discovered Session 110)
+
+### Available Days Counter
+- Primary: `getAvailableDays()` extracts integer from text matching `/(\d+)\s+in\s+\d{4}/`
+- Signed variant: `getAvailableDaysSigned()` — handles negative values via `/-?\d+/` regex, uses `page.evaluate()` to scan `span, div` elements for pattern `/-?\d+[\s\u00a0]+in[\s\u00a0]+\d{4}$/`
+- **CRITICAL**: UI available days value is computed dynamically by the API (factors in approved/pending vacations, carry-over, prorating). It does NOT equal `SUM(employee_vacation.available_vacation_days)` from the DB. Never compare UI value with raw DB sum.
+
+### Yearly Breakdown Tooltip
+- Toggle: `toggleYearlyBreakdown()` clicks `[class*="vacationDaysTooltip"]` or `getByText("Available vacation days")`
+- Entries: `getYearlyBreakdownEntries()` tries CSS class selectors first, falls back to raw text extraction
+- **Fallback pattern**: Locate `[class*="vacationDaysTooltip"], [class*="tooltip"]`, extract text, parse with regex `(\d{4})\D+(\d+)` to get `{year, days}[]`
+- Entries show per-year breakdown; individual year values may differ from DB `employee_vacation` rows
+
+### DB Schema Notes (office_annual_leave)
+- Column: `days` (NOT `annual_leave_days`)
+- FK: `office` (NOT `office_id`)
+- Join: `office_annual_leave oal ON oal.office = o.id`

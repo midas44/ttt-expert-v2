@@ -240,6 +240,37 @@ export class MyVacationsPage {
     return match ? parseInt(match[1], 10) : 0;
   }
 
+  /** Returns the available vacation days as a signed number (handles negative for AV=true). */
+  async getAvailableDaysSigned(): Promise<number> {
+    const text = await this.page.evaluate(() => {
+      // Strategy 1: "-N in YYYY" or "N in YYYY" (handles &nbsp; and minus sign)
+      for (const span of document.querySelectorAll("span, div")) {
+        const t = span.textContent?.trim() ?? "";
+        if (/^-?\d+[\s\u00a0]+in[\s\u00a0]+\d{4}$/.test(t)) return t;
+      }
+      // Strategy 2: leaf element with negative or positive number near the label
+      for (const el of document.querySelectorAll("span, div")) {
+        if (el.childElementCount !== 0) continue;
+        const ct = el.textContent?.trim() ?? "";
+        if (!/^-?\d{1,3}$/.test(ct)) continue;
+        let parent = el.parentElement;
+        for (let depth = 0; depth < 3 && parent; depth++) {
+          const pt = parent.textContent ?? "";
+          if (
+            pt.length < 300 &&
+            /available vacation days|доступно отпускных/i.test(pt)
+          ) {
+            return ct;
+          }
+          parent = parent.parentElement;
+        }
+      }
+      return "";
+    });
+    const match = text.match(/(-?\d+)/);
+    return match ? parseInt(match[1], 10) : 0;
+  }
+
   /** Clicks the "All" filter tab. */
   async clickAllTab(): Promise<void> {
     await this.page.getByRole("button", { name: /^All$/i }).click();
