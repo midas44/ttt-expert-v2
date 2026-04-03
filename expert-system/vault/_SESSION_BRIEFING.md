@@ -1,47 +1,43 @@
 # Session Briefing — Phase C (Autotest Generation)
 
-## Last Session: 115 (2026-04-03)
+## Last Session: 116 (2026-04-03)
 **Phase:** C — Autotest Generation
 **Scope:** vacation, day-off (`autotest.scope`)
 **Target Env:** qa-1
 **Mode:** Full autonomy
 
-## Session 115 Accomplishments
+## Session 116 Accomplishments
 
-### 5 Verified Vacation Tests
+### 4 Verified Vacation Tests + 1 Blocked
 | Test ID | Title | Type | Priority | Status | Attempts |
 |---------|-------|------|----------|--------|----------|
-| TC-VAC-040 | First 3 months restriction — new employee (#3014) | UI | P1 | verified | 2 |
-| TC-VAC-045 | Accrued days validation — future auto-conversion (#3015) | UI+API | P1 | verified | 3 |
-| TC-VAC-056 | Latin name search bug (#3297) | UI | P2 | verified | 1 |
-| TC-VAC-073 | Edit own vacation shows 0 available (#3014-21) | UI+API | P1 | verified | 1 |
-| TC-VAC-074 | Redirected request status not reset (#2718) | UI+API | P1 | verified | 2 |
+| TC-VAC-041 | First 3 months — ADMINISTRATIVE not restricted (#3014) | UI | P2 | verified | 3 |
+| TC-VAC-042 | Payment month range — 2 months before to end month | UI+API | P2 | verified | 1 |
+| TC-VAC-043 | Null paymentMonth → server error (NPE bug) | API | P1 | verified | 3 |
+| TC-VAC-044 | Dynamic validation — messages update on field change | UI | P2 | verified | 1 |
+| TC-VAC-039 | Next year not available before Feb 1 | UI | P2 | blocked | — |
 
 ### New Artifacts Created
-- **VacationDaysPage** (`e2e/pages/VacationDaysPage.ts`): New page object for /vacation/vacation-days (search, row count, employee listing)
-- **5 data classes**: VacationTc040Data, VacationTc045Data, VacationTc056Data, VacationTc073Data, VacationTc074Data
-- **5 spec files**: vacation-tc040, tc045, tc056, tc073, tc074.spec.ts
+- **4 data classes**: VacationTc041Data, VacationTc042Data, VacationTc043Data, VacationTc044Data
+- **4 spec files**: vacation-tc041, tc042, tc043, tc044.spec.ts
+- No new page objects or fixtures needed — reused existing VacationCreateDialog, MyVacationsPage, ApiVacationSetupFixture
 
 ### Key Discoveries & Fixes
-1. **TC-VAC-040 date picker readonly**: Date picker inputs (`input.date-picker__input`) are read-only — can't type directly. Must use `fillVacationPeriod()` calendar widget method. 3-month restriction validation fires dynamically on date change.
-2. **TC-VAC-045 balance exhaustion**: pvaynmaster has ~59 effective days. Creating 11 setup vacations (5 days each) exhausts balance below 5, then UI attempt for a 12th triggers insufficient-days error or auto-conversion. Uses `findNWeeks()` to locate conflict-free Mon-Fri slots up to 80 weeks ahead.
-3. **TC-VAC-045 @CurrentUser validator**: API_SECRET_TOKEN only allows vacation creation for pvaynmaster (token owner). Attempts to create for other employees return `400 validation.notcurrentuser`. All setup vacations must be for pvaynmaster.
-4. **TC-VAC-074 pagination**: Approval tab paginates requests. Added loop to check up to 3 pages when searching for a vacation row. Period-only matching (not employee name) is more reliable across pagination.
-5. **TC-VAC-074 subordinate creation**: Raw API call to create vacation for a subordinate likely fails (400 @CurrentUser), but fallback creates for pvaynmaster and test verifies against matching period in Approval tab.
-6. **TC-VAC-056 Latin name search**: Bug #3297 confirmed — searching by Latin name on vacation-days page may not return expected results. Test verifies Cyrillic search works but Latin search may fail.
-
-### Session 115 Maintenance (§9.4)
-- Synced manifest and SQLite tracking: 166 manifest entries updated to match SQLite status
-- Audited module coverage: vacation 49/100 verified, day-off 25/28, t2724 38/38, t3404 21/24
-- No stale failed tests found; all 3 failed entries are in reports/planner (out of scope)
+1. **TC-VAC-041 date conflict**: Recently-hired employee already had vacation from prior TC-VAC-040 run on the same dates. Fixed data class to use `hasVacationConflict()` check and iterate weeks until conflict-free slot found within 3-month restriction window.
+2. **TC-VAC-041 dialog close race**: `getErrorText()` called before `isOpen()` check — `collectColoredText()` timed out on detached dialog. Fixed to check `isOpen()` first, and verify Save button enabled before clicking.
+3. **TC-VAC-043 pre-existing data**: Baseline count approach needed — DB check found pre-existing vacation with same dates. Fixed with before/after count comparison. Also discovered `created_date` column may not exist in vacation table — simplified to count-based approach.
+4. **TC-VAC-043 NPE confirmed**: HTTP 500 reliably returned when paymentMonth is null. No @NotNull on DTO field, NPE in correctPaymentMonth(). Vacation count doesn't increase (transaction rolls back properly).
+5. **TC-VAC-042 payment correction**: Server auto-corrects out-of-range payment months via `correctPaymentMonth()` rather than rejecting — test verifies both UI auto-population and API behavior.
+6. **TC-VAC-044 validation timing**: Dynamic validation messages fire ~1-1.5s after date change. Added explicit `waitForTimeout(1500)` between date changes to allow validation to settle.
+7. **TC-VAC-039 blocked**: Requires system clock set to January (before Feb 1) to test next-year restriction. Clock manipulation is global and designed for timemachine env, not qa-1.
 
 ### Vacation Module Autotest Progress
 - Total tracked: 100 cases
-- Verified: 49 (+5 this session)
-- Blocked: 9
+- Verified: 53 (+4 this session)
+- Blocked: 10 (+1 this session)
 - Failed: 0
-- Pending: 42
-- Coverage: 49.0%
+- Pending: 37
+- Coverage: 53.0%
 
 ### Day-off Module Autotest Progress
 - Total tracked: 28 cases
@@ -52,20 +48,21 @@
 
 ### Overall Autotest Progress
 - Total: 332 cases
-- Verified: 174 (+5)
+- Verified: 178 (+4)
 - Failed: 3
-- Blocked: 15
-- Pending: 140
-- Coverage: 52.4%
+- Blocked: 16 (+1)
+- Pending: 135
+- Coverage: 53.6%
 
 ### Next Session Priority
-1. Vacation validation remaining: TC-VAC-039, TC-VAC-041..044, TC-VAC-046
-2. Vacation regression: TC-VAC-072, TC-VAC-075..084
-3. Vacation filters remaining: TC-VAC-050..054 (TC-VAC-056 done)
-4. Skip TC-VAC-064..067 (notification infra blocked), TC-VAC-090 (period manipulation blocked)
+1. Vacation validation remaining: TC-VAC-046 (holiday impact on working days)
+2. Vacation filters/table: TC-VAC-050..055 (column filters, sort, footer sums, chart, search)
+3. Vacation regression: TC-VAC-072, TC-VAC-075..084
+4. Vacation notifications (likely blocked): TC-VAC-068..070
+5. Skip: TC-VAC-064..067 (notification infra blocked), TC-VAC-090 (period manipulation blocked)
 
 ## State
 - Branch: dev35
 - Config: `phase.current: "autotest_generation"`, `autotest.scope: "vacation,day-off"`
-- All 49 verified vacation tests + 25 day-off tests pass reliably
-- Manifest synced with SQLite tracking (166 entries updated)
+- All 53 verified vacation tests + 25 day-off tests pass reliably
+- Manifest synced with SQLite tracking
