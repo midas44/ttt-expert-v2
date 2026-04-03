@@ -1,40 +1,43 @@
 # Session Briefing
 
-## Session 119 — 2026-04-03
+## Session 120 — 2026-04-03
 **Phase:** C (Autotest Generation)
 **Scope:** vacation, day-off
 **Status:** COMPLETED — 5/5 tests verified
+**Maintenance:** Session 120 (multiple of 5) — maintenance checks run, no stale records found.
 
 ### Tests Generated & Verified
 | Test ID | Title | Attempts | Key Fix |
 |---------|-------|----------|---------|
-| TC-VAC-011 | Per-year breakdown tooltip | 3 | `getAvailableDays()` reads current-year only ("7 in 2026"), not total; removed stale DB cross-check |
-| TC-VAC-012 | Vacation events feed | 1 | None needed — passed first run |
-| TC-VAC-013 | Delete PAID+NON-EXACT vacation | 2 | Design issue now FIXED — API returns 403; test updated to verify correct block |
-| TC-VAC-014 | Soft delete — record persists in DB | 1 | None needed — passed first run |
-| TC-VAC-054 | Availability chart — vacation display | 1 | None needed — passed first run |
+| TC-VAC-083 | Null optionalApprovers → NPE on CPO path | 1 | None needed — passed first run |
+| TC-VAC-055 | Employees Vacation Days page — search by name | 2 | Search by latin last name (more unique); assert by count reduction not exact name match (table shows Russian names) |
+| TC-VAC-089 | Accountant can pay but not approve | 1 | None needed — passed first run |
+| TC-VAC-091 | Empty request body → empty 400 response | 1 | None needed — passed first run |
+| TC-VAC-078 | Maternity leave user can't edit vacation (#3370) | 2 | DB column is `maternity` not `maternity_leave` |
 
 ### Key Discoveries
-1. **Available days counter format**: "N in YYYY" shows the CURRENT year's balance only, not the total across all years. The tooltip shows the full per-year breakdown. Tests must not compare the counter value with the sum of all years.
-2. **PAID+NON_EXACT deletion design issue fixed**: The original test case documented that `deleteVacation` only guarded PAID+EXACT. Now the API correctly returns 403 for ALL PAID vacations regardless of period type. The guard has been tightened.
-3. **Events feed dialog structure**: Opens as a dialog with employee info (name, days left, work dates) and a paginated table with columns: Date, Event, Paid days allowance, Paid days used, Unpaid days used. pvaynmaster has 35 pages of events.
-4. **Availability chart colored cells**: Approved vacations render as colored background cells in the Days view. The underlying `<table>` uses CSS overflow (Playwright reports elements as hidden), so DOM-based `evaluate()` is needed for color checks.
-
-### Page Object Enhancements
-- **MyVacationsPage**: Added `openEventsFeed()`, `getEventsFeedRows()`, `closeEventsFeedDialog()` methods
-- **AvailabilityChartPage**: Added `navigateToMonth()` (auto-direction) and `getColoredCellCount()` methods
+1. **ttt_vacation.employee.maternity column**: The column is `maternity` (boolean), not `maternity_leave` as documented in some vault notes. Updated test code accordingly.
+2. **Vacation Days page search displays**: The /vacation/vacation-days page shows Russian names in the table even when the UI is in English. Search accepts Latin names but displays are Russian. Tests should assert by count reduction, not by matching search text in table cells.
+3. **Accountant page access pattern**: ROLE_ACCOUNTANT can access /vacation/payment (VACATIONS:VIEW_PAYMENTS) but NOT /vacation/request (requires VACATIONS:VIEW_APPROVES which is PM/DM/TL/ADM/VALL only).
+4. **HttpMessageNotReadableException confirmed empty**: POST with no body → HTTP 400 with completely empty response body (0 bytes). Unique error handling behavior.
 
 ### Vacation Module Progress
-- **Verified:** 68 tests
-- **Pending:** 22 tests
+- **Verified:** 73 tests
+- **Pending:** 17 tests
 - **Blocked:** 10 tests
-- **Total:** 100 tests (68% automated)
+- **Total:** 100 tests (73% automated)
 
 ### Day-off Module Progress
 - **Verified:** 25 tests
 - **Blocked:** 3 tests
 - **Total:** 28 tests (89% automated)
 
+### Combined Progress
+- **Total scope:** 128 tests
+- **Automated:** 98 tests (77%)
+- **Remaining pending:** 17 vacation tests
+
 ### Next Session Priorities
-1. Continue vacation pending tests (22 remaining): TC-VAC-055, TC-VAC-068..070, TC-VAC-076, TC-VAC-078, TC-VAC-080..084, TC-VAC-089, TC-VAC-091..100
-2. Focus on lower-numbered pending tests first (closer to core CRUD functionality)
+1. Continue vacation pending tests (17 remaining): TC-VAC-068..070, TC-VAC-076, TC-VAC-080..082, TC-VAC-084, TC-VAC-092..100
+2. Mix of UI tests (notifications, regression) and API error handling tests
+3. Notification tests (068-070) may need email verification — assess feasibility
