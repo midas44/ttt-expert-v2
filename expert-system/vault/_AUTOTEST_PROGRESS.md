@@ -12,21 +12,21 @@ updated: '2026-04-03'
 | t2724 | 38 | 38 | 100% | 0 |
 | day-off | 25 | 28 | 89.3% | 3 |
 | t3404 | 21 | 24 | 87.5% | 3 |
-| vacation | 39 | 100 | 39.0% | 8 |
+| vacation | 49 | 100 | 49.0% | 9 |
 | planner | 24 | 82 | 29.3% | 0 |
 | reports | 17 | 60 | 28.3% | 0 |
-| **Total** | **164** | **332** | **49.4%** | **14** |
+| **Total** | **174** | **332** | **52.4%** | **15** |
 
 ## Vacation Module
 
 | Metric | Value |
 |--------|-------|
 | Total test cases | 100 |
-| Verified | 39 |
-| Blocked | 8 |
+| Verified | 49 |
+| Blocked | 9 |
 | Failed | 0 |
-| Pending | 53 |
-| Coverage | 39.0% |
+| Pending | 42 |
+| Coverage | 49.0% |
 
 ### Verified Tests by Session
 
@@ -40,7 +40,11 @@ updated: '2026-04-03'
 
 **Sessions 111-112 (TC-VAC-060..062):** FIFO balance consumption, redistribution on cancel, day correction basics. 3 verified.
 
-**Session 113 (TC-VAC-063):** Day correction AV=false prohibits negative balance (UI). Rewrote data class to use alphabetically-earliest employee for page-1 visibility. Rewrote spec to skip autocomplete search.
+**Session 113 (TC-VAC-063):** Day correction AV=false prohibits negative balance (UI). Rewrote data class to use alphabetically-earliest employee for page-1 visibility.
+
+**Session 114 (TC-VAC-085..088, TC-VAC-071):** Owner edit/no-edit PAID, non-approver cannot approve, ReadOnly user server-side rejection, overlapping vacations blocked. TC-VAC-090 blocked (period manipulation needs timemachine).
+
+**Session 115 (TC-VAC-040, 045, 056, 073, 074):** 3-month restriction for new employees, accrued days exhaustion with multi-vacation setup, Latin name search bug, edit-shows-0-available bug, redirect status reset. Created VacationDaysPage for /vacation/vacation-days. Key finding: @CurrentUser validator blocks non-pvaynmaster vacation creation via API.
 
 ### Blocked Tests
 
@@ -54,6 +58,7 @@ updated: '2026-04-03'
 | TC-VAC-065 | Same — approve notification not generated |
 | TC-VAC-066 | Same — reject notification not generated |
 | TC-VAC-067 | Same — cancel notification not generated |
+| TC-VAC-090 | Requires accounting period manipulation (needs timemachine env) |
 
 ## Planner Module
 
@@ -76,31 +81,6 @@ updated: '2026-04-03'
 **Session 90 (TC-PLN-016 to TC-PLN-020):** Projects tab — project selector dropdown filtering, "Open for editing" generates assignments, edit hours in manager view, color coding (blocked/done), Info/Tracker column display.
 
 **Session 91 (TC-PLN-021 to TC-PLN-024):** Remaining work column, Total row calculations, multi-project aggregation, effort validation.
-
-### PlannerPage Object Methods
-
-| Method | Added | Purpose |
-|--------|-------|---------|
-| `waitForReady()` | s87 | Wait for Planner heading |
-| `navigateDateForward/Backward()` | s87 | Date navigation |
-| `clickTasksTab/ProjectsTab()` | s87 | Tab switching |
-| `selectProject()` | s87 | Project dropdown |
-| `selectRoleFilter()` | s88 | Role filter dropdown |
-| `socketManagerWrapper/Container()` | s88 | WebSocket indicator |
-| `totalRow()` | s88 | Total row locator |
-| `expandButtons/clickExpandButton()` | s88 | Collapse/expand |
-| `switchToTaskView/TicketView()` | s88 | Task/Ticket toggle |
-| `ensureEditMode()` | s89 | Robust editing mode activation |
-| `clickCellToEdit()` | s89 | Two-click edit pattern |
-| `isCellEditable()` | s89 | Readonly detection |
-| `dismissErrorBanner()` | s89 | Error banner handling |
-| `getEffortCell/RemainingWorkCell/CommentCell()` | s89 | Cell locators by column index |
-| `waitForTableLoaded()` | s90 | DO NOT USE — loading class is perpetual |
-| `dataTable()` | s90 | Datasheet table locator |
-| `dataTableRows()` | s90 | Direct child rows (unreliable — prefer planner__cel filter) |
-| `blockedCells() / doneCells()` | s90 | Color-coded cell locators |
-| `getEmployeeHeaderRow()` | s90 | Projects tab employee header |
-| `getEmployeeOpenForEditingButton()` | s90 | Per-employee edit button |
 
 ### Known Issues
 
