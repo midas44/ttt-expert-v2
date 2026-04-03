@@ -11860,7 +11860,7 @@
               "module_component": "vacation/regression",
               "notes": "3-way overlap check: start-in-range, end-in-range, enclosing.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-072",
@@ -12060,7 +12060,7 @@
               "module_component": "vacation/permissions",
               "notes": "Permission EDIT: Owner, status not PAID (always).",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-086",
@@ -12074,7 +12074,7 @@
               "module_component": "vacation/permissions",
               "notes": "NON_EDITABLE_STATUSES = {CANCELED, PAID}.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-087",
@@ -12088,7 +12088,7 @@
               "module_component": "vacation/permissions",
               "notes": "MANAGER_ROLES = {PM, DM, CACC}. ROLE_ADMIN is NOT in MANAGER_ROLES (design issue).",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-088",
@@ -12102,7 +12102,7 @@
               "module_component": "vacation/permissions",
               "notes": "checkVacation(): if readOnly → throw VacationSecurityException (403).",
               "classified_type": "hybrid",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-089",
@@ -12130,7 +12130,7 @@
               "module_component": "vacation/permissions",
               "notes": "Protects against canceling after accounting period closure. Needs timemachine env.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "blocked"
             }
           ]
         },

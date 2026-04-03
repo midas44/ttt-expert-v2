@@ -186,6 +186,13 @@ export class MyVacationsPage {
     return pollForMatch(candidates, { timeout, interval: 300 });
   }
 
+  /** Returns the count of action buttons for a vacation row. */
+  async getActionButtonCount(period: string | RegExp): Promise<number> {
+    const row = this.vacationRow(period).first();
+    const actionsCell = row.locator("td").last();
+    return actionsCell.locator("button").count();
+  }
+
   /** Opens the edit dialog by clicking the pencil icon on a vacation row. */
   async openEditDialog(period: string | RegExp): Promise<VacationCreateDialog> {
     const row = this.vacationRow(period).first();
