@@ -1,28 +1,34 @@
 # Investigation Agenda
 
-## Phase C — Autotest Generation (vacation, day-off)
+## Phase C — Autotest Generation (absences: vacation, day-off, sick-leave)
 
-### P0 — Immediate (Next Session)
-- [ ] Generate vacation pending UI tests: TC-VAC-068 (also-notify notification), TC-VAC-069 (wrong payment month notification), TC-VAC-070 (auto-conversion notification)
-- [ ] Generate vacation API error tests: TC-VAC-092 (invalid type), TC-VAC-094 (exception leakage), TC-VAC-095 (update without id)
-- [ ] Assess notification test feasibility — do we need email MCP or can we verify via DB/timeline?
+### P0 — Immediate (Next Session: sick-leave continued)
+- [ ] Generate sick-leave CRUD tests: TC-SL-002 (create with number), TC-SL-003 (create with attachments), TC-SL-004 (validation: end before start), TC-SL-005 (validation: overlapping dates)
+- [ ] Generate sick-leave edit tests: TC-SL-007 (edit number field)
+- [ ] Address API auth issue — sick leave CRUD needs AUTHENTICATED_USER, not API_SECRET_TOKEN. All tests must use UI-based setup/cleanup.
 
-### P1 — High Priority
-- [ ] Generate remaining vacation regression tests: TC-VAC-080 (approver field missing), TC-VAC-081 (validation flash), TC-VAC-082 (Russian in English events), TC-VAC-084 (calendar change converts all)
-- [ ] Generate vacation API tests: TC-VAC-096 (crossing format), TC-VAC-097 (sick leave crossing), TC-VAC-098 (non-existent ID), TC-VAC-099 (invalid notifyAlso)
-- [ ] TC-VAC-100 (batch deadlock) — complex concurrency test
+### P1 — High Priority (sick-leave lifecycle + manager)
+- [ ] Generate sick-leave lifecycle tests: TC-SL-009 (close without number — error), TC-SL-012 (reopen ended sick leave)
+- [ ] Generate sick-leave manager tests: TC-SL-013+ (manager view, approval flows)
+- [ ] Generate sick-leave accounting tests: TC-SL-020+ (accounting status transitions)
+- [ ] Generate sick-leave permissions tests
 
 ### P2 — Lower Priority
-- [ ] Review blocked tests (10 vacation + 3 day-off) — check if any can be unblocked with new patterns
-- [ ] Run full regression suite to verify no flakiness across all 98 verified tests
+- [ ] Review 18 blocked vacation/day-off tests — check if any can be unblocked
+- [ ] Run full regression suite across all verified tests (vacation + day-off + sick-leave)
+- [ ] Investigate JWT-based auth for sick leave API as alternative to UI-only approach
 
-### Completed (Session 120)
-- [x] TC-VAC-083: Null optionalApprovers → NPE on CPO path (High, API) — verified
-- [x] TC-VAC-055: Employees Vacation Days page — search by name (Medium, UI) — verified
-- [x] TC-VAC-089: Accountant can pay but not approve (Medium, UI) — verified
-- [x] TC-VAC-091: Empty request body → empty 400 response (Medium, API) — verified
-- [x] TC-VAC-078: Maternity leave user can't edit vacation (#3370) (Medium, UI) — verified
+### Completed (Session 125)
+- [x] TC-SL-001: Create sick leave — happy path (P0, UI) — verified
+- [x] TC-SL-006: Edit sick leave dates (P0, UI) — verified
+- [x] TC-SL-008: Close sick leave — happy path with number (P0, UI) — verified
+- [x] TC-SL-010: Delete sick leave (P1, UI) — verified
+- [x] TC-SL-011: View sick leave details (P1, UI) — verified
+- [x] Built MySickLeavePage, SickLeaveCreateDialog page objects
+- [x] Built SickLeaveSetupData, SickLeaveTc001Data data classes
+- [x] Built sickLeaveQueries.ts DB queries
+- [x] Discovered: details dialog uses rc-dialog (not role="dialog"), delete is inside details dialog
 
-<details><summary>Completed (Sessions 85-119) — 68 vacation + 25 day-off tests</summary>
+<details><summary>Completed (Sessions 85-124) — 85 vacation + 25 day-off tests</summary>
 See autotest_tracking table for full history.
 </details>

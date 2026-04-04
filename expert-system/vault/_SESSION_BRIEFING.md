@@ -1,42 +1,43 @@
 # Session Briefing
 
-## Session 124 — 2026-04-04
+## Session 125 — 2026-04-04
 **Phase:** C (Autotest Generation)
-**Scope:** vacation, day-off
-**Status:** COMPLETED — scope fully covered. Setting autonomy.stop: true.
+**Scope:** absences (vacation, day-off, sick-leave)
+**Status:** sick-leave module started — 5/71 tests verified
 
 ### Tests Generated
 | Test ID | Title | Status | Key Finding |
 |---------|-------|--------|-------------|
-| TC-VAC-100 | Batch deadlock on concurrent operations | verified | 3 concurrent vacation create requests all succeeded (1.4s). Deadlocks are probabilistic — test handles both outcomes (all succeed or some fail with 500). |
+| TC-SL-001 | Create sick leave — happy path | verified | Date format in table: "25 – 30 Apr 2026", NOT dd.mm.yyyy. State shows as "started"/"planned". |
+| TC-SL-006 | Edit sick leave dates (OPEN) | verified | Edit button uses `data-testid="sickleave-action-edit"`. Calendar days recalculates on date change. |
+| TC-SL-008 | Close sick leave — happy path | verified | Close button: `sickleave-action-close`. State changes to "Ended"/"Closed". Requires document number. |
+| TC-SL-010 | Delete sick leave | verified | Delete is NOT a row action — must open details dialog first (`sickleave-action-detail`), then click Delete button inside the rc-dialog. |
+| TC-SL-011 | View sick leave details | verified | Details dialog uses rc-dialog (`.rc-dialog-wrap`), NOT `role="dialog"`. Contains employee, dates, days, number, state. |
 
-### Vacation Module — FINAL
-- **Verified:** 85 tests
-- **Blocked:** 15 tests (environment issues: email pipeline, calendar service, TTT test auth)
-- **Pending:** 0 tests
-- **Total:** 100 tests (85% verified, 15% blocked)
+### Infrastructure Built
+- **Page objects:** MySickLeavePage.ts, SickLeaveCreateDialog.ts
+- **Data classes:** SickLeaveTc001Data.ts, SickLeaveSetupData.ts (shared for TC-006/008/010/011)
+- **DB queries:** sickLeaveQueries.ts (findEmployeeWithManager, conflict checks)
+- **Fixture:** ApiSickLeaveSetupFixture.ts (currently non-functional — 401 auth issue)
+- **Vault updated:** exploration/ui-flows/sick-leave-pages.md with all discovered selectors
 
-### Day-off Module — FINAL
-- **Verified:** 25 tests
-- **Blocked:** 3 tests
-- **Total:** 28 tests (89% verified, 11% blocked)
+### Key Discoveries
+1. **API auth incompatibility:** Sick leave CRUD requires AUTHENTICATED_USER authority. API_SECRET_TOKEN returns 403, page.request returns 401. All setup/cleanup must be UI-based.
+2. **No "more" menu:** Unlike vacation, sick leave has no three-dots dropdown. The `sickleave-action-detail` button opens a details panel (rc-dialog), not a menu.
+3. **rc-dialog pattern:** Details dialog uses React rc-dialog component. Must use `.rc-dialog-wrap` selector, not `getByRole("dialog")`.
 
-### Combined — FINAL
-- **Total scope:** 128 tests
-- **Verified:** 110 tests (86%)
-- **Blocked:** 18 tests (14%)
-- **Pending:** 0 tests (0%)
+### Maintenance (§9.4)
+- SQLite audit: no orphans, no duplicates in autotest_tracking
+- Agenda updated for sick-leave focus
+- Vault knowledge written back (sick-leave-pages.md)
 
-### Phase C Complete
-All test cases in scope (vacation + day-off) are now covered — zero pending. The 18 blocked tests are due to QA-1 environment issues (vacation email pipeline, calendar service 502, TTT test endpoint auth) and cannot be resolved without infrastructure fixes. Setting `autonomy.stop: true`.
+### Overall Progress
+| Module | Verified | Blocked | Failed | Pending | Total |
+|--------|----------|---------|--------|---------|-------|
+| vacation | 85 | 15 | 0 | 0 | 100 |
+| day-off | 25 | 3 | 0 | 0 | 28 |
+| sick-leave | 5 | 0 | 0 | 66 | 71 |
+| **absences total** | **115** | **18** | **0** | **66** | **199** |
 
-### Blocked Test Summary (for future re-verification)
-**Vacation (15 blocked):**
-- TC-VAC-039,068,069,070: Email notification tests — RabbitMQ consumer for vacation topic down on QA-1
-- TC-VAC-084: Calendar change converts vacations — calendar service 502
-- TC-VAC-024,046,056,090,091: Various environment/auth constraints
-- TC-VAC-097: Test endpoint auth issue
-- Others: clock manipulation or multi-user JWT requirements
-
-**Day-off (3 blocked):**
-- Environment-specific constraints requiring timemachine or special auth
+### Next Session
+Continue sick-leave: TC-SL-002 (create with number), TC-SL-003 (attachments), TC-SL-004/005 (validations), TC-SL-007 (edit number). All UI-based due to API auth limitation.
