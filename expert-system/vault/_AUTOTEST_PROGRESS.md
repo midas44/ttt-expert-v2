@@ -1,41 +1,45 @@
-# Autotest Progress — Phase C
+# Autotest Progress
 
-## Overall Coverage (Session 116)
-| Metric | Count | % |
-|--------|-------|---|
-| Total tracked | 332 | — |
-| Verified | 178 | 53.6% |
-| Failed | 3 | 0.9% |
-| Blocked | 16 | 4.8% |
-| Pending | 135 | 40.7% |
+## Last Updated: Session 122 — 2026-04-04
 
-## Module Breakdown
-| Module | Total | Verified | Blocked | Failed | Pending | Coverage |
-|--------|-------|----------|---------|--------|---------|----------|
-| vacation | 100 | 53 | 10 | 0 | 37 | 53.0% |
-| day-off | 28 | 25 | 3 | 0 | 0 | 89.3% |
-| t2724 | 38 | 38 | 0 | 0 | 0 | 100% |
-| t3404 | 24 | 21 | 0 | 0 | 3 | 87.5% |
-| reports | 58 | 20 | 0 | 2 | 36 | 34.5% |
-| planner | 22 | 15 | 0 | 1 | 6 | 68.2% |
-| Other | 62 | 6 | 3 | 0 | 53 | 9.7% |
+## Coverage Summary
 
-## Session 116 Delta
-- +4 verified: TC-VAC-041, TC-VAC-042, TC-VAC-043, TC-VAC-044
-- +1 blocked: TC-VAC-039 (needs timemachine clock manipulation)
+| Module | Verified | Blocked | Pending | Total | Coverage |
+|--------|----------|---------|---------|-------|----------|
+| vacation | 83 | 11 | 6 | 100 | 83% |
+| day-off | 25 | 3 | 0 | 28 | 89% |
+| **Total** | **108** | **14** | **6** | **128** | **84%** |
 
-## Blocked Tests Summary
-| Test ID | Reason |
-|---------|--------|
-| TC-VAC-039 | Needs timemachine env clock set to January |
-| TC-VAC-064..067 | Email notification infrastructure not available |
-| TC-VAC-071 | Requires test endpoint for period manipulation |
-| TC-VAC-090 | Requires closed period manipulation |
-| TC-DO-026..028 | Day-off notification/email verification |
+## Remaining Pending Tests (6)
 
-## Vacation Pending Priority
-1. TC-VAC-046 — Holiday impact on working days
-2. TC-VAC-050..055 — Column filters, sort, footer, chart, search
-3. TC-VAC-072, TC-VAC-075..084 — Regression tests
-4. TC-VAC-068..070 — Notifications (likely blocked)
-5. TC-VAC-089..100 — API/edge case tests
+### Notification Tests (vacation/notifications)
+- **TC-VAC-068**: Also-notify recipients receive notification — email DB check
+- **TC-VAC-069**: Wrong payment month in notification (#2925) — OPEN bug regression
+- **TC-VAC-070**: Notification on auto-conversion to ADMINISTRATIVE (#3015) — complex setup
+
+### Regression Tests (vacation/regression)
+- **TC-VAC-076**: last_date not updated during CS sync (#3374) — API sync trigger
+- **TC-VAC-084**: Calendar change converts ALL vacations (#3338) — admin calendar mod
+
+### Concurrency (vacation/api)
+- **TC-VAC-100**: Batch deadlock on concurrent operations — parallel API requests
+
+## Blocked Tests (14)
+
+### Vacation (11)
+- TC-VAC-024, 039: Self-approval / CPO self-approve — pvaynmaster role conflict
+- TC-VAC-097: Sick leave crossing — API_SECRET_TOKEN 403 on sick leave endpoint
+- TC-VAC-057..058: Salary office filter — complex filter + dropdown selectors
+- Others: Various auth/permission constraints
+
+### Day-off (3)
+- TC-DO-024, 025, 026: Complex approval workflow edge cases
+
+## Session History (Recent)
+| Session | Tests Verified | Cumulative |
+|---------|---------------|------------|
+| 122 | 5 (TC-VAC-094,095,096,098,099) + 1 blocked (097) | 108/128 (84%) |
+| 121 | 5 (TC-VAC-080,081,082,092,093) | 103/128 (80%) |
+| 120 | 5 (TC-VAC-055,078,083,089,091) | 98/128 (77%) |
+| 119 | 5 (TC-VAC-011,012,013,014,054) | 93/128 (73%) |
+| 118 | 5 (TC-VAC-022,072,075,077,079) | 88/128 (69%) |
