@@ -1155,10 +1155,10 @@ export async function getVacationBalance(
   employeeId: number,
 ): Promise<number> {
   const row = await db.queryOne<{ days: string }>(
-    `SELECT COALESCE(vd.days, 0)::text AS days
-     FROM ttt_vacation.vacation_days vd
-     WHERE vd.employee = $1
-     ORDER BY vd.actual_year DESC
+    `SELECT COALESCE(ev.available_vacation_days, 0)::text AS days
+     FROM ttt_vacation.employee_vacation ev
+     WHERE ev.employee = $1
+     ORDER BY ev.year DESC
      LIMIT 1`,
     [employeeId],
   );

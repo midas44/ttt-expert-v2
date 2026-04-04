@@ -1,40 +1,49 @@
 # Session Briefing
 
-## Last Session: 127 — 2026-04-04T18:10Z
+## Session 129 — Instructions from Human Operator
+
 **Phase:** C (autotest_generation) | **Scope:** collection:absences | **Mode:** full
 
-### What Happened
-Generated 4 day-off calendar conflict cascade tests (TC-DO-033 through TC-DO-036):
+### Collection Progress (absences)
+- **Completed:** 9 vacation (tagged), 6 day-off (TC-DO-033/034/035/037/038 verified, TC-DO-069/070 generated)
+- **Blocked:** TC-DO-036 (no API to change employee office; cascade only via HR sync + date-conditional)
+- **Remaining:** ~15 tests (TC-CS-013..027+054 cross-service)
 
-| Test | Path | Status | Notes |
-|------|------|--------|-------|
-| TC-DO-033 | A — Calendar day moved | **verified** (7.0s) | POST /api/calendar/v1/calendar creates holiday, verifies ledger + status |
-| TC-DO-034 | B — Calendar day removed | **verified** (17.8s) | DELETE /api/calendar/v1/calendar/{id}, verifies DELETED_FROM_CALENDAR + UI |
-| TC-DO-035 | C — Period change rejects | **blocked** | PATCH /v1/offices/{id}/periods/approve → 403 (needs ROLE_ADMIN) |
-| TC-DO-036 | D — Office change deletes | **blocked** | PATCH employee office → 405/403 (needs ROLE_ADMIN) |
+### Key Findings from Session 128
 
-### Key Discoveries
-- **Calendar v1 API**: Correct endpoint is `/api/calendar/v1/calendar` (NOT `/v1/production-calendars`). POST creates with `{calendarId, date, duration, reason}`, DELETE by row ID.
-- **employee_dayoff table**: No FK to employee_dayoff_request — uses `(employee, original_date)` not `(requestId)`.
-- **last_approved_date**: Column in employee_dayoff_request matches original_date in most cases. Used by PeriodChangedEventHandler for Path C matching.
-- **API_SECRET_TOKEN**: Authenticates as `pvaynmaster` (ROLE_EMPLOYEE only). Admin operations (period change, employee office change) require `kbryazgin` (ROLE_ADMIN) via JWT auth.
-- **Approve period storage**: `ttt_backend.office_period` table, `type='APPROVE'`. Most offices at `2026-03-01`.
+#### TC-DO-035 Root Cause & Fix
+The 403 errors were caused by two issues:
+1. **Auth**: The `patchApprovePeriod` endpoint requires `AUTHENTICATED_USER` authority (JWT via CAS login), not `API_SECRET_TOKEN`. The Autotest token provides `ApiPermission` set (e.g., `CALENDAR_EDIT`, `OFFICES_VIEW`) but NOT `AUTHENTICATED_USER`.
+2. **Field name**: The DTO field is `start` (not `startDate`).
+3. **Period constraint**: Approve period can't exceed report period. Both periods must be advanced.
+**Fix**: Login via CAS as `pvaynmaster`, extract JWT from `localStorage['id_token']`, use as `TTT_JWT_TOKEN` header. Advance report period first, then approve period.
 
-### Auth Blocker for TC-DO-035/036
-Both Path C and Path D require admin-level API auth:
-- `pvaynmaster` (API_SECRET_TOKEN owner) has only `ROLE_EMPLOYEE`
-- `kbryazgin` has `ROLE_ADMIN` but no API token configured
-- JWT endpoint (`/v1/security/jwt`) requires an existing JWT, not API tokens
-- **Resolution needed**: Configure admin API token or find alternative auth approach
+#### TC-DO-036 Permanently Blocked
+- No REST API exists to change an employee's salary office
+- Office changes only happen via `CSEmployeeSynchronizer` (HR sync process)  
+- `EmployeeOfficeChangedProcessor.process()` has date-conditional cascade: `nextYear.equals(year) || isTodayFirstDayOfYear()` — only fires for next year or on Jan 1
+- Would need either: (a) HR sync mock, (b) clock manipulation to Jan 1, (c) test for year 2027 only
 
-### Overall Progress
-- **Global**: 224 verified, 23 blocked, 3 failed, 98 pending (348 total)
-- **Day-off module**: 29 verified, 5 blocked
-- **Collection absences**: 15 tests remaining (13 cross-service, 2 day-off)
+#### JWT Auth Pattern (for endpoints needing AUTHENTICATED_USER)
+```typescript
+// Login via CAS
+const login = new LoginFixture(page, tttConfig);
+await login.run();
+const jwt = await page.evaluate(() => localStorage.getItem("id_token"));
+const headers = { TTT_JWT_TOKEN: jwt, "Content-Type": "application/json" };
+// Use standalone `request` fixture with JWT headers
+await request.patch(url, { headers, data: {...} });
+```
+Test must use `{ page, request }` fixtures — `page` for CAS login, `request` for API calls with JWT.
 
-### Next Session Priorities
-1. **Investigate admin JWT auth** — find a way to get JWT for kbryazgin to unblock TC-DO-035/036
-2. **TC-DO-037**: Calendar deletion affects only correct office (cross-office isolation)
-3. **TC-DO-038**: Auto-deletion triggers vacation recalculation (AV=False)
-4. **Cross-service tests**: TC-CS-013 through TC-CS-027 (calendar/period cascade tests)
-5. Consider whether blocked Path C/D tests can use DB-level manipulation + test sync endpoints instead
+#### Autotest Token Permissions (qa-1, id=62447)
+Token has: ASSIGNMENTS_ALL, ASSIGNMENTS_VIEW, CALENDAR_EDIT, CALENDAR_VIEW, EMPLOYEES_VIEW, OFFICES_VIEW, PROJECTS_ALL, REPORTS_APPROVE, REPORTS_EDIT, REPORTS_VIEW, STATISTICS_VIEW, SUGGESTIONS_VIEW, TASKS_EDIT, VACATIONS_APPROVE, VACATIONS_CREATE, VACATIONS_DELETE, VACATIONS_EDIT, VACATIONS_PAY, VACATIONS_VIEW, VACATION_DAYS_EDIT, VACATION_DAYS_VIEW.
+**Missing**: No `OFFICES_EDIT`, `EMPLOYEES_EDIT` — these don't exist in the `ApiPermission` enum.
+
+#### getVacationBalance Fix
+The query used wrong table. Correct: `ttt_vacation.employee_vacation.available_vacation_days` (not `ttt_vacation.vacation_days`).
+
+### Priority for Next Session
+1. Start cross-service tests (TC-CS-013, TC-CS-014, etc.)
+2. These involve calendar changes → vacation recalculation cascades
+3. Many will need the JWT auth pattern for period-related endpoints

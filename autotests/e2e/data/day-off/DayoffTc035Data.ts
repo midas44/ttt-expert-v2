@@ -16,6 +16,7 @@ interface Tc035Args {
   employeeLogin: string;
   managerId: number;
   currentApprovePeriod: string;
+  currentReportPeriod: string;
   /** Holiday in the month AFTER approve period — will be affected */
   affectedDate: string;
   affectedRequestId: number;
@@ -29,8 +30,8 @@ interface Tc035Args {
  *
  * Finds an office with an approve period, creates 2 NEW transfer requests
  * in different months (one in the next month after approve period, one later).
- * The test will advance the approve period by 1 month via PATCH, triggering
- * PeriodChangedEventHandler → rejectedBySystem() cascade.
+ * The test will advance both report and approve periods by 1 month via PATCH,
+ * triggering PeriodChangedEventHandler → rejectedBySystem() cascade.
  *
  * Expected: the request in the newly-approved month gets REJECTED,
  * the other request remains NEW.
@@ -41,6 +42,7 @@ export class DayoffTc035Data {
   readonly employeeLogin: string;
   readonly managerId: number;
   readonly currentApprovePeriod: string;
+  readonly currentReportPeriod: string;
   readonly affectedDate: string;
   readonly affectedRequestId: number;
   readonly unaffectedDate: string;
@@ -52,14 +54,15 @@ export class DayoffTc035Data {
     this.employeeLogin = args.employeeLogin;
     this.managerId = args.managerId;
     this.currentApprovePeriod = args.currentApprovePeriod;
+    this.currentReportPeriod = args.currentReportPeriod;
     this.affectedDate = args.affectedDate;
     this.affectedRequestId = args.affectedRequestId;
     this.unaffectedDate = args.unaffectedDate;
     this.unaffectedRequestId = args.unaffectedRequestId;
   }
 
-  /** The new approve period start_date (1 month after current) */
-  get newApprovePeriod(): string {
+  /** The new period start_date (1 month after current) */
+  get newPeriod(): string {
     const d = new Date(this.currentApprovePeriod + "T12:00:00Z");
     d.setUTCMonth(d.getUTCMonth() + 1);
     return d.toISOString().slice(0, 10);
@@ -75,6 +78,7 @@ export class DayoffTc035Data {
       employeeLogin: process.env.DAYOFF_TC035_EMPLOYEE ?? "ogribanova",
       managerId: 0,
       currentApprovePeriod: "2026-03-01",
+      currentReportPeriod: "2026-03-01",
       affectedDate: "2026-04-13",
       affectedRequestId: 0,
       unaffectedDate: "2026-06-12",
@@ -89,13 +93,19 @@ export class DayoffTc035Data {
 
     const db = new DbClient(tttConfig);
     try {
-      // Pick an office with approve period at 2026-03-01 (most common)
-      // Use office 2 (Сатурн) — small office
       const officeId = 2;
-      const currentPeriod = await getApprovePeriod(db, officeId);
+      const currentApprovePeriod = await getApprovePeriod(db, officeId);
+
+      // Also get report period (approve can't exceed report)
+      const reportRow = await db.queryOne<{ start_date: string }>(
+        `SELECT start_date::text FROM ttt_backend.office_period
+         WHERE office = $1 AND type = 'REPORT'`,
+        [officeId],
+      );
+      const currentReportPeriod = reportRow.start_date;
 
       // Find employee with 2 free holidays in different months after approve period
-      const emp = await findEmployeeForPeriodTest(db, officeId, currentPeriod);
+      const emp = await findEmployeeForPeriodTest(db, officeId, currentApprovePeriod);
 
       // Create 2 NEW requests
       const req1 = await createNewRequestForDate(
@@ -110,7 +120,8 @@ export class DayoffTc035Data {
         employeeId: emp.employeeId,
         employeeLogin: emp.employeeLogin,
         managerId: emp.managerId,
-        currentApprovePeriod: currentPeriod,
+        currentApprovePeriod,
+        currentReportPeriod,
         affectedDate: emp.holiday1,
         affectedRequestId: req1.requestId,
         unaffectedDate: emp.holiday2,

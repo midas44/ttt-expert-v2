@@ -1,23 +1,22 @@
 # Autotest Progress
 
-## Overall Coverage (Session 125)
+## Overall Coverage (Session 128)
 
 | Module | Manifest Total | Verified | Blocked | Failed | Pending | Coverage |
 |--------|---------------|----------|---------|--------|---------|----------|
 | vacation | 100 | 85 | 15 | 0 | 0 | 85% (100% addressed) |
-| day-off | 28 | 25 | 3 | 0 | 0 | 89% (100% addressed) |
+| day-off | 28+4 | 30 | 4 | 0 | ~6 | 75% |
 | sick-leave | 71 | 5 | 0 | 0 | 66 | 7% |
 | t2724 | 38 | 38 | 0 | 0 | 0 | 100% |
 | t3404 | 24 | 21 | 3 | 0 | 0 | 88% (100% addressed) |
 | planner | 82 | 24 | 0 | 1 | 57 | 29% |
 | reports | 60 | 17 | 0 | 2 | 41 | 28% |
 
-### Absences Scope (current focus)
-- **Total:** 199 test cases (vacation 100 + day-off 28 + sick-leave 71)
-- **Verified:** 115 (58%)
-- **Blocked:** 18 (9%)
-- **Pending:** 66 (33%)
-- **Target:** All sick-leave tests
+### Absences Collection (current focus)
+- **Day-off verified in S128:** TC-DO-035 (fixed: JWT auth + field name), TC-DO-037 (new), TC-DO-038 (new)
+- **Day-off blocked:** TC-DO-036 (no API for office change, HR sync only, date-conditional cascade)
+- **Remaining:** ~15 cross-service tests (TC-CS-013..027+054)
+- **Target:** Complete absences collection
 
 ### Sick-Leave Progress (started session 125)
 **Verified (5):** TC-SL-001, TC-SL-006, TC-SL-008, TC-SL-010, TC-SL-011
