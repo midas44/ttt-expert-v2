@@ -1,48 +1,46 @@
 # Session Briefing
 
-## Session 122 — 2026-04-04
+## Session 123 — 2026-04-04
 **Phase:** C (Autotest Generation)
 **Scope:** vacation, day-off
-**Status:** COMPLETED — 5/5 tests verified, 1 blocked
+**Status:** COMPLETED — 5 tests generated, 1 verified, 4 blocked by environment
 
-### Tests Generated & Verified
-| Test ID | Title | Attempts | Key Fix |
-|---------|-------|----------|---------|
-| TC-VAC-098 | Non-existent vacation ID → 400 (VacationIdExistsValidator) | 2 | API returns 400 (validation) not 404 — @VacationIdExists annotation catches it before controller |
-| TC-VAC-094 | Exception class leakage in error responses | 2 | Exception field contains Spring class name (`MethodArgumentNotValidException`), not TTT-specific — broadened regex to match any FQCN |
-| TC-VAC-095 | Update without id in body → IllegalArgumentException | 2 | Payment validation error with weeksAhead=2 — increased to 5 |
-| TC-VAC-099 | Invalid notifyAlso login → 400 | 1 | None needed — passed first run |
-| TC-VAC-096 | Crossing validation error format inconsistency | 2 | Same payment validation fix — increased weeksAhead from 3→5 and 6→8 |
+### Tests Generated
+| Test ID | Title | Status | Key Finding |
+|---------|-------|--------|-------------|
+| TC-VAC-068 | Also-notify recipients receive notification | blocked | QA-1 vacation email notification pipeline not generating emails. TC-VAC-064 (previously verified) also fails. Day-off emails work — likely RabbitMQ consumer issue for vacation topic. |
+| TC-VAC-069 | Wrong payment month in notification (#2925) | blocked | Same email pipeline issue. Cannot verify payment month in notification body. |
+| TC-VAC-070 | Notification on auto-conversion to ADMINISTRATIVE (#3015) | blocked | Email pipeline down + pvaynmaster is in AV=true office. Auto-conversion only triggers for AV=false employees. Need per-user JWT auth (not available). |
+| TC-VAC-076 | last_date not updated during CS sync (#3374) | verified | Bug #3374 CONFIRMED: 7 mismatches (3 critical — employees have termination date in backend but vacation service unaware). Test correctly detects the open bug. |
+| TC-VAC-084 | Calendar change converts ALL vacations (#3338) | blocked | Calendar service returning 502 Bad Gateway on QA-1. Cannot create/modify production calendar entries. |
 
-### Test Blocked
-| Test ID | Title | Reason |
-|---------|-------|--------|
-| TC-VAC-097 | Sick leave crossing vacation → 409 CONFLICT | API_SECRET_TOKEN returns 403 for sick leave endpoint. Needs CAS JWT auth (per-user context) which is not available via API. |
+### Infrastructure Changes
+- Added `createVacationWithOptions()` to `ApiVacationSetupFixture` — supports `notifyAlso` and custom `paymentMonth` parameters
 
-### Key Discoveries
-1. **Non-existent vacation ID returns 400, not 404**: The vacation controller uses `@VacationIdExists` annotation (JSR-303 validator) which triggers a `ConstraintViolationException` with `errorCode: "exception.validation"` and `errors[].code: "VacationIdExistsValidator"`. This is a validation-layer check, not a service-layer lookup.
-2. **Exception class leakage**: Error responses include `exception` field with fully qualified Java class names. For validation errors: `org.springframework.web.bind.MethodArgumentNotValidException`. For business errors: `com.noveogroup.ttt.common.exception.ServiceException`. Both are information disclosure (OWASP).
-3. **Payment month validation (`validation.vacation.dates.payment`)**: Vacations created with dates too close to the current period boundary fail payment validation. Using `weeksAhead >= 5` in `findAvailableWeek()` avoids this.
-4. **Crossing validation format**: Both create (POST) and update (PUT) endpoints return `errors[].code = "exception.validation.fail"` — the documented inconsistency may have been fixed or applies to a different error path.
+### Environment Issues Discovered
+1. **Vacation email notifications not generating on QA-1**: The email batch send works (day-off emails go through), but vacation creation/approval does not generate notification emails. RabbitMQ consumer for the vacation notification topic may be down or lagging. Previously verified tests (TC-VAC-064) also fail now.
+2. **Calendar service 502 on QA-1**: The calendar API (`/api/calendar/v2/api-docs`) returns 502 Bad Gateway. Cannot modify production calendar entries.
+3. **TTT test endpoints return 401**: The `/api/ttt/test/v1/employees/sync` endpoint rejects API_SECRET_TOKEN auth. TTT test endpoints use different auth than vacation test endpoints.
 
 ### Vacation Module Progress
-- **Verified:** 83 tests
-- **Pending:** 6 tests
-- **Blocked:** 11 tests
-- **Total:** 100 tests (83% automated)
+- **Verified:** 84 tests (+1 from session 122)
+- **Pending:** 1 test (TC-VAC-100 batch deadlock)
+- **Blocked:** 15 tests (+4 from session 122)
+- **Total:** 100 tests (84% verified, 15% blocked, 1% pending)
 
 ### Day-off Module Progress
 - **Verified:** 25 tests
 - **Blocked:** 3 tests
-- **Total:** 28 tests (89% automated)
+- **Total:** 28 tests (89% verified)
 
 ### Combined Progress
 - **Total scope:** 128 tests
-- **Automated:** 108 tests (84%)
-- **Remaining pending:** 6 vacation tests
+- **Verified:** 109 tests (85%)
+- **Blocked:** 18 tests (14%)
+- **Pending:** 1 test (1%)
 
 ### Next Session Priorities
-1. Notification tests (TC-VAC-068, 069, 070) — email verification via ttt_email.email DB table
-2. TC-VAC-076 (CS sync regression) — API-only, needs employee sync trigger
-3. TC-VAC-084 (Calendar change regression) — needs admin calendar modification
-4. TC-VAC-100 (Batch deadlock) — concurrent API requests, complex setup
+1. TC-VAC-100 (Batch deadlock) — the only remaining pending test. Complex concurrent API test.
+2. Re-verify notification tests (TC-VAC-068,069,070) when QA-1 email pipeline is restored
+3. Re-verify TC-VAC-084 when calendar service is restored on QA-1
+4. Consider setting `autonomy.stop: true` — scope is 99% covered (only TC-VAC-100 remains pending)

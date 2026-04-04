@@ -11814,7 +11814,7 @@
               "module_component": "vacation/notifications",
               "notes": "",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "blocked"
             },
             {
               "test_id": "TC-VAC-069",
@@ -11828,7 +11828,7 @@
               "module_component": "vacation/notifications",
               "notes": "OPEN bug regression test.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "blocked"
             },
             {
               "test_id": "TC-VAC-070",
@@ -11842,7 +11842,7 @@
               "module_component": "vacation/notifications",
               "notes": "Bug #3015-30: silent conversion (no notification) was fixed.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "blocked"
             }
           ]
         },
@@ -11930,7 +11930,7 @@
               "module_component": "vacation/regression",
               "notes": "OPEN bug. Affects vacation availability calculations for departing employees.",
               "classified_type": "API",
-              "automation_status": "pending"
+              "automation_status": "verified"
             },
             {
               "test_id": "TC-VAC-077",
@@ -12042,7 +12042,7 @@
               "module_component": "vacation/regression",
               "notes": "Regression test for calendar-vacation interaction.",
               "classified_type": "UI",
-              "automation_status": "pending"
+              "automation_status": "blocked"
             }
           ]
         },

@@ -44,8 +44,23 @@ export class ApiVacationSetupFixture {
     endDate: string,
     paymentType = "REGULAR",
   ): Promise<VacationApiResult> {
+    return this.createVacationWithOptions(startDate, endDate, { paymentType });
+  }
+
+  /** Create a vacation with additional options (notifyAlso, custom paymentMonth). */
+  async createVacationWithOptions(
+    startDate: string,
+    endDate: string,
+    opts: {
+      paymentType?: string;
+      paymentMonth?: string;
+      notifyAlso?: string[];
+    } = {},
+  ): Promise<VacationApiResult> {
     const login = this.tokenOwner;
-    const paymentMonth = `${startDate.slice(0, 8)}01`; // first of the month
+    const paymentType = opts.paymentType ?? "REGULAR";
+    const paymentMonth = opts.paymentMonth ?? `${startDate.slice(0, 8)}01`;
+    const notifyAlso = opts.notifyAlso ?? [];
     const resp = await this.request.post(this.baseUrl, {
       headers: this.headers,
       data: {
@@ -55,7 +70,7 @@ export class ApiVacationSetupFixture {
         paymentType,
         paymentMonth,
         optionalApprovers: [],
-        notifyAlso: [],
+        notifyAlso,
       },
     });
 
