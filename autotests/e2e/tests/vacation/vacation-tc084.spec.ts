@@ -20,7 +20,7 @@ import { getDbTimestamp } from "../../data/vacation/queries/vacationNotification
  * Phase 1 (immediate): Calendar change increases working days → check annual days → convert if exceeded
  * Phase 2 (10 min delay): Check accrued days for affected payment month and later → convert if insufficient
  */
-test("TC-VAC-084: Calendar change converts ALL vacations (#3338) @regress @vacation", async ({
+test("TC-VAC-084: Calendar change converts ALL vacations (#3338) @regress @vacation @col-absences", async ({
   request,
 }) => {
   const tttConfig = new TttConfig();

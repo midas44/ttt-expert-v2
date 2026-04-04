@@ -1,0 +1,258 @@
+{
+  "collection_name": "absences",
+  "tag": "@col-absences",
+  "generated_at": "2026-04-04T07:39:31.848999+00:00",
+  "dry_run": false,
+  "total_cases": 30,
+  "summary": {
+    "tags_added": 0,
+    "tags_already_present": 9,
+    "needs_generation": 21,
+    "not_in_manifest": 0
+  },
+  "cases": [
+    {
+      "test_id": "TC-CS-013",
+      "module": "cross-service",
+      "spec_file": null,
+      "action": "needs_generation",
+      "manifest_title": "Calendar change triggers vacation recalculation via RabbitMQ",
+      "manifest_type": "UI",
+      "manifest_priority": "Critical"
+    },
+    {
+      "test_id": "TC-CS-014",
+      "module": "cross-service",
+      "spec_file": null,
+      "action": "needs_generation",
+      "manifest_title": "Calendar day deleted triggers day-off cascade deletion",
+      "manifest_type": "UI",
+      "manifest_priority": "Critical"
+    },
+    {
+      "test_id": "TC-CS-015",
+      "module": "cross-service",
+      "spec_file": null,
+      "action": "needs_generation",
+      "manifest_title": "Period advance triggers vacation payment marking",
+      "manifest_type": "UI",
+      "manifest_priority": "Critical"
+    },
+    {
+      "test_id": "TC-CS-016",
+      "module": "cross-service",
+      "spec_file": null,
+      "action": "needs_generation",
+      "manifest_title": "Period reopen reverses vacation day recalculation",
+      "manifest_type": "UI",
+      "manifest_priority": "High"
+    },
+    {
+      "test_id": "TC-CS-017",
+      "module": "cross-service",
+      "spec_file": null,
+      "action": "needs_generation",
+      "manifest_title": "Employee change event triggers cache invalidation",
+      "manifest_type": "UI",
+      "manifest_priority": "Medium"
+    },
+    {
+      "test_id": "TC-CS-019",
+      "module": "cross-service",
+      "spec_file": null,
+      "action": "needs_generation",
+      "manifest_title": "Email sent via async RabbitMQ path after vacation creation",
+      "manifest_type": "API",
+      "manifest_priority": "High"
+    },
+    {
+      "test_id": "TC-CS-021",
+      "module": "cross-service",
+      "spec_file": null,
+      "action": "needs_generation",
+      "manifest_title": "System clock change broadcast via ttt.fanout to all services",
+      "manifest_type": "hybrid",
+      "manifest_priority": "Medium"
+    },
+    {
+      "test_id": "TC-CS-022",
+      "module": "cross-service",
+      "spec_file": null,
+      "action": "needs_generation",
+      "manifest_title": "Employee period change event processed by vacation service",
+      "manifest_type": "UI",
+      "manifest_priority": "High"
+    },
+    {
+      "test_id": "TC-CS-023",
+      "module": "cross-service",
+      "spec_file": null,
+      "action": "needs_generation",
+      "manifest_title": "Office assignment consistent between TTT backend and vacation service",
+      "manifest_type": "UI",
+      "manifest_priority": "High"
+    },
+    {
+      "test_id": "TC-CS-024",
+      "module": "cross-service",
+      "spec_file": null,
+      "action": "needs_generation",
+      "manifest_title": "Employee yearly office record matches vacation service office",
+      "manifest_type": "UI",
+      "manifest_priority": "Medium"
+    },
+    {
+      "test_id": "TC-CS-025",
+      "module": "cross-service",
+      "spec_file": null,
+      "action": "needs_generation",
+      "manifest_title": "last_date field synced between backend and vacation (#3374)",
+      "manifest_type": "UI",
+      "manifest_priority": "High"
+    },
+    {
+      "test_id": "TC-CS-027",
+      "module": "cross-service",
+      "spec_file": null,
+      "action": "needs_generation",
+      "manifest_title": "Statistics norm uses correct office calendar despite divergence",
+      "manifest_type": "UI",
+      "manifest_priority": "Medium"
+    },
+    {
+      "test_id": "TC-CS-054",
+      "module": "cross-service",
+      "spec_file": null,
+      "action": "needs_generation",
+      "manifest_title": "Vacation notification email reaches email service DB",
+      "manifest_type": "API",
+      "manifest_priority": "High"
+    },
+    {
+      "test_id": "TC-VAC-064",
+      "module": "vacation",
+      "spec_file": "autotests/e2e/tests/vacation/vacation-tc064.spec.ts",
+      "action": "tag_already_present"
+    },
+    {
+      "test_id": "TC-VAC-065",
+      "module": "vacation",
+      "spec_file": "autotests/e2e/tests/vacation/vacation-tc065.spec.ts",
+      "action": "tag_already_present"
+    },
+    {
+      "test_id": "TC-VAC-066",
+      "module": "vacation",
+      "spec_file": "autotests/e2e/tests/vacation/vacation-tc066.spec.ts",
+      "action": "tag_already_present"
+    },
+    {
+      "test_id": "TC-VAC-067",
+      "module": "vacation",
+      "spec_file": "autotests/e2e/tests/vacation/vacation-tc067.spec.ts",
+      "action": "tag_already_present"
+    },
+    {
+      "test_id": "TC-VAC-068",
+      "module": "vacation",
+      "spec_file": "autotests/e2e/tests/vacation/vacation-tc068.spec.ts",
+      "action": "tag_already_present"
+    },
+    {
+      "test_id": "TC-VAC-069",
+      "module": "vacation",
+      "spec_file": "autotests/e2e/tests/vacation/vacation-tc069.spec.ts",
+      "action": "tag_already_present"
+    },
+    {
+      "test_id": "TC-VAC-070",
+      "module": "vacation",
+      "spec_file": "autotests/e2e/tests/vacation/vacation-tc070.spec.ts",
+      "action": "tag_already_present"
+    },
+    {
+      "test_id": "TC-VAC-076",
+      "module": "vacation",
+      "spec_file": "autotests/e2e/tests/vacation/vacation-tc076.spec.ts",
+      "action": "tag_already_present"
+    },
+    {
+      "test_id": "TC-VAC-084",
+      "module": "vacation",
+      "spec_file": "autotests/e2e/tests/vacation/vacation-tc084.spec.ts",
+      "action": "tag_already_present"
+    },
+    {
+      "test_id": "TC-DO-033",
+      "module": "day-off",
+      "spec_file": null,
+      "action": "needs_generation",
+      "manifest_title": "Path A \u2014 Calendar day moved, transfer request follows",
+      "manifest_type": "UI",
+      "manifest_priority": "High"
+    },
+    {
+      "test_id": "TC-DO-034",
+      "module": "day-off",
+      "spec_file": null,
+      "action": "needs_generation",
+      "manifest_title": "Path B \u2014 Calendar day removed, status DELETED_FROM_CALENDAR",
+      "manifest_type": "UI",
+      "manifest_priority": "High"
+    },
+    {
+      "test_id": "TC-DO-035",
+      "module": "day-off",
+      "spec_file": null,
+      "action": "needs_generation",
+      "manifest_title": "Path C \u2014 System rejects NEW requests when period changes",
+      "manifest_type": "UI",
+      "manifest_priority": "High"
+    },
+    {
+      "test_id": "TC-DO-036",
+      "module": "day-off",
+      "spec_file": null,
+      "action": "needs_generation",
+      "manifest_title": "Path D \u2014 Employee office change deletes year ledger",
+      "manifest_type": "UI",
+      "manifest_priority": "Medium"
+    },
+    {
+      "test_id": "TC-DO-037",
+      "module": "day-off",
+      "spec_file": null,
+      "action": "needs_generation",
+      "manifest_title": "Calendar deletion affects only correct office (cross-office isolation)",
+      "manifest_type": "UI",
+      "manifest_priority": "Medium"
+    },
+    {
+      "test_id": "TC-DO-038",
+      "module": "day-off",
+      "spec_file": null,
+      "action": "needs_generation",
+      "manifest_title": "Auto-deletion triggers vacation recalculation (AV=False)",
+      "manifest_type": "UI",
+      "manifest_priority": "High"
+    },
+    {
+      "test_id": "TC-DO-069",
+      "module": "day-off",
+      "spec_file": null,
+      "action": "needs_generation",
+      "manifest_title": "Email notification sent on approval",
+      "manifest_type": "hybrid",
+      "manifest_priority": "High"
+    },
+    {
+      "test_id": "TC-DO-070",
+      "module": "day-off",
+      "spec_file": null,
+      "action": "needs_generation",
+      "manifest_title": "Email notification sent on rejection",
+      "manifest_type": "UI",
+      "manifest_priority": "High"
+    }
+  ]
+}

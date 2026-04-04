@@ -17,7 +17,7 @@ import { DbClient } from "../../config/db/dbClient";
  * separate CSEmployeeSynchronizer implementations, but ttt_vacation's
  * sync simply does not update last_date.
  */
-test("TC-VAC-076: last_date not updated during CS sync (#3374) @regress @vacation", async ({
+test("TC-VAC-076: last_date not updated during CS sync (#3374) @regress @vacation @col-absences", async ({
   request,
 }) => {
   const tttConfig = new TttConfig();

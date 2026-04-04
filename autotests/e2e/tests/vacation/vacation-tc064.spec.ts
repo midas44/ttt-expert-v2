@@ -16,7 +16,7 @@ import {
  * Ref: exploration/api-findings/vacation-notification-templates.md
  * Templates: NOTIFY_VACATION_CREATE_TO_SENIOR_MANAGER ("[TTT] Новая заявка на отпуск")
  */
-test("TC-VAC-064: Create vacation — notification to approver @regress @vacation", async ({
+test("TC-VAC-064: Create vacation — notification to approver @regress @vacation @col-absences", async ({
   request,
 }) => {
   const tttConfig = new TttConfig();

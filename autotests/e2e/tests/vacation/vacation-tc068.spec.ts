@@ -15,7 +15,7 @@ import {
  * then verifies a notification email is sent to that colleague.
  * Template: NOTIFY_VACATION_CREATE_TO_ALSO ("[TTT] Уведомление об отпуске сотрудника")
  */
-test("TC-VAC-068: Also-notify recipients receive notification @regress @vacation", async ({
+test("TC-VAC-068: Also-notify recipients receive notification @regress @vacation @col-absences", async ({
   request,
 }) => {
   const tttConfig = new TttConfig();

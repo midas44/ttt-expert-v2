@@ -20,7 +20,7 @@ import {
  * The auto-conversion logic checks accrued days: X = monthsWorked * md/12 + remainderDays - md.
  * If X < 0 for a later payment month, the later vacation is converted to ADMINISTRATIVE.
  */
-test("TC-VAC-070: Notification on auto-conversion to ADMINISTRATIVE (#3015) @regress @vacation", async ({
+test("TC-VAC-070: Notification on auto-conversion to ADMINISTRATIVE (#3015) @regress @vacation @col-absences", async ({
   request,
 }) => {
   const tttConfig = new TttConfig();

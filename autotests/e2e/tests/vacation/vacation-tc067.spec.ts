@@ -15,7 +15,7 @@ import {
  * cancellation notification email is generated for the approver.
  * Template: NOTIFY_VACATION_DELETE_CANCEL_TO_APPROVER ("[TTT] Изменение статуса заявки")
  */
-test("TC-VAC-067: Cancel vacation — notification to approver @regress @vacation", async ({
+test("TC-VAC-067: Cancel vacation — notification to approver @regress @vacation @col-absences", async ({
   request,
 }) => {
   const tttConfig = new TttConfig();

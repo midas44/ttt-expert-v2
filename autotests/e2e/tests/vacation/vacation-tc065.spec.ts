@@ -15,7 +15,7 @@ import {
  * status-change notification email is generated for the employee.
  * Template: NOTIFY_VACATION_STATUS_CHANGE_TO_EMPLOYEE ("[TTT] Изменение статуса заявки")
  */
-test("TC-VAC-065: Approve vacation — notification to employee @regress @vacation", async ({
+test("TC-VAC-065: Approve vacation — notification to employee @regress @vacation @col-absences", async ({
   request,
 }) => {
   const tttConfig = new TttConfig();

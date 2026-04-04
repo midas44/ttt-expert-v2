@@ -44,7 +44,7 @@ The agent connects to the target application and supporting tools through 39 MCP
 
 ### Skills
 
-17 reusable skills encapsulate domain-specific interaction patterns: GitLab access, Confluence access, Figma access, Qase access, Swagger API, PostgreSQL queries, Playwright browser, autotest generator, autotest runner, autotest fixer, XLSX parser, autotest progress, page discoverer, test reporting, MCP setup, package install, skill creator.
+18 reusable skills encapsulate domain-specific interaction patterns: GitLab access, Confluence access, Figma access, Qase access, Swagger API, PostgreSQL queries, Playwright browser, autotest generator, autotest runner, autotest fixer, XLSX parser, autotest progress, page discoverer, collection generator, test reporting, MCP setup, package install, skill creator.
 
 ## Target Application (TTT)
 
@@ -104,10 +104,13 @@ expert-system/
   generators/                           # Python scripts that produce XLSX workbooks
   repos/project/                        # Local TTT codebase clone (populated at runtime)
 test-docs/                              # Generated XLSX workbooks (per module or per ticket)
+  collections/<name>/                   # Curated Test Collections (cross-module reference workbooks)
 autotests/                              # Playwright + TypeScript E2E framework
   playwright.config.ts                  # Test configuration
   scripts/parse_xlsx.py                 # XLSX → JSON manifest parser
+  scripts/process_collection.py         # Collection processor (tag injection + report)
   manifest/test-cases.json              # Parsed test cases with automation status
+  manifest/collection-<name>.json       # Collection processing reports
   e2e/
     tests/<module>/                     # Generated test specs (per module subdir)
     data/<module>/                      # Test data classes + queries
@@ -118,7 +121,7 @@ config/ttt/
   envs/*.yml                            # Environment credentials (per env)
 docs/                                   # Setup guides, troubleshooting, epic description
 .claude/
-  skills/                               # 17 reusable skills
+  skills/                               # 18 reusable skills
 ```
 
 ## Technology Stack

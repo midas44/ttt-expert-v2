@@ -18,7 +18,7 @@ import {
  * Template variable: {{payment_date}} injected by AbstractVacationNotificationHelper.fillBaseInfo()
  * from VacationBO.paymentDate (formatted as "Month/Year" or "").
  */
-test("TC-VAC-069: Wrong payment month in notification (#2925) @regress @vacation", async ({
+test("TC-VAC-069: Wrong payment month in notification (#2925) @regress @vacation @col-absences", async ({
   request,
 }) => {
   const tttConfig = new TttConfig();

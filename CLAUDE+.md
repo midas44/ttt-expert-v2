@@ -1026,6 +1026,26 @@ Compare against the manifest total for those modules. If covered >= manifest tot
 - **No production data modification:** Never generate tests that modify real calendar events, employee records, or accounting data without cleanup
 - **Selector fallback:** When uncertain about a selector, use multi-strategy fallback resolution (`resolveFirstVisible()` from `e2e/utils/locatorResolver.ts`)
 
+### Curated Test Collections
+
+A **Curated Test Collection** groups test cases from multiple modules into a single runnable suite via a shared Playwright tag (`@col-<name>`). Collections enable cross-cutting test execution without duplicating specs.
+
+**Collection XLSX:** `test-docs/collections/<name>/<name>.xlsx` with a `COL-<name>` sheet (not `TS-`). Columns: test_id, source_module, source_suite, title, inclusion_reason, priority_override. The `COL-` prefix ensures `parse_xlsx.py` ignores these workbooks.
+
+**Processing:** `python3 autotests/scripts/process_collection.py --collection <name>` resolves each referenced TC against the manifest, injects `@col-<name>` tag into existing specs, and reports missing specs for generation. The script is idempotent.
+
+**Collection as scope:** Set `autotest.scope: "<collection-name>"` in config.yaml. Scope detection order:
+1. `"all"` → full module sweep
+2. Pure digits → ticket scope (`t<number>`)
+3. `test-docs/collections/<name>/` exists → **collection scope**
+4. `test-docs/<name>/` exists → module scope
+
+When processing a collection scope, the session protocol reads the collection XLSX, processes tags for existing specs, and generates missing specs in their original module directories with both standard tags and the collection tag.
+
+**Running:** `npx playwright test --grep "@col-<name>" --project=chrome-headless`
+
+**Skill:** `collection-generator` — full workflow for creating and processing collections.
+
 ### Phase Transition to Phase C
 
 **Phase B→C transition quality gates.** Before auto-transitioning from B to C, Phase B must have:

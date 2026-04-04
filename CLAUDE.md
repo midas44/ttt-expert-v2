@@ -7,6 +7,7 @@ This project contains an expert knowledge base for the TTT (Time Tracking Tool) 
 - **Obsidian vault** (`expert-system/vault/`, 191 notes, ~222K tokens) — search via `mcp__qmd-search__` tools or read directly via `mcp__obsidian__` tools
 - **SQLite analytics** (`expert-system/analytics.db`) — query via `mcp__sqlite-analytics__execute_sql`
 - **Generated test docs** (`test-docs/` — XLSX workbooks per module, UI-first test cases)
+- **Curated test collections** (`test-docs/collections/` — XLSX reference workbooks grouping TCs from multiple modules into cross-cutting suites)
 - **Autotests** (`autotests/` — Playwright + TypeScript E2E framework, generated from XLSX test cases)
 
 ## Available MCPs
@@ -82,6 +83,7 @@ Use the autotest skills to generate, run, and fix Playwright E2E tests from the 
 - **xlsx-parser** — parse XLSX workbooks into the JSON manifest
 - **autotest-progress** — view automation coverage and prioritize next tests
 - **page-discoverer** — explore TTT pages to discover selectors for page objects
+- **collection-generator** — create and process curated test collections (cross-module suites via shared tags)
 
 The autotest framework lives in `autotests/` and shares config with the expert system (`config/ttt/`).
 
@@ -96,6 +98,8 @@ When you discover new information during autotest generation (selectors, UI quir
 **Test step conventions:** Test documentation uses prefixed steps — `SETUP:` (API state creation), `CLEANUP:` (teardown), `DB-CHECK:` (data verification), unprefixed (main UI steps). When generating autotests, map these to `ApiVacationSetupFixture` for setup/cleanup and `DbClient` for DB checks.
 
 **Ticket scope:** When `scope` in config.yaml is a GitLab ticket number (pure digits, e.g., `"3404"`), all artifacts use `t<number>` prefix internally. Test IDs: `TC-T3404-001`. Dirs: `tests/t3404/`, `data/t3404/`. XLSX: `test-docs/t3404/t3404.xlsx`. See CLAUDE+.md §10.1 for full protocol.
+
+**Collection scope:** When `autotest.scope` is a collection name (e.g., `"absences"`), the system reads `test-docs/collections/<name>/<name>.xlsx` for the set of referenced TCs across modules. Processing adds a `@col-<name>` tag to existing specs and generates missing ones. Run: `python3 autotests/scripts/process_collection.py --collection <name>`. Execute the suite: `npx playwright test --grep "@col-<name>"`. See the `collection-generator` skill for the full workflow.
 
 **Selector rules (text-first, BEM banned):** The TTT app has minimal ARIA roles. Use text-based selectors first (`getByText`, `getByRole+name`), then role-based, then structural (tag+containment), then partial class match (`[class*='...']`). **Exact BEM class selectors are BANNED** (`.navbar__*`, `.page-body__*`, `.drop-down-menu__*`) — they break across environments. **NEVER put `page.locator()` in spec files** — all selectors must be in page objects.
 
