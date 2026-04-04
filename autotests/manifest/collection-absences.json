@@ -1,13 +1,13 @@
 {
   "collection_name": "absences",
   "tag": "@col-absences",
-  "generated_at": "2026-04-04T11:07:06.962195+00:00",
-  "dry_run": false,
+  "generated_at": "2026-04-04T12:41:46.454469+00:00",
+  "dry_run": true,
   "total_cases": 30,
   "summary": {
     "tags_added": 0,
-    "tags_already_present": 15,
-    "needs_generation": 15,
+    "tags_already_present": 17,
+    "needs_generation": 13,
     "not_in_manifest": 0
   },
   "cases": [
@@ -209,20 +209,14 @@
     {
       "test_id": "TC-DO-037",
       "module": "day-off",
-      "spec_file": null,
-      "action": "needs_generation",
-      "manifest_title": "Calendar deletion affects only correct office (cross-office isolation)",
-      "manifest_type": "UI",
-      "manifest_priority": "Medium"
+      "spec_file": "autotests/e2e/tests/day-off/dayoff-tc037.spec.ts",
+      "action": "tag_already_present"
     },
     {
       "test_id": "TC-DO-038",
       "module": "day-off",
-      "spec_file": null,
-      "action": "needs_generation",
-      "manifest_title": "Auto-deletion triggers vacation recalculation (AV=False)",
-      "manifest_type": "UI",
-      "manifest_priority": "High"
+      "spec_file": "autotests/e2e/tests/day-off/dayoff-tc038.spec.ts",
+      "action": "tag_already_present"
     },
     {
       "test_id": "TC-DO-069",
