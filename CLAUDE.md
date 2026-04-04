@@ -99,7 +99,7 @@ When you discover new information during autotest generation (selectors, UI quir
 
 **Ticket scope:** When `scope` in config.yaml is a GitLab ticket number (pure digits, e.g., `"3404"`), all artifacts use `t<number>` prefix internally. Test IDs: `TC-T3404-001`. Dirs: `tests/t3404/`, `data/t3404/`. XLSX: `test-docs/t3404/t3404.xlsx`. See CLAUDE+.md §10.1 for full protocol.
 
-**Collection scope:** When `autotest.scope` is a collection name (e.g., `"absences"`), the system reads `test-docs/collections/<name>/<name>.xlsx` for the set of referenced TCs across modules. Processing adds a `@col-<name>` tag to existing specs and generates missing ones. Run: `python3 autotests/scripts/process_collection.py --collection <name>`. Execute the suite: `npx playwright test --grep "@col-<name>"`. See the `collection-generator` skill for the full workflow.
+**Collection scope:** Use `autotest.scope: "collection:<name>"` (e.g., `"collection:absences"`) — the `collection:` prefix is mandatory. The system runs `process_collection.py`, reads the report JSON for the exact set of TCs, and works only on those. Existing specs get the `@col-<name>` tag; missing specs are generated. Execute the suite: `npx playwright test --grep "@col-<name>"`. See the `collection-generator` skill for the full workflow.
 
 **Selector rules (text-first, BEM banned):** The TTT app has minimal ARIA roles. Use text-based selectors first (`getByText`, `getByRole+name`), then role-based, then structural (tag+containment), then partial class match (`[class*='...']`). **Exact BEM class selectors are BANNED** (`.navbar__*`, `.page-body__*`, `.drop-down-menu__*`) — they break across environments. **NEVER put `page.locator()` in spec files** — all selectors must be in page objects.
 

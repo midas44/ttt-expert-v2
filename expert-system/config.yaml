@@ -7,7 +7,7 @@ phase:
   current: autotest_generation
   generation_allowed: true
   coverage_override: -1
-  scope: vacation,day-off
+  scope: collection:absences
 thresholds:
   knowledge_coverage_target: 0.8
   note_quality_min_links: 2
@@ -31,14 +31,14 @@ autonomy:
   consecutive_failure_limit: 30
   auto_phase_transition: true
   log_dir: expert-system/logs
-  stop: true
+  stop: false
   model: opus
   effort: max
   effort_phase_a: max
   effort_phase_b: max
   effort_phase_c: max
   allow_api_mutations: true
-stop_at: ""
+stop_at: ''
 peak_hours:
   enabled: true
   range_utc: 12:00-19:00
@@ -49,7 +49,7 @@ autotest:
   target_env: qa-1
   max_tests_per_session: 5
   auto_fix_attempts: 3
-  scope: vacation,day-off
+  scope: collection:absences
   priority_order:
   - vacation
   - sick-leave

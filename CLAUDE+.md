@@ -90,7 +90,8 @@ autonomy:
   - A module name: `"vacation"` — single module
   - A comma-separated list: `"vacation, statistics"` — multiple modules
   - A GitLab ticket number: `"3404"` — single ticket (pure digits = ticket)
-  - Mixed: `"vacation, 3404, 3405"` — modules and tickets together
+  - A collection: `"collection:absences"` — curated test collection (prefix `collection:` is mandatory)
+  - Mixed: `"vacation, 3404, 3405"` — modules and tickets together (collections cannot be mixed)
   Phase A: only investigate those modules/tickets. Phase B: only generate XLSX for those. Phase C uses `autotest.scope` independently (same format). When scope is set, skip all items not in the list.
 - **Ticket scope normalization:** Any scope entry that is pure digits is a GitLab ticket number. It is normalized to `t<number>` internally (e.g., `3404` → `t3404`). All derived artifacts use the `t<number>` prefix: test IDs `TC-T3404-001`, directories `t3404/`, manifest keys `t3404`. See §10.1 for the full ticket protocol.
 - Check `session.delay_minutes` — if previous session briefing timestamp is less than this many minutes ago:
@@ -857,7 +858,10 @@ Playwright API
 - Determine next test cases to generate
 
 **2. Test Case Selection:**
-- **Scope filter:** If `autotest.scope` is not `"all"`, restrict to the specified module(s) only. Accepts a single name (`"vacation"`) or comma-separated list (`"vacation, statistics"`). When set to `"all"`, iterate through modules in `autotest.priority_order`.
+- **Scope filter:** If `autotest.scope` is not `"all"`, restrict to the specified scope. Accepts:
+  - A single module name: `"vacation"` or comma-separated list: `"vacation, statistics"`
+  - A collection: `"collection:<name>"` (e.g., `"collection:absences"`) — see **Collection scope protocol** below
+  - When set to `"all"`, iterate through modules in `autotest.priority_order`.
 - Follow `autotest.priority_order` (modules) × `autotest.type_priority` (UI first, then hybrid)
 - Skip test cases where `automation_status` is not `pending`
 - Skip test IDs matching `autotest.skip_patterns`
@@ -1034,13 +1038,20 @@ A **Curated Test Collection** groups test cases from multiple modules into a sin
 
 **Processing:** `python3 autotests/scripts/process_collection.py --collection <name>` resolves each referenced TC against the manifest, injects `@col-<name>` tag into existing specs, and reports missing specs for generation. The script is idempotent.
 
-**Collection as scope:** Set `autotest.scope: "<collection-name>"` in config.yaml. Scope detection order:
-1. `"all"` → full module sweep
-2. Pure digits → ticket scope (`t<number>`)
-3. `test-docs/collections/<name>/` exists → **collection scope**
-4. `test-docs/<name>/` exists → module scope
+**Collection as scope:** Set `autotest.scope: "collection:<name>"` in config.yaml (e.g., `"collection:absences"`). The `collection:` prefix is **mandatory** — without it, the scope will be interpreted as a module name.
 
-When processing a collection scope, the session protocol reads the collection XLSX, processes tags for existing specs, and generates missing specs in their original module directories with both standard tags and the collection tag.
+**Collection scope protocol** (when `autotest.scope` starts with `collection:`):
+1. Extract collection name: `"collection:absences"` → `absences`
+2. Run: `python3 autotests/scripts/process_collection.py --collection <name>`
+3. Read the report JSON at `autotests/manifest/collection-<name>.json`
+4. The report contains the **exact set of test cases** to work on:
+   - `"action": "tag_already_present"` or `"tag_added"` → spec exists, skip (already automated)
+   - `"action": "needs_generation"` → generate this spec using the standard autotest-generator pipeline, adding `@col-<name>` tag alongside `@regress @<module>`
+5. Generate up to `max_tests_per_session` specs from the `needs_generation` list
+6. After generating, re-run `process_collection.py` to inject tags and update the report
+7. Track progress: count `needs_generation` remaining vs total. When 0 remain, scope is complete — set `autonomy.stop: true`
+
+**CRITICAL:** When scope is `collection:*`, work **ONLY** on test cases listed in the collection report. Do NOT expand to the full module or interpret the collection name semantically. The collection XLSX at `test-docs/collections/<name>/<name>.xlsx` is the sole source of truth for which TCs are in scope.
 
 **Running:** `npx playwright test --grep "@col-<name>" --project=chrome-headless`
 

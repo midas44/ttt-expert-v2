@@ -131,24 +131,26 @@ grep -r "@col-<name>" autotests/e2e/tests/ | wc -l
 
 ## Collection as Autonomous Scope
 
-A collection name can be used in `autotest.scope` in `config.yaml`:
+Use the `collection:` prefix in `autotest.scope`:
 
 ```yaml
 autotest:
-  scope: "absences"   # collection name
+  scope: "collection:absences"   # prefix is mandatory
 ```
 
-The Phase C session protocol detects collections via:
-1. Check if `test-docs/collections/<scope>/` exists → collection scope
-2. Read the collection XLSX → get referenced test case IDs
-3. For each: check spec → add tag or generate
-4. Track progress per-collection
+The Phase C session protocol:
+1. Detects `collection:` prefix → extracts name (`absences`)
+2. Runs `process_collection.py --collection absences` → reads report JSON
+3. Works **only** on TCs in the report with `"action": "needs_generation"`
+4. Generates up to `max_tests_per_session` specs per session
+5. Re-runs `process_collection.py` after generation to update tags and report
+6. When 0 `needs_generation` remain → scope complete, sets `autonomy.stop: true`
 
-**Scope detection order:**
-1. `"all"` → full module sweep
-2. Pure digits → ticket scope (`t<number>`)
-3. `test-docs/collections/<name>/` exists → collection scope
-4. `test-docs/<name>/` exists → module scope
+**Scope format summary:**
+- `"all"` → full module sweep
+- `"vacation"` → single module
+- `"3404"` → ticket scope (`t3404`)
+- `"collection:absences"` → curated collection (prefix required)
 
 ## Tag Convention
 
