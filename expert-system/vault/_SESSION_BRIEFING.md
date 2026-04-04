@@ -1,43 +1,40 @@
 # Session Briefing
 
-## Session 125 — 2026-04-04
-**Phase:** C (Autotest Generation)
-**Scope:** absences (vacation, day-off, sick-leave)
-**Status:** sick-leave module started — 5/71 tests verified
+## Last Session: 127 — 2026-04-04T18:10Z
+**Phase:** C (autotest_generation) | **Scope:** collection:absences | **Mode:** full
 
-### Tests Generated
-| Test ID | Title | Status | Key Finding |
-|---------|-------|--------|-------------|
-| TC-SL-001 | Create sick leave — happy path | verified | Date format in table: "25 – 30 Apr 2026", NOT dd.mm.yyyy. State shows as "started"/"planned". |
-| TC-SL-006 | Edit sick leave dates (OPEN) | verified | Edit button uses `data-testid="sickleave-action-edit"`. Calendar days recalculates on date change. |
-| TC-SL-008 | Close sick leave — happy path | verified | Close button: `sickleave-action-close`. State changes to "Ended"/"Closed". Requires document number. |
-| TC-SL-010 | Delete sick leave | verified | Delete is NOT a row action — must open details dialog first (`sickleave-action-detail`), then click Delete button inside the rc-dialog. |
-| TC-SL-011 | View sick leave details | verified | Details dialog uses rc-dialog (`.rc-dialog-wrap`), NOT `role="dialog"`. Contains employee, dates, days, number, state. |
+### What Happened
+Generated 4 day-off calendar conflict cascade tests (TC-DO-033 through TC-DO-036):
 
-### Infrastructure Built
-- **Page objects:** MySickLeavePage.ts, SickLeaveCreateDialog.ts
-- **Data classes:** SickLeaveTc001Data.ts, SickLeaveSetupData.ts (shared for TC-006/008/010/011)
-- **DB queries:** sickLeaveQueries.ts (findEmployeeWithManager, conflict checks)
-- **Fixture:** ApiSickLeaveSetupFixture.ts (currently non-functional — 401 auth issue)
-- **Vault updated:** exploration/ui-flows/sick-leave-pages.md with all discovered selectors
+| Test | Path | Status | Notes |
+|------|------|--------|-------|
+| TC-DO-033 | A — Calendar day moved | **verified** (7.0s) | POST /api/calendar/v1/calendar creates holiday, verifies ledger + status |
+| TC-DO-034 | B — Calendar day removed | **verified** (17.8s) | DELETE /api/calendar/v1/calendar/{id}, verifies DELETED_FROM_CALENDAR + UI |
+| TC-DO-035 | C — Period change rejects | **blocked** | PATCH /v1/offices/{id}/periods/approve → 403 (needs ROLE_ADMIN) |
+| TC-DO-036 | D — Office change deletes | **blocked** | PATCH employee office → 405/403 (needs ROLE_ADMIN) |
 
 ### Key Discoveries
-1. **API auth incompatibility:** Sick leave CRUD requires AUTHENTICATED_USER authority. API_SECRET_TOKEN returns 403, page.request returns 401. All setup/cleanup must be UI-based.
-2. **No "more" menu:** Unlike vacation, sick leave has no three-dots dropdown. The `sickleave-action-detail` button opens a details panel (rc-dialog), not a menu.
-3. **rc-dialog pattern:** Details dialog uses React rc-dialog component. Must use `.rc-dialog-wrap` selector, not `getByRole("dialog")`.
+- **Calendar v1 API**: Correct endpoint is `/api/calendar/v1/calendar` (NOT `/v1/production-calendars`). POST creates with `{calendarId, date, duration, reason}`, DELETE by row ID.
+- **employee_dayoff table**: No FK to employee_dayoff_request — uses `(employee, original_date)` not `(requestId)`.
+- **last_approved_date**: Column in employee_dayoff_request matches original_date in most cases. Used by PeriodChangedEventHandler for Path C matching.
+- **API_SECRET_TOKEN**: Authenticates as `pvaynmaster` (ROLE_EMPLOYEE only). Admin operations (period change, employee office change) require `kbryazgin` (ROLE_ADMIN) via JWT auth.
+- **Approve period storage**: `ttt_backend.office_period` table, `type='APPROVE'`. Most offices at `2026-03-01`.
 
-### Maintenance (§9.4)
-- SQLite audit: no orphans, no duplicates in autotest_tracking
-- Agenda updated for sick-leave focus
-- Vault knowledge written back (sick-leave-pages.md)
+### Auth Blocker for TC-DO-035/036
+Both Path C and Path D require admin-level API auth:
+- `pvaynmaster` (API_SECRET_TOKEN owner) has only `ROLE_EMPLOYEE`
+- `kbryazgin` has `ROLE_ADMIN` but no API token configured
+- JWT endpoint (`/v1/security/jwt`) requires an existing JWT, not API tokens
+- **Resolution needed**: Configure admin API token or find alternative auth approach
 
 ### Overall Progress
-| Module | Verified | Blocked | Failed | Pending | Total |
-|--------|----------|---------|--------|---------|-------|
-| vacation | 85 | 15 | 0 | 0 | 100 |
-| day-off | 25 | 3 | 0 | 0 | 28 |
-| sick-leave | 5 | 0 | 0 | 66 | 71 |
-| **absences total** | **115** | **18** | **0** | **66** | **199** |
+- **Global**: 224 verified, 23 blocked, 3 failed, 98 pending (348 total)
+- **Day-off module**: 29 verified, 5 blocked
+- **Collection absences**: 15 tests remaining (13 cross-service, 2 day-off)
 
-### Next Session
-Continue sick-leave: TC-SL-002 (create with number), TC-SL-003 (attachments), TC-SL-004/005 (validations), TC-SL-007 (edit number). All UI-based due to API auth limitation.
+### Next Session Priorities
+1. **Investigate admin JWT auth** — find a way to get JWT for kbryazgin to unblock TC-DO-035/036
+2. **TC-DO-037**: Calendar deletion affects only correct office (cross-office isolation)
+3. **TC-DO-038**: Auto-deletion triggers vacation recalculation (AV=False)
+4. **Cross-service tests**: TC-CS-013 through TC-CS-027 (calendar/period cascade tests)
+5. Consider whether blocked Path C/D tests can use DB-level manipulation + test sync endpoints instead

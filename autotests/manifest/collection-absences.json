@@ -1,13 +1,13 @@
 {
   "collection_name": "absences",
   "tag": "@col-absences",
-  "generated_at": "2026-04-04T09:22:44.156301+00:00",
+  "generated_at": "2026-04-04T11:07:06.962195+00:00",
   "dry_run": false,
   "total_cases": 30,
   "summary": {
     "tags_added": 0,
-    "tags_already_present": 9,
-    "needs_generation": 21,
+    "tags_already_present": 15,
+    "needs_generation": 15,
     "not_in_manifest": 0
   },
   "cases": [
@@ -185,38 +185,26 @@
     {
       "test_id": "TC-DO-033",
       "module": "day-off",
-      "spec_file": null,
-      "action": "needs_generation",
-      "manifest_title": "Path A \u2014 Calendar day moved, transfer request follows",
-      "manifest_type": "UI",
-      "manifest_priority": "High"
+      "spec_file": "autotests/e2e/tests/day-off/dayoff-tc033.spec.ts",
+      "action": "tag_already_present"
     },
     {
       "test_id": "TC-DO-034",
       "module": "day-off",
-      "spec_file": null,
-      "action": "needs_generation",
-      "manifest_title": "Path B \u2014 Calendar day removed, status DELETED_FROM_CALENDAR",
-      "manifest_type": "UI",
-      "manifest_priority": "High"
+      "spec_file": "autotests/e2e/tests/day-off/dayoff-tc034.spec.ts",
+      "action": "tag_already_present"
     },
     {
       "test_id": "TC-DO-035",
       "module": "day-off",
-      "spec_file": null,
-      "action": "needs_generation",
-      "manifest_title": "Path C \u2014 System rejects NEW requests when period changes",
-      "manifest_type": "UI",
-      "manifest_priority": "High"
+      "spec_file": "autotests/e2e/tests/day-off/dayoff-tc035.spec.ts",
+      "action": "tag_already_present"
     },
     {
       "test_id": "TC-DO-036",
       "module": "day-off",
-      "spec_file": null,
-      "action": "needs_generation",
-      "manifest_title": "Path D \u2014 Employee office change deletes year ledger",
-      "manifest_type": "UI",
-      "manifest_priority": "Medium"
+      "spec_file": "autotests/e2e/tests/day-off/dayoff-tc036.spec.ts",
+      "action": "tag_already_present"
     },
     {
       "test_id": "TC-DO-037",
@@ -239,20 +227,14 @@
     {
       "test_id": "TC-DO-069",
       "module": "day-off",
-      "spec_file": null,
-      "action": "needs_generation",
-      "manifest_title": "Email notification sent on approval",
-      "manifest_type": "hybrid",
-      "manifest_priority": "High"
+      "spec_file": "autotests/e2e/tests/day-off/dayoff-tc069.spec.ts",
+      "action": "tag_already_present"
     },
     {
       "test_id": "TC-DO-070",
       "module": "day-off",
-      "spec_file": null,
-      "action": "needs_generation",
-      "manifest_title": "Email notification sent on rejection",
-      "manifest_type": "UI",
-      "manifest_priority": "High"
+      "spec_file": "autotests/e2e/tests/day-off/dayoff-tc070.spec.ts",
+      "action": "tag_already_present"
     }
   ]
 }
