@@ -10,7 +10,8 @@
     "test:headless": "playwright test --project=chrome-headless",
     "parse": "python3 scripts/parse_xlsx.py",
     "matrix": "npx tsx scripts/generate-matrix.ts",
-    "test:matrix": "playwright test && npx tsx scripts/generate-matrix.ts"
+    "test:matrix": "playwright test && npx tsx scripts/generate-matrix.ts",
+    "regress-loop": "bash scripts/regression-loop.sh"
   },
   "devDependencies": {
     "@playwright/test": "^1.55.0",

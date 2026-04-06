@@ -91,6 +91,8 @@ interface TcInfo {
   xlsxPath: string;
   collections: string[];
   runs: Map<string, TestEntry>; // runId -> result
+  regressionCount: number;      // how many times failed on env_A but passed on env_B
+  regressionRunIds: Set<string>; // runIds where regression was detected
 }
 
 // ---------------------------------------------------------------------------
@@ -202,6 +204,8 @@ function buildIndex(
           xlsxPath: m?.xlsxPath ?? "",
           collections: cols ? Array.from(cols) : [],
           runs: new Map(),
+          regressionCount: 0,
+          regressionRunIds: new Set(),
         });
       }
 
@@ -228,6 +232,58 @@ function statusRank(status: string): number {
     case "skipped": return 0;
     default: return 3;
   }
+}
+
+// ---------------------------------------------------------------------------
+// Regression detection
+// ---------------------------------------------------------------------------
+
+function detectRegressions(tcList: TcInfo[], runs: RunResults[]): number {
+  // Build pairs: runs sharing the same testDataRunId but different env
+  // Map: testDataRunId -> { envA_runId, envB_runId }
+  const byDataId = new Map<string, RunResults[]>();
+  for (const run of runs) {
+    const did = run.meta.testDataRunId;
+    if (!did) continue;
+    if (!byDataId.has(did)) byDataId.set(did, []);
+    byDataId.get(did)!.push(run);
+  }
+
+  let totalRegressions = 0;
+
+  for (const [, group] of byDataId) {
+    if (group.length < 2) continue;
+    // Find all env pairs within this data group
+    for (let a = 0; a < group.length; a++) {
+      for (let b = a + 1; b < group.length; b++) {
+        const runA = group[a];
+        const runB = group[b];
+        if (runA.meta.env === runB.meta.env) continue;
+
+        // For each TC, check if failed on one env but passed on other
+        for (const tc of tcList) {
+          const resultA = tc.runs.get(runA.meta.runId);
+          const resultB = tc.runs.get(runB.meta.runId);
+          if (!resultA || !resultB) continue;
+
+          const failedA = resultA.status === "failed" || resultA.status === "timedOut";
+          const passedB = resultB.status === "passed";
+          const failedB = resultB.status === "failed" || resultB.status === "timedOut";
+          const passedA = resultA.status === "passed";
+
+          if ((failedA && passedB) || (failedB && passedA)) {
+            tc.regressionCount++;
+            // Mark the failing run
+            if (failedA) tc.regressionRunIds.add(runA.meta.runId);
+            if (failedB) tc.regressionRunIds.add(runB.meta.runId);
+            totalRegressions++;
+          }
+        }
+      }
+    }
+  }
+
+  return totalRegressions;
 }
 
 // ---------------------------------------------------------------------------
@@ -400,23 +456,26 @@ function generateHtml(
       const entry = tc.runs.get(r.meta.runId);
       if (!entry) return `<td class="cell-empty">-</td>`;
 
-      const cls = `status-${entry.status}`;
+      const isRegr = tc.regressionRunIds.has(r.meta.runId);
+      const cls = `status-${entry.status}${isRegr ? " regression" : ""}`;
       const dur = entry.durationMs > 0 ? `${(entry.durationMs / 1000).toFixed(1)}s` : "";
       const errTip = entry.error ? `\nError: ${esc(entry.error.slice(0, 200))}` : "";
-      const tip = `${entry.status}${dur ? ` (${dur})` : ""}${entry.project ? `\n${entry.project}` : ""}${errTip}`;
+      const regrTip = isRegr ? "\nREGRESSION" : "";
+      const tip = `${entry.status}${dur ? ` (${dur})` : ""}${entry.project ? `\n${entry.project}` : ""}${regrTip}${errTip}`;
       return `<td class="cell-status ${cls}" title="${esc(tip)}"><span class="dot"></span></td>`;
     });
 
     const docsRef = tc.xlsxPath ? esc(tc.xlsxPath) : esc(tc.module);
     const colsAttr = tc.collections.map((c) => esc(c)).join(" ");
 
-    return `<tr data-module="${esc(tc.module)}" data-collections="${colsAttr}" data-passrate="${passRate}">
+    return `<tr data-module="${esc(tc.module)}" data-collections="${colsAttr}" data-passrate="${passRate}" data-regr="${tc.regressionCount}">
       <td class="col-id">${esc(tc.testId)}</td>
       <td class="col-title" title="${esc(tc.title)}">${esc(tc.title)}</td>
       <td class="col-module">${esc(tc.module)}</td>
       <td class="col-priority">${esc(tc.priority)}</td>
       <td class="col-docs" title="${docsRef}">${docsRef}</td>
       <td class="col-rate ${passRate === 100 ? "rate-perfect" : passRate >= 80 ? "rate-good" : passRate >= 0 ? "rate-bad" : ""}">${passRate >= 0 ? passRate + "%" : "-"}</td>
+      <td class="col-regr">${tc.regressionCount > 0 ? `<span class="regr-badge">${tc.regressionCount}</span>` : "-"}</td>
       ${cells.join("\n      ")}
     </tr>`;
   });
@@ -438,6 +497,7 @@ function generateHtml(
   .header .stat { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
   .stat-tcs { background: #1f6feb33; color: #58a6ff; }
   .stat-runs { background: #3fb95033; color: #56d364; }
+  .stat-regr { background: #da363333; color: #f85149; }
 
   .tabs { display: flex; gap: 4px; padding: 8px 24px; background: #161b22; border-bottom: 1px solid #30363d; flex-wrap: wrap; }
   .tab { padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; color: #8b949e; background: transparent; border: 1px solid transparent; transition: all 0.15s; }
@@ -475,6 +535,10 @@ function generateHtml(
   .status-skipped .dot { background: #484f58; }
   .status-timedOut .dot { background: #bc4c78; }
   .status-interrupted .dot { background: #6e7681; }
+  .regression .dot { box-shadow: 0 0 0 3px #f85149; }
+  .col-regr { text-align: center; font-weight: 600; }
+  .regr-badge { background: #da363333; color: #f85149; padding: 2px 8px; border-radius: 10px; font-size: 11px; }
+  .tab-regr { color: #f85149 !important; }
 
   .run-hdr { font-size: 10px; text-align: center; min-width: 60px; }
   .run-hdr .run-id { display: block; color: #c9d1d9; font-family: monospace; font-size: 9px; white-space: nowrap; }
@@ -503,6 +567,7 @@ function generateHtml(
   <div class="stats">
     <span class="stat stat-tcs">${tcList.length} test cases</span>
     <span class="stat stat-runs">${visibleRuns.length} runs${runs.length > MAX_RUNS ? ` (of ${runs.length})` : ""}</span>
+    <span class="stat stat-regr">${tcList.filter((t) => t.regressionCount > 0).length} regressions</span>
   </div>
 </div>
 
@@ -512,6 +577,8 @@ function generateHtml(
   ${sortedModules.map((m) => `<div class="tab" data-filter="module:${esc(m)}">${esc(m)}</div>`).join("\n  ")}
   ${sortedCollections.length > 0 ? `<div class="tab-sep"></div>` : ""}
   ${sortedCollections.map((c) => `<div class="tab" data-filter="col:${esc(c)}">col:${esc(c)}</div>`).join("\n  ")}
+  <div class="tab-sep"></div>
+  <div class="tab tab-regr" data-filter="regressions">Regressions</div>
 </div>
 
 ${synth ? `<div class="synth-banner">
@@ -531,6 +598,7 @@ ${synth ? `<div class="synth-banner">
   <th>Priority</th>
   <th>Test Docs</th>
   <th>Pass%</th>
+  <th>Regr</th>
   ${runHeaders.map((r) => `<th class="run-hdr" title="Run: ${esc(r.runId)}&#10;Data: ${esc(r.testDataRunId)}"><span class="run-id">${esc(r.runId)}</span><span class="mode-badge mode-${esc(r.mode)}">${esc(r.mode)}</span>${r.testDataRunId ? `<span class="run-data-id">${esc(r.testDataRunId)}</span>` : ""}</th>`).join("\n  ")}
 </tr>
 </thead>
@@ -573,6 +641,9 @@ ${rows.join("\n")}
           const col = filter.slice(4);
           const cols = (r.getAttribute('data-collections') || '').split(' ');
           r.classList.toggle('hidden', !cols.includes(col));
+        } else if (filter === 'regressions') {
+          const regr = parseInt(r.getAttribute('data-regr') || '0', 10);
+          r.classList.toggle('hidden', regr === 0);
         }
       });
       updateSummary();
@@ -609,6 +680,11 @@ function main(): void {
   console.log("[matrix] Building index...");
   const tcList = buildIndex(runs, manifest, collections);
   console.log(`[matrix] ${tcList.length} test cases across runs`);
+
+  console.log("[matrix] Detecting regressions...");
+  const regrTotal = detectRegressions(tcList, runs);
+  const regrTcs = tcList.filter((t) => t.regressionCount > 0).length;
+  console.log(`[matrix] Regressions: ${regrTcs} TCs with ${regrTotal} total detections`);
 
   console.log("[matrix] Generating synthetic dataset...");
   const synth = generateSyntheticDataSet(tcList, runs);
