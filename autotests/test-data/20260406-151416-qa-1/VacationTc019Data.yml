@@ -1,0 +1,9 @@
+className: VacationTc019Data
+runId: 20260406-151416-qa-1
+savedAt: "2026-04-06T15:16:14.239Z"
+args:
+  username: pvaynmaster
+  employeeName: Pavel Weinmeister
+  managerName: Ivan Ilnitsky
+  startDateIso: "2026-12-28"
+  endDateIso: "2027-01-01"

@@ -1,0 +1,9 @@
+className: VacationTc017Data
+runId: 20260406-160837-qa-1
+savedAt: "2026-04-06T16:10:34.026Z"
+args:
+  employeeLogin: adanilevskaya
+  employeeName: Anastasia Danilevskaya
+  managerLogin: pvaynmaster
+  startDateIso: "2026-07-13"
+  endDateIso: "2026-07-17"

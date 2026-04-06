@@ -11,7 +11,7 @@ import * as yaml from "js-yaml";
  * Used by savedDataStore.ts (the public facade) — not imported directly by data classes.
  */
 
-const TEST_DATA_DIR = path.resolve(__dirname, "../../../test-data");
+const TEST_DATA_DIR = path.resolve(__dirname, "../../test-data");
 const RUN_ID_FILE = path.join(TEST_DATA_DIR, ".current-run-id");
 
 /** Cached run ID for the current process (read once from .current-run-id). */

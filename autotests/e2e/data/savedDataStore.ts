@@ -80,7 +80,7 @@ export function clearSaved(className: string): boolean {
   if (!resolved) return false;
 
   const fs = require("fs") as typeof import("fs");
-  const basePath = path.resolve(__dirname, "../../../test-data");
+  const basePath = path.resolve(__dirname, "../../test-data");
   const fp = path.join(basePath, resolved, `${className}.yml`);
   if (fs.existsSync(fp)) {
     fs.unlinkSync(fp);
@@ -97,7 +97,7 @@ export function listSaved(): string[] {
   if (!resolved) return [];
 
   const fs = require("fs") as typeof import("fs");
-  const basePath = path.resolve(__dirname, "../../../test-data");
+  const basePath = path.resolve(__dirname, "../../test-data");
   const dir = path.join(basePath, resolved);
   if (!fs.existsSync(dir)) return [];
 

@@ -1,0 +1,10 @@
+className: VacationTc011Data
+runId: 20260406-151416-qa-1
+savedAt: "2026-04-06T15:16:03.860Z"
+args:
+  username: qnguyen
+  entries:
+    - year: 2026
+      days: 15
+    - year: 2027
+      days: 15

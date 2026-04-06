@@ -1,0 +1,9 @@
+className: DayoffTc042Data
+runId: 20260406-145319-qa-1
+savedAt: "2026-04-06T14:54:14.983Z"
+args:
+  username: mseryukov
+  originalDate: "2026-04-10"
+  personalDate: "2026-04-17"
+  requestId: "3527"
+  expectedRowCount: 14

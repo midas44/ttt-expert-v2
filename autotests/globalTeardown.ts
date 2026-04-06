@@ -6,8 +6,8 @@ import { finalizeRun, type RunMeta } from "./e2e/data/yamlArtifactStore";
 /**
  * Playwright globalTeardown — finalizes the test-data run.
  *
- * Writes _meta.yml with run metadata and updates the `latest` symlink.
- * Only activates for "dynamic" and "saved" modes.
+ * Writes _meta.yml and updates the `latest` symlink (dynamic/saved modes).
+ * History archival is handled by the JSON reporter (onEnd) to avoid race conditions.
  */
 export default function globalTeardown(): void {
   const globalYml = readYaml(path.resolve(__dirname, "e2e/config/global.yml"));
@@ -28,7 +28,7 @@ export default function globalTeardown(): void {
   const envDir = path.resolve(__dirname, "../config/ttt/envs");
   let appUrl = "";
   try {
-    const envYml = readYaml(path.resolve(envDir, `${env}.yml`));
+    readYaml(path.resolve(envDir, `${env}.yml`));
     const template = String(tttYml["appUrl"] ?? "");
     appUrl = template.replace("***", env);
   } catch {

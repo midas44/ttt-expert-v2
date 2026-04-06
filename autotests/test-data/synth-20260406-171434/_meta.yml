@@ -1,0 +1,14 @@
+runId: synth-20260406-171434
+generatedAt: "2026-04-06T17:14:34.952Z"
+sourceMode: synthetic
+description: "Best-of dataset: latest passing test data per TC"
+coveredTcs: 103
+totalTcs: 147
+sourceDataRuns:
+  - 20260406-141717-qa-1
+  - 20260406-145319-qa-1
+  - 20260406-151416-qa-1
+  - 20260406-160152-qa-1
+  - 20260406-160837-qa-1
+  - 20260406-163830-qa-1
+  - 20260406-165359-qa-1

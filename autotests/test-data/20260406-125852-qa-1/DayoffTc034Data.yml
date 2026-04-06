@@ -1,0 +1,13 @@
+className: DayoffTc034Data
+runId: 20260406-125852-qa-1
+savedAt: "2026-04-06T13:00:11.995Z"
+args:
+  requestId: "2735"
+  employeeId: "990186"
+  employeeLogin: vshamanaev
+  employeeName: Шаманаев Владимир
+  originalDate: "2026-10-01"
+  personalDate: "2026-10-16"
+  calendarId: "6"
+  officeId: "10"
+  ledgerCountBefore: 2

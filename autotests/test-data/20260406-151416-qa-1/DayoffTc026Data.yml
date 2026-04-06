@@ -1,0 +1,10 @@
+className: DayoffTc026Data
+runId: 20260406-151416-qa-1
+savedAt: "2026-04-06T15:14:54.797Z"
+args:
+  managerLogin: perekrest
+  employeeName: Васильев Олег
+  originalDate: "2027-02-02"
+  personalDate: "2027-02-09"
+  requestId: "3537"
+  optionalApproverName: Андрей Тушов

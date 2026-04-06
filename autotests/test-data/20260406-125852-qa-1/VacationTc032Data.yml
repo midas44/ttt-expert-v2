@@ -1,0 +1,6 @@
+className: VacationTc032Data
+runId: 20260406-125852-qa-1
+savedAt: "2026-04-06T13:02:20.360Z"
+args:
+  payExpiredUrl: https://ttt-qa-1.noveogroup.com/api/vacation/v1/test/vacations/pay-expired-approved
+  apiToken: 76c45e8c-457a-4a8f-817f-4160d0cc2eaf

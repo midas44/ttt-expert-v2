@@ -89,7 +89,11 @@ const headlessProjects = (["chrome"] as BrowserName[]).map((browser) => ({
 export default defineConfig({
   globalSetup: "./globalSetup.ts",
   globalTeardown: "./globalTeardown.ts",
-  reporter: [["line"], ["html", { open: "never" }]],
+  reporter: [
+    ["line"],
+    ["html", { open: "never" }],
+    ["./e2e/reporters/jsonResultsReporter.ts"],
+  ],
   testDir: "./e2e/tests",
   timeout: 180_000,
   expect: { timeout: 10_000 },

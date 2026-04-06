@@ -1,0 +1,9 @@
+className: VacationTc056Data
+runId: 20260406-151416-qa-1
+savedAt: "2026-04-06T15:17:09.671Z"
+args:
+  managerLogin: pvaynmaster
+  targetLogin: vkopylov
+  latinLastName: Kopylov
+  russianLastName: Копылов
+  targetDisplayName: Vladimir Kopylov

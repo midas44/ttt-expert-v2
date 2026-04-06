@@ -1,0 +1,7 @@
+className: DayoffTc003Data
+runId: 20260406-141717-qa-1
+savedAt: "2026-04-06T14:17:19.255Z"
+args:
+  username: agrigorenko
+  publicDate: "2026-12-31"
+  targetDate: "2027-01-07"

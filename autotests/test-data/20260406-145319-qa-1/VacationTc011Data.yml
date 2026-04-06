@@ -1,0 +1,10 @@
+className: VacationTc011Data
+runId: 20260406-145319-qa-1
+savedAt: "2026-04-06T14:55:16.623Z"
+args:
+  username: verfilov
+  entries:
+    - year: 2026
+      days: 12
+    - year: 2027
+      days: 24
