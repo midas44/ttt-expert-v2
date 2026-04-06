@@ -81,7 +81,7 @@ export class ReportsTc019Data {
         dateLabel: weekday.dateLabel,
         dateIso: weekday.dateIso,
       };
-      if (mode === "saved") saveToDisk("ReportsTc019Data", args);
+      saveToDisk("ReportsTc019Data", args);
       return new ReportsTc019Data(args);
     } finally {
       await db.close();

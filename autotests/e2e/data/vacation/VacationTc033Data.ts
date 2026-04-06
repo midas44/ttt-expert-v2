@@ -97,7 +97,7 @@ export class VacationTc033Data {
       hasNegativeBalance,
     };
 
-    if (mode === "saved") saveToDisk("VacationTc033Data", args);
+    saveToDisk("VacationTc033Data", args);
     return new VacationTc033Data(
       args.username,
       args.startDateIso,

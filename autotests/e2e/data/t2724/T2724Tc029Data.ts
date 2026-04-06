@@ -94,7 +94,7 @@ export class T2724Tc029Data {
         noTagsProjectId: noTags.project_id,
         noTagsProjectName: noTags.project_name,
       };
-      if (mode === "saved") saveToDisk("T2724Tc029Data", args);
+      saveToDisk("T2724Tc029Data", args);
       return new T2724Tc029Data(
         args.username, args.projectId, args.projectName,
         args.assignmentId, args.assignmentDate,

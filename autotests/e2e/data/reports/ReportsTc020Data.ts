@@ -85,7 +85,7 @@ export class ReportsTc020Data {
         date2Label: day2.dateLabel,
         date2Iso: day2.dateIso,
       };
-      if (mode === "saved") saveToDisk("ReportsTc020Data", args);
+      saveToDisk("ReportsTc020Data", args);
       return new ReportsTc020Data(args);
     } finally {
       await db.close();

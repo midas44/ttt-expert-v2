@@ -6,3 +6,4 @@ fixtureDelayMs: 500
 windowWidth: 1920
 windowHeight: 1200
 testDataMode: dynamic
+savedDataSet: latest

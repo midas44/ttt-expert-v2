@@ -133,7 +133,7 @@ export class DayoffTc038Data {
         originalDate: emp.holDate,
         personalDate: created.personalDate ?? emp.holDate,
       };
-      if (mode === "saved") saveToDisk("DayoffTc038Data", args);
+      saveToDisk("DayoffTc038Data", args);
       return new DayoffTc038Data(args);
     } finally {
       await db.close();

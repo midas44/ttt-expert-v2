@@ -75,7 +75,6 @@ export class DayoffTc006Data {
         previousYear,
       );
 
-      if (mode === "saved")
         saveToDisk("DayoffTc006Data", {
           username: row.login,
           currentYear,

@@ -61,7 +61,7 @@ export class PlannerTc018Data {
         employeeName: row.employee_name,
         daysBack: row.days_back,
       };
-      if (mode === "saved") saveToDisk("PlannerTc018Data", args);
+      saveToDisk("PlannerTc018Data", args);
       return new PlannerTc018Data(
         args.username,
         args.projectName,

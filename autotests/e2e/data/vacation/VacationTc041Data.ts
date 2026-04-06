@@ -114,7 +114,7 @@ export class VacationTc041Data {
         restrictedEndInput: toCalendarFormat(toIso(end)),
       };
 
-      if (mode === "saved") saveToDisk("VacationTc041Data", args);
+      saveToDisk("VacationTc041Data", args);
       return new VacationTc041Data(args);
     } finally {
       await db.close();

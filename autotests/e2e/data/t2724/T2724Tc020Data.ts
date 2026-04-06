@@ -105,7 +105,7 @@ export class T2724Tc020Data {
         ticketInfo: info,
         tagValue,
       };
-      if (mode === "saved") saveToDisk("T2724Tc020Data", args);
+      saveToDisk("T2724Tc020Data", args);
       return new T2724Tc020Data(
         args.username,
         args.projectId,

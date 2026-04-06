@@ -106,7 +106,7 @@ export class VacationTc084Data {
         calendarId: empInfo.calendar_id,
       };
 
-      if (mode === "saved") saveToDisk("VacationTc084Data", args);
+      saveToDisk("VacationTc084Data", args);
       return new VacationTc084Data(args);
     } finally {
       await db.close();

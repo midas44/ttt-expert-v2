@@ -70,7 +70,7 @@ export class T2724Tc022Data {
         witnessAssignmentId: witness?.assignment_id ?? null,
         witnessAssignmentDate: witness?.assignment_date ?? null,
       };
-      if (mode === "saved") saveToDisk("T2724Tc022Data", args);
+      saveToDisk("T2724Tc022Data", args);
       return new T2724Tc022Data(
         args.username, args.projectId, args.projectName,
         args.witnessAssignmentId, args.witnessAssignmentDate,

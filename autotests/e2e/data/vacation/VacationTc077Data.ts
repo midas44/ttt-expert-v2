@@ -1,3 +1,4 @@
+import { loadSaved, saveToDisk } from "../savedDataStore";
 import type { TestDataMode } from "../../config/configUtils";
 import type { TttConfig } from "../../config/tttConfig";
 import { DbClient } from "../../config/db/dbClient";
@@ -23,9 +24,13 @@ export class VacationTc077Data {
   }
 
   static async create(
-    _mode: TestDataMode,
+    mode: TestDataMode,
     tttConfig: TttConfig,
   ): Promise<VacationTc077Data> {
+    if (mode === "saved") {
+      const cached = loadSaved<{ employees: MaternityEmployee[] }>("VacationTc077Data");
+      if (cached) return new VacationTc077Data(cached.employees);
+    }
     const db = new DbClient(tttConfig);
     try {
       const rows = await db.query<{
@@ -58,6 +63,7 @@ export class VacationTc077Data {
         hasOverlappingVacation: r.has_overlap === "1",
       }));
 
+      saveToDisk("VacationTc077Data", { employees });
       return new VacationTc077Data(employees);
     } finally {
       await db.close();

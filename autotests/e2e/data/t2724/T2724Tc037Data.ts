@@ -59,7 +59,7 @@ export class T2724Tc037Data {
         projectId: row.project_id,
         projectName: row.project_name,
       };
-      if (mode === "saved") saveToDisk("T2724Tc037Data", args);
+      saveToDisk("T2724Tc037Data", args);
       return new T2724Tc037Data(
         args.username, args.projectId, args.projectName,
       );

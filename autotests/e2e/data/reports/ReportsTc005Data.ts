@@ -66,7 +66,7 @@ export class ReportsTc005Data {
         taskName: result.taskName,
         projectName: result.projectName,
       };
-      if (mode === "saved") saveToDisk("ReportsTc005Data", args);
+      saveToDisk("ReportsTc005Data", args);
       return new ReportsTc005Data(
         args.username,
         args.taskName,

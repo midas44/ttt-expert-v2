@@ -56,7 +56,7 @@ export class PlannerTc004Data {
         projectId: pm.project_id,
         projectName: pm.project_name,
       };
-      if (mode === "saved") saveToDisk("PlannerTc004Data", args);
+      saveToDisk("PlannerTc004Data", args);
       return new PlannerTc004Data(
         args.username,
         args.projectId,

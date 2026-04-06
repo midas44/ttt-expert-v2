@@ -47,7 +47,7 @@ export class VacationTc088Data {
       );
 
       const args: Tc088Args = { readOnlyLogin: row.login };
-      if (mode === "saved") saveToDisk("VacationTc088Data", args);
+      saveToDisk("VacationTc088Data", args);
       return new VacationTc088Data(args.readOnlyLogin);
     } finally {
       await db.close();

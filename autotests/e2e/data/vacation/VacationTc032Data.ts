@@ -1,7 +1,13 @@
 declare const process: { env: Record<string, string | undefined> };
 
+import { loadSaved, saveToDisk } from "../savedDataStore";
 import type { TestDataMode } from "../../config/configUtils";
 import type { TttConfig } from "../../config/tttConfig";
+
+interface Tc032Args {
+  payExpiredUrl: string;
+  apiToken: string;
+}
 
 /**
  * TC-VAC-032: Auto-pay expired APPROVED vacations (cron).
@@ -15,17 +21,26 @@ export class VacationTc032Data {
   readonly payExpiredUrl: string;
   readonly apiToken: string;
 
-  constructor(tttConfig: TttConfig) {
-    this.payExpiredUrl = tttConfig.buildUrl(
-      "/api/vacation/v1/test/vacations/pay-expired-approved",
-    );
-    this.apiToken = tttConfig.apiToken;
+  constructor(args: Tc032Args) {
+    this.payExpiredUrl = args.payExpiredUrl;
+    this.apiToken = args.apiToken;
   }
 
   static async create(
-    _mode: TestDataMode,
+    mode: TestDataMode,
     tttConfig: TttConfig,
   ): Promise<VacationTc032Data> {
-    return new VacationTc032Data(tttConfig);
+    if (mode === "saved") {
+      const cached = loadSaved<Tc032Args>("VacationTc032Data");
+      if (cached) return new VacationTc032Data(cached);
+    }
+    const args: Tc032Args = {
+      payExpiredUrl: tttConfig.buildUrl(
+        "/api/vacation/v1/test/vacations/pay-expired-approved",
+      ),
+      apiToken: tttConfig.apiToken,
+    };
+    saveToDisk("VacationTc032Data", args);
+    return new VacationTc032Data(args);
   }
 }

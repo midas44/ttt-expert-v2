@@ -46,7 +46,7 @@ export class PlannerTc022Data {
         username: row.login,
         projectName: row.project_name,
       };
-      if (mode === "saved") saveToDisk("PlannerTc022Data", args);
+      saveToDisk("PlannerTc022Data", args);
       return new PlannerTc022Data(args.username, args.projectName);
     } finally {
       await db.close();

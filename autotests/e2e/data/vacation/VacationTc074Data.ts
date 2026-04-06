@@ -107,7 +107,7 @@ export class VacationTc074Data {
         periodPattern: `${sd}.*${ed}.*${em}`,
       };
 
-      if (mode === "saved") saveToDisk("VacationTc074Data", args);
+      saveToDisk("VacationTc074Data", args);
       return new VacationTc074Data(args);
     } finally {
       await db.close();

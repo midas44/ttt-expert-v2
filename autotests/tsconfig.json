@@ -9,5 +9,5 @@
     "useDefineForClassFields": false,
     "types": ["@playwright/test", "node"]
   },
-  "include": ["playwright.config.ts", "e2e"]
+  "include": ["playwright.config.ts", "globalSetup.ts", "globalTeardown.ts", "e2e"]
 }

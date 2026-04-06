@@ -79,7 +79,7 @@ export class VacationTc053Data {
       vac2EndIso: weeks.week2End,
     };
 
-    if (mode === "saved") saveToDisk("VacationTc053Data", args);
+    saveToDisk("VacationTc053Data", args);
     return new VacationTc053Data(args);
   }
 }

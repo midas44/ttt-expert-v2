@@ -118,7 +118,7 @@ export class VacationTc072Data {
             initialPaymentMonth: toPaymentMonth(firstWeek.start),
             expectedPaymentMonth: toPaymentMonth(startIso),
           };
-          if (mode === "saved") saveToDisk("VacationTc072Data", args);
+          saveToDisk("VacationTc072Data", args);
           return new VacationTc072Data(args);
         }
       }

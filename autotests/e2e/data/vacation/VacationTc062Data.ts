@@ -148,7 +148,7 @@ export class VacationTc062Data {
         endDateIso: week.endDate,
       };
 
-      if (mode === "saved") saveToDisk("VacationTc062Data", args);
+      saveToDisk("VacationTc062Data", args);
       return new VacationTc062Data(args);
     } finally {
       await db.close();

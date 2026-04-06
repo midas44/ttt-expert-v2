@@ -107,7 +107,7 @@ export class VacationTc058Data {
         uiEndInput: isoToInput(uiSlot.end),
       };
 
-      if (mode === "saved") saveToDisk("VacationTc058Data", args);
+      saveToDisk("VacationTc058Data", args);
       return new VacationTc058Data(
         username,
         slots,

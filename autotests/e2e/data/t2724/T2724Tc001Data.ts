@@ -62,7 +62,7 @@ export class T2724Tc001Data {
         projectName: proj.project_name,
         tagValue: `[autotest-${Date.now()}]`,
       };
-      if (mode === "saved") saveToDisk("T2724Tc001Data", args);
+      saveToDisk("T2724Tc001Data", args);
       return new T2724Tc001Data(
         args.username,
         args.projectId,

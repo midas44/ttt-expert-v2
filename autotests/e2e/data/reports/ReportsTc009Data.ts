@@ -97,7 +97,7 @@ export class ReportsTc009Data {
         tuesdayLabel,
         tuesdayIso,
       };
-      if (mode === "saved") saveToDisk("ReportsTc009Data", args);
+      saveToDisk("ReportsTc009Data", args);
       return new ReportsTc009Data(
         args.username,
         args.task1Name,

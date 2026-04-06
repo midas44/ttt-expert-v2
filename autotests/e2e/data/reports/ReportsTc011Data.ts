@@ -73,7 +73,7 @@ export class ReportsTc011Data {
         dateLabel,
         dateIso,
       };
-      if (mode === "saved") saveToDisk("ReportsTc011Data", args);
+      saveToDisk("ReportsTc011Data", args);
       return new ReportsTc011Data(
         args.username,
         args.taskName,

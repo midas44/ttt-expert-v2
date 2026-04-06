@@ -69,7 +69,7 @@ export class T2724Tc015Data {
           `cancelled-${ts}`,
         ],
       };
-      if (mode === "saved") saveToDisk("T2724Tc015Data", args);
+      saveToDisk("T2724Tc015Data", args);
       return new T2724Tc015Data(
         args.username,
         args.projectId,

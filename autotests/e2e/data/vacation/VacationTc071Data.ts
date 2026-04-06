@@ -83,7 +83,7 @@ export class VacationTc071Data {
         overlapEndInput: toCalendarFormat(toIso(nextTue)),
       };
 
-      if (mode === "saved") saveToDisk("VacationTc071Data", args);
+      saveToDisk("VacationTc071Data", args);
       return new VacationTc071Data(
         args.username,
         args.existingStartIso,

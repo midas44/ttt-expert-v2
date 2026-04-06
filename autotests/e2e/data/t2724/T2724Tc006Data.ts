@@ -69,7 +69,7 @@ export class T2724Tc006Data {
         tagA: `dup-a-${ts}`,
         tagB: `dup-b-${ts}`,
       };
-      if (mode === "saved") saveToDisk("T2724Tc006Data", args);
+      saveToDisk("T2724Tc006Data", args);
       return new T2724Tc006Data(
         args.username,
         args.projectId,

@@ -83,7 +83,6 @@ export class DayoffTc042Data {
         transfer.requestId,
         rowCount,
       );
-      if (mode === "saved")
         saveToDisk("DayoffTc042Data", {
           username: row.login,
           originalDate: row.public_date,

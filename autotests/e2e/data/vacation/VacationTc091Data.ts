@@ -1,5 +1,6 @@
 declare const process: { env: Record<string, string | undefined> };
 
+import { loadSaved, saveToDisk } from "../savedDataStore";
 import type { TestDataMode } from "../../config/configUtils";
 import type { TttConfig } from "../../config/tttConfig";
 
@@ -20,11 +21,17 @@ export class VacationTc091Data {
   }
 
   static async create(
-    _mode: TestDataMode,
+    mode: TestDataMode,
     tttConfig: TttConfig,
   ): Promise<VacationTc091Data> {
-    return new VacationTc091Data({
+    if (mode === "saved") {
+      const cached = loadSaved<Tc091Args>("VacationTc091Data");
+      if (cached) return new VacationTc091Data(cached);
+    }
+    const args: Tc091Args = {
       apiUrl: tttConfig.buildUrl("/api/vacation/v1/vacations"),
-    });
+    };
+    saveToDisk("VacationTc091Data", args);
+    return new VacationTc091Data(args);
   }
 }

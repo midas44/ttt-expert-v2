@@ -1,5 +1,6 @@
 declare const process: { env: Record<string, string | undefined> };
 
+import { loadSaved, saveToDisk } from "../savedDataStore";
 import type { TestDataMode } from "../../config/configUtils";
 import type { TttConfig } from "../../config/tttConfig";
 import { ApiVacationSetupFixture } from "../../fixtures/ApiVacationSetupFixture";
@@ -33,19 +34,25 @@ export class VacationTc099Data {
   }
 
   static async create(
-    _mode: TestDataMode,
+    mode: TestDataMode,
     tttConfig: TttConfig,
   ): Promise<VacationTc099Data> {
+    if (mode === "saved") {
+      const cached = loadSaved<Tc099Args>("VacationTc099Data");
+      if (cached) return new VacationTc099Data(cached);
+    }
     const { startDate, endDate } =
       await ApiVacationSetupFixture.findAvailableWeek(tttConfig, "pvaynmaster");
     const paymentMonth = `${startDate.slice(0, 8)}01`;
 
-    return new VacationTc099Data({
+    const args: Tc099Args = {
       vacationsUrl: tttConfig.buildUrl("/api/vacation/v1/vacations"),
       login: "pvaynmaster",
       startDate,
       endDate,
       paymentMonth,
-    });
+    };
+    saveToDisk("VacationTc099Data", args);
+    return new VacationTc099Data(args);
   }
 }

@@ -147,7 +147,7 @@ export class VacationTc046Data {
           holidayDateIso: h.holiday,
           expectedWorkingDays: expectedDays,
         };
-        if (mode === "saved") saveToDisk("VacationTc046Data", args);
+        saveToDisk("VacationTc046Data", args);
         return new VacationTc046Data(args);
       }
 

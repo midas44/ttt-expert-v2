@@ -61,7 +61,7 @@ export class PlannerTc014Data {
         taskName: row.task_name,
         daysBack: row.days_back,
       };
-      if (mode === "saved") saveToDisk("PlannerTc014Data", args);
+      saveToDisk("PlannerTc014Data", args);
       return new PlannerTc014Data(
         args.username,
         args.projectName,

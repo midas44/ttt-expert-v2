@@ -47,7 +47,7 @@ export class ReportsTc014Data {
         managerLogin: result.managerLogin,
         employeeLogin: result.employeeLogin,
       };
-      if (mode === "saved") saveToDisk("ReportsTc014Data", args);
+      saveToDisk("ReportsTc014Data", args);
       return new ReportsTc014Data(args.managerLogin, args.employeeLogin);
     } finally {
       await db.close();

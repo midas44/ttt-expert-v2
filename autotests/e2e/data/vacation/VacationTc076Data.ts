@@ -77,7 +77,7 @@ export class VacationTc076Data {
       }));
 
       const args: Tc076Args = { mismatched };
-      if (mode === "saved") saveToDisk("VacationTc076Data", args);
+      saveToDisk("VacationTc076Data", args);
       return new VacationTc076Data(args);
     } finally {
       await db.close();

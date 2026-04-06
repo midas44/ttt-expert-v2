@@ -1,5 +1,6 @@
 declare const process: { env: Record<string, string | undefined> };
 
+import { loadSaved, saveToDisk } from "../savedDataStore";
 import type { TestDataMode } from "../../config/configUtils";
 import type { TttConfig } from "../../config/tttConfig";
 import { ApiVacationSetupFixture } from "../../fixtures/ApiVacationSetupFixture";
@@ -38,9 +39,13 @@ export class VacationTc100Data {
   }
 
   static async create(
-    _mode: TestDataMode,
+    mode: TestDataMode,
     tttConfig: TttConfig,
   ): Promise<VacationTc100Data> {
+    if (mode === "saved") {
+      const cached = loadSaved<Tc100Args>("VacationTc100Data");
+      if (cached) return new VacationTc100Data(cached);
+    }
     // Find 3 non-overlapping conflict-free weeks for pvaynmaster
     const login = "pvaynmaster";
     const weeks: Array<{
@@ -67,11 +72,13 @@ export class VacationTc100Data {
       weeksAhead += 3;
     }
 
-    return new VacationTc100Data({
+    const args: Tc100Args = {
       vacationsUrl: tttConfig.buildUrl("/api/vacation/v1/vacations"),
       login,
       apiToken: tttConfig.apiToken,
       weeks,
-    });
+    };
+    saveToDisk("VacationTc100Data", args);
+    return new VacationTc100Data(args);
   }
 }

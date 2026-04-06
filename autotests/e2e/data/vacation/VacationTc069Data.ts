@@ -79,7 +79,7 @@ export class VacationTc069Data {
         paymentMonth,
       };
 
-      if (mode === "saved") saveToDisk("VacationTc069Data", args);
+      saveToDisk("VacationTc069Data", args);
       return new VacationTc069Data(args);
     } finally {
       await db.close();

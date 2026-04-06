@@ -92,7 +92,7 @@ export class VacationTc059Data {
         annualNorm,
       };
 
-      if (mode === "saved") saveToDisk("VacationTc059Data", args);
+      saveToDisk("VacationTc059Data", args);
       return new VacationTc059Data(
         args.username,
         args.totalAvailableDays,

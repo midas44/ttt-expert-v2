@@ -126,7 +126,7 @@ export class VacationTc044Data {
         shortStartInput: toCalendarFormat(shortStart),
         shortEndInput: toCalendarFormat(shortEnd),
       };
-      if (mode === "saved") saveToDisk("VacationTc044Data", args);
+      saveToDisk("VacationTc044Data", args);
       return new VacationTc044Data(args);
     } finally {
       await db.close();

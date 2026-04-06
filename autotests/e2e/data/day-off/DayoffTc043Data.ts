@@ -84,7 +84,6 @@ export class DayoffTc043Data {
           existing.personalDate,
           false,
         );
-        if (mode === "saved")
           saveToDisk("DayoffTc043Data", {
             managerLogin: existing.managerLogin,
             employeeName: existing.employeeName,
@@ -106,7 +105,6 @@ export class DayoffTc043Data {
         created.personalDate,
         true,
       );
-      if (mode === "saved")
         saveToDisk("DayoffTc043Data", {
           managerLogin: created.managerLogin,
           employeeName: created.employeeName,

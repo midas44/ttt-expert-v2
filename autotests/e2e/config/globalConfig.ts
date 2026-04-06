@@ -1,6 +1,6 @@
 import * as path from "path";
 import type { Page } from "@playwright/test";
-import { readYaml, readNumber, readTestDataMode, type TestDataMode } from "./configUtils";
+import { readYaml, readNumber, readString, readTestDataMode, type TestDataMode } from "./configUtils";
 import { TttConfig } from "./tttConfig";
 
 const GLOBAL_YML = path.resolve(__dirname, "global.yml");
@@ -15,6 +15,8 @@ export class GlobalConfig {
   readonly windowWidth: number;
   readonly windowHeight: number;
   readonly testDataMode: TestDataMode;
+  /** Which saved dataset to load in "saved" mode ("latest" or a specific run ID). */
+  readonly savedDataSet: string;
   readonly appUrl: string;
 
   private readonly tttConfig: TttConfig;
@@ -33,6 +35,7 @@ export class GlobalConfig {
     this.windowWidth = readNumber(data["windowWidth"], 2560, "windowWidth");
     this.windowHeight = readNumber(data["windowHeight"], 1440, "windowHeight");
     this.testDataMode = readTestDataMode(data["testDataMode"]);
+    this.savedDataSet = readString(data["savedDataSet"], "latest", "savedDataSet");
   }
 
   /** Returns a promise that resolves after `fixtureDelayMs` milliseconds. */

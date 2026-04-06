@@ -75,7 +75,7 @@ export class T2724Tc013Data {
         tagCyrillic: `Закрыто-${ts}`,
         tagXss: `<b>xss-${ts}</b>`,
       };
-      if (mode === "saved") saveToDisk("T2724Tc013Data", args);
+      saveToDisk("T2724Tc013Data", args);
       return new T2724Tc013Data(
         args.username,
         args.projectId,

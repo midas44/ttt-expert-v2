@@ -94,7 +94,6 @@ export class T3404Tc020Data {
         row.date,
         apStart,
       );
-      if (mode === "saved")
         saveToDisk("T3404Tc020Data", {
           username: row.login,
           managerLogin: row.manager_login,

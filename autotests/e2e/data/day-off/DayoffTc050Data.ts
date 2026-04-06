@@ -74,7 +74,6 @@ export class DayoffTc050Data {
         transfer.personalDate,
         transfer.requestId,
       );
-      if (mode === "saved")
         saveToDisk("DayoffTc050Data", {
           username: row.login,
           holiday2: row.holiday2,

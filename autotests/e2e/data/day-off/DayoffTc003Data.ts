@@ -69,7 +69,6 @@ export class DayoffTc003Data {
         targetDate,
       );
 
-      if (mode === "saved")
         saveToDisk("DayoffTc003Data", {
           username: row.login,
           publicDate: row.public_date,

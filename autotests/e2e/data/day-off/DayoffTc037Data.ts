@@ -170,7 +170,7 @@ export class DayoffTc037Data {
         emp2RequestId: req2.requestId,
         sharedDate: pair.sharedDate,
       };
-      if (mode === "saved") saveToDisk("DayoffTc037Data", args);
+      saveToDisk("DayoffTc037Data", args);
       return new DayoffTc037Data(args);
     } finally {
       await db.close();

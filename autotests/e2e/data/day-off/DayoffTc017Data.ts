@@ -47,7 +47,6 @@ export class DayoffTc017Data {
       const row = await findEmployeeWithDayOffRequest(db, "NEW");
       const instance = new DayoffTc017Data(row.login, row.original_date);
 
-      if (mode === "saved")
         saveToDisk("DayoffTc017Data", {
           username: row.login,
           originalDate: row.original_date,

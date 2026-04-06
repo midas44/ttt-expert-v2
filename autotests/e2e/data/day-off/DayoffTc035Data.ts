@@ -127,7 +127,7 @@ export class DayoffTc035Data {
         unaffectedDate: emp.holiday2,
         unaffectedRequestId: req2.requestId,
       };
-      if (mode === "saved") saveToDisk("DayoffTc035Data", args);
+      saveToDisk("DayoffTc035Data", args);
       return new DayoffTc035Data(args);
     } finally {
       await db.close();

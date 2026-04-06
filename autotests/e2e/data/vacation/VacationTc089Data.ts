@@ -64,7 +64,7 @@ export class VacationTc089Data {
         accountantName: row.display_name,
       };
 
-      if (mode === "saved") saveToDisk("VacationTc089Data", args);
+      saveToDisk("VacationTc089Data", args);
       return new VacationTc089Data(args);
     } finally {
       await db.close();

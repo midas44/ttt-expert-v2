@@ -1,3 +1,4 @@
+import { loadSaved, saveToDisk } from "../savedDataStore";
 import type { TestDataMode } from "../../config/configUtils";
 import type { TttConfig } from "../../config/tttConfig";
 import { DbClient } from "../../config/db/dbClient";
@@ -21,9 +22,13 @@ export class VacationTc075Data {
   }
 
   static async create(
-    _mode: TestDataMode,
+    mode: TestDataMode,
     tttConfig: TttConfig,
   ): Promise<VacationTc075Data> {
+    if (mode === "saved") {
+      const cached = loadSaved<{ duplicates: DuplicateEntry[] }>("VacationTc075Data");
+      if (cached) return new VacationTc075Data(cached.duplicates);
+    }
     const db = new DbClient(tttConfig);
     try {
       const rows = await db.query<{
@@ -47,6 +52,7 @@ export class VacationTc075Data {
         count: parseInt(r.cnt, 10),
       }));
 
+      saveToDisk("VacationTc075Data", { duplicates });
       return new VacationTc075Data(duplicates);
     } finally {
       await db.close();

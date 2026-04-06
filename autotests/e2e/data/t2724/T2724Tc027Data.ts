@@ -95,7 +95,7 @@ export class T2724Tc027Data {
         assignment2Date: second.assignment_date,
         ticketInfo2: second.ticket_info,
       };
-      if (mode === "saved") saveToDisk("T2724Tc027Data", args);
+      saveToDisk("T2724Tc027Data", args);
       return new T2724Tc027Data(
         args.username, args.projectId, args.projectName,
         args.assignment1Id, args.assignment1Date, args.ticketInfo1,

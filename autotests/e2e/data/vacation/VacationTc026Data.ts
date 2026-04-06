@@ -98,7 +98,7 @@ export class VacationTc026Data {
         paymentMonthLabel,
       };
 
-      if (mode === "saved") saveToDisk("VacationTc026Data", args);
+      saveToDisk("VacationTc026Data", args);
       return new VacationTc026Data(args, ownerRow.display_name);
     } finally {
       await db.close();

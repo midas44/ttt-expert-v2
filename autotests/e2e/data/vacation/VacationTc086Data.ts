@@ -55,7 +55,7 @@ export class VacationTc086Data {
       const { startDate, endDate } = await findAvailableWeek(db, username, 9);
 
       const args: Tc086Args = { username, startDateIso: startDate, endDateIso: endDate };
-      if (mode === "saved") saveToDisk("VacationTc086Data", args);
+      saveToDisk("VacationTc086Data", args);
       return new VacationTc086Data(args.username, args.startDateIso, args.endDateIso);
     } finally {
       await db.close();

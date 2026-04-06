@@ -79,7 +79,7 @@ export class DayoffTc033Data {
         row = await createApprovedRequestForCalendarTest(db);
       }
 
-      if (mode === "saved") saveToDisk("DayoffTc033Data", row);
+      saveToDisk("DayoffTc033Data", row);
       return new DayoffTc033Data(row);
     } finally {
       await db.close();

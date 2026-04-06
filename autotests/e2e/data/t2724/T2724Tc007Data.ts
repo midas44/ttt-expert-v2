@@ -62,7 +62,7 @@ export class T2724Tc007Data {
         projectName: proj.project_name,
         tagValue: `del-${Date.now()}`,
       };
-      if (mode === "saved") saveToDisk("T2724Tc007Data", args);
+      saveToDisk("T2724Tc007Data", args);
       return new T2724Tc007Data(
         args.username,
         args.projectId,

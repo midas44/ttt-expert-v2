@@ -104,7 +104,7 @@ export class VacationTc042Data {
           latestPaymentIso: toIso(endMonth),
           invalidPaymentIso: toIso(invalid),
         };
-        if (mode === "saved") saveToDisk("VacationTc042Data", args);
+        saveToDisk("VacationTc042Data", args);
         return new VacationTc042Data(args);
       }
       throw new Error("No conflict-free week found for pvaynmaster");

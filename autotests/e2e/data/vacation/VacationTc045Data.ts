@@ -113,7 +113,7 @@ export class VacationTc045Data {
         uiEndInput: toCalendarFormat(uiWeek.end),
       };
 
-      if (mode === "saved") saveToDisk("VacationTc045Data", args);
+      saveToDisk("VacationTc045Data", args);
       return new VacationTc045Data(args);
     } finally {
       await db.close();

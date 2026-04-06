@@ -53,7 +53,7 @@ export class ReportsTc008Data {
         username: emp.login,
         taskName: emp.taskName,
       };
-      if (mode === "saved") saveToDisk("ReportsTc008Data", args);
+      saveToDisk("ReportsTc008Data", args);
       return new ReportsTc008Data(args.username, args.taskName);
     } finally {
       await db.close();

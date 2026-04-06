@@ -1,3 +1,4 @@
+import { loadSaved, saveToDisk } from "../savedDataStore";
 import { TttConfig } from "../../config/tttConfig";
 import { DbClient } from "../../config/db/dbClient";
 import {
@@ -29,20 +30,27 @@ export class DayoffTc026Data {
     mode: string,
     config: TttConfig,
   ): Promise<DayoffTc026Data> {
-    if (mode === "dynamic") {
+    if (mode === "saved") {
+      const cached = loadSaved<Tc026Data>("DayoffTc026Data");
+      if (cached) return new DayoffTc026Data(cached);
+    }
+
+    if (mode === "dynamic" || mode === "saved") {
       const db = new DbClient(config);
       try {
         const req = await findNewDayoffRequestWithManager(db);
         if (!req) throw new Error("No NEW dayoff request available for TC-026");
         const otherMgr = await findAnotherManager(db, req.managerLogin);
-        return new DayoffTc026Data({
+        const data: Tc026Data = {
           managerLogin: req.managerLogin,
           employeeName: req.employeeName,
           originalDate: req.originalDate,
           personalDate: req.personalDate,
           requestId: req.requestId,
           optionalApproverName: otherMgr.fullName,
-        });
+        };
+        saveToDisk("DayoffTc026Data", data);
+        return new DayoffTc026Data(data);
       } finally {
         await db.close();
       }

@@ -62,7 +62,7 @@ export class T2724Tc011Data {
         projectName: proj.project_name,
         tagCreate: `spm-${Date.now()}`,
       };
-      if (mode === "saved") saveToDisk("T2724Tc011Data", args);
+      saveToDisk("T2724Tc011Data", args);
       return new T2724Tc011Data(
         args.username,
         args.projectId,

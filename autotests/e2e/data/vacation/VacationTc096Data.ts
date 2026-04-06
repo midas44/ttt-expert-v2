@@ -1,5 +1,6 @@
 declare const process: { env: Record<string, string | undefined> };
 
+import { loadSaved, saveToDisk } from "../savedDataStore";
 import type { TestDataMode } from "../../config/configUtils";
 import type { TttConfig } from "../../config/tttConfig";
 import { ApiVacationSetupFixture } from "../../fixtures/ApiVacationSetupFixture";
@@ -32,9 +33,13 @@ export class VacationTc096Data {
   }
 
   static async create(
-    _mode: TestDataMode,
+    mode: TestDataMode,
     tttConfig: TttConfig,
   ): Promise<VacationTc096Data> {
+    if (mode === "saved") {
+      const cached = loadSaved<Tc096Args>("VacationTc096Data");
+      if (cached) return new VacationTc096Data(cached);
+    }
     // Find two non-conflicting weeks for the token owner
     const weekA = await ApiVacationSetupFixture.findAvailableWeek(
       tttConfig,
@@ -47,11 +52,13 @@ export class VacationTc096Data {
       8,
     );
 
-    return new VacationTc096Data({
+    const args: Tc096Args = {
       vacationsUrl: tttConfig.buildUrl("/api/vacation/v1/vacations"),
       login: "pvaynmaster",
       weekADates: weekA,
       weekBDates: weekB,
-    });
+    };
+    saveToDisk("VacationTc096Data", args);
+    return new VacationTc096Data(args);
   }
 }

@@ -81,7 +81,7 @@ export class T2724Tc012Data {
         projectBName: row.project_b_name,
         tagValue: `cross-${Date.now()}`,
       };
-      if (mode === "saved") saveToDisk("T2724Tc012Data", args);
+      saveToDisk("T2724Tc012Data", args);
       return new T2724Tc012Data(
         args.pmALogin,
         args.projectAId,

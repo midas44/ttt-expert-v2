@@ -60,7 +60,7 @@ export class VacationTc011Data {
       entries: result.entries,
     };
 
-    if (mode === "saved") saveToDisk("VacationTc011Data", args);
+    saveToDisk("VacationTc011Data", args);
     return new VacationTc011Data(args);
   }
 }

@@ -78,7 +78,7 @@ export class DayoffTc070Data {
         personalDate: row.personalDate,
       };
 
-      if (mode === "saved") saveToDisk("DayoffTc070Data", args);
+      saveToDisk("DayoffTc070Data", args);
       return new DayoffTc070Data(args);
     } finally {
       await db.close();

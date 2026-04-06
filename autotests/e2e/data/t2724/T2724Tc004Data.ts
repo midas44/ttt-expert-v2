@@ -69,7 +69,7 @@ export class T2724Tc004Data {
         originalTag: `edit-orig-${ts}`,
         updatedTag: `edit-upd-${ts}`,
       };
-      if (mode === "saved") saveToDisk("T2724Tc004Data", args);
+      saveToDisk("T2724Tc004Data", args);
       return new T2724Tc004Data(
         args.username,
         args.projectId,

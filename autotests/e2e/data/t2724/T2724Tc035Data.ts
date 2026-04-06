@@ -88,7 +88,7 @@ export class T2724Tc035Data {
         tagValue: row.ticket_info,
         assigneeId: row.assignee_id,
       };
-      if (mode === "saved") saveToDisk("T2724Tc035Data", args);
+      saveToDisk("T2724Tc035Data", args);
       return new T2724Tc035Data(
         args.username, args.projectId, args.projectName,
         args.assignmentId, args.assignmentDate,

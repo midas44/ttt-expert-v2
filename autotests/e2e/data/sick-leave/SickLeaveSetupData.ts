@@ -86,7 +86,7 @@ export class SickLeaveSetupData {
         endDateIso: endDate,
       };
 
-      if (mode === "saved") saveToDisk(cacheKey, args);
+      saveToDisk(cacheKey, args);
       return new SickLeaveSetupData(
         args.username,
         args.managerLogin,

@@ -45,7 +45,7 @@ export class PlannerTc007Data {
         username: emp.login,
         daysBack: emp.days_back,
       };
-      if (mode === "saved") saveToDisk("PlannerTc007Data", args);
+      saveToDisk("PlannerTc007Data", args);
       return new PlannerTc007Data(args.username, args.daysBack);
     } finally {
       await db.close();

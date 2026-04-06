@@ -46,7 +46,7 @@ export class VacationTc082Data {
          LIMIT 1`,
       );
       const args: Tc082Args = { username: row.login };
-      if (mode === "saved") saveToDisk("VacationTc082Data", args);
+      saveToDisk("VacationTc082Data", args);
       return new VacationTc082Data(args);
     } finally {
       await db.close();

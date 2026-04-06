@@ -69,7 +69,7 @@ export class VacationTc065Data {
         endDate,
       };
 
-      if (mode === "saved") saveToDisk("VacationTc065Data", args);
+      saveToDisk("VacationTc065Data", args);
       return new VacationTc065Data(args);
     } finally {
       await db.close();

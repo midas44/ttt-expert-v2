@@ -80,7 +80,7 @@ export class VacationTc055Data {
         expectedEmployee: emp.full_name,
       };
 
-      if (mode === "saved") saveToDisk("VacationTc055Data", args);
+      saveToDisk("VacationTc055Data", args);
       return new VacationTc055Data(args);
     } finally {
       await db.close();

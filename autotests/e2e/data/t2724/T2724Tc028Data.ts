@@ -71,7 +71,7 @@ export class T2724Tc028Data {
         assignmentDate: row.assignment_date,
         taskId: row.task_id,
       };
-      if (mode === "saved") saveToDisk("T2724Tc028Data", args);
+      saveToDisk("T2724Tc028Data", args);
       return new T2724Tc028Data(
         args.username, args.projectId, args.projectName,
         args.assignmentId, args.assignmentDate, args.taskId,

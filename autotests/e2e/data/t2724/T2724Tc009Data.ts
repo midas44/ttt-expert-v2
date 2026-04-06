@@ -70,7 +70,7 @@ export class T2724Tc009Data {
         projectName: row.project_name,
         tagValue: `perm-${Date.now()}`,
       };
-      if (mode === "saved") saveToDisk("T2724Tc009Data", args);
+      saveToDisk("T2724Tc009Data", args);
       return new T2724Tc009Data(
         args.pmLogin,
         args.memberLogin,

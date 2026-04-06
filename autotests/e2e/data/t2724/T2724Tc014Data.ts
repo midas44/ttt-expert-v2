@@ -75,7 +75,7 @@ export class T2724Tc014Data {
         tag255,
         tag256,
       };
-      if (mode === "saved") saveToDisk("T2724Tc014Data", args);
+      saveToDisk("T2724Tc014Data", args);
       return new T2724Tc014Data(
         args.username,
         args.projectId,

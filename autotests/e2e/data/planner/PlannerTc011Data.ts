@@ -49,12 +49,12 @@ export class PlannerTc011Data {
          LIMIT 1`,
       );
       const args: Tc011Args = { username: row.login };
-      if (mode === "saved") saveToDisk("PlannerTc011Data", args);
+      saveToDisk("PlannerTc011Data", args);
       return new PlannerTc011Data(args.username);
     } catch {
       // Fall back to pvaynmaster — known to have notification banners on qa-1
       const args: Tc011Args = { username: "pvaynmaster" };
-      if (mode === "saved") saveToDisk("PlannerTc011Data", args);
+      saveToDisk("PlannerTc011Data", args);
       return new PlannerTc011Data(args.username);
     } finally {
       await db.close();

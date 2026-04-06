@@ -47,7 +47,7 @@ export class ReportsTc015Data {
         adminLogin: result.adminLogin,
         contractorLogin: result.contractorLogin,
       };
-      if (mode === "saved") saveToDisk("ReportsTc015Data", args);
+      saveToDisk("ReportsTc015Data", args);
       return new ReportsTc015Data(args.adminLogin, args.contractorLogin);
     } finally {
       await db.close();

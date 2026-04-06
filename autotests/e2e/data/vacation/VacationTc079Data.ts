@@ -78,7 +78,7 @@ export class VacationTc079Data {
             startDateIso: startIso,
             endDateIso: endIso,
           };
-          if (mode === "saved") saveToDisk("VacationTc079Data", args);
+          saveToDisk("VacationTc079Data", args);
           return new VacationTc079Data(args);
         }
       }

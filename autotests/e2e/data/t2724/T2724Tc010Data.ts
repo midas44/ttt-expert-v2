@@ -69,7 +69,7 @@ export class T2724Tc010Data {
         tagCreate: `crud-${ts}`,
         tagEdited: `crud-upd-${ts}`,
       };
-      if (mode === "saved") saveToDisk("T2724Tc010Data", args);
+      saveToDisk("T2724Tc010Data", args);
       return new T2724Tc010Data(
         args.username,
         args.projectId,

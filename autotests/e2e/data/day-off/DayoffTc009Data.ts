@@ -77,7 +77,6 @@ export class DayoffTc009Data {
           existing.request_id,
           false,
         );
-        if (mode === "saved")
           saveToDisk("DayoffTc009Data", {
             username: existing.login,
             originalDate: existing.original_date,
@@ -97,7 +96,6 @@ export class DayoffTc009Data {
         null,
         true,
       );
-      if (mode === "saved")
         saveToDisk("DayoffTc009Data", {
           username: row.login,
           originalDate: row.public_date,

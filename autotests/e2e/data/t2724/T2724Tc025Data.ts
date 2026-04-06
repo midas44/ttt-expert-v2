@@ -82,7 +82,7 @@ export class T2724Tc025Data {
         boundEmployeeId: row.bound_employee_id,
         targetDate: row.target_date,
       };
-      if (mode === "saved") saveToDisk("T2724Tc025Data", args);
+      saveToDisk("T2724Tc025Data", args);
       return new T2724Tc025Data(
         args.username, args.projectId, args.projectName,
         args.taskId, args.ticketInfo, args.tagValue,

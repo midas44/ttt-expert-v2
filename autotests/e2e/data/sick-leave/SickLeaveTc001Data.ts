@@ -81,7 +81,7 @@ export class SickLeaveTc001Data {
         endDateIso: endDate,
       };
 
-      if (mode === "saved") saveToDisk("SickLeaveTc001Data", args);
+      saveToDisk("SickLeaveTc001Data", args);
       return new SickLeaveTc001Data(
         args.username,
         args.managerLogin,

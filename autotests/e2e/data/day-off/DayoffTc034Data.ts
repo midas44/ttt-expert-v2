@@ -92,7 +92,7 @@ export class DayoffTc034Data {
       const ledgerCountBefore = await countLedgerEntries(db, row.employeeId, row.originalDate);
 
       const args: Tc034Args = { ...row, ledgerCountBefore };
-      if (mode === "saved") saveToDisk("DayoffTc034Data", args);
+      saveToDisk("DayoffTc034Data", args);
       return new DayoffTc034Data(args);
     } finally {
       await db.close();

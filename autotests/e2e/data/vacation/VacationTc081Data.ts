@@ -66,7 +66,7 @@ export class VacationTc081Data {
 
         if (!(await hasVacationConflict(db, username, startIso, endIso))) {
           const args: Tc081Args = { username, startDateIso: startIso, endDateIso: endIso };
-          if (mode === "saved") saveToDisk("VacationTc081Data", args);
+          saveToDisk("VacationTc081Data", args);
           return new VacationTc081Data(args);
         }
       }

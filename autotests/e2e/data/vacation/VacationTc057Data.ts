@@ -76,7 +76,7 @@ export class VacationTc057Data {
         currentYear,
       };
 
-      if (mode === "saved") saveToDisk("VacationTc057Data", args);
+      saveToDisk("VacationTc057Data", args);
       return new VacationTc057Data(
         args.username,
         args.totalAvailableDays,

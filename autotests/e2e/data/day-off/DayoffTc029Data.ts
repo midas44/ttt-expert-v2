@@ -78,7 +78,6 @@ export class DayoffTc029Data {
         row.requestId,
       );
 
-      if (mode === "saved")
         saveToDisk("DayoffTc029Data", {
           managerLogin: row.managerLogin,
           employeeLogin: row.employeeLogin,

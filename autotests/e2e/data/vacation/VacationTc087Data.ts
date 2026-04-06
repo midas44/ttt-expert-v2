@@ -122,7 +122,7 @@ export class VacationTc087Data {
         tokenOwnerName: nameRow.name,
       };
 
-      if (mode === "saved") saveToDisk("VacationTc087Data", args);
+      saveToDisk("VacationTc087Data", args);
       return new VacationTc087Data(
         args.tokenOwner,
         args.managerBLogin,

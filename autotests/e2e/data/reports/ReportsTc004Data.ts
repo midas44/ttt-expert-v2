@@ -88,7 +88,7 @@ export class ReportsTc004Data {
         closedDateLabel,
         closedDateIso,
       };
-      if (mode === "saved") saveToDisk("ReportsTc004Data", args);
+      saveToDisk("ReportsTc004Data", args);
       return new ReportsTc004Data(
         args.username,
         args.periodStart,

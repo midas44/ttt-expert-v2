@@ -37,3 +37,6 @@ autotests/node_modules/
 # Autotest execution results (reports, screenshots, traces, videos)
 autotests/playwright-report/
 autotests/test-results/
+
+# Test data run marker (temp file, not the YAML artifacts themselves)
+autotests/test-data/.current-run-id

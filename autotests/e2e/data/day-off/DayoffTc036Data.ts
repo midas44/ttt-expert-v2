@@ -122,7 +122,7 @@ export class DayoffTc036Data {
         approvedRequestIds: [created.requestId],
         approvedCountBefore: approvedCount,
       };
-      if (mode === "saved") saveToDisk("DayoffTc036Data", args);
+      saveToDisk("DayoffTc036Data", args);
       return new DayoffTc036Data(args);
     } finally {
       await db.close();

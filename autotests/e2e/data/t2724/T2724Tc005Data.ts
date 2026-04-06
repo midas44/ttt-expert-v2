@@ -62,7 +62,7 @@ export class T2724Tc005Data {
         projectName: proj.project_name,
         tagValue: `esc-test-${Date.now()}`,
       };
-      if (mode === "saved") saveToDisk("T2724Tc005Data", args);
+      saveToDisk("T2724Tc005Data", args);
       return new T2724Tc005Data(
         args.username,
         args.projectId,

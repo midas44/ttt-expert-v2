@@ -61,7 +61,6 @@ export class DayoffTc013Data {
         row.personal_date,
       );
 
-      if (mode === "saved")
         saveToDisk("DayoffTc013Data", {
           username: row.login,
           originalDate: row.original_date,

@@ -36,7 +36,7 @@ export class PlannerTc001Data {
     try {
       const emp = await findEnabledEmployee(db);
       const args: Tc001Args = { username: emp.login };
-      if (mode === "saved") saveToDisk("PlannerTc001Data", args);
+      saveToDisk("PlannerTc001Data", args);
       return new PlannerTc001Data(args.username);
     } finally {
       await db.close();
