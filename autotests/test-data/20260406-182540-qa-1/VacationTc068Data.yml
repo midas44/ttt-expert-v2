@@ -1,0 +1,10 @@
+className: VacationTc068Data
+runId: 20260406-182540-qa-1
+savedAt: "2026-04-06T18:29:26.739Z"
+args:
+  employeeLogin: pvaynmaster
+  employeeEmail: Pavel.Weinmeister@noveogroup.com
+  colleagueLogin: mpotter
+  colleagueEmail: Mikhail.Potter@noveogroup.com
+  startDate: "2026-09-14"
+  endDate: "2026-09-18"

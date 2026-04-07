@@ -1,0 +1,9 @@
+className: VacationTc049Data
+runId: 20260406-190917-qa-1
+savedAt: "2026-04-06T19:11:51.827Z"
+args:
+  username: pvaynmaster
+  newVacStartIso: "2027-01-18"
+  newVacEndIso: "2027-01-22"
+  rejectedVacStartIso: "2027-02-01"
+  rejectedVacEndIso: "2027-02-05"

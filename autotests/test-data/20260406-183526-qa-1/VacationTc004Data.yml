@@ -1,0 +1,9 @@
+className: VacationTc004Data
+runId: 20260406-183526-qa-1
+savedAt: "2026-04-06T18:37:18.168Z"
+args:
+  creatorLogin: dvovney
+  colleagueLogin: ebrysova
+  colleagueName: Ekaterina Brysova
+  startDateIso: "2026-05-11"
+  endDateIso: "2026-05-13"

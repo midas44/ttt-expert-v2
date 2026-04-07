@@ -1,0 +1,11 @@
+className: VacationTc020Data
+runId: 20260406-191734-qa-1
+savedAt: "2026-04-06T19:19:24.296Z"
+args:
+  employeeLogin: ltoussaint
+  employeeName: Loic Toussaint
+  managerLogin: pvaynmaster
+  altManagerLogin: katya
+  altManagerName: Ekaterina Ilnitskaya
+  startDateIso: "2026-07-20"
+  endDateIso: "2026-07-24"

@@ -1,0 +1,16 @@
+className: VacationTc060Data
+runId: 20260406-183526-qa-1
+savedAt: "2026-04-06T18:38:48.128Z"
+args:
+  username: vperevozchikov
+  yearlyBreakdown:
+    - year: 2025
+      days: 14
+    - year: 2026
+      days: 24
+    - year: 2027
+      days: 24
+  totalAvailableDays: 62
+  earliestYear: 2025
+  startDateIso: "2026-04-27"
+  endDateIso: "2026-05-01"

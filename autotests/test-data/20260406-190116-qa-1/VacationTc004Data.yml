@@ -1,0 +1,9 @@
+className: VacationTc004Data
+runId: 20260406-190116-qa-1
+savedAt: "2026-04-06T19:03:17.394Z"
+args:
+  creatorLogin: alsmirnov
+  colleagueLogin: okozub
+  colleagueName: Olga Kozub
+  startDateIso: "2026-05-11"
+  endDateIso: "2026-05-13"

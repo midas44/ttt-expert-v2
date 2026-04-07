@@ -1,0 +1,12 @@
+className: VacationTc084Data
+runId: 20260406-183944-stage
+savedAt: "2026-04-06T18:44:45.301Z"
+args:
+  employeeLogin: pvaynmaster
+  employeeEmail: Pavel.Weinmeister@noveogroup.com
+  startDate1: "2026-11-09"
+  endDate1: "2026-11-13"
+  startDate2: "2026-11-09"
+  endDate2: "2026-11-13"
+  officeId: "20"
+  calendarId: "1"

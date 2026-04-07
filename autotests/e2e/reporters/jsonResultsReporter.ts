@@ -75,15 +75,17 @@ function truncate(s: string, max: number): string {
   return s.length > max ? s.slice(0, max) + "..." : s;
 }
 
-function readConfigSafe(): { env: string; appUrl: string; testDataMode: string; runId: string } {
+function readConfigSafe(): { env: string; appUrl: string; testDataMode: string; runId: string; savedDataSet: string } {
   let env = "unknown";
   let appUrl = "";
   let testDataMode = "unknown";
   let runId = "";
+  let savedDataSet = "";
 
   try {
     const globalYml = readYaml(path.resolve(__dirname, "../config/global.yml"));
     testDataMode = readTestDataMode(globalYml["testDataMode"]);
+    savedDataSet = String(globalYml["savedDataSet"] ?? "");
   } catch { /* leave defaults */ }
 
   try {
@@ -100,7 +102,7 @@ function readConfigSafe(): { env: string; appUrl: string; testDataMode: string; 
     }
   } catch { /* leave empty */ }
 
-  return { env, appUrl, testDataMode, runId };
+  return { env, appUrl, testDataMode, runId, savedDataSet };
 }
 
 // ---------------------------------------------------------------------------
@@ -184,7 +186,9 @@ class JsonResultsReporter implements Reporter {
         env: config.env,
         appUrl: config.appUrl,
         testDataMode: config.testDataMode,
-        testDataRunId: config.runId,
+        testDataRunId: config.testDataMode === "saved" && config.savedDataSet
+          ? config.savedDataSet
+          : config.runId,
         runStatus: result.status,
         durationMs,
         totalTests: this.totalTests,

@@ -1,0 +1,9 @@
+className: VacationTc071Data
+runId: 20260406-183944-stage
+savedAt: "2026-04-06T18:44:27.228Z"
+args:
+  username: pvaynmaster
+  existingStartIso: "2026-10-26"
+  existingEndIso: "2026-10-30"
+  overlapStartInput: 28.10.2026
+  overlapEndInput: 04.11.2026

@@ -488,7 +488,8 @@ function generateHtml(
 <title>Test Traceability Matrix</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace; font-size: 13px; background: #0d1117; color: #c9d1d9; }
+  html { overflow-x: hidden; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace; font-size: 13px; background: #0d1117; color: #c9d1d9; max-width: 100vw; overflow-x: hidden; }
 
   .header { padding: 16px 24px; background: #161b22; border-bottom: 1px solid #30363d; display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
   .header h1 { font-size: 18px; color: #f0f6fc; }
@@ -505,7 +506,7 @@ function generateHtml(
   .tab.active { color: #f0f6fc; background: #1f6feb; border-color: #1f6feb; }
   .tab-sep { width: 1px; background: #30363d; margin: 2px 4px; }
 
-  .table-wrap { overflow-x: auto; padding: 0; }
+  .table-wrap { overflow-x: auto; padding: 0; width: 100vw; max-width: 100vw; }
   table { border-collapse: collapse; width: max-content; min-width: 100%; }
   th, td { padding: 6px 10px; border: 1px solid #21262d; white-space: nowrap; text-align: left; }
   th { background: #161b22; color: #8b949e; font-weight: 600; font-size: 11px; position: sticky; top: 0; z-index: 2; }

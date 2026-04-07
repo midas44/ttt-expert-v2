@@ -1,0 +1,12 @@
+className: VacationTc073Data
+runId: 20260406-180042-qa-1
+savedAt: "2026-04-06T18:05:48.822Z"
+args:
+  username: pvaynmaster
+  startDateIso: "2026-06-08"
+  endDateIso: "2026-06-12"
+  startInput: 08.06.2026
+  endInput: 12.06.2026
+  periodPattern: 8.*12.*Jun
+  availableDaysBefore: 19
+  vacationDays: 5

@@ -1,0 +1,9 @@
+className: VacationTc056Data
+runId: 20260406-190116-qa-1
+savedAt: "2026-04-06T19:04:05.637Z"
+args:
+  managerLogin: pvaynmaster
+  targetLogin: pdvukhrechensky
+  latinLastName: Dvukhrechensky
+  russianLastName: Двухреченский
+  targetDisplayName: Petr Dvukhrechensky

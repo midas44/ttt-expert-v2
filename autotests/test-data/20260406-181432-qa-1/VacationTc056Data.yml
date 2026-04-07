@@ -1,0 +1,9 @@
+className: VacationTc056Data
+runId: 20260406-181432-qa-1
+savedAt: "2026-04-06T18:17:55.084Z"
+args:
+  managerLogin: pvaynmaster
+  targetLogin: anisimov
+  latinLastName: Anisimov
+  russianLastName: Анисимов
+  targetDisplayName: Aleksey Anisimov

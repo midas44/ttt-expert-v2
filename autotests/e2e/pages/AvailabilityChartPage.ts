@@ -178,7 +178,7 @@ export class AvailabilityChartPage {
       } else {
         await this.clickNextMonth();
       }
-      await this.page.waitForTimeout(300);
+      await this.page.waitForTimeout(5000);
     }
   }
 

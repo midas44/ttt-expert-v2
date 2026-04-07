@@ -753,7 +753,7 @@ export class MyTasksPage {
   async toggleTaskPin(row: Locator): Promise<void> {
     const taskCell = row.locator("td").first();
     await taskCell.hover();
-    await this.page.waitForTimeout(500);
+    await this.page.waitForTimeout(5000);
     const pinBtn = await resolveFirstVisible(
       [
         taskCell.locator("[class*='task-pin']"),

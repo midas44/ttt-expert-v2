@@ -23,7 +23,7 @@ export class VacationDaysPage {
     await this.searchInput.click();
     await this.searchInput.fill("");
     await this.searchInput.pressSequentially(text, { delay: 50 });
-    await this.page.waitForTimeout(1500);
+    await this.page.waitForTimeout(5000);
     await this.page.waitForLoadState("networkidle");
   }
 

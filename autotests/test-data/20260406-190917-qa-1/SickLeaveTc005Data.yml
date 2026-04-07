@@ -1,0 +1,8 @@
+className: SickLeaveTc005Data
+runId: 20260406-190917-qa-1
+savedAt: "2026-04-06T19:10:28.355Z"
+args:
+  username: panda.lazy
+  managerLogin: ilnitsky
+  startDateIso: "2026-06-03"
+  endDateIso: "2026-06-03"

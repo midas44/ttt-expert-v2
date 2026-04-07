@@ -1,0 +1,14 @@
+className: VacationTc011Data
+runId: 20260406-192526-qa-1
+savedAt: "2026-04-06T19:27:19.448Z"
+args:
+  username: amelnikova
+  entries:
+    - year: 2024
+      days: 1
+    - year: 2025
+      days: 24
+    - year: 2026
+      days: 24
+    - year: 2027
+      days: 24

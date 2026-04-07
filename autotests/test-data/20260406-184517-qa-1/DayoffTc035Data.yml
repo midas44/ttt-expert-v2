@@ -1,0 +1,14 @@
+className: DayoffTc035Data
+runId: 20260406-184517-qa-1
+savedAt: "2026-04-06T18:46:05.212Z"
+args:
+  officeId: 2
+  employeeId: "1246"
+  employeeLogin: tdovgal
+  managerId: "94"
+  currentApprovePeriod: "2026-03-01"
+  currentReportPeriod: "2026-04-01"
+  affectedDate: "2026-03-09"
+  affectedRequestId: "3564"
+  unaffectedDate: "2026-05-11"
+  unaffectedRequestId: "3565"

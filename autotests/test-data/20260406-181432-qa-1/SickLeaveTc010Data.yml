@@ -1,0 +1,8 @@
+className: SickLeaveTc010Data
+runId: 20260406-181432-qa-1
+savedAt: "2026-04-06T18:15:56.661Z"
+args:
+  username: nhi.tran
+  managerLogin: juliet_nekhor
+  startDateIso: "2026-04-18"
+  endDateIso: "2026-04-21"
