@@ -1,0 +1,10 @@
+className: DayoffTc004Data
+runId: 20260407-193435-qa-1
+savedAt: "2026-04-07T19:34:36.776Z"
+args:
+  username: jramisch
+  originalDate: "2026-07-14"
+  currentPersonalDate: "2026-07-21"
+  newTargetDate: "2026-07-28"
+  requestId: "3587"
+  needsApiSetup: false

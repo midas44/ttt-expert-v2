@@ -1,0 +1,8 @@
+className: DayoffTc050Data
+runId: 20260407-195922-qa-1
+savedAt: "2026-04-07T20:01:59.828Z"
+args:
+  username: akuzmin
+  holiday2: "2026-06-12"
+  personalDate: "2026-05-18"
+  requestId: "3635"

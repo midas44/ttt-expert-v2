@@ -1,0 +1,8 @@
+className: SickLeaveTc002Data
+runId: 20260407-165905-qa-1
+savedAt: "2026-04-07T17:07:23.469Z"
+args:
+  username: dvoronina
+  managerLogin: olivier.morlet
+  startDateIso: "2026-05-27"
+  endDateIso: "2026-05-31"

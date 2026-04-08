@@ -1,0 +1,13 @@
+className: ReportsTc020Data
+runId: 20260407-205016-qa-1
+savedAt: "2026-04-07T20:57:40.413Z"
+args:
+  managerLogin: dergachev
+  employeeLogin: vmokhorova
+  projectName: Diabolocom-Java-ODC
+  taskName: "Diabolocom-Java-ODC / #PRD-312 PO tasks"
+  taskId: "521627"
+  date1Label: "06.04"
+  date1Iso: "2026-04-06"
+  date2Label: "08.04"
+  date2Iso: "2026-04-08"

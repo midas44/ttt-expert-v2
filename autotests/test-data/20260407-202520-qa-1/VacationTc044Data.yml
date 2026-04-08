@@ -1,0 +1,10 @@
+className: VacationTc044Data
+runId: 20260407-202520-qa-1
+savedAt: "2026-04-07T20:35:31.965Z"
+args:
+  username: okharchenko
+  availableDays: 1
+  longStartInput: 11.05.2026
+  longEndInput: 15.05.2026
+  shortStartInput: 11.05.2026
+  shortEndInput: 12.05.2026

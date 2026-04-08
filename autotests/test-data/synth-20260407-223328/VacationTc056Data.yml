@@ -1,0 +1,9 @@
+className: VacationTc056Data
+runId: 20260407-205016-qa-1
+savedAt: "2026-04-07T21:01:26.744Z"
+args:
+  managerLogin: pvaynmaster
+  targetLogin: dbalakhonov
+  latinLastName: Balakhonov
+  russianLastName: Балахонов
+  targetDisplayName: Dmitry Balakhonov

@@ -1,0 +1,6 @@
+className: DayoffTc008Data
+runId: 20260407-193435-qa-1
+savedAt: "2026-04-07T19:34:37.098Z"
+args:
+  username: rlee
+  expectedHolidayCount: 12

@@ -1,0 +1,7 @@
+className: ReportsTc005Data
+runId: 20260407-182029-qa-1
+savedAt: "2026-04-07T18:26:47.308Z"
+args:
+  username: dergachev
+  taskName: "#DEV-31540 [Data1][Reports][BE] Isolation - add reports isolation agent"
+  projectName: Diabolocom-Java-ODC

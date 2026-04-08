@@ -1,0 +1,7 @@
+className: ReportsTc005Data
+runId: 20260407-193435-qa-1
+savedAt: "2026-04-07T19:41:01.207Z"
+args:
+  username: shcherbakov
+  taskName: "#DEV-9460 [QA1][Mail][Threadbox] - Agent has 2 threads in working status"
+  projectName: Diabolocom-Java-ODC

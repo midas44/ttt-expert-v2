@@ -1,0 +1,14 @@
+className: DayoffTc036Data
+runId: 20260407-202520-qa-1
+savedAt: "2026-04-07T20:27:06.200Z"
+args:
+  employeeId: "990067"
+  employeeLogin: aritter
+  employeeName: Риттер Анна
+  originalOfficeId: "2"
+  originalOfficeName: Сатурн
+  targetOfficeId: "24"
+  targetOfficeName: Скорпион
+  approvedRequestIds:
+    - "3645"
+  approvedCountBefore: 3

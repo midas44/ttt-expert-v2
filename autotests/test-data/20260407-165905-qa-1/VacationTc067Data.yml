@@ -1,0 +1,9 @@
+className: VacationTc067Data
+runId: 20260407-165905-qa-1
+savedAt: "2026-04-07T17:11:57.926Z"
+args:
+  employeeLogin: pvaynmaster
+  employeeEmail: Pavel.Weinmeister@noveogroup.com
+  approverEmail: ivan.ilnitsky@noveogroup.com
+  startDate: "2026-06-15"
+  endDate: "2026-06-19"

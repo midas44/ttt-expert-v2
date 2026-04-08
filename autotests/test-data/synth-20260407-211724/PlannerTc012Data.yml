@@ -1,0 +1,10 @@
+className: PlannerTc012Data
+runId: 20260407-182029-qa-1
+savedAt: "2026-04-07T18:23:11.325Z"
+args:
+  username: cduy.nguyen
+  projectName: Diabolocom-Java-ODC
+  taskName: >-
+    Diabolocom-Java-ODC / #EV2-26787 [QA4][QA2] [Mail]/[Merge Threads] - Technical. To add unique data-test-ids for
+    merge threads pop-ups
+  daysBack: 0

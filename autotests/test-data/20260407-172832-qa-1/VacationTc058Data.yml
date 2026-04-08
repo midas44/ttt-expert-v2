@@ -1,0 +1,17 @@
+className: VacationTc058Data
+runId: 20260407-172832-qa-1
+savedAt: "2026-04-07T17:39:34.353Z"
+args:
+  username: pvaynmaster
+  setupSlots:
+    - start: "2026-07-06"
+      end: "2026-07-10"
+    - start: "2026-07-27"
+      end: "2026-07-31"
+    - start: "2026-08-17"
+      end: "2026-08-21"
+  uiSlot:
+    start: "2026-09-07"
+    end: "2026-09-11"
+  uiStartInput: 07.09.2026
+  uiEndInput: 11.09.2026

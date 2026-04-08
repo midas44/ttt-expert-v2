@@ -1,0 +1,8 @@
+className: VacationTc036Data
+runId: 20260407-182029-qa-1
+savedAt: "2026-04-07T18:30:00.204Z"
+args:
+  username: nshevtsova
+  availableDays: 5
+  startDateIso: "2026-06-08"
+  endDateIso: "2026-06-26"

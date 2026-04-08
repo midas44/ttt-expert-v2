@@ -1,0 +1,12 @@
+className: ReportsTc017Data
+runId: 20260407-190832-qa-1
+savedAt: "2026-04-07T19:15:37.330Z"
+args:
+  managerLogin: nmungalova
+  employeeLogin: zvezda
+  employeeName: Vladimir Zvezda
+  projectName: WiseMoGuest
+  taskName: WiseMoGuest / Mngt & Arch / Code review
+  taskId: "295943"
+  dateLabel: "07.04"
+  dateIso: "2026-04-07"

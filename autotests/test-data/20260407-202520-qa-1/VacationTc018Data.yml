@@ -1,0 +1,9 @@
+className: VacationTc018Data
+runId: 20260407-202520-qa-1
+savedAt: "2026-04-07T20:34:34.223Z"
+args:
+  employeeLogin: atushov
+  employeeName: Andrey Tushov
+  managerLogin: pvaynmaster
+  startDateIso: "2026-07-20"
+  endDateIso: "2026-07-24"

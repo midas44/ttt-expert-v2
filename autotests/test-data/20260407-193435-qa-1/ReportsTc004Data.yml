@@ -1,0 +1,9 @@
+className: ReportsTc004Data
+runId: 20260407-193435-qa-1
+savedAt: "2026-04-07T19:40:05.525Z"
+args:
+  username: sleonovich
+  periodStart: "2026-04-01"
+  taskName: Seagate-HomeCloud-ODC / Communication
+  closedDateLabel: "23.03"
+  closedDateIso: "2026-03-23"

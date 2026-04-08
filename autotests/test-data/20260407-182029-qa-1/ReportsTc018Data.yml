@@ -1,0 +1,11 @@
+className: ReportsTc018Data
+runId: 20260407-182029-qa-1
+savedAt: "2026-04-07T18:27:42.182Z"
+args:
+  managerLogin: nmungalova
+  employeeLogin: zvezda
+  projectName: WiseMoGuest
+  taskName: WiseMoGuest / Mngt & Arch / Prepare Redmine tickets
+  taskId: "449804"
+  dateLabel: "09.04"
+  dateIso: "2026-04-09"

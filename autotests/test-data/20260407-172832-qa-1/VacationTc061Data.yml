@@ -1,0 +1,11 @@
+className: VacationTc061Data
+runId: 20260407-172832-qa-1
+savedAt: "2026-04-07T17:39:47.642Z"
+args:
+  username: pvaynmaster
+  yearlyBreakdownBefore:
+    - year: 2027
+      days: 18
+  totalAvailableDays: 18
+  startDateIso: "2026-06-15"
+  endDateIso: "2026-06-19"

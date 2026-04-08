@@ -1,0 +1,6 @@
+className: DayoffTc007Data
+runId: 20260407-182029-qa-1
+savedAt: "2026-04-07T18:20:30.910Z"
+args:
+  username: soykin
+  expectedHolidayCount: 18

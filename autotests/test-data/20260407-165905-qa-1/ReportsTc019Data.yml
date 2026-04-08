@@ -1,0 +1,12 @@
+className: ReportsTc019Data
+runId: 20260407-165905-qa-1
+savedAt: "2026-04-07T17:07:07.464Z"
+args:
+  managerLogin: nmungalova
+  employeeLogin: zvezda
+  projectName: WiseMoGuest
+  taskName: WiseMoGuest / Mngt & Arch / RFC
+  taskDisplayName: Mngt & Arch / RFC
+  taskId: "380079"
+  dateLabel: "06.04"
+  dateIso: "2026-04-06"

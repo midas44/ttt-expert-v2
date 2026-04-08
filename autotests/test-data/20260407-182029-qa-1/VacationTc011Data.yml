@@ -1,0 +1,14 @@
+className: VacationTc011Data
+runId: 20260407-182029-qa-1
+savedAt: "2026-04-07T18:29:16.586Z"
+args:
+  username: hbukarev
+  entries:
+    - year: 2024
+      days: 16
+    - year: 2025
+      days: 24
+    - year: 2026
+      days: 24
+    - year: 2027
+      days: 24

@@ -1,0 +1,8 @@
+className: PlannerTc014Data
+runId: 20260407-165905-qa-1
+savedAt: "2026-04-07T17:02:11.655Z"
+args:
+  username: cduy.nguyen
+  projectName: Diabolocom-Java-ODC
+  taskName: "Diabolocom-Java-ODC / #DEV-65946 [QA2][sftp-server] Cannot download files in /omnichannel/scenario_variable_logs"
+  daysBack: 0

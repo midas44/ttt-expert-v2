@@ -1,0 +1,9 @@
+className: VacationTc004Data
+runId: 20260407-184513-qa-1
+savedAt: "2026-04-07T18:53:52.583Z"
+args:
+  creatorLogin: ntolstikov
+  colleagueLogin: jkim
+  colleagueName: Jung Myung Kim
+  startDateIso: "2026-06-01"
+  endDateIso: "2026-06-03"

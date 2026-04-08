@@ -1,0 +1,10 @@
+className: DayoffTc026Data
+runId: 20260407-165905-qa-1
+savedAt: "2026-04-07T17:00:11.565Z"
+args:
+  managerLogin: perekrest
+  employeeName: Зарубина Ольга
+  originalDate: "2026-12-31"
+  personalDate: "2027-01-07"
+  requestId: "3502"
+  optionalApproverName: Николай Шумаков

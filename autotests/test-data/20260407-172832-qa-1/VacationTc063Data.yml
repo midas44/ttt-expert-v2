@@ -1,0 +1,10 @@
+className: VacationTc063Data
+runId: 20260407-172832-qa-1
+savedAt: "2026-04-07T17:39:49.947Z"
+args:
+  adminUsername: pvaynmaster
+  targetEmployeeLogin: nabderrahim
+  targetEmployeeLastName: Abderrahim
+  targetEmployeeFirstName: Nadim
+  currentDays: 22
+  currentYear: 2026

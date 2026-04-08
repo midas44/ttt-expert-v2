@@ -1,0 +1,12 @@
+className: DayoffTc033Data
+runId: 20260407-184513-qa-1
+savedAt: "2026-04-07T18:46:23.550Z"
+args:
+  requestId: "3536"
+  employeeId: "990067"
+  employeeLogin: aritter
+  employeeName: Риттер Анна
+  originalDate: "2026-12-31"
+  personalDate: "2027-01-07"
+  calendarId: "1"
+  officeId: "2"

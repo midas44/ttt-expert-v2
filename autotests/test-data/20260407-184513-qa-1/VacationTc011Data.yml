@@ -1,0 +1,10 @@
+className: VacationTc011Data
+runId: 20260407-184513-qa-1
+savedAt: "2026-04-07T18:54:03.238Z"
+args:
+  username: eperov
+  entries:
+    - year: 2026
+      days: 17
+    - year: 2027
+      days: 24

@@ -1,0 +1,7 @@
+className: VacationTc008Data
+runId: 20260407-175312-qa-1
+savedAt: "2026-04-07T18:02:04.069Z"
+args:
+  username: pvaynmaster
+  startDateIso: "2026-07-20"
+  endDateIso: "2026-07-24"

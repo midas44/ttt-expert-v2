@@ -1,0 +1,13 @@
+className: ReportsTc020Data
+runId: 20260407-172832-qa-1
+savedAt: "2026-04-07T17:36:10.216Z"
+args:
+  managerLogin: nmungalova
+  employeeLogin: aryabchenko
+  projectName: WiseMoGuest
+  taskName: "WiseMoGuest / QA: Android Host"
+  taskId: "25343"
+  date1Label: "06.04"
+  date1Iso: "2026-04-06"
+  date2Label: "08.04"
+  date2Iso: "2026-04-08"

@@ -1,0 +1,8 @@
+className: ReportsTc001Data
+runId: 20260407-175312-qa-1
+savedAt: "2026-04-07T17:57:19.739Z"
+args:
+  username: perekrest
+  taskName: Обсуждение текущих вопросов с менеджерами
+  dateLabel: "08.04"
+  dateIso: "2026-04-08"

@@ -1,0 +1,9 @@
+className: VacationTc099Data
+runId: 20260407-182029-qa-1
+savedAt: "2026-04-07T18:31:30.074Z"
+args:
+  vacationsUrl: https://ttt-qa-1.noveogroup.com/api/vacation/v1/vacations
+  login: pvaynmaster
+  startDate: "2026-07-20"
+  endDate: "2026-07-24"
+  paymentMonth: "2026-07-01"

@@ -1,0 +1,11 @@
+className: VacationTc072Data
+runId: 20260407-172832-qa-1
+savedAt: "2026-04-07T17:39:56.403Z"
+args:
+  username: pvaynmaster
+  initialStartIso: "2026-07-06"
+  initialEndIso: "2026-07-10"
+  newStartIso: "2026-08-03"
+  newEndIso: "2026-08-07"
+  initialPaymentMonth: 01.07.2026
+  expectedPaymentMonth: 01.08.2026

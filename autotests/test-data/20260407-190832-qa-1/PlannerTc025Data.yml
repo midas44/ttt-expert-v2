@@ -1,0 +1,9 @@
+className: PlannerTc025Data
+runId: 20260407-190832-qa-1
+savedAt: "2026-04-07T19:12:50.939Z"
+args:
+  username: amalcev
+  projectName: DirectEnergie-ODC
+  employeeAName: Javokhir Sherbaev
+  employeeBName: Tatiana Dovgal
+  daysBack: 12

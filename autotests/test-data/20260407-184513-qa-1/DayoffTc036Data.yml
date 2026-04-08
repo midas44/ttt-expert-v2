@@ -1,0 +1,14 @@
+className: DayoffTc036Data
+runId: 20260407-184513-qa-1
+savedAt: "2026-04-07T18:46:37.995Z"
+args:
+  employeeId: "1190"
+  employeeLogin: nermakova
+  employeeName: Ермакова Наталья
+  originalOfficeId: "4"
+  originalOfficeName: Юпитер
+  targetOfficeId: "29"
+  targetOfficeName: Плутон (РФ)
+  approvedRequestIds:
+    - "3579"
+  approvedCountBefore: 2

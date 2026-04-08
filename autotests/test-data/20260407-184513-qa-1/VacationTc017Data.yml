@@ -1,0 +1,9 @@
+className: VacationTc017Data
+runId: 20260407-184513-qa-1
+savedAt: "2026-04-07T18:54:07.181Z"
+args:
+  employeeLogin: imalakhovskaia
+  employeeName: Irina Malakhovskaia
+  managerLogin: pvaynmaster
+  startDateIso: "2026-07-13"
+  endDateIso: "2026-07-17"

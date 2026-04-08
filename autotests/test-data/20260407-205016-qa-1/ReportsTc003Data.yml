@@ -1,0 +1,8 @@
+className: ReportsTc003Data
+runId: 20260407-205016-qa-1
+savedAt: "2026-04-07T20:54:59.951Z"
+args:
+  username: akuzmin
+  taskName: MAG-1052 Block checkout if only PLV at 0€ in the basket
+  dateLabel: "09.04"
+  dateIso: "2026-04-09"

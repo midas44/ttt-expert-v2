@@ -1,0 +1,11 @@
+className: ReportsTc016Data
+runId: 20260407-193435-qa-1
+savedAt: "2026-04-07T19:41:27.041Z"
+args:
+  managerLogin: dergachev
+  employeeLogin: shcherbakov
+  projectName: Diabolocom-Java-ODC
+  taskName: "Diabolocom-Java-ODC / #DEV-4191 Daily /\_Retrospective Recurring meetings"
+  taskId: "485578"
+  dateLabel: "08.04"
+  dateIso: "2026-04-08"

@@ -1,0 +1,16 @@
+className: VacationTc045Data
+runId: 20260407-165905-qa-1
+savedAt: "2026-04-07T17:10:53.384Z"
+args:
+  username: pvaynmaster
+  availableDays: 15
+  setupWeeks:
+    - start: "2026-05-11"
+      end: "2026-05-15"
+    - start: "2026-05-18"
+      end: "2026-05-22"
+  uiWeek:
+    start: "2026-05-25"
+    end: "2026-05-29"
+  uiStartInput: 25.05.2026
+  uiEndInput: 29.05.2026

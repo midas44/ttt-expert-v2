@@ -1,0 +1,8 @@
+className: PlannerTc016Data
+runId: 20260407-184513-qa-1
+savedAt: "2026-04-07T18:48:38.852Z"
+args:
+  username: diborisov
+  projectName: Diabolocom-Java-ODC
+  taskName: "Diabolocom-Java-ODC / #DEV-58741 [Auxiliary][BE][Public-Api-Admin] Remove unused non-isolated endpoints"
+  daysBack: 0

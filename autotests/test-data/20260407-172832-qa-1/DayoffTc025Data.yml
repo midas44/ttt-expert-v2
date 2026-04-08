@@ -1,0 +1,10 @@
+className: DayoffTc025Data
+runId: 20260407-172832-qa-1
+savedAt: "2026-04-07T17:29:27.220Z"
+args:
+  managerLogin: perekrest
+  employeeName: Ермакова Наталья
+  originalDate: "2026-12-31"
+  personalDate: "2027-01-07"
+  requestId: "3518"
+  optionalApproverName: Николай Герасимов

@@ -1,0 +1,12 @@
+className: VacationTc011Data
+runId: 20260407-195922-qa-1
+savedAt: "2026-04-07T20:10:04.634Z"
+args:
+  username: istarodumov
+  entries:
+    - year: 2025
+      days: 5
+    - year: 2026
+      days: 24
+    - year: 2027
+      days: 24

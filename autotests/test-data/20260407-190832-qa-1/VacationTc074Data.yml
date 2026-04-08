@@ -1,0 +1,12 @@
+className: VacationTc074Data
+runId: 20260407-190832-qa-1
+savedAt: "2026-04-07T19:19:32.388Z"
+args:
+  employeeLogin: msorokin
+  employeeName: Maxim Sorokin
+  managerLogin: pvaynmaster
+  altManagerLogin: ngerasimov
+  altManagerName: Nikolay Gerasimov
+  startDateIso: "2026-05-25"
+  endDateIso: "2026-05-29"
+  periodPattern: 25.*29.*May

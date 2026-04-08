@@ -1,0 +1,9 @@
+className: DayoffTc010Data
+runId: 20260407-195922-qa-1
+savedAt: "2026-04-07T19:59:41.001Z"
+args:
+  username: ishalygin
+  originalDate: "2025-03-03"
+  personalDate: "2025-07-17"
+  requestId: "1628"
+  needsApiSetup: false

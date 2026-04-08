@@ -1,0 +1,9 @@
+className: VacationTc018Data
+runId: 20260407-190832-qa-1
+savedAt: "2026-04-07T19:17:55.377Z"
+args:
+  employeeLogin: atyvonyak
+  employeeName: Aleksandr Tyvonyak
+  managerLogin: pvaynmaster
+  startDateIso: "2026-07-20"
+  endDateIso: "2026-07-24"

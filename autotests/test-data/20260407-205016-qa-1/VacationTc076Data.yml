@@ -1,0 +1,26 @@
+className: VacationTc076Data
+runId: 20260407-205016-qa-1
+savedAt: "2026-04-07T21:01:59.622Z"
+args:
+  mismatched:
+    - login: rnikolaev
+      backendLastDate: "2026-04-10"
+      vacationLastDate: null
+    - login: abpopov
+      backendLastDate: "2026-03-31"
+      vacationLastDate: null
+    - login: ebryndina
+      backendLastDate: "2026-03-24"
+      vacationLastDate: null
+    - login: talekseeva
+      backendLastDate: null
+      vacationLastDate: "2021-12-30"
+    - login: oberezka
+      backendLastDate: null
+      vacationLastDate: "2022-04-01"
+    - login: azavyalov
+      backendLastDate: null
+      vacationLastDate: "2019-11-22"
+    - login: egrafeeva
+      backendLastDate: null
+      vacationLastDate: "2019-03-06"

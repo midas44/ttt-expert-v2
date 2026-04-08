@@ -1,0 +1,10 @@
+className: PlannerTc015Data
+runId: 20260407-202520-qa-1
+savedAt: "2026-04-07T20:28:53.518Z"
+args:
+  username: cduy.nguyen
+  projectName: Diabolocom-Java-ODC
+  taskName: >-
+    Diabolocom-Java-ODC / #DEV-65450 Start/Pause icons are missing on the isolated report when FT 'sftp_data_isolation'
+    is off
+  daysBack: 0

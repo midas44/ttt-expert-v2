@@ -1,0 +1,14 @@
+className: DayoffTc036Data
+runId: 20260407-195922-qa-1
+savedAt: "2026-04-07T20:01:40.112Z"
+args:
+  employeeId: "1450"
+  employeeLogin: adudkina
+  employeeName: Дудкина Анастасия
+  originalOfficeId: "4"
+  originalOfficeName: Юпитер
+  targetOfficeId: "20"
+  targetOfficeName: Персей
+  approvedRequestIds:
+    - "3630"
+  approvedCountBefore: 3

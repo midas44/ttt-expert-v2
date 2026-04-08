@@ -1,0 +1,11 @@
+className: DayoffTc069Data
+runId: 20260407-195922-qa-1
+savedAt: "2026-04-07T20:02:00.979Z"
+args:
+  managerLogin: perekrest
+  employeeLogin: omanoshkina
+  employeeName: Маношкина Оксана
+  employeeEmail: Oksana.Manoshkina@noveogroup.com
+  requestId: "3636"
+  originalDate: "2026-06-12"
+  personalDate: "2026-06-19"

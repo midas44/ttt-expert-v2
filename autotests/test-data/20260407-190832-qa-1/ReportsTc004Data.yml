@@ -1,0 +1,9 @@
+className: ReportsTc004Data
+runId: 20260407-190832-qa-1
+savedAt: "2026-04-07T19:14:29.678Z"
+args:
+  username: anazarov
+  periodStart: "2026-04-01"
+  taskName: Fondation du Patrimoine / Testing / non-regression
+  closedDateLabel: "23.03"
+  closedDateIso: "2026-03-23"

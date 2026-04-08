@@ -1,0 +1,9 @@
+className: ReportsTc012Data
+runId: 20260407-190832-qa-1
+savedAt: "2026-04-07T19:15:17.849Z"
+args:
+  username: polly
+  taskName: Работа с документами по подрядчикам
+  taskId: "73739"
+  dateLabel: "08.04"
+  dateIso: "2026-04-08"

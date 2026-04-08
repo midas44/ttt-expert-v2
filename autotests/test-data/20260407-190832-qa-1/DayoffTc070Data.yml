@@ -1,0 +1,11 @@
+className: DayoffTc070Data
+runId: 20260407-190832-qa-1
+savedAt: "2026-04-07T19:10:19.106Z"
+args:
+  managerLogin: perekrest
+  employeeLogin: adudkina
+  employeeName: Дудкина Анастасия
+  employeeEmail: Anastasiya.Dudkina@noveogroup.com
+  requestId: "3603"
+  originalDate: "2026-05-11"
+  personalDate: "2026-05-18"

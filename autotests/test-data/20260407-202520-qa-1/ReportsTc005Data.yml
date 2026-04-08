@@ -1,0 +1,7 @@
+className: ReportsTc005Data
+runId: 20260407-202520-qa-1
+savedAt: "2026-04-07T20:32:08.224Z"
+args:
+  username: lsimonyan
+  taskName: "#DEV-13050 [Mail][Full thread in reply] - Add line break after thread history added"
+  projectName: Diabolocom-Java-ODC

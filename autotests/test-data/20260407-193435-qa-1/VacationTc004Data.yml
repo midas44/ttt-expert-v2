@@ -1,0 +1,9 @@
+className: VacationTc004Data
+runId: 20260407-193435-qa-1
+savedAt: "2026-04-07T19:43:10.822Z"
+args:
+  creatorLogin: egrafeeva
+  colleagueLogin: mvedencov
+  colleagueName: Matvey Vedencov
+  startDateIso: "2026-05-25"
+  endDateIso: "2026-05-27"

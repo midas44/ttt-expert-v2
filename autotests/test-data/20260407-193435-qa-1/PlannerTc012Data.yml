@@ -1,0 +1,10 @@
+className: PlannerTc012Data
+runId: 20260407-193435-qa-1
+savedAt: "2026-04-07T19:37:16.329Z"
+args:
+  username: diborisov
+  projectName: Diabolocom-Java-ODC
+  taskName: >-
+    Diabolocom-Java-ODC / #EV2-30687 [Support] [Regression] Profile/ Mute contact button is not available on AI even if
+    the permission is activated
+  daysBack: 0

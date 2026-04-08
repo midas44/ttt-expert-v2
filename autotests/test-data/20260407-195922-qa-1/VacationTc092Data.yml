@@ -1,0 +1,5 @@
+className: VacationTc092Data
+runId: 20260407-195922-qa-1
+savedAt: "2026-04-07T20:12:13.547Z"
+args:
+  invalidIdUrl: https://ttt-qa-1.noveogroup.com/api/vacation/v1/vacations/abc

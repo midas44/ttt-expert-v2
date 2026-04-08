@@ -1,0 +1,10 @@
+className: DayoffTc018Data
+runId: 20260407-195922-qa-1
+savedAt: "2026-04-07T19:59:54.431Z"
+args:
+  managerLogin: perekrest
+  employeeLogin: ogribanova
+  employeeName: Грибанова Ольга
+  originalDate: "2026-05-11"
+  personalDate: "2026-05-18"
+  requestId: "3622"

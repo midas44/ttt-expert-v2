@@ -1,0 +1,8 @@
+className: PlannerTc016Data
+runId: 20260407-175312-qa-1
+savedAt: "2026-04-07T17:56:06.436Z"
+args:
+  username: cduy.nguyen
+  projectName: Diabolocom-Java-ODC
+  taskName: "Diabolocom-Java-ODC / #DEV-62095 [Contact card][BE] Strange search behavior when entering query with spaces"
+  daysBack: 0

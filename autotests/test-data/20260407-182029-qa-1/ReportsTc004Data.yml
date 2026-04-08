@@ -1,0 +1,9 @@
+className: ReportsTc004Data
+runId: 20260407-182029-qa-1
+savedAt: "2026-04-07T18:25:54.262Z"
+args:
+  username: alebedeva
+  periodStart: "2026-04-01"
+  taskName: GroupS-Flexyoo-.NET-ODC / Analytics / Dashboard functionalities
+  closedDateLabel: "23.03"
+  closedDateIso: "2026-03-23"

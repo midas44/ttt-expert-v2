@@ -1,0 +1,7 @@
+className: ReportsTc005Data
+runId: 20260407-184513-qa-1
+savedAt: "2026-04-07T18:51:22.143Z"
+args:
+  username: tanikeeva
+  taskName: "Total Direct Energie iOS / #TDEIOS-10525 [Consents][Deeplinks] Link doesn't open the target screen"
+  projectName: DirectEnergie-ODC
