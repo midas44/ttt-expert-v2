@@ -24,7 +24,7 @@ __pycache__/
 # Playwright MCP logs
 .playwright-mcp/
 
-# MCP tools cache (swagger specs)
+# MCP tools swagger spec cache
 .claude/mcp-tools/cache/
 
 # Exploration artefacts (screenshots, PDFs, downloads)
