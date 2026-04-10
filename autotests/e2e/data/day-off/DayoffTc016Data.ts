@@ -65,7 +65,6 @@ export class DayoffTc016Data {
         row.workingWeekendDate,
         row.workingWeekendDow,
       );
-      if (mode === "saved")
         saveToDisk("DayoffTc016Data", {
           username: row.login,
           holidayDate: row.holidayDate,

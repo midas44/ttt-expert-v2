@@ -1,0 +1,14 @@
+className: DayoffTc036Data
+runId: 20260407-205016-qa-1
+savedAt: "2026-04-07T20:51:53.795Z"
+args:
+  employeeId: "238"
+  employeeLogin: ogribanova
+  employeeName: Грибанова Ольга
+  originalOfficeId: "2"
+  originalOfficeName: Сатурн
+  targetOfficeId: "21"
+  targetOfficeName: Пегас
+  approvedRequestIds:
+    - "3664"
+  approvedCountBefore: 2

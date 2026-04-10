@@ -90,7 +90,8 @@ autonomy:
   - A module name: `"vacation"` — single module
   - A comma-separated list: `"vacation, statistics"` — multiple modules
   - A GitLab ticket number: `"3404"` — single ticket (pure digits = ticket)
-  - Mixed: `"vacation, 3404, 3405"` — modules and tickets together
+  - A collection: `"collection:absences"` — curated test collection (prefix `collection:` is mandatory)
+  - Mixed: `"vacation, 3404, 3405"` — modules and tickets together (collections cannot be mixed)
   Phase A: only investigate those modules/tickets. Phase B: only generate XLSX for those. Phase C uses `autotest.scope` independently (same format). When scope is set, skip all items not in the list.
 - **Ticket scope normalization:** Any scope entry that is pure digits is a GitLab ticket number. It is normalized to `t<number>` internally (e.g., `3404` → `t3404`). All derived artifacts use the `t<number>` prefix: test IDs `TC-T3404-001`, directories `t3404/`, manifest keys `t3404`. See §10.1 for the full ticket protocol.
 - Check `session.delay_minutes` — if previous session briefing timestamp is less than this many minutes ago:
@@ -547,6 +548,8 @@ Update `_KNOWLEDGE_COVERAGE.md` comprehensively, query module_health for gaps.
 
 **Phase transitions when scope is a specific module or ticket (not `"all"`):** When `auto_phase_transition: true`, the agent MAY auto-transition for both module and ticket scope, provided the minimum depth requirements below are met. The agent must still log a readiness report to `_SESSION_BRIEFING.md` with evidence of depth (word counts, tickets mined, methods used) before each transition. If `auto_phase_transition: false`, all transitions require human approval — set `autonomy.stop: true` and wait for review.
 
+**Mixed scope** (e.g., `scope: "vacation, 3404, sick-leave"`): Scope can contain both module names and ticket numbers in any combination. Each item is processed according to its type — modules follow the module protocol, tickets (pure digits → `t<number>`) follow §10.1. Before transitioning phases, ALL items in scope must meet the depth requirements. Do not transition just because one item is ready — wait until every module and every ticket in the list has been sufficiently investigated (Phase A) or documented (Phase B). Generate separate XLSX workbooks and separate autotest directories for each scope item.
+
 When `phase.scope` is `"all"` (global sweep), the original auto-transition rules apply:
 - **hybrid mode**: Present coverage report to human with Phase B readiness recommendation.
 - **full mode** (with `auto_phase_transition: true`): When coverage >= `thresholds.knowledge_coverage_target` AND no coverage_override is active (value is -1 or field absent), automatically update `config.yaml` to set `phase.current: "generation"` and `phase.generation_allowed: true`. Log the transition decision to `_SESSION_BRIEFING.md`. **Reset vault control files** (see Phase Reset Protocol below).
@@ -855,7 +858,10 @@ Playwright API
 - Determine next test cases to generate
 
 **2. Test Case Selection:**
-- **Scope filter:** If `autotest.scope` is not `"all"`, restrict to the specified module(s) only. Accepts a single name (`"vacation"`) or comma-separated list (`"vacation, statistics"`). When set to `"all"`, iterate through modules in `autotest.priority_order`.
+- **Scope filter:** If `autotest.scope` is not `"all"`, restrict to the specified scope. Accepts:
+  - A single module name: `"vacation"` or comma-separated list: `"vacation, statistics"`
+  - A collection: `"collection:<name>"` (e.g., `"collection:absences"`) — see **Collection scope protocol** below
+  - When set to `"all"`, iterate through modules in `autotest.priority_order`.
 - Follow `autotest.priority_order` (modules) × `autotest.type_priority` (UI first, then hybrid)
 - Skip test cases where `automation_status` is not `pending`
 - Skip test IDs matching `autotest.skip_patterns`
@@ -1023,6 +1029,33 @@ Compare against the manifest total for those modules. If covered >= manifest tot
 - **Cleanup:** Tests that create data (vacations, tasks, reports) MUST include cleanup steps (delete the created entity, logout)
 - **No production data modification:** Never generate tests that modify real calendar events, employee records, or accounting data without cleanup
 - **Selector fallback:** When uncertain about a selector, use multi-strategy fallback resolution (`resolveFirstVisible()` from `e2e/utils/locatorResolver.ts`)
+
+### Curated Test Collections
+
+A **Curated Test Collection** groups test cases from multiple modules into a single runnable suite via a shared Playwright tag (`@col-<name>`). Collections enable cross-cutting test execution without duplicating specs.
+
+**Collection XLSX:** `test-docs/collections/<name>/<name>.xlsx` with a `COL-<name>` sheet (not `TS-`). Columns: test_id, source_module, source_suite, title, inclusion_reason, priority_override. The `COL-` prefix ensures `parse_xlsx.py` ignores these workbooks.
+
+**Processing:** `python3 autotests/scripts/process_collection.py --collection <name>` resolves each referenced TC against the manifest, injects `@col-<name>` tag into existing specs, and reports missing specs for generation. The script is idempotent.
+
+**Collection as scope:** Set `autotest.scope: "collection:<name>"` in config.yaml (e.g., `"collection:absences"`). The `collection:` prefix is **mandatory** — without it, the scope will be interpreted as a module name.
+
+**Collection scope protocol** (when `autotest.scope` starts with `collection:`):
+1. Extract collection name: `"collection:absences"` → `absences`
+2. Run: `python3 autotests/scripts/process_collection.py --collection <name>`
+3. Read the report JSON at `autotests/manifest/collection-<name>.json`
+4. The report contains the **exact set of test cases** to work on:
+   - `"action": "tag_already_present"` or `"tag_added"` → spec exists, skip (already automated)
+   - `"action": "needs_generation"` → generate this spec using the standard autotest-generator pipeline, adding `@col-<name>` tag alongside `@regress @<module>`
+5. Generate up to `max_tests_per_session` specs from the `needs_generation` list
+6. After generating, re-run `process_collection.py` to inject tags and update the report
+7. Track progress: count `needs_generation` remaining vs total. When 0 remain, scope is complete — set `autonomy.stop: true`
+
+**CRITICAL:** When scope is `collection:*`, work **ONLY** on test cases listed in the collection report. Do NOT expand to the full module or interpret the collection name semantically. The collection XLSX at `test-docs/collections/<name>/<name>.xlsx` is the sole source of truth for which TCs are in scope.
+
+**Running:** `npx playwright test --grep "@col-<name>" --project=chrome-headless`
+
+**Skill:** `collection-generator` — full workflow for creating and processing collections.
 
 ### Phase Transition to Phase C
 

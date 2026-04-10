@@ -1,0 +1,9 @@
+className: VacationTc056Data
+runId: 20260406-182540-qa-1
+savedAt: "2026-04-06T18:29:05.627Z"
+args:
+  managerLogin: pvaynmaster
+  targetLogin: aprokhorov
+  latinLastName: Prokhorov
+  russianLastName: Прохоров
+  targetDisplayName: Artem Prokhorov

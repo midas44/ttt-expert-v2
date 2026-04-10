@@ -1,0 +1,14 @@
+className: DayoffTc036Data
+runId: 20260407-193435-qa-1
+savedAt: "2026-04-07T19:36:13.052Z"
+args:
+  employeeId: "607"
+  employeeLogin: alexander.il
+  employeeName: Ильницкий Александр
+  originalOfficeId: "2"
+  originalOfficeName: Сатурн
+  targetOfficeId: "28"
+  targetOfficeName: Уран (РФ)
+  approvedRequestIds:
+    - "3613"
+  approvedCountBefore: 3

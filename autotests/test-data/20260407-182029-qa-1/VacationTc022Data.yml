@@ -1,0 +1,11 @@
+className: VacationTc022Data
+runId: 20260407-182029-qa-1
+savedAt: "2026-04-07T18:29:34.176Z"
+args:
+  vacationOwner: pvaynmaster
+  vacationOwnerName: Pavel Weinmeister
+  optionalApproverLogin: gprikhodko
+  optionalApproverName: Galina Prikhodko
+  startDateIso: "2026-07-20"
+  endDateIso: "2026-07-24"
+  newEndDateIso: "2026-07-31"

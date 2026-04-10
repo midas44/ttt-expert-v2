@@ -1,0 +1,11 @@
+className: ReportsTc009Data
+runId: 20260407-184513-qa-1
+savedAt: "2026-04-07T18:51:54.827Z"
+args:
+  username: ybersenev
+  task1Name: Performance review
+  task2Name: Performance review / feedback
+  mondayLabel: "06.04"
+  mondayIso: "2026-04-06"
+  tuesdayLabel: "07.04"
+  tuesdayIso: "2026-04-07"

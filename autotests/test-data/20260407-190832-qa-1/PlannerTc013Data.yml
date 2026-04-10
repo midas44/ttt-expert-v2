@@ -1,0 +1,8 @@
+className: PlannerTc013Data
+runId: 20260407-190832-qa-1
+savedAt: "2026-04-07T19:11:35.870Z"
+args:
+  username: diborisov
+  projectName: Diabolocom-Java-ODC
+  taskName: "Diabolocom-Java-ODC / #DEV-61279 [API-gateway][Account] Fetch user data from account service after verification"
+  daysBack: 0

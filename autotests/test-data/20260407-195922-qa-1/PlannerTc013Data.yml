@@ -1,0 +1,8 @@
+className: PlannerTc013Data
+runId: 20260407-195922-qa-1
+savedAt: "2026-04-07T20:03:18.532Z"
+args:
+  username: cduy.nguyen
+  projectName: Diabolocom-Java-ODC
+  taskName: "Diabolocom-Java-ODC / #DEV-62014 [sftp-report] scheduler for isolated report request"
+  daysBack: 0

@@ -111,66 +111,80 @@ test("TC-VAC-022: Approval resets on date edit @regress @vacation", async ({
     await oaLogout.runViaDirectUrl();
     await globalConfig.delay();
 
-    // ── Phase 2: Owner logs in and edits vacation dates ──
-    const ownerLogin = new LoginFixture(
-      page,
-      tttConfig,
-      data.vacationOwner,
-      globalConfig,
-    );
-    const ownerLogout = new LogoutFixture(page, tttConfig, globalConfig);
+    // ── Phase 2: Owner logs in using a NEW browser context ──
+    // CAS SSO session persists in the same context, so we need isolation.
+    const ownerContext = await page.context().browser()!.newContext();
+    const ownerPage = await ownerContext.newPage();
+    await globalConfig.applyViewport(ownerPage);
 
-    await ownerLogin.run();
-    const mainPageOwner = new MainPage(page);
-    if ((await mainPageOwner.getCurrentLanguage()) !== "EN") {
-      await mainPageOwner.setLanguage("EN");
-      await globalConfig.delay();
-    }
-
-    await page.goto(`${tttConfig.appUrl}/vacation/my`, {
-      waitUntil: "domcontentloaded",
-    });
-    const vacationsPage = new MyVacationsPage(page);
-    await vacationsPage.waitForReady();
-
-    // Find and edit the vacation
-    await vacationsPage.waitForVacationRow(data.periodPattern);
-    const dialog = await vacationsPage.openEditDialog(data.periodPattern);
-    await dialog.fillVacationPeriod(data.startInput, data.newEndInput);
-    await globalConfig.delay();
-    await verification.captureStep(testInfo, "edit-dialog-new-dates");
-
-    await dialog.submit();
-    await dialog
-      .root()
-      .waitFor({ state: "detached", timeout: 15_000 })
-      .catch(() => {});
-    await globalConfig.delay();
-
-    // Verify updated row appears
-    const updatedRow = await vacationsPage.waitForVacationRow(
-      data.newPeriodPattern,
-    );
-    await expect(updatedRow.first()).toBeVisible();
-    await verification.captureStep(testInfo, "vacation-dates-edited");
-
-    // DB-CHECK: vacation_approval.status should reset to ASKED
-    const db2 = new DbClient(tttConfig);
     try {
-      const resetRow = await db2.queryOne<{ status: string }>(
-        `SELECT va.status
-         FROM ttt_vacation.vacation_approval va
-         JOIN ttt_vacation.employee oa ON va.employee = oa.id
-         WHERE va.vacation = $1
-           AND oa.login = $2`,
-        [vacationId, data.optionalApproverLogin],
+      const ownerLogin = new LoginFixture(
+        ownerPage,
+        tttConfig,
+        data.vacationOwner,
+        globalConfig,
       );
-      expect(resetRow.status).toBe("ASKED");
-    } finally {
-      await db2.close();
-    }
+      const ownerVerification = new VerificationFixture(
+        ownerPage,
+        globalConfig,
+      );
+      const ownerLogout = new LogoutFixture(ownerPage, tttConfig, globalConfig);
 
-    await ownerLogout.runViaDirectUrl();
+      await ownerLogin.run();
+      const mainPageOwner = new MainPage(ownerPage);
+      if ((await mainPageOwner.getCurrentLanguage()) !== "EN") {
+        await mainPageOwner.setLanguage("EN");
+        await globalConfig.delay();
+      }
+
+      await ownerPage.goto(`${tttConfig.appUrl}/vacation/my`, {
+        waitUntil: "domcontentloaded",
+      });
+      const vacationsPage = new MyVacationsPage(ownerPage);
+      await vacationsPage.waitForReady();
+
+      // Find and edit the vacation
+      await vacationsPage.waitForVacationRow(data.periodPattern);
+      const dialog = await vacationsPage.openEditDialog(data.periodPattern);
+      await dialog.fillVacationPeriod(data.startInput, data.newEndInput);
+      await globalConfig.delay();
+      await ownerVerification.captureStep(testInfo, "edit-dialog-new-dates");
+
+      await dialog.submit();
+      await dialog
+        .root()
+        .waitFor({ state: "detached", timeout: 15_000 })
+        .catch(() => {});
+      await globalConfig.delay();
+
+      // Verify updated row appears
+      const updatedRow = await vacationsPage.waitForVacationRow(
+        data.newPeriodPattern,
+      );
+      await expect(updatedRow.first()).toBeVisible();
+      await ownerVerification.captureStep(testInfo, "vacation-dates-edited");
+
+      // DB-CHECK: vacation_approval.status should reset to ASKED
+      const db2 = new DbClient(tttConfig);
+      try {
+        const resetRow = await db2.queryOne<{ status: string }>(
+          `SELECT va.status
+           FROM ttt_vacation.vacation_approval va
+           JOIN ttt_vacation.employee oa ON va.employee = oa.id
+           WHERE va.vacation = $1
+             AND oa.login = $2`,
+          [vacationId, data.optionalApproverLogin],
+        );
+        expect(resetRow.status).toBe("ASKED");
+      } finally {
+        await db2.close();
+      }
+
+      await ownerLogout.runViaDirectUrl();
+    } finally {
+      await ownerPage.close();
+      await ownerContext.close();
+    }
     await page.close();
   } finally {
     // CLEANUP: Delete the vacation

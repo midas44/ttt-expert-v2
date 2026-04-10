@@ -1,0 +1,10 @@
+className: VacationTc044Data
+runId: 20260407-193435-qa-1
+savedAt: "2026-04-07T19:44:12.436Z"
+args:
+  username: trasputina
+  availableDays: 4
+  longStartInput: 25.05.2026
+  longEndInput: 29.05.2026
+  shortStartInput: 25.05.2026
+  shortEndInput: 26.05.2026

@@ -1,0 +1,11 @@
+className: ReportsTc009Data
+runId: 20260407-182029-qa-1
+savedAt: "2026-04-07T18:27:03.178Z"
+args:
+  username: nzavalny
+  task1Name: Management
+  task2Name: Meetings / Status meeting
+  mondayLabel: "06.04"
+  mondayIso: "2026-04-06"
+  tuesdayLabel: "07.04"
+  tuesdayIso: "2026-04-07"

@@ -1,0 +1,8 @@
+className: PlannerTc012Data
+runId: 20260407-202520-qa-1
+savedAt: "2026-04-07T20:28:45.757Z"
+args:
+  username: diborisov
+  projectName: Diabolocom-Java-ODC
+  taskName: "Diabolocom-Java-ODC / #EV2-6355: [Cold Statistics  reports] : P3 / Use replication db for calculation"
+  daysBack: 0

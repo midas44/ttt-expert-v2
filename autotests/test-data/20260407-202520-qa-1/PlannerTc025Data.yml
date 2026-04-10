@@ -1,0 +1,9 @@
+className: PlannerTc025Data
+runId: 20260407-202520-qa-1
+savedAt: "2026-04-07T20:30:01.035Z"
+args:
+  username: dergachev
+  projectName: Diabolocom-Java-ODC
+  employeeAName: Heghine Khachatryan
+  employeeBName: Nikita Mikhaylov
+  daysBack: 12

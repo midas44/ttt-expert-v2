@@ -118,7 +118,87 @@ images (they appear as `![alt](/uploads/<hash>/<filename>)` in the description o
 
 ---
 
-## 2. Downloading Attachments
+## 2. Uploading Files (Screenshots, Images)
+
+Upload files to a GitLab issue via the project uploads API. This is a two-step process:
+upload the file, then reference it in a comment or description.
+
+### Step 1: Upload the File
+
+```bash
+curl -s --noproxy "gitlab.noveogroup.com" \
+  --header "PRIVATE-TOKEN: $TOKEN" \
+  -F "file=@/path/to/screenshot.png" \
+  "https://gitlab.noveogroup.com/api/v4/projects/1288/uploads"
+```
+
+Response:
+```json
+{
+  "alt": "screenshot",
+  "url": "/uploads/<hash>/screenshot.png",
+  "full_path": "/noveo-internal-tools/ttt-spring/uploads/<hash>/screenshot.png",
+  "markdown": "![screenshot](/uploads/<hash>/screenshot.png)"
+}
+```
+
+### Step 2: Reference in a Comment
+
+Use the `markdown` value (or the `url` field) directly in the comment body:
+
+```markdown
+<details><summary>screen description</summary>
+
+![screenshot](/uploads/<hash>/screenshot.png)
+
+</details>
+```
+
+### Complete Example: Upload + Post Comment with Image
+
+```bash
+TOKEN="<read from .claude/.mcp.json>"
+
+# Upload
+UPLOAD=$(curl -s --noproxy "gitlab.noveogroup.com" \
+  --header "PRIVATE-TOKEN: $TOKEN" \
+  -F "file=@screenshot.png" \
+  "https://gitlab.noveogroup.com/api/v4/projects/1288/uploads")
+
+IMG_URL=$(echo "$UPLOAD" | python3 -c "import sys,json; print(json.load(sys.stdin)['url'])")
+
+# Build comment body with the uploaded image
+BODY=$(cat <<EOFBODY
+**QA screenshot:**
+
+<details><summary>evidence</summary>
+
+![screenshot](${IMG_URL})
+
+</details>
+EOFBODY
+)
+
+# Post the comment
+curl -s --noproxy "gitlab.noveogroup.com" \
+  --header "PRIVATE-TOKEN: $TOKEN" \
+  --header "Content-Type: application/json" \
+  -X POST "https://gitlab.noveogroup.com/api/v4/projects/1288/issues/$IID/notes" \
+  --data "$(python3 -c "import json,sys; print(json.dumps({'body': sys.stdin.read()}))" <<< "$BODY")"
+```
+
+### Important Notes
+
+- The upload endpoint accepts any file type (png, jpg, pdf, etc.)
+- Max file size: 10 MB (GitLab default)
+- Uploaded files are permanent — they persist even if the referencing comment is deleted
+- The returned `url` path is relative to the project — it works in issues, MRs, and wiki pages
+- **Blank lines** around `![image]()` inside `<details>` tags are required for GitLab to render the image
+- Multiple files can be uploaded in separate calls and referenced in the same comment
+
+---
+
+## 3. Downloading Attachments
 
 Uploaded files (screenshots, images, documents) in issue descriptions or comments are
 served through **web routes**, not the API. The PAT does not work for these URLs — they
@@ -201,7 +281,7 @@ If Puppeteer is unavailable, write an inline Node.js script. Critical details:
 
 ---
 
-## 3. Pipelines, Branches & Code Changes
+## 4. Pipelines, Branches & Code Changes
 
 Use the REST API to list pipelines, compare branches, and see what files changed.
 
@@ -265,7 +345,7 @@ curl -s --noproxy "gitlab.noveogroup.com" --header "PRIVATE-TOKEN: $TOKEN" \
 
 ---
 
-## 4. CI Operations — Deploy, Migrate, Restart, Rollback
+## 5. CI Operations — Deploy, Migrate, Restart, Rollback
 
 All CI operations are **manual jobs** within existing pipelines. They are triggered by
 "playing" the job via the GitLab API. You do NOT create new pipelines — you find the

@@ -186,6 +186,13 @@ export class MyVacationsPage {
     return pollForMatch(candidates, { timeout, interval: 300 });
   }
 
+  /** Returns the count of action buttons for a vacation row. */
+  async getActionButtonCount(period: string | RegExp): Promise<number> {
+    const row = this.vacationRow(period).first();
+    const actionsCell = row.locator("td").last();
+    return actionsCell.locator("button").count();
+  }
+
   /** Opens the edit dialog by clicking the pencil icon on a vacation row. */
   async openEditDialog(period: string | RegExp): Promise<VacationCreateDialog> {
     const row = this.vacationRow(period).first();
@@ -238,6 +245,73 @@ export class MyVacationsPage {
     });
     const match = text.match(/(\d+)/);
     return match ? parseInt(match[1], 10) : 0;
+  }
+
+  /** Returns the available vacation days as a signed number (handles negative for AV=true). */
+  async getAvailableDaysSigned(): Promise<number> {
+    const text = await this.page.evaluate(() => {
+      // Strategy 1: "-N in YYYY" or "N in YYYY" (handles &nbsp; and minus sign)
+      for (const span of document.querySelectorAll("span, div")) {
+        const t = span.textContent?.trim() ?? "";
+        if (/^-?\d+[\s\u00a0]+in[\s\u00a0]+\d{4}$/.test(t)) return t;
+      }
+      // Strategy 2: leaf element with negative or positive number near the label
+      for (const el of document.querySelectorAll("span, div")) {
+        if (el.childElementCount !== 0) continue;
+        const ct = el.textContent?.trim() ?? "";
+        if (!/^-?\d{1,3}$/.test(ct)) continue;
+        let parent = el.parentElement;
+        for (let depth = 0; depth < 3 && parent; depth++) {
+          const pt = parent.textContent ?? "";
+          if (
+            pt.length < 300 &&
+            /available vacation days|доступно отпускных/i.test(pt)
+          ) {
+            return ct;
+          }
+          parent = parent.parentElement;
+        }
+      }
+      return "";
+    });
+    const match = text.match(/(-?\d+)/);
+    return match ? parseInt(match[1], 10) : 0;
+  }
+
+  // --- Vacation Events Feed Dialog ---
+
+  /** Opens the "Vacation events feed" dialog. */
+  async openEventsFeed(): Promise<Locator> {
+    await this.page
+      .getByRole("button", { name: "Vacation events feed" })
+      .click();
+    const dialog = this.page.getByRole("dialog", {
+      name: /Vacation events feed/i,
+    });
+    await dialog.waitFor({ state: "visible" });
+    return dialog;
+  }
+
+  /** Returns event rows from the open events feed dialog. */
+  async getEventsFeedRows(
+    dialog: Locator,
+  ): Promise<{ date: string; event: string }[]> {
+    const rows = dialog.locator("table tbody tr");
+    const count = await rows.count();
+    const result: { date: string; event: string }[] = [];
+    for (let i = 0; i < count; i++) {
+      const cells = rows.nth(i).locator("td");
+      const date = ((await cells.nth(0).textContent()) ?? "").trim();
+      const event = ((await cells.nth(1).textContent()) ?? "").trim();
+      if (date && event) result.push({ date, event });
+    }
+    return result;
+  }
+
+  /** Closes the events feed dialog via Escape. */
+  async closeEventsFeedDialog(dialog: Locator): Promise<void> {
+    await this.page.keyboard.press("Escape");
+    await dialog.waitFor({ state: "detached" });
   }
 
   /** Clicks the "All" filter tab. */
@@ -392,6 +466,31 @@ export class MyVacationsPage {
       return entries;
     });
   }
+
+  /**
+   * Returns yearly breakdown entries with automatic raw-text fallback.
+   * First tries structured DOM extraction; if empty, parses raw text
+   * for "YYYY N" / "YYYY: N" patterns.
+   */
+  async getYearlyBreakdownWithFallback(): Promise<
+    { year: string; days: string }[]
+  > {
+    let entries = await this.getYearlyBreakdownEntries();
+    if (entries.length > 0) return entries;
+
+    // Fallback: read tooltip raw text and parse year/days patterns
+    const rawText = await this.page
+      .locator('[class*="vacationDaysTooltip"], [class*="tooltip"]')
+      .first()
+      .textContent()
+      .catch(() => "");
+    const yearPattern = /(\d{4})\D+(\d+)/g;
+    let match: RegExpExecArray | null;
+    while ((match = yearPattern.exec(rawText ?? "")) !== null) {
+      entries.push({ year: match[1], days: match[2] });
+    }
+    return entries;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -464,9 +563,28 @@ export class MyTasksPage {
     return row;
   }
 
-  /** Fills search and clicks "Add a task" to add a task. */
-  async addTask(searchTerm: string): Promise<void> {
+  /**
+   * Adds a task via autocomplete:
+   * 1. Fills search with the term
+   * 2. Waits for autocomplete suggestions to appear
+   * 3. Clicks the suggestion matching suggestionFilter (or first if omitted)
+   * 4. Clicks "Add a task" button
+   */
+  async addTask(
+    searchTerm: string,
+    suggestionFilter?: string | RegExp,
+  ): Promise<void> {
     await this.fillSearch(searchTerm);
+    const allSuggestions = this.page.locator(
+      "[class*='autosuggest'] li, ul[role='listbox'] li",
+    );
+    await allSuggestions.first().waitFor({ state: "visible", timeout: 5000 });
+    if (suggestionFilter) {
+      const match = allSuggestions.filter({ hasText: suggestionFilter });
+      await match.first().click();
+    } else {
+      await allSuggestions.first().click();
+    }
     await this.clickAddTask();
   }
 
@@ -529,6 +647,137 @@ export class MyTasksPage {
     );
     await floatingEditor.first().waitFor({ state: "visible", timeout: 3000 });
     return floatingEditor.first();
+  }
+
+  // ── Week Navigation ──────────────────────────────────────────
+
+  /** Returns the displayed week date range (e.g. "23.03.2026 – 29.03.2026"). */
+  async getWeekRangeText(): Promise<string> {
+    const range = this.page.locator("[class*='week-navigation'] span, [class*='weekNavigation'] span").first();
+    try {
+      await range.waitFor({ state: "visible", timeout: 3000 });
+      return (await range.textContent())?.trim() ?? "";
+    } catch {
+      // Fallback: look for date range pattern in any visible element near nav
+      const dateRange = this.page.getByText(/\d{2}\.\d{2}\.\d{4}\s*[–—-]\s*\d{2}\.\d{2}\.\d{4}/);
+      return (await dateRange.first().textContent())?.trim() ?? "";
+    }
+  }
+
+  /** Clicks the previous-week arrow button (left arrow). */
+  async navigateToPreviousWeek(): Promise<void> {
+    const candidates = [
+      this.page.locator("button[class*='prev'], button[class*='Prev']"),
+      this.page.locator("[class*='week-navigation'] button:first-child, [class*='weekNavigation'] button:first-child"),
+      this.page.locator("button:has(img[alt*='prev']), button:has(img[alt*='left'])"),
+      this.page.locator("button:has(img)").first(),
+    ];
+    const btn = await resolveFirstVisible(candidates, { timeout: 5000 });
+    await btn.click();
+  }
+
+  /** Clicks the next-week arrow button (right arrow). */
+  async navigateToNextWeek(): Promise<void> {
+    const candidates = [
+      this.page.locator("button[class*='next'], button[class*='Next']"),
+      this.page.locator("[class*='week-navigation'] button:last-child, [class*='weekNavigation'] button:last-child"),
+      this.page.locator("button:has(img[alt*='next']), button:has(img[alt*='right'])"),
+    ];
+    const btn = await resolveFirstVisible(candidates, { timeout: 5000 });
+    await btn.click();
+  }
+
+  /** Clicks the "Current week" button. */
+  async goToCurrentWeek(): Promise<void> {
+    await this.page.getByRole("button", { name: /current week/i }).click();
+  }
+
+  /** Returns all visible week tab labels (date ranges). */
+  async getVisibleWeekTabs(): Promise<string[]> {
+    const tabs = this.page.locator("button").filter({
+      hasText: /\d{2}\.\d{2}\s*[–—-]\s*\d{2}\.\d{2}/,
+    });
+    const count = await tabs.count();
+    const labels: string[] = [];
+    for (let i = 0; i < count; i++) {
+      const text = await tabs.nth(i).textContent();
+      if (text) labels.push(text.trim());
+    }
+    return labels;
+  }
+
+  /**
+   * Checks if a day cell in a task row is editable.
+   * Returns true if double-clicking opens an input, false otherwise.
+   */
+  async isCellEditable(row: Locator, dateLabel: string): Promise<boolean> {
+    const cell = await this.dayCell(row, dateLabel);
+    await cell.dblclick();
+    const inlineInput = cell.locator("input, textarea");
+    try {
+      await inlineInput.first().waitFor({ state: "visible", timeout: 2000 });
+      // Close the editor by pressing Escape
+      await inlineInput.first().press("Escape");
+      return true;
+    } catch {
+      // Check floating editor
+      const floatingEditor = this.page.locator(
+        ".timesheet-reporting__input input, .timesheet-reporting__input textarea",
+      );
+      try {
+        await floatingEditor.first().waitFor({ state: "visible", timeout: 1000 });
+        await floatingEditor.first().press("Escape");
+        return true;
+      } catch {
+        return false;
+      }
+    }
+  }
+
+  // ── Task Pin/Rename ──────────────────────────────────────────
+
+  /** Returns task names in their current display order (top to bottom). */
+  async getTaskNamesInOrder(): Promise<string[]> {
+    const rows = this.taskTable.locator("tbody tr");
+    const count = await rows.count();
+    const names: string[] = [];
+    for (let i = 0; i < count; i++) {
+      const firstCell = rows.nth(i).locator("td").first();
+      const text = await firstCell.textContent();
+      if (text?.trim()) names.push(text.trim());
+    }
+    return names;
+  }
+
+  /** Hovers over a task row and clicks the pin/unpin toggle icon. */
+  async toggleTaskPin(row: Locator): Promise<void> {
+    const taskCell = row.locator("td").first();
+    await taskCell.hover();
+    await this.page.waitForTimeout(5000);
+    const pinBtn = await resolveFirstVisible(
+      [
+        taskCell.locator("[class*='task-pin']"),
+        taskCell.locator("button:has(svg)"),
+        taskCell.locator("button:has(img)"),
+      ],
+      { timeout: 3000 },
+    );
+    await pinBtn.click();
+    await this.page.waitForLoadState("networkidle");
+  }
+
+  /** Clicks the task name text to trigger the rename modal. */
+  async clickTaskName(row: Locator): Promise<void> {
+    const taskCell = row.locator("td").first();
+    const nameEl = await resolveFirstVisible(
+      [
+        taskCell.locator("span[class*='task-name']"),
+        taskCell.locator("a"),
+        taskCell.locator("span").first(),
+      ],
+      { timeout: 3000 },
+    );
+    await nameEl.click();
   }
 
   /**

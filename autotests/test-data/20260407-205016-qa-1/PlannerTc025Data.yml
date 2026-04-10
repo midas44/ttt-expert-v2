@@ -1,0 +1,9 @@
+className: PlannerTc025Data
+runId: 20260407-205016-qa-1
+savedAt: "2026-04-07T20:54:31.066Z"
+args:
+  username: egalkina
+  projectName: Pragmatik-RN7
+  employeeAName: Alexander Ozertsov
+  employeeBName: Ivan Morozov
+  daysBack: 12

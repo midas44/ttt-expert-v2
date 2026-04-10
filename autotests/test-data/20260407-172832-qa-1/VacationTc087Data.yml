@@ -1,0 +1,9 @@
+className: VacationTc087Data
+runId: 20260407-172832-qa-1
+savedAt: "2026-04-07T17:40:05.345Z"
+args:
+  tokenOwner: pvaynmaster
+  managerBLogin: olivier.morlet
+  startDateIso: "2026-07-06"
+  endDateIso: "2026-07-10"
+  tokenOwnerName: Pavel Weinmeister

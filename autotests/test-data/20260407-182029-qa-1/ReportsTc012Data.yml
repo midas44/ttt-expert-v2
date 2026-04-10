@@ -1,0 +1,9 @@
+className: ReportsTc012Data
+runId: 20260407-182029-qa-1
+savedAt: "2026-04-07T18:27:18.555Z"
+args:
+  username: bryz
+  taskName: Small tasks
+  taskId: "33751"
+  dateLabel: "08.04"
+  dateIso: "2026-04-08"

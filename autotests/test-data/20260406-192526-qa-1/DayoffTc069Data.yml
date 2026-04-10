@@ -1,0 +1,11 @@
+className: DayoffTc069Data
+runId: 20260406-192526-qa-1
+savedAt: "2026-04-06T19:26:30.694Z"
+args:
+  managerLogin: perekrest
+  employeeLogin: alexander.il
+  employeeName: Ильницкий Александр
+  employeeEmail: Alexander.Ilnitsky@noveogroup.com
+  requestId: "3658"
+  originalDate: "2026-11-06"
+  personalDate: "2026-11-13"

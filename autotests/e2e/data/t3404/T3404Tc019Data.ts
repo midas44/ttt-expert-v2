@@ -71,7 +71,6 @@ export class T3404Tc019Data {
     try {
       const row = await findFutureMidMonthDayoff(db);
       const instance = new T3404Tc019Data(row.login, row.date);
-      if (mode === "saved")
         saveToDisk("T3404Tc019Data", {
           username: row.login,
           dayoffDate: row.date,

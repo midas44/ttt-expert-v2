@@ -1,0 +1,11 @@
+className: VacationTc020Data
+runId: 20260407-165905-qa-1
+savedAt: "2026-04-07T17:09:41.970Z"
+args:
+  employeeLogin: gboyer
+  employeeName: Guillaume Boyer
+  managerLogin: pvaynmaster
+  altManagerLogin: nshumakov
+  altManagerName: Nikolay Shumakov
+  startDateIso: "2026-07-20"
+  endDateIso: "2026-07-24"

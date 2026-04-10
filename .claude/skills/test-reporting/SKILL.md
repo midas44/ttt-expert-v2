@@ -113,6 +113,261 @@ Rollback deployment tested on **qa-1** and **timemachine** environments using pi
 
 ---
 
+## Bug Report Format (Individual Bugs as Comments)
+
+Each bug found during QA testing gets its **own separate comment** on the GitLab issue. The format uses a checkbox prefix for tracking resolution status.
+
+### Template
+
+```markdown
+* [ ] <N>. <Brief description of the bug>
+
+**Example:**
+
+`<env>`, `<user>`, <context description>
+
+<details><summary>screen1</summary>
+
+![screen1](/uploads/...)
+
+</details>
+
+**Expected:**
+
+<What the correct behavior should be>
+
+**Notes:**
+
+* <Edge cases, related bugs, additional context>
+
+**Env:**
+
+`<env-name>`
+```
+
+### Checkbox Status Conventions
+
+| Checkbox | Meaning |
+|---|---|
+| `* [ ] 1.` | Open bug, not resolved |
+| `* [x] 1.` | Resolved / fixed |
+| `* [x] [NOT A BUG] 1.` | Investigated, not a bug |
+| `* [x] [WON'T FIX] 1.` | Acknowledged, won't be fixed |
+| `* [x] [CAN'T REPRODUCE] 1.` | Cannot reproduce on current build |
+| `* [x] [DESIGN] 1.` | Requires design decision |
+| `* [ ] [DESIGN] 1.` | Open design question |
+
+### Key Rules
+
+1. **One bug per comment** — enables reply threading and independent resolution tracking
+2. **Never edit original bug text** — always append updates using `**Upd:**`, `**Upd2:**` etc.
+3. **Screenshots in collapsible `<details>` blocks** — keeps comments compact
+4. **Screenshots MUST be annotated** — red boxes, arrows, and labels highlighting the bug. Raw unannotated screenshots are not acceptable. See "Annotating Screenshots" section below.
+5. **`**Env:**` block always present** — use backtick format: `` `qa-1` ``, `` `qa-1, timemachine` ``
+6. **`**Example:**` block** — include env, user login, and reproduction context in backticks
+7. **Sub-variants** of one bug use `1.1`, `1.2` numbering within the same comment
+8. **Use backticks** for code entities: `` `lastApprovedDate > approvePeriod` ``, `` `useWeekendTableHeaders.tsx` ``
+
+### Bug Report Example
+
+```markdown
+* [ ] 1. Edit icon missing for day-off on approve period start date (boundary `>` vs `>=`)
+
+**Example:**
+
+`qa-1`, `aglushko` (office Уран), approve period = `2026-03-01`, test holiday created on `2026-03-01`
+
+<details><summary>screen1</summary>
+
+![boundary-bug](/uploads/...)
+
+</details>
+
+**Expected:**
+
+Day-off on March 1 (= approve period start date) should have the edit icon, since March 1 IS in the open approve period.
+
+**Notes:**
+
+* Code in `useWeekendTableHeaders.tsx` uses `lastApprovedDate > moment(approvePeriod)` — should be `>=`
+* Low probability (holidays rarely fall on 1st of month) but incorrect behavior when they do
+* Identified during static analysis (GAP-1 / ST-1), confirmed dynamically by creating a test holiday
+
+**Env:**
+
+`qa-1`
+```
+
+### Design Notes Format
+
+For architectural or design observations (not bugs), use a separate comment:
+
+```markdown
+**Design Notes:** [Updated]
+
+@designer_name @developer_name
+
+* <Observation or recommendation>
+* <Cross-reference to related tickets>
+```
+
+### TO DO Tracking
+
+When bugs need developer attention, post a summary comment:
+
+```markdown
+**TO DO:**
+
+@developer_name
+
+1, 3, 5 (bug numbers from earlier comments that still need fixing)
+```
+
+---
+
+## Updating Existing QA Comments
+
+To update an existing QA comment (e.g., after deeper testing), use the PUT endpoint:
+
+```bash
+curl -s --noproxy "gitlab.noveogroup.com" \
+  --header "PRIVATE-TOKEN: $TOKEN" \
+  --header "Content-Type: application/json" \
+  -X PUT "https://gitlab.noveogroup.com/api/v4/projects/1288/issues/$IID/notes/$NOTE_ID" \
+  --data "$(python3 -c "import json,sys; print(json.dumps({'body': sys.stdin.read()}))" <<< "$BODY")"
+```
+
+**Note:** `$NOTE_ID` is the ID of the existing comment to update. Use GET to find it first.
+
+---
+
+## Uploading Screenshots
+
+Upload images via the GitLab project uploads API, then reference the returned path in comments:
+
+```bash
+# Step 1: Upload the file
+curl -s --noproxy "gitlab.noveogroup.com" \
+  --header "PRIVATE-TOKEN: $TOKEN" \
+  -F "file=@/path/to/screenshot.png" \
+  "https://gitlab.noveogroup.com/api/v4/projects/1288/uploads"
+```
+
+Response:
+```json
+{
+  "alt": "screenshot",
+  "url": "/uploads/<hash>/screenshot.png",
+  "markdown": "![screenshot](/uploads/<hash>/screenshot.png)"
+}
+```
+
+Use the `markdown` value directly in comment bodies. For collapsible screenshots:
+```markdown
+<details><summary>screen description</summary>
+
+![screenshot](/uploads/<hash>/screenshot.png)
+
+</details>
+```
+
+**Important:** The blank lines around the `![image]()` inside `<details>` are required for GitLab to render the image.
+
+---
+
+## Annotating Screenshots (MANDATORY)
+
+**Every screenshot attached to a GitLab comment MUST be annotated** with visual markers
+that clearly highlight the bug or finding. Raw screenshots without annotations are not
+acceptable — the reader should immediately see what is wrong without reading the text first.
+
+### Annotation Workflow
+
+1. **Take/obtain the raw screenshot** (via Playwright, manual, or any tool)
+2. **Read the image using the Read tool** — Claude analyzes it visually to identify exact
+   pixel positions of UI elements (rows, buttons, empty cells, text, icons)
+3. **Generate PIL annotation code** using the visually identified coordinates — no guessing,
+   no OCR, no web tools needed. Claude's multimodal vision is the coordinate source.
+4. **Annotate with PIL/Pillow**, then upload the annotated image to GitLab
+
+### Annotation Standards
+
+| Element | Style | When to use |
+|---|---|---|
+| **Bug highlight** | Red box (`outline="red", width=3`) + red semi-transparent row tint (`fill=(255,0,0,40)`) | Row/cell where the bug is visible |
+| **Expected behavior** | Green box (`outline=(0,160,0), width=3`) | Nearby row/cell showing correct behavior for contrast |
+| **Arrow** | Red filled arrow pointing to the bug location | Always — draws the eye to the defect |
+| **Bug label** | Red bold text: "BUG: <short description>" | Always — placed to the right of or above the screenshot |
+| **OK label** | Green text: "OK: <what works>" | When a contrast row is shown |
+| **Context labels** | Grey text for non-essential context (e.g., "Closed period — correct") | When helpful |
+
+### Implementation Pattern
+
+```python
+from PIL import Image, ImageDraw, ImageFont
+
+img = Image.open("screenshot.png")
+w, h = img.size
+
+# Extend canvas for labels (add 350px to the right)
+canvas = Image.new('RGB', (w + 350, h), (255, 255, 255))
+canvas.paste(img, (0, 0))
+draw = ImageDraw.Draw(canvas)
+
+font_big = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 18)
+font_med = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 14)
+font_sm = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 12)
+
+# --- Coordinates from visual analysis of the image ---
+# (Claude reads the image and provides exact pixel positions)
+bug_row_top, bug_row_bot = 160, 200    # y range of the bug row
+ok_row_top, ok_row_bot = 200, 240      # y range of the comparison row
+target_x_left, target_x_right = 1180, w - 2  # x range of the target cell
+
+# 1. Red tint on bug row
+overlay = Image.new('RGBA', canvas.size, (0, 0, 0, 0))
+od = ImageDraw.Draw(overlay)
+od.rectangle([0, bug_row_top, w, bug_row_bot], fill=(255, 0, 0, 40))
+canvas = Image.alpha_composite(canvas.convert('RGBA'), overlay).convert('RGB')
+draw = ImageDraw.Draw(canvas)
+
+# 2. Red box on target cell
+draw.rectangle([target_x_left, bug_row_top+2, target_x_right, bug_row_bot-2],
+               outline="red", width=3)
+
+# 3. Green box on OK cell
+draw.rectangle([target_x_left, ok_row_top+2, target_x_right, ok_row_bot-2],
+               outline=(0, 160, 0), width=3)
+
+# 4. Red arrow pointing to the bug
+arrow_y = (bug_row_top + bug_row_bot) // 2
+draw.line([(w + 60, arrow_y), (target_x_right + 5, arrow_y)], fill="red", width=3)
+draw.polygon([(target_x_right+5, arrow_y),
+              (target_x_right+17, arrow_y-8),
+              (target_x_right+17, arrow_y+8)], fill="red")
+
+# 5. Labels
+draw.text((w + 70, bug_row_top - 5), "BUG: No edit icon!", fill="red", font=font_big)
+draw.text((w + 70, bug_row_top + 18), "reason details", fill=(200,0,0), font=font_sm)
+draw.text((w + 70, ok_row_top + 3), "OK: has edit icon", fill=(0,140,0), font=font_med)
+
+# 6. Crop to relevant area and save
+canvas.save("annotated.png")
+```
+
+### Key Rules
+
+- **Always read the image first** with the Read tool to visually determine coordinates —
+  never guess pixel positions from DOM snapshots or element counts
+- **Extend the canvas** (typically +350px right) rather than overlapping text on the UI
+- **Crop to the relevant area** — don't include the full page if only 5 rows matter
+- **Use element screenshots** (`ref` parameter in `browser_take_screenshot`) to capture
+  just the table/component rather than the full viewport — this gives a cleaner base image
+- **Red + green contrast** — always show both the broken and working state when possible
+- If Pillow is not installed, run `pip3 install --break-system-packages Pillow`
+
+---
+
 ## How to Post
 
 Build the comment body in a shell variable, then post via the GitLab API:

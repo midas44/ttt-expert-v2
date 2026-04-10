@@ -1,0 +1,9 @@
+className: ReportsTc012Data
+runId: 20260407-193435-qa-1
+savedAt: "2026-04-07T19:41:03.981Z"
+args:
+  username: ogribanova
+  taskName: оплаты
+  taskId: "377603"
+  dateLabel: "08.04"
+  dateIso: "2026-04-08"

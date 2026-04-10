@@ -1,0 +1,12 @@
+className: DayoffTc021Data
+runId: 20260406-151416-qa-1
+savedAt: "2026-04-06T15:14:45.334Z"
+args:
+  managerLogin: perekrest
+  employeeLogin: ovasilev
+  employeeName: Васильев Олег
+  originalDate: "2026-11-06"
+  personalDate: "2026-11-13"
+  requestId: "3535"
+  targetManagerLogin: gkornev
+  targetManagerFullName: Герман Корнев

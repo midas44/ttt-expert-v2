@@ -1,0 +1,11 @@
+className: DayoffTc070Data
+runId: 20260407-195922-qa-1
+savedAt: "2026-04-07T20:02:02.150Z"
+args:
+  managerLogin: perekrest
+  employeeLogin: ovasilev
+  employeeName: Васильев Олег
+  employeeEmail: Oleg.Vasilev@noveogroup.com
+  requestId: "3637"
+  originalDate: "2026-11-06"
+  personalDate: "2026-11-13"

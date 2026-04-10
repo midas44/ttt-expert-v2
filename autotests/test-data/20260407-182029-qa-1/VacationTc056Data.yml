@@ -1,0 +1,9 @@
+className: VacationTc056Data
+runId: 20260407-182029-qa-1
+savedAt: "2026-04-07T18:30:39.111Z"
+args:
+  managerLogin: pvaynmaster
+  targetLogin: rgladkikh
+  latinLastName: Gladkikh
+  russianLastName: Гладких
+  targetDisplayName: Roman Gladkikh

@@ -1,0 +1,11 @@
+className: ReportsTc018Data
+runId: 20260407-172832-qa-1
+savedAt: "2026-04-07T17:36:03.419Z"
+args:
+  managerLogin: dergachev
+  employeeLogin: eponomarev
+  projectName: Diabolocom-Java-ODC
+  taskName: "Diabolocom-Java-ODC / #EV2-2727 Sprint Retrospective & Review & Planning & Daily"
+  taskId: "174132"
+  dateLabel: "09.04"
+  dateIso: "2026-04-09"

@@ -1,0 +1,12 @@
+className: DayoffTc021Data
+runId: 20260407-175312-qa-1
+savedAt: "2026-04-07T17:54:00.282Z"
+args:
+  managerLogin: perekrest
+  employeeLogin: omanoshkina
+  employeeName: Маношкина Оксана
+  originalDate: "2026-12-31"
+  personalDate: "2027-01-07"
+  requestId: "3537"
+  targetManagerLogin: atushov
+  targetManagerFullName: Андрей Тушов

@@ -1,0 +1,12 @@
+className: VacationTc074Data
+runId: 20260406-151416-qa-1
+savedAt: "2026-04-06T15:17:23.824Z"
+args:
+  employeeLogin: aglushko
+  employeeName: Artem Glushko
+  managerLogin: pvaynmaster
+  altManagerLogin: hbukarev
+  altManagerName: Herman Bukarev
+  startDateIso: "2026-05-25"
+  endDateIso: "2026-05-29"
+  periodPattern: 25.*29.*May

@@ -1,0 +1,14 @@
+className: DayoffTc036Data
+runId: 20260406-125852-qa-1
+savedAt: "2026-04-06T13:00:16.789Z"
+args:
+  employeeId: "98"
+  employeeLogin: omanoshkina
+  employeeName: Маношкина Оксана
+  originalOfficeId: "2"
+  originalOfficeName: Сатурн
+  targetOfficeId: "24"
+  targetOfficeName: Скорпион
+  approvedRequestIds:
+    - "3491"
+  approvedCountBefore: 1

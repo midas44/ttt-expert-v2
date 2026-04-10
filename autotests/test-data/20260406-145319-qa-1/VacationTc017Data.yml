@@ -1,0 +1,9 @@
+className: VacationTc017Data
+runId: 20260406-145319-qa-1
+savedAt: "2026-04-06T14:55:25.682Z"
+args:
+  employeeLogin: ianisyutin
+  employeeName: Ilya Anisyutin
+  managerLogin: pvaynmaster
+  startDateIso: "2026-07-13"
+  endDateIso: "2026-07-17"

@@ -1,0 +1,8 @@
+className: VacationTc036Data
+runId: 20260406-183526-qa-1
+savedAt: "2026-04-06T18:38:02.876Z"
+args:
+  username: okharchenko
+  availableDays: 1
+  startDateIso: "2026-06-08"
+  endDateIso: "2026-06-26"

@@ -1,0 +1,11 @@
+className: DayoffTc069Data
+runId: 20260407-190832-qa-1
+savedAt: "2026-04-07T19:10:19.382Z"
+args:
+  managerLogin: perekrest
+  employeeLogin: ogribanova
+  employeeName: Грибанова Ольга
+  employeeEmail: Olga.Gribanova@noveogroup.com
+  requestId: "3604"
+  originalDate: "2026-11-06"
+  personalDate: "2026-11-13"

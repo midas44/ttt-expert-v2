@@ -1,0 +1,12 @@
+className: DayoffTc033Data
+runId: 20260407-175312-qa-1
+savedAt: "2026-04-07T17:54:26.465Z"
+args:
+  requestId: "2822"
+  employeeId: "761"
+  employeeLogin: etrofimova
+  employeeName: Трофимова Екатерина
+  originalDate: "2026-06-01"
+  personalDate: "2026-12-29"
+  calendarId: "6"
+  officeId: "10"

@@ -1,0 +1,9 @@
+className: ReportsTc004Data
+runId: 20260407-165905-qa-1
+savedAt: "2026-04-07T17:05:26.180Z"
+args:
+  username: hbukarev
+  periodStart: "2026-04-01"
+  taskName: HR / Candidates processing
+  closedDateLabel: "23.03"
+  closedDateIso: "2026-03-23"

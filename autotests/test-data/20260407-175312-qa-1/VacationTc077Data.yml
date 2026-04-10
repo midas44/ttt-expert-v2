@@ -1,0 +1,53 @@
+className: VacationTc077Data
+runId: 20260407-175312-qa-1
+savedAt: "2026-04-07T18:04:46.864Z"
+args:
+  employees:
+    - login: afanaseva
+      availableDays: 0
+      year: 2026
+      hasOverlappingVacation: true
+    - login: atynybaeva
+      availableDays: 0
+      year: 2026
+      hasOverlappingVacation: true
+    - login: dbogunova
+      availableDays: 0
+      year: 2026
+      hasOverlappingVacation: true
+    - login: eamelchenko
+      availableDays: 0
+      year: 2026
+      hasOverlappingVacation: true
+    - login: edobrovlyanskaya
+      availableDays: 0
+      year: 2026
+      hasOverlappingVacation: true
+    - login: gsherpaeva
+      availableDays: 0
+      year: 2026
+      hasOverlappingVacation: true
+    - login: iromanenko
+      availableDays: 0
+      year: 2026
+      hasOverlappingVacation: true
+    - login: mgrishkevich
+      availableDays: 0
+      year: 2026
+      hasOverlappingVacation: true
+    - login: nshevtsova
+      availableDays: 5
+      year: 2026
+      hasOverlappingVacation: true
+    - login: okharchenko
+      availableDays: 1
+      year: 2026
+      hasOverlappingVacation: true
+    - login: ypushkareva
+      availableDays: 0
+      year: 2026
+      hasOverlappingVacation: true
+    - login: zmustafina
+      availableDays: 0
+      year: 2026
+      hasOverlappingVacation: true

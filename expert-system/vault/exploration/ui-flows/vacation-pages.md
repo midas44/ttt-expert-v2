@@ -350,3 +350,74 @@ await requestsPage.waitForRequestRowToDisappear(data.employeeName, data.periodPa
 - Table rows: `table.user-vacations tbody tr, table tbody tr`
 - Sort button: inside `table thead th` filtered by column label, `getByRole("button", { name: columnLabel })`
 - Column filter button: second button inside the `th` (after sort button)
+
+
+## Payment API Behavior (discovered during Phase C Session 109)
+
+### Terminal State (PAID) Response Codes
+- `PUT /cancel/{id}` on PAID → **403 Forbidden** (not 400) — permission service returns empty action set
+- `PUT /reject/{id}` on PAID → **403 Forbidden**
+- `PUT /vacations` (update body with PAID id) → **405 Method Not Allowed**
+- `DELETE /{id}` on PAID+EXACT → **403 Forbidden**
+- Hard-delete via `DELETE /test/vacations/{id}` always works (bypasses checks)
+
+### Payment Validation
+- Wrong day sum (`regularDaysPayed + administrativeDaysPayed != vacation.days`) → 400, errorCode: `exception.vacation.pay.days.not.equal`
+- Pay NEW vacation → 400 (status must be APPROVED)
+- `createApproveAndPay()` workflow: create → approve → read `days` from response → pay with correct split
+
+### Ghost Conflict Issue
+- Server crossing validation includes DELETED/CANCELED vacations (ghost conflicts)
+- `hasVacationConflict()` in vacationQueries.ts excludes those statuses
+- Workaround: use high week offsets (45+) for payment tests to avoid dense test data regions
+
+
+## Balance Display Selectors (discovered Session 110)
+
+### Available Days Counter
+- Primary: `getAvailableDays()` extracts integer from text matching `/(\d+)\s+in\s+\d{4}/`
+- Signed variant: `getAvailableDaysSigned()` — handles negative values via `/-?\d+/` regex, uses `page.evaluate()` to scan `span, div` elements for pattern `/-?\d+[\s\u00a0]+in[\s\u00a0]+\d{4}$/`
+- **CRITICAL**: UI available days value is computed dynamically by the API (factors in approved/pending vacations, carry-over, prorating). It does NOT equal `SUM(employee_vacation.available_vacation_days)` from the DB. Never compare UI value with raw DB sum.
+
+### Yearly Breakdown Tooltip
+- Toggle: `toggleYearlyBreakdown()` clicks `[class*="vacationDaysTooltip"]` or `getByText("Available vacation days")`
+- Entries: `getYearlyBreakdownEntries()` tries CSS class selectors first, falls back to raw text extraction
+- **Fallback pattern**: Locate `[class*="vacationDaysTooltip"], [class*="tooltip"]`, extract text, parse with regex `(\d{4})\D+(\d+)` to get `{year, days}[]`
+- Entries show per-year breakdown; individual year values may differ from DB `employee_vacation` rows
+
+### DB Schema Notes (office_annual_leave)
+- Column: `days` (NOT `annual_leave_days`)
+- FK: `office` (NOT `office_id`)
+- Join: `office_annual_leave oal ON oal.office = o.id`
+
+
+## Calendar Schema for Holiday Day-Count (discovered Session 117)
+
+The "Number of days" field in the vacation creation dialog uses the employee's office-specific production calendar to exclude holidays from the working day count.
+
+**Schema join path (from test data class to calendar_days):**
+```
+ttt_vacation.employee.office_id
+  → ttt_calendar.office_calendar.office_id
+  → ttt_calendar.office_calendar.calendar_id
+  → ttt_calendar.calendar.id
+  → ttt_calendar.calendar_days.calendar_id
+```
+
+**Key schema facts:**
+- Table: `ttt_calendar.calendar_days` (PLURAL, not `calendar_day`)
+- Date column: `calendar_date` (not `event_date`)
+- Duration: `0` = holiday, `7` = short day (7h)
+- `ttt_calendar.calendar` has NO `office_id` — must join through `office_calendar`
+- Vacation and calendar schemas share the same office IDs (`ttt_vacation.office.id = ttt_calendar.office.id`)
+
+**Query for finding holidays affecting a Mon-Fri range:**
+```sql
+SELECT COUNT(*)::text AS cnt
+FROM ttt_calendar.calendar_days cd
+JOIN ttt_calendar.calendar c ON cd.calendar_id = c.id
+JOIN ttt_calendar.office_calendar oc ON oc.calendar_id = c.id
+WHERE oc.office_id = $1::bigint
+  AND cd.calendar_date BETWEEN $2::date AND $3::date
+  AND cd.duration = 0
+```

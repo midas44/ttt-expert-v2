@@ -1,0 +1,8 @@
+className: ReportsTc011Data
+runId: 20260407-190832-qa-1
+savedAt: "2026-04-07T19:15:07.676Z"
+args:
+  username: hbukarev
+  taskName: Candidate processing / Golang / CV creation
+  dateLabel: "10.04"
+  dateIso: "2026-04-10"

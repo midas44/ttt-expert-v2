@@ -1,0 +1,9 @@
+className: VacationTc004Data
+runId: 20260407-182029-qa-1
+savedAt: "2026-04-07T18:29:02.323Z"
+args:
+  creatorLogin: sbuketova
+  colleagueLogin: apavliukova
+  colleagueName: Aleksandra Pavliukova
+  startDateIso: "2026-05-11"
+  endDateIso: "2026-05-13"

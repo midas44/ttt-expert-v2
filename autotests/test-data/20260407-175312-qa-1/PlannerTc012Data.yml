@@ -1,0 +1,8 @@
+className: PlannerTc012Data
+runId: 20260407-175312-qa-1
+savedAt: "2026-04-07T17:55:43.126Z"
+args:
+  username: kdurneva
+  projectName: Diabolocom-Java-ODC
+  taskName: "Diabolocom-Java-ODC / #EV2-28516 [Cold stats] Generated files should have retention time"
+  daysBack: 0

@@ -1,0 +1,12 @@
+className: DayoffTc033Data
+runId: 20260406-141717-qa-1
+savedAt: "2026-04-06T14:18:08.810Z"
+args:
+  requestId: "3405"
+  employeeId: "990247"
+  employeeLogin: hkhachatryan
+  employeeName: Хачатрян Егине
+  originalDate: "2026-05-01"
+  personalDate: "2026-07-31"
+  calendarId: "6"
+  officeId: "10"

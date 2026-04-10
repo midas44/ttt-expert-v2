@@ -1,0 +1,10 @@
+className: VacationTc026Data
+runId: 20260406-125852-qa-1
+savedAt: "2026-04-06T13:02:02.576Z"
+args:
+  accountantLogin: ann
+  vacationOwner: pvaynmaster
+  startDateIso: "2026-05-25"
+  endDateIso: "2026-05-29"
+  paymentMonth: "2026-05-01"
+  paymentMonthLabel: May 2026

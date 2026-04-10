@@ -1,52 +1,34 @@
----
-type: agenda
-updated: 2026-03-27
-phase: C (autotest_generation)
----
+# Investigation Agenda
 
-# Investigation Agenda — Phase C (Autotest Generation)
+## Phase C — Autotest Generation (absences: vacation, day-off, sick-leave)
 
-## P0 — Immediate (Next Session)
-- [ ] Continue vacation autotests — pick 5 from pending (avoid multi-user tests)
-- [ ] TC-VAC-011: Yearly breakdown tooltip
-- [ ] TC-VAC-022: Approval resets on date edit — may be blocked (two-user)
-- [ ] TC-VAC-009: View vacation details dialog
-- [ ] TC-VAC-040-046: Table sorting/filtering tests (pagination-aware)
-- [ ] TC-VAC-050+: Remaining filter and view tests
+### P0 — Immediate (Next Session: sick-leave continued)
+- [ ] Generate sick-leave CRUD tests: TC-SL-002 (create with number), TC-SL-003 (create with attachments), TC-SL-004 (validation: end before start), TC-SL-005 (validation: overlapping dates)
+- [ ] Generate sick-leave edit tests: TC-SL-007 (edit number field)
+- [ ] Address API auth issue — sick leave CRUD needs AUTHENTICATED_USER, not API_SECRET_TOKEN. All tests must use UI-based setup/cleanup.
 
-## P1 — Framework & Infrastructure
-- [ ] Extract `toPeriodPattern` into shared utility (duplicated in 7+ data classes now)
-- [ ] Add `cleanupPvaynmasterVacations()` pre-test hook for resilience
-- [ ] Investigate JWT-based auth for creating vacations as arbitrary employees
-- [x] Fix `deleteVacation` to use hard-delete test endpoint (done session 70)
-- [x] Add `goToLastPage()` pagination method to MyVacationsPage (done session 70)
+### P1 — High Priority (sick-leave lifecycle + manager)
+- [ ] Generate sick-leave lifecycle tests: TC-SL-009 (close without number — error), TC-SL-012 (reopen ended sick leave)
+- [ ] Generate sick-leave manager tests: TC-SL-013+ (manager view, approval flows)
+- [ ] Generate sick-leave accounting tests: TC-SL-020+ (accounting status transitions)
+- [ ] Generate sick-leave permissions tests
 
-## P2 — Knowledge Gaps Found
-- [ ] Document which vacation statuses appear on which tabs comprehensively
-- [ ] Investigate CANCELED status — why it's excluded from all tabs
-- [ ] Map pagination behavior across different tab types
+### P2 — Lower Priority
+- [ ] Review 18 blocked vacation/day-off tests — check if any can be unblocked
+- [ ] Run full regression suite across all verified tests (vacation + day-off + sick-leave)
+- [ ] Investigate JWT-based auth for sick leave API as alternative to UI-only approach
 
-## Completed (Sessions 65-70)
-- [x] TC-VAC-001-008, 010, 015-021, 023, 025 verified (sessions 65-69)
-- [x] TC-VAC-034-038 verified (session 69)
-- [x] TC-VAC-047 (Open tab filter) verified (session 69)
-- [x] TC-VAC-048 (Closed tab filter) verified — changed CANCELED→REJECTED (session 70)
-- [x] TC-VAC-049 (All tab filter) verified — changed CANCELED→REJECTED (session 70)
-- [x] TC-VAC-024 marked blocked (two-user workflow) (session 70)
-- [x] ApiVacationSetupFixture: hard-delete cleanup (session 70)
-- [x] Discovered: CANCELED vacations not shown on any tab (session 70)
-- [x] Session 70 maintenance (§9.4)
+### Completed (Session 125)
+- [x] TC-SL-001: Create sick leave — happy path (P0, UI) — verified
+- [x] TC-SL-006: Edit sick leave dates (P0, UI) — verified
+- [x] TC-SL-008: Close sick leave — happy path with number (P0, UI) — verified
+- [x] TC-SL-010: Delete sick leave (P1, UI) — verified
+- [x] TC-SL-011: View sick leave details (P1, UI) — verified
+- [x] Built MySickLeavePage, SickLeaveCreateDialog page objects
+- [x] Built SickLeaveSetupData, SickLeaveTc001Data data classes
+- [x] Built sickLeaveQueries.ts DB queries
+- [x] Discovered: details dialog uses rc-dialog (not role="dialog"), delete is inside details dialog
 
-<details>
-<summary>Completed from Previous Phases</summary>
-
-### Phase B (Sessions 59-64)
-- [x] Vacation XLSX: 100 test cases across 7 suites
-- [x] Deep-dive vault enrichment for vacation module (3000+ words)
-- [x] GitLab ticket mining (all history, descriptions + comments)
-- [x] UI exploration via Playwright for all vacation pages
-
-### Phase A (Sessions 1-58)
-- [x] Full knowledge acquisition across all modules
-- [x] Day-off and t3404 autotest generation (previous Phase C scopes)
+<details><summary>Completed (Sessions 85-124) — 85 vacation + 25 day-off tests</summary>
+See autotest_tracking table for full history.
 </details>

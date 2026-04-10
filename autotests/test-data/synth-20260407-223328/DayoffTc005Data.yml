@@ -1,0 +1,9 @@
+className: DayoffTc005Data
+runId: 20260407-195922-qa-1
+savedAt: "2026-04-07T19:59:23.786Z"
+args:
+  username: mvagner
+  originalDate: "2026-06-12"
+  personalDate: "2026-06-19"
+  requestId: "3605"
+  needsApiSetup: false

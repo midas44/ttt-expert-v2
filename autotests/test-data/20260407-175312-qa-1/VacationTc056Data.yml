@@ -1,0 +1,9 @@
+className: VacationTc056Data
+runId: 20260407-175312-qa-1
+savedAt: "2026-04-07T18:04:15.110Z"
+args:
+  managerLogin: pvaynmaster
+  targetLogin: aenovikova
+  latinLastName: Novikova
+  russianLastName: Новикова
+  targetDisplayName: Anastasiya Novikova

@@ -763,3 +763,18 @@ The Controller Endpoint Security Matrix in §6 above lists paths relative to the
 All paths are relative to base `/v1/vacations` (full: `/api/vacation/v1/vacations`).
 
 The swagger spec (`/api/vacation/v2/api-docs`) is the authoritative source for deployed endpoint paths. The code analysis may show controller annotations that differ from the deployed routing due to API gateway remapping.
+
+
+## Autotest Notes (Session 120)
+
+### ttt_vacation.employee.maternity column (NOT maternity_leave)
+**Discovered**: Session 120, TC-VAC-078 initial failure.
+The column for maternity status is `maternity` (boolean, default false), NOT `maternity_leave` as referenced in some bug reports and vault notes. Always use `ve.maternity = true` in queries.
+
+### Vacation Days page search — Russian name display
+The /vacation/vacation-days page shows employee names in Russian even when the UI language is English. The search input accepts Latin names (search works), but the table cells display Russian names. Test assertions should verify search works by count reduction (filtered < unfiltered), not by matching the search term in table cell text.
+
+### Accountant page access confirmed
+- /vacation/payment → accessible (VACATIONS:VIEW_PAYMENTS → ACC, CACC, ADM, VALL)
+- /vacation/request → NOT accessible for plain ACCOUNTANT (needs VACATIONS:VIEW_APPROVES → PM, DM, TL, ADM, VALL)
+- This confirms the permission matrix: accountants can pay but have no approval UI path.

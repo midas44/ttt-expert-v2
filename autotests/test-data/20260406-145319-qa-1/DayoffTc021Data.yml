@@ -1,0 +1,12 @@
+className: DayoffTc021Data
+runId: 20260406-145319-qa-1
+savedAt: "2026-04-06T14:53:45.237Z"
+args:
+  managerLogin: perekrest
+  employeeLogin: aritter
+  employeeName: Риттер Анна
+  originalDate: "2026-05-11"
+  personalDate: "2026-05-18"
+  requestId: "3504"
+  targetManagerLogin: nshumakov
+  targetManagerFullName: Николай Шумаков

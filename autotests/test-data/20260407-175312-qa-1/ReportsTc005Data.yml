@@ -1,0 +1,7 @@
+className: ReportsTc005Data
+runId: 20260407-175312-qa-1
+savedAt: "2026-04-07T17:59:47.000Z"
+args:
+  username: dvelizhanin
+  taskName: "Total Direct Energie iOS / #TDEIOS-4182 [Conso Live/ Eligibility] get rid of stockage permission"
+  projectName: DirectEnergie-ODC

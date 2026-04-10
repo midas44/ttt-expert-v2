@@ -1,0 +1,7 @@
+className: ReportsTc005Data
+runId: 20260407-172832-qa-1
+savedAt: "2026-04-07T17:35:36.285Z"
+args:
+  username: aryabchenko
+  taskName: Webmodule / small issues / check warning on load connection properties
+  projectName: WiseMoGuest

@@ -1,0 +1,17 @@
+className: VacationTc100Data
+runId: 20260407-195922-qa-1
+savedAt: "2026-04-07T20:12:15.990Z"
+args:
+  vacationsUrl: https://ttt-qa-1.noveogroup.com/api/vacation/v1/vacations
+  login: pvaynmaster
+  apiToken: 76c45e8c-457a-4a8f-817f-4160d0cc2eaf
+  weeks:
+    - startDate: "2026-11-23"
+      endDate: "2026-11-27"
+      paymentMonth: "2026-11-01"
+    - startDate: "2026-12-07"
+      endDate: "2026-12-11"
+      paymentMonth: "2026-12-01"
+    - startDate: "2027-01-11"
+      endDate: "2027-01-15"
+      paymentMonth: "2027-01-01"

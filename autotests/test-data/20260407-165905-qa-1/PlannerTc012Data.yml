@@ -1,0 +1,10 @@
+className: PlannerTc012Data
+runId: 20260407-165905-qa-1
+savedAt: "2026-04-07T17:01:58.473Z"
+args:
+  username: kbryazgin
+  projectName: Diabolocom-Java-ODC
+  taskName: >-
+    Diabolocom-Java-ODC / #EV2-24539 [BE][LOAD2] [Mail]/[Global mail settings] - Technical. To extend 'createMailData'
+    endpoint for using correct data on LOAD2
+  daysBack: 0

@@ -88,7 +88,6 @@ export class T3404Tc016Data {
       const row = await findPastDayoffInOpenPeriod(db);
       const apStart = await getApprovePeriodStart(db);
       const instance = new T3404Tc016Data(row.login, row.date, apStart);
-      if (mode === "saved")
         saveToDisk("T3404Tc016Data", {
           username: row.login,
           dayoffDate: row.date,

@@ -1,0 +1,12 @@
+className: DayoffTc021Data
+runId: 20260407-195922-qa-1
+savedAt: "2026-04-07T20:00:10.286Z"
+args:
+  managerLogin: perekrest
+  employeeLogin: ogribanova
+  employeeName: Грибанова Ольга
+  originalDate: "2026-05-11"
+  personalDate: "2026-05-18"
+  requestId: "3622"
+  targetManagerLogin: azharkikh
+  targetManagerFullName: Андрей Жарких

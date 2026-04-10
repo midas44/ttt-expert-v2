@@ -75,7 +75,7 @@ export class VacationTc047Data {
       canceledVacEndIso: weeks.week2End,
     };
 
-    if (mode === "saved") saveToDisk("VacationTc047Data", args);
+    saveToDisk("VacationTc047Data", args);
     return new VacationTc047Data(args);
   }
 }

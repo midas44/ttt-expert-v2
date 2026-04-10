@@ -1,0 +1,7 @@
+className: VacationTc055Data
+runId: 20260407-165905-qa-1
+savedAt: "2026-04-07T17:11:21.370Z"
+args:
+  username: nmungalova
+  searchName: Strakhov
+  expectedEmployee: Viktor Strakhov

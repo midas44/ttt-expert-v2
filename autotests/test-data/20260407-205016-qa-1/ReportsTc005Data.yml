@@ -1,0 +1,7 @@
+className: ReportsTc005Data
+runId: 20260407-205016-qa-1
+savedAt: "2026-04-07T20:56:22.624Z"
+args:
+  username: ishalygin
+  taskName: "#DEV-24315 [load1] Tests with enabled FT use_sftp_api_structure failed"
+  projectName: Diabolocom-Java-ODC

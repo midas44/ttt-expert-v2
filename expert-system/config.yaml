@@ -1,13 +1,13 @@
 session:
-  delay_minutes: 10
-  delay_minutes_offhours: 10
+  delay_minutes: 60
+  delay_minutes_offhours: 30
   offhours_utc: 15:00-03:00
   max_duration_minutes: 90
 phase:
   current: autotest_generation
   generation_allowed: true
   coverage_override: -1
-  scope: vacation
+  scope: collection:absences
 thresholds:
   knowledge_coverage_target: 0.8
   note_quality_min_links: 2
@@ -34,19 +34,22 @@ autonomy:
   stop: true
   model: opus
   effort: max
+  effort_phase_a: max
+  effort_phase_b: max
+  effort_phase_c: max
   allow_api_mutations: true
-promo:
+stop_at: ''
+peak_hours:
   enabled: true
-  peak_hours_utc: 12:00-18:00
+  range_utc: 12:00-19:00
   weekdays_only: true
-  expires: '2026-03-29'
   buffer_minutes: 40
 autotest:
   enabled: true
   target_env: qa-1
   max_tests_per_session: 5
   auto_fix_attempts: 3
-  scope: vacation
+  scope: collection:absences
   priority_order:
   - vacation
   - sick-leave

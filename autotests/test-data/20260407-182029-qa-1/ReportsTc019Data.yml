@@ -1,0 +1,12 @@
+className: ReportsTc019Data
+runId: 20260407-182029-qa-1
+savedAt: "2026-04-07T18:27:45.507Z"
+args:
+  managerLogin: nmungalova
+  employeeLogin: zvezda
+  projectName: WiseMoGuest
+  taskName: WiseMoGuest / Mngt & Arch / Videocall Ole
+  taskDisplayName: Mngt & Arch / Videocall Ole
+  taskId: "391787"
+  dateLabel: "06.04"
+  dateIso: "2026-04-06"

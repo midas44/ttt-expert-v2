@@ -1,0 +1,8 @@
+className: DayoffTc030Data
+runId: 20260407-184513-qa-1
+savedAt: "2026-04-07T18:46:23.049Z"
+args:
+  cpoLogin: perekrest
+  cpoName: Перекрест Галина
+  originalDate: "2026-12-31"
+  personalDate: "2027-01-07"

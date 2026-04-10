@@ -1,0 +1,9 @@
+className: ReportsTc012Data
+runId: 20260407-195922-qa-1
+savedAt: "2026-04-07T20:07:45.637Z"
+args:
+  username: ktalinin
+  taskName: Develoment / UGV-3118 Error for too large timeframe for the "Impact Video" DATA
+  taskId: "651901"
+  dateLabel: "08.04"
+  dateIso: "2026-04-08"

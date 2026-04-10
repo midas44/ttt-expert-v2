@@ -1,0 +1,12 @@
+className: ReportsTc017Data
+runId: 20260407-184513-qa-1
+savedAt: "2026-04-07T18:52:26.874Z"
+args:
+  managerLogin: dergachev
+  employeeLogin: rgladkikh
+  employeeName: Roman Gladkikh
+  projectName: Diabolocom-Java-ODC
+  taskName: Diabolocom-Java-ODC / Project feedbac
+  taskId: "668117"
+  dateLabel: "07.04"
+  dateIso: "2026-04-07"

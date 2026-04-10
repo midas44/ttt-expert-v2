@@ -1,0 +1,10 @@
+className: VacationTc070Data
+runId: 20260407-190832-qa-1
+savedAt: "2026-04-07T19:19:29.672Z"
+args:
+  employeeLogin: ebrysova
+  employeeEmail: Ekaterina.Brysova@noveogroup.com
+  startDate1: "2026-07-06"
+  endDate1: "2026-07-10"
+  startDate2: "2026-08-03"
+  endDate2: "2026-08-07"

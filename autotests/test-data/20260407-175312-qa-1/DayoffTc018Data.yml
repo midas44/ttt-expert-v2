@@ -1,0 +1,10 @@
+className: DayoffTc018Data
+runId: 20260407-175312-qa-1
+savedAt: "2026-04-07T17:53:46.183Z"
+args:
+  managerLogin: perekrest
+  employeeLogin: aritter
+  employeeName: Риттер Анна
+  originalDate: "2026-12-31"
+  personalDate: "2027-01-07"
+  requestId: "3536"

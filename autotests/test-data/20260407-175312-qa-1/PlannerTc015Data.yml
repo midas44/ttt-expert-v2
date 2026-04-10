@@ -1,0 +1,8 @@
+className: PlannerTc015Data
+runId: 20260407-175312-qa-1
+savedAt: "2026-04-07T17:56:01.719Z"
+args:
+  username: diborisov
+  projectName: Diabolocom-Java-ODC
+  taskName: "Diabolocom-Java-ODC / #DEV-43558 Missing descriptions of rights of some permissions"
+  daysBack: 0

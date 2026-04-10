@@ -1,0 +1,8 @@
+className: VacationTc059Data
+runId: 20260407-175312-qa-1
+savedAt: "2026-04-07T18:04:21.699Z"
+args:
+  username: vkochetkov
+  totalAvailableDays: 50
+  currentYear: 2026
+  annualNorm: 24

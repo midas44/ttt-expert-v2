@@ -82,7 +82,6 @@ export class T3404Tc007Data {
         row.approve_start,
         row.is_exact,
       );
-      if (mode === "saved")
         saveToDisk("T3404Tc007Data", {
           username: row.login,
           dayoffDate: row.date,

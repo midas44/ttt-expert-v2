@@ -1,0 +1,8 @@
+className: SickLeaveTc007Data
+runId: 20260407-202520-qa-1
+savedAt: "2026-04-07T20:33:36.654Z"
+args:
+  username: ebrysova
+  managerLogin: ngerasimov
+  startDateIso: "2026-06-06"
+  endDateIso: "2026-06-10"

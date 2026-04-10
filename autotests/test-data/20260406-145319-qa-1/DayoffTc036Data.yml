@@ -1,0 +1,14 @@
+className: DayoffTc036Data
+runId: 20260406-145319-qa-1
+savedAt: "2026-04-06T14:54:14.658Z"
+args:
+  employeeId: "1325"
+  employeeLogin: ovasilev
+  employeeName: Васильев Олег
+  originalOfficeId: "4"
+  originalOfficeName: Юпитер
+  targetOfficeId: "27"
+  targetOfficeName: Венера (РФ)
+  approvedRequestIds:
+    - "3525"
+  approvedCountBefore: 2

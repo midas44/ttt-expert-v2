@@ -999,3 +999,312 @@ export async function findEmployeeWithMultiYearDayoffs(
      LIMIT 1`,
   );
 }
+
+/**
+ * Finds an employee with an APPROVED transfer request whose original_date
+ * matches a calendar day in the production calendar. Returns the calendar_id
+ * needed for deletion (Path B cascade trigger).
+ */
+export async function findApprovedRequestWithCalendarDay(
+  db: DbClient,
+): Promise<{
+  requestId: number;
+  employeeId: number;
+  employeeLogin: string;
+  employeeName: string;
+  originalDate: string;
+  personalDate: string;
+  calendarId: number;
+  officeId: number;
+}> {
+  return db.queryOne<{
+    requestId: number;
+    employeeId: number;
+    employeeLogin: string;
+    employeeName: string;
+    originalDate: string;
+    personalDate: string;
+    calendarId: number;
+    officeId: number;
+  }>(
+    `SELECT edr.id AS "requestId",
+            e.id AS "employeeId",
+            e.login AS "employeeLogin",
+            CONCAT(e.russian_last_name, ' ', e.russian_first_name) AS "employeeName",
+            edr.original_date::text AS "originalDate",
+            edr.personal_date::text AS "personalDate",
+            oc.calendar_id AS "calendarId",
+            e.office_id AS "officeId"
+     FROM ttt_vacation.employee_dayoff_request edr
+     JOIN ttt_vacation.employee e ON edr.employee = e.id
+     JOIN ttt_calendar.office_calendar oc ON oc.office_id = e.office_id
+     JOIN ttt_calendar.calendar_days cd ON cd.calendar_id = oc.calendar_id
+       AND cd.calendar_date = edr.original_date
+     WHERE edr.status = 'APPROVED'
+       AND e.enabled = true
+       AND edr.original_date > CURRENT_DATE
+       AND oc.since_year <= EXTRACT(YEAR FROM CURRENT_DATE)
+       AND NOT EXISTS (
+         SELECT 1 FROM ttt_calendar.office_calendar oc2
+         WHERE oc2.office_id = oc.office_id
+           AND oc2.since_year > oc.since_year
+           AND oc2.since_year <= EXTRACT(YEAR FROM CURRENT_DATE)
+       )
+     ORDER BY random()
+     LIMIT 1`,
+  );
+}
+
+/**
+ * Creates an APPROVED transfer request and returns it with calendar info.
+ * Used when no existing APPROVED request is found.
+ */
+export async function createApprovedRequestForCalendarTest(
+  db: DbClient,
+): Promise<{
+  requestId: number;
+  employeeId: number;
+  employeeLogin: string;
+  employeeName: string;
+  originalDate: string;
+  personalDate: string;
+  calendarId: number;
+  officeId: number;
+}> {
+  const created = await createApprovedDayoffRequest(db);
+  const info = await db.queryOne<{
+    employeeId: number;
+    calendarId: number;
+    officeId: number;
+  }>(
+    `SELECT e.id AS "employeeId",
+            oc.calendar_id AS "calendarId",
+            e.office_id AS "officeId"
+     FROM ttt_vacation.employee e
+     JOIN ttt_calendar.office_calendar oc ON oc.office_id = e.office_id
+     WHERE e.login = $1
+       AND oc.since_year <= EXTRACT(YEAR FROM CURRENT_DATE)
+     ORDER BY oc.since_year DESC
+     LIMIT 1`,
+    [created.employeeLogin],
+  );
+  return {
+    ...created,
+    employeeId: info.employeeId,
+    calendarId: info.calendarId,
+    officeId: info.officeId,
+  };
+}
+
+/**
+ * Returns the count of employee_dayoff ledger entries for a given employee
+ * on a specific original_date. The ledger table has no FK to requests —
+ * it links via (employee, original_date).
+ */
+export async function countLedgerEntries(
+  db: DbClient,
+  employeeId: number,
+  originalDate: string,
+): Promise<number> {
+  const row = await db.queryOne<{ cnt: string }>(
+    `SELECT COUNT(*)::text AS cnt
+     FROM ttt_vacation.employee_dayoff
+     WHERE employee = $1
+       AND original_date = $2::date`,
+    [employeeId, originalDate],
+  );
+  return Number(row.cnt);
+}
+
+/**
+ * Returns the current status of a dayoff request.
+ */
+export async function getRequestStatus(
+  db: DbClient,
+  requestId: number,
+): Promise<string> {
+  const row = await db.queryOne<{ status: string }>(
+    `SELECT status FROM ttt_vacation.employee_dayoff_request WHERE id = $1`,
+    [requestId],
+  );
+  return row.status;
+}
+
+/**
+ * Returns the calendar_days row ID for a given calendar + date.
+ * Needed for DELETE /v1/calendar/{id} which deletes by row ID.
+ */
+export async function findCalendarDayId(
+  db: DbClient,
+  calendarId: number,
+  date: string,
+): Promise<number> {
+  const row = await db.queryOne<{ id: number }>(
+    `SELECT id FROM ttt_calendar.calendar_days
+     WHERE calendar_id = $1 AND calendar_date = $2::date`,
+    [calendarId, date],
+  );
+  return row.id;
+}
+
+/**
+ * Returns the employee's current vacation day balance.
+ */
+export async function getVacationBalance(
+  db: DbClient,
+  employeeId: number,
+): Promise<number> {
+  const row = await db.queryOne<{ days: string }>(
+    `SELECT COALESCE(ev.available_vacation_days, 0)::text AS days
+     FROM ttt_vacation.employee_vacation ev
+     WHERE ev.employee = $1
+     ORDER BY ev.year DESC
+     LIMIT 1`,
+    [employeeId],
+  );
+  return Number(row.days);
+}
+
+/**
+ * Returns the current approve period start_date for an office.
+ */
+export async function getApprovePeriod(
+  db: DbClient,
+  officeId: number,
+): Promise<string> {
+  const row = await db.queryOne<{ start_date: string }>(
+    `SELECT start_date::text
+     FROM ttt_backend.office_period
+     WHERE office = $1 AND type = 'APPROVE'`,
+    [officeId],
+  );
+  return row.start_date;
+}
+
+/**
+ * Creates a NEW dayoff request for a specific employee/date combination.
+ * Sets last_approved_date = original_date (matches app behavior).
+ * Returns the inserted request ID and computed personal_date.
+ */
+export async function createNewRequestForDate(
+  db: DbClient,
+  employeeId: number,
+  approverId: number,
+  originalDate: string,
+): Promise<{ requestId: number; personalDate: string }> {
+  const personalRow = await db.queryOne<{ workingDate: string }>(
+    `WITH dates AS (
+       SELECT generate_series(
+         ($1::date + INTERVAL '7 days')::date,
+         ($1::date + INTERVAL '60 days')::date,
+         '1 day'::interval
+       )::date AS d
+     )
+     SELECT d::text AS "workingDate"
+     FROM dates
+     WHERE EXTRACT(DOW FROM d) NOT IN (0, 6)
+     ORDER BY d
+     LIMIT 1`,
+    [originalDate],
+  );
+  const inserted = await db.queryOne<{ id: number }>(
+    `INSERT INTO ttt_vacation.employee_dayoff_request
+       (employee, approver, original_date, personal_date, last_approved_date, duration, status, creation_date)
+     VALUES ($1, $2, $3::date, $4::date, $3::date, 0, 'NEW', NOW())
+     RETURNING id`,
+    [employeeId, approverId, originalDate, personalRow.workingDate],
+  );
+  await db.query(
+    `UPDATE ttt_vacation.timeline SET fetch_day_off = false
+     WHERE day_off = $1 AND fetch_day_off = true`,
+    [inserted.id],
+  );
+  await db.query(
+    `INSERT INTO ttt_vacation.timeline
+       (employee, event_time, event_type, day_off, approver, start_date, end_date, fetch_day_off, days_used, days_accrued)
+     VALUES ($1, NOW(), 'EMPLOYEE_DAY_OFF_CREATED', $2, $3, $4::date, $5::date, true, 0, 0)`,
+    [employeeId, inserted.id, approverId, originalDate, personalRow.workingDate],
+  );
+  return { requestId: inserted.id, personalDate: personalRow.workingDate };
+}
+
+/**
+ * Finds an employee+manager pair in a specific office with two free holidays
+ * in different months (both after approve period). Used for TC-DO-035.
+ */
+export async function findEmployeeForPeriodTest(
+  db: DbClient,
+  officeId: number,
+  afterDate: string,
+): Promise<{
+  employeeId: number;
+  employeeLogin: string;
+  managerId: number;
+  holiday1: string;
+  holiday2: string;
+}> {
+  return db.queryOne<{
+    employeeId: number;
+    employeeLogin: string;
+    managerId: number;
+    holiday1: string;
+    holiday2: string;
+  }>(
+    `WITH free_holidays AS (
+       SELECT e.id AS eid, e.login, m.id AS mid,
+              cd.calendar_date,
+              EXTRACT(MONTH FROM cd.calendar_date) AS mon,
+              ROW_NUMBER() OVER (PARTITION BY e.id ORDER BY cd.calendar_date) AS rn
+       FROM ttt_vacation.employee e
+       JOIN ttt_vacation.employee m ON e.manager = m.id
+       JOIN ttt_calendar.office_calendar oc ON oc.office_id = e.office_id
+       JOIN ttt_calendar.calendar_days cd ON cd.calendar_id = oc.calendar_id
+       WHERE e.office_id = $1
+         AND e.enabled = true AND m.enabled = true
+         AND cd.duration = 0
+         AND cd.calendar_date > $2::date
+         AND oc.since_year <= EXTRACT(YEAR FROM CURRENT_DATE)
+         AND NOT EXISTS (
+           SELECT 1 FROM ttt_calendar.office_calendar oc2
+           WHERE oc2.office_id = oc.office_id
+             AND oc2.since_year > oc.since_year
+             AND oc2.since_year <= EXTRACT(YEAR FROM CURRENT_DATE)
+         )
+         AND NOT EXISTS (
+           SELECT 1 FROM ttt_vacation.employee_dayoff_request edr
+           WHERE edr.employee = e.id
+             AND edr.original_date = cd.calendar_date
+             AND edr.status NOT IN ('DELETED', 'DELETED_FROM_CALENDAR', 'CANCELED')
+         )
+     )
+     SELECT f1.eid AS "employeeId", f1.login AS "employeeLogin",
+            f1.mid AS "managerId",
+            f1.calendar_date::text AS holiday1,
+            f2.calendar_date::text AS holiday2
+     FROM free_holidays f1
+     JOIN free_holidays f2 ON f1.eid = f2.eid AND f2.rn > f1.rn AND f2.mon != f1.mon
+     WHERE f1.rn = 1
+     ORDER BY random()
+     LIMIT 1`,
+    [officeId, afterDate],
+  );
+}
+
+/**
+ * Counts APPROVED dayoff requests for an employee in a given year.
+ */
+export async function countApprovedRequestsInYear(
+  db: DbClient,
+  employeeId: number,
+  year: number,
+): Promise<number> {
+  const row = await db.queryOne<{ cnt: string }>(
+    `SELECT COUNT(*)::text AS cnt
+     FROM ttt_vacation.employee_dayoff_request
+     WHERE employee = $1
+       AND status = 'APPROVED'
+       AND EXTRACT(YEAR FROM original_date) = $2`,
+    [employeeId, year],
+  );
+  return Number(row.cnt);
+}

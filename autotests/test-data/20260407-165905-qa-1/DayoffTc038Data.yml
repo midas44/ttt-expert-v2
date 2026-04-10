@@ -1,0 +1,14 @@
+className: DayoffTc038Data
+runId: 20260407-165905-qa-1
+savedAt: "2026-04-07T17:00:37.719Z"
+args:
+  employeeId: "990282"
+  employeeLogin: ltran
+  managerId: "65"
+  officeId: "22"
+  officeName: ГолденСтар
+  calendarId: "5"
+  calDayId: 479
+  requestId: "3511"
+  originalDate: "2026-04-27"
+  personalDate: "2026-05-04"

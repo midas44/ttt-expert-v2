@@ -1,52 +1,35 @@
-# Autotest Progress — Phase C
+# Autotest Progress
 
-## Overall Status (2026-03-27, Session 68)
+## Overall Coverage (Session 128)
 
-| Module | Total | Verified | Blocked | Pending | Coverage |
-|--------|-------|----------|---------|---------|----------|
-| vacation | 100 | 19 | 1 | 80 | 19% |
-| day-off | 121 | 0 | 0 | 121 | 0% |
-| **Total** | **221** | **19** | **1** | **201** | **8.6%** |
+| Module | Manifest Total | Verified | Blocked | Failed | Pending | Coverage |
+|--------|---------------|----------|---------|--------|---------|----------|
+| vacation | 100 | 85 | 15 | 0 | 0 | 85% (100% addressed) |
+| day-off | 28+4 | 30 | 4 | 0 | ~6 | 75% |
+| sick-leave | 71 | 5 | 0 | 0 | 66 | 7% |
+| t2724 | 38 | 38 | 0 | 0 | 0 | 100% |
+| t3404 | 24 | 21 | 3 | 0 | 0 | 88% (100% addressed) |
+| planner | 82 | 24 | 0 | 1 | 57 | 29% |
+| reports | 60 | 17 | 0 | 2 | 41 | 28% |
 
-## Verified Tests by Session
+### Absences Collection (current focus)
+- **Day-off verified in S128:** TC-DO-035 (fixed: JWT auth + field name), TC-DO-037 (new), TC-DO-038 (new)
+- **Day-off blocked:** TC-DO-036 (no API for office change, HR sync only, date-conditional cascade)
+- **Remaining:** ~15 cross-service tests (TC-CS-013..027+054)
+- **Target:** Complete absences collection
 
-### Session 65 (5 verified)
-- TC-VAC-001: View personal vacation list
-- TC-VAC-002: View vacation balance per year
-- TC-VAC-003: Create REGULAR vacation — happy path
-- TC-VAC-004: Create ADMINISTRATIVE vacation
-- TC-VAC-005: Edit NEW vacation dates
+### Sick-Leave Progress (started session 125)
+**Verified (5):** TC-SL-001, TC-SL-006, TC-SL-008, TC-SL-010, TC-SL-011
+**Key patterns established:**
+- Page objects: MySickLeavePage, SickLeaveCreateDialog
+- Data classes: SickLeaveTc001Data, SickLeaveSetupData
+- DB queries: sickLeaveQueries.ts
+- All tests use UI-based setup/cleanup (API auth returns 401/403)
+- Details dialog: rc-dialog (`.rc-dialog-wrap`), not `role="dialog"`
+- Action buttons: `data-testid="sickleave-action-*"` (edit, close, detail, attachments)
+- No "more" menu — detail button opens rc-dialog panel
+- Table date format: "dd – dd Mon yyyy"
 
-### Session 66 (5 verified, 1 blocked)
-- TC-VAC-006: Delete NEW vacation
-- TC-VAC-007: View vacation details in read-only modal
-- TC-VAC-008: Filter vacation list by status
-- TC-VAC-009: Filter vacation list by year
-- TC-VAC-010: blocked (pagination — insufficient data)
-- TC-VAC-011: Verify vacation creation notification
-
-### Session 67 (5 verified)
-- TC-VAC-012: Manager approve vacation
-- TC-VAC-013: Manager reject vacation
-- TC-VAC-014: Verify approval changes status to APPROVED
-- TC-VAC-015: Verify rejection reason saved in DB
-- TC-VAC-016: Verify manager sees pending requests count
-
-### Session 68 (5 verified)
-- TC-VAC-019: CPO self-approval on create
-- TC-VAC-020: Change approver (redirect request)
-- TC-VAC-025: Pay APPROVED REGULAR vacation
-- TC-VAC-034: Start date in past — rejected
-- TC-VAC-036: Insufficient available days — REGULAR blocked
-
-## Reusable Artifacts Created
-- **Page Objects**: MyVacationsPage, VacationCreationDialog, VacationDetailsDialog, EmployeeRequestsPage, VacationPaymentPage, MainPage
-- **Fixtures**: LoginFixture, LogoutFixture, VerificationFixture, ApiVacationSetupFixture
-- **Data queries**: vacationQueries.ts (findEmployeeWithManager, findCpoEmployeeWithManager, findSubordinateAndAltManager, findAccountantForEmployee, findEmployeeWithLimitedDays, hasVacationConflict, +more)
-
-## Key Technical Notes
-- All tests pass with `--workers=1` (sequential) — parallel execution causes CAS session conflicts
-- react-select dropdowns: use `[class*='option']` divs, type with `{ delay: 50 }` + 1500ms wait
-- react-datetime picker: `rdtSwitch` header, `rdtNext` navigation, `rdtMonth` cells
-- Payment page: dual confirmation dialogs, office-filtered accountants, "Last First" name format
-- PAID+EXACT vacations are permanent — test pollution accumulates
+### Blocked Tests (18 total)
+**Vacation (15):** Email pipeline (4), calendar service (1), environment/auth (10)
+**Day-off (3):** Environment-specific constraints

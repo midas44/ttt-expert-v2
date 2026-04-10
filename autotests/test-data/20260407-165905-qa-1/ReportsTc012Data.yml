@@ -1,0 +1,9 @@
+className: ReportsTc012Data
+runId: 20260407-165905-qa-1
+savedAt: "2026-04-07T17:06:41.046Z"
+args:
+  username: azhukov
+  taskName: Development / Front-end / 1381 - Progressive Mission Loading with Infinite Scroll
+  taskId: "711059"
+  dateLabel: "08.04"
+  dateIso: "2026-04-08"

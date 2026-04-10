@@ -1,0 +1,13 @@
+className: DayoffTc034Data
+runId: 20260407-195922-qa-1
+savedAt: "2026-04-07T20:01:35.778Z"
+args:
+  requestId: "3607"
+  employeeId: "98"
+  employeeLogin: omanoshkina
+  employeeName: Маношкина Оксана
+  originalDate: "2026-06-12"
+  personalDate: "2026-06-19"
+  calendarId: "1"
+  officeId: "2"
+  ledgerCountBefore: 0

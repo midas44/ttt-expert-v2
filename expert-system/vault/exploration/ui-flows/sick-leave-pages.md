@@ -1,67 +1,71 @@
----
-type: exploration
-tags:
-  - ui-flow
-  - sick-leave
-  - playwright
-  - timemachine
-created: '2026-03-12'
-updated: '2026-03-12'
-status: active
-related:
-  - '[[frontend-sick-leave-module]]'
-  - '[[sick-leave-service-implementation]]'
-  - '[[app-navigation]]'
-branch: release/2.1
----
-# Sick Leave UI Exploration (Timemachine)
 
-Explored as Dmitry Dergachev (manager + accounting roles). Build 2.1.26-SNAPSHOT.290209.
 
-## Page 1: /sick-leave/my — Employee View
+## Selectors (discovered during Phase C, session 125)
 
-**Title**: "My sick leaves". Single table, no tabs. "Add a sick note" button (blue, primary).
+### MySickLeavePage (`/sick-leave/my`)
 
-**Table columns**: Sick leave dates (sortable) | Calendar days (sortable) | Number (sortable) | Accountant (link to CS) | State (sortable) | Actions (2 icons per row)
+- **Page heading**: `locator("text=/My sick leaves|Мои больничные/i")` — bilingual regex needed
+- **Add button**: `getByRole("button", { name: "Add a sick note" })`
+- **Data table rows**: `page.locator("table tbody").first().locator("tr")` — first tbody is data, second is footer "Total"
+- **No data indicator**: `td` with text "No data"
 
-**Actions per row**:
-- Attachment icon (`data-testid="sickleave-action-attachments"`) → inline panel showing uploaded files
-- Detail icon (`data-testid="sickleave-action-detail"`) → "More about the sick note" modal
+#### Table columns (EN):
+| Index | Column |
+|-------|--------|
+| 0 | Sick leave dates |
+| 1 | Calendar days |
+| 2 | Number |
+| 3 | Accountant |
+| 4 | State |
+| 5 | Actions |
 
-**Detail modal fields**: Employee, Accountant, State, Status, Period, Calendar days, Number, Notify also.
+#### Date format in table:
+- Format: `"25 – 30 Apr 2026"` (day – day Month year)
+- NOT `dd.mm – dd.mm.yyyy`
+- Pattern match: `new RegExp(\`${startDay}.*${endDay}.*${monthAbbrev}\`)`
+- Month abbreviations: Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec
 
-**Create modal ("Adding sick note")**: Start date*, End date* (pickers), Calendar days (auto-calculated live), Number (optional, "needed to end sick leave"), File upload (JPG/JPEG/PNG/PDF, max 5 files, 5MB each), Notify also (multiselect, note: "manager, tech lead, accounting, PMs notified automatically"), info: "Sick pay paid after ending". Cancel / Save.
+#### Action buttons (data-testid selectors):
+- **Edit (pencil)**: `[data-testid="sickleave-action-edit"]` — opens edit dialog
+- **Close (checkmark)**: `[data-testid="sickleave-action-close"]` — opens close dialog (fallback: `sickleave-action-end`)
+- **Details (three-dots)**: `[data-testid="sickleave-action-detail"]` — opens rc-dialog details panel
+- **Attachments**: `[data-testid="sickleave-action-attachments"]` — hidden by default, do NOT match with generic `button` selector
 
-## Page 2: /vacation/sick-leaves-of-employees — Manager View
+**CRITICAL: There is NO direct delete button on the row.** Delete is accessed via the details dialog — open details first, then find Delete button inside the dialog.
 
-**Title**: "Sick leaves of employees". Redirects to `/my-department` default tab. "Add a sick note" button present.
+**CRITICAL: There is NO "more" (...) menu like vacation.** The three-dots icon IS the details button (`sickleave-action-detail`), NOT a dropdown menu.
 
-**Two tabs**: My department | My projects
+### Details Dialog (rc-dialog)
+- **Selector**: `page.locator(".rc-dialog-wrap, [role='dialog']").first()`
+- Does NOT match `getByRole("dialog")` — must use class-based selector
+- Contains: employee name, dates, calendar days, number, state
+- Contains Delete button: `detailsDialog.getByRole("button", { name: /delete/i })`
+- Close via: `.rc-dialog-close` (X button) or `Escape` key
 
-**Table columns**: Employee (CS link) | Sick leave dates (sortable, default desc) | Calendar days | State (filterable) | Status (filterable) | Actions (1 icon per row)
+### SickLeaveCreateDialog
+- **Dialog title (create)**: "Adding sick note" / "Добавление больничного"
+- **Dialog title (edit)**: "Editing sick note" / contains "edit" or "изменени"
+- **Date pickers**: react-datetime, same calendar navigation as VacationCreateDialog
+- **Number field**: `dialog.locator("div").filter({ hasText: /Number of the sick note/i }).last().locator("input")`
+- **Calendar days display**: Read via `evaluate()` searching for "calendar days:" text in dialog
+- **Submit button**: `getByRole("button", { name: /save|сохранить/i })`
+- **Cancel button**: `getByRole("button", { name: /cancel|отмена/i })`
 
-**Sample data**: Mix of Ended/Paid, Ended/New (unpaid), Rejected/Rejected. Pagination on My projects tab (~20/page).
+### Confirmation dialogs
+- Delete confirmation appears after clicking Delete in details dialog
+- Selector: `page.locator(".rc-dialog-wrap, [role='dialog']").last()`
+- Confirm button: `getByRole("button", { name: /delete|confirm|yes|ok/i })`
 
-## Page 3: /accounting/sick-leaves — Accounting View
+### State values (EN):
+- After create: "started" or "planned" (depends on dates relative to today)
+- After close: "Ended" or "Closed"
+- After delete: row disappears, or shows "Deleted" state
 
-**Title**: "Sick leave records". Accessible with accounting role. Shows "No data" with default filters (scoped to accountant's salary office).
+## API Authentication Issue (Phase C finding)
 
-**Table columns (richer)**: Employee | Sick leave dates | Days | **Work days** | **Sick note** (number) | Accountant | **Salary office** (filterable) | State (filterable) | Status (filterable) | Actions
-
-**State filter values**: All, Started, Ended, Planned, Overdue, Rejected, Deleted.
-
-No "Add a sick note" button — read-only view.
-
-## Cross-Cutting Observations
-
-**State vs Status distinction in UI**:
-- **State** = lifecycle: Started / Ended / Planned / Overdue / Rejected / Deleted
-- **Status** = payment: New / Paid / Rejected
-
-Maps to backend: State ≈ main status (OPEN→Started/Planned/Overdue, CLOSED→Ended), Status ≈ accounting_status.
-
-**No inline status editing** — state transitions driven by system processes and accountant actions, not direct UI buttons in these views. Accounting status change likely happens through a different mechanism (inline dropdown found in frontend code analysis but not observed in this exploration — may require correct salary office data).
-
-**Number field**: Optional on creation, required to close (end) the sick leave.
-
-Links: [[frontend-sick-leave-module]], [[sick-leave-service-implementation]], [[app-navigation]]
+Sick leave CRUD requires `AUTHENTICATED_USER` authority. Unlike vacation:
+- `API_SECRET_TOKEN` gets **403 Forbidden** for sick leave endpoints
+- `page.request.post()` gets **401 Unauthorized** (CAS cookies don't pass through proxy)
+- `page.evaluate(fetch())` with `credentials: "include"` also gets **401**
+- **Workaround**: Use UI-based create/edit/delete for both test actions AND cleanup
+- Cleanup in `finally` blocks should use UI delete (open details → click delete → confirm)

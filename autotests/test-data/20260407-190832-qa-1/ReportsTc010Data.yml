@@ -1,0 +1,10 @@
+className: ReportsTc010Data
+runId: 20260407-190832-qa-1
+savedAt: "2026-04-07T19:14:40.611Z"
+args:
+  username: vorobev
+  taskName: >-
+    QA / #67 SAP vacancies - Select only vacancies which title include the key word "SAP" in the subject and not in the
+    body of the vacancy
+  dateLabel: "09.04"
+  dateIso: "2026-04-09"

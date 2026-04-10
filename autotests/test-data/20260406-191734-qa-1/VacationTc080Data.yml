@@ -1,0 +1,5 @@
+className: VacationTc080Data
+runId: 20260406-191734-qa-1
+savedAt: "2026-04-06T19:20:19.759Z"
+args:
+  vacationsUrl: https://ttt-qa-1.noveogroup.com/api/vacation/v1/vacations

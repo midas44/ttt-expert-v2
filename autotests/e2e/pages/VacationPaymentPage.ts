@@ -54,7 +54,7 @@ export class VacationPaymentPage {
       const nextBtn = this.page.locator("th.rdtNext, [class*='rdtNext']").first();
       if (await nextBtn.isVisible().catch(() => false)) {
         await nextBtn.click();
-        await this.page.waitForTimeout(300);
+        await this.page.waitForTimeout(5000);
       } else {
         break;
       }

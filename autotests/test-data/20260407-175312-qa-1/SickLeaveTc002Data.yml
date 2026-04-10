@@ -1,0 +1,8 @@
+className: SickLeaveTc002Data
+runId: 20260407-175312-qa-1
+savedAt: "2026-04-07T18:00:32.523Z"
+args:
+  username: dmoskvina
+  managerLogin: ilnitsky
+  startDateIso: "2026-05-27"
+  endDateIso: "2026-05-31"

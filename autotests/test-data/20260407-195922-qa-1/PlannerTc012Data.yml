@@ -1,0 +1,8 @@
+className: PlannerTc012Data
+runId: 20260407-195922-qa-1
+savedAt: "2026-04-07T20:03:15.654Z"
+args:
+  username: diborisov
+  projectName: Diabolocom-Java-ODC
+  taskName: "Diabolocom-Java-ODC / #DEV-34726 Automate basic (couple) cases for each isolation"
+  daysBack: 0

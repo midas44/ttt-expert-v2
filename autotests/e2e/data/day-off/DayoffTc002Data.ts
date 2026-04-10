@@ -36,7 +36,6 @@ export class DayoffTc002Data {
     try {
       const row = await findEmployeeWithDayoffs(db);
       const instance = new DayoffTc002Data(row.login);
-      if (mode === "saved")
         saveToDisk("DayoffTc002Data", { username: row.login });
       return instance;
     } finally {

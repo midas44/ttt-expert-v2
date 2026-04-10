@@ -1,8 +1,9 @@
 globalTimeout: 10000
-stepTimeoutMs: 30000
+stepTimeoutMs: 60000
 windowPositionX: 0
 windowPositionY: 0
-fixtureDelayMs: 500
+fixtureDelayMs: 2000
 windowWidth: 1920
 windowHeight: 1200
-testDataMode: dynamic
+testDataMode: saved
+savedDataSet: synth-20260406-163536

@@ -1,0 +1,8 @@
+className: VacationTc033Data
+runId: 20260407-182029-qa-1
+savedAt: "2026-04-07T18:29:38.604Z"
+args:
+  username: zmustafina
+  startDateIso: "2027-02-22"
+  endDateIso: "2027-02-26"
+  hasNegativeBalance: true

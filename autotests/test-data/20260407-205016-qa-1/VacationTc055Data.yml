@@ -1,0 +1,7 @@
+className: VacationTc055Data
+runId: 20260407-205016-qa-1
+savedAt: "2026-04-07T21:01:26.359Z"
+args:
+  username: hbukarev
+  searchName: Orekhov
+  expectedEmployee: Yuriy Orekhov

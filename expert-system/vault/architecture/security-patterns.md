@@ -94,3 +94,63 @@ Pattern 3 is the correct approach but inconsistently applied. Sick leave uses pa
 - [[architecture/backend-architecture]] — Service architecture
 - [[exploration/api-findings/sick-leave-api-testing]] — Permission gap
 - [[exploration/api-findings/vacation-crud-api-testing]] — Working API token flow
+
+
+## Ticket-Derived Security Test Scenarios (Session 97 Enrichment)
+
+### Systemic API Authorization Bypass Pattern (15 tickets)
+
+The most critical security pattern across TTT: **UI hides features but API endpoints remain accessible without authorization checks.** This is a design-level issue — controllers use `@PreAuthorize` annotations but many rely on generic `AUTHENTICATED_USER` which any logged-in user has.
+
+**Test approach:** For EVERY endpoint, test with:
+1. The intended role (should succeed)
+2. A role that sees the feature hidden in UI (should fail with 403)
+3. An API token without specific permission (should fail with 403)
+
+**High-severity examples from tickets:**
+- #117: ANY user with approver role can approve ANY vacation request — the `approverId` field on vacation requests is decorative, not enforced
+- #1250: Employee redirects own vacation via API (UI doesn't show this option)
+- #1292: Manager cancels vacation via API (UI only shows approve/reject)
+- #3002: PROJECT_MANAGER edits sick leave records via API (accountant-only operation)
+- #736: ANY user sees other employees' reports via `GET /v1/reports`
+
+### Cross-Office Data Leakage (6 tickets)
+
+Office-scoped access control is frequently broken:
+- OFFICE_DIRECTOR sees ALL offices instead of own only (#2050)
+- Office accountant views/modifies vacation days for other offices (#480)
+- Office accountant sees report periods for all offices (#479)
+- Regular employee accesses admin-level pages (#482)
+
+**Root cause:** Many endpoints filter by office at the SERVICE level (not controller). If the service-level filter has a bug or is bypassed, data from all offices is returned.
+
+### Error Code Masking (4 tickets)
+
+Authorization failures sometimes return 500 or 400 instead of 403:
+- Inter-service calls mask 403 as 500 (#1286)
+- Token/settings operations return 500 (#1883)
+- Project access returns 400 (#2164)
+
+This makes it difficult to distinguish security violations from server errors in monitoring/testing.
+
+### JWT Lifecycle Edge Cases
+
+| Scenario | Expected | Actual (from tickets) |
+|----------|----------|----------------------|
+| Expired JWT | 401, redirect to login | WebSocket loops (#2270), fallback to polling |
+| Deactivated user login | 412 or 403 | Infinite 500-loop (#1275) |
+| API token on JWT-only endpoint | 403 | 400 (misleading — #1231) |
+| Different env auth behavior | Consistent | Dev loops, preprod redirects (#1262) |
+
+### Role Assignment Fragility
+
+Roles are synced from CompanyStaff, creating a dependency chain:
+```
+CS → RabbitMQ event → TTT sync → employee_global_roles table → JWT claims
+```
+
+If ANY link in this chain fails, the user's roles in TTT may be stale. Tickets #807, #522, #451, #293, #2063 all document cases where roles were missing or incorrect after sync delays.
+
+**Test strategy:** After CS sync, verify `GET /v1/employees/{login}/roles` matches expected roles. Also test with stale JWT (roles changed since token generation).
+
+Links: [[architecture/roles-permissions]], [[architecture/backend-architecture]], [[exploration/api-findings/sick-leave-api-testing]], [[exploration/tickets/security-ticket-findings]], [[analysis/role-permission-matrix]]

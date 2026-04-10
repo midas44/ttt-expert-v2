@@ -1,0 +1,11 @@
+className: VacationTc020Data
+runId: 20260407-184513-qa-1
+savedAt: "2026-04-07T18:54:07.365Z"
+args:
+  employeeLogin: kcherenkov
+  employeeName: Kirill Cherenkov
+  managerLogin: pvaynmaster
+  altManagerLogin: gkornev
+  altManagerName: German Kornev
+  startDateIso: "2026-07-20"
+  endDateIso: "2026-07-24"

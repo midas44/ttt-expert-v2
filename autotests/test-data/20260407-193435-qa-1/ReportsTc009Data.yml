@@ -1,0 +1,11 @@
+className: ReportsTc009Data
+runId: 20260407-193435-qa-1
+savedAt: "2026-04-07T19:40:43.502Z"
+args:
+  username: vshamanaev
+  task1Name: Communications
+  task2Name: Autotests
+  mondayLabel: "06.04"
+  mondayIso: "2026-04-06"
+  tuesdayLabel: "07.04"
+  tuesdayIso: "2026-04-07"

@@ -1,0 +1,13 @@
+className: DayoffTc034Data
+runId: 20260407-165905-qa-1
+savedAt: "2026-04-07T17:00:31.307Z"
+args:
+  requestId: "3422"
+  employeeId: "990205"
+  employeeLogin: rlee
+  employeeName: Ли Роман
+  originalDate: "2026-04-10"
+  personalDate: "2026-05-07"
+  calendarId: "6"
+  officeId: "10"
+  ledgerCountBefore: 2

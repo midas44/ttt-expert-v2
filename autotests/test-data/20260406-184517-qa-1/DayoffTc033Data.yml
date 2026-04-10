@@ -1,0 +1,12 @@
+className: DayoffTc033Data
+runId: 20260406-184517-qa-1
+savedAt: "2026-04-06T18:46:03.721Z"
+args:
+  requestId: "3246"
+  employeeId: "530"
+  employeeLogin: dmaslov
+  employeeName: Маслов Дмитрий
+  originalDate: "2026-06-01"
+  personalDate: "2026-12-29"
+  calendarId: "6"
+  officeId: "10"

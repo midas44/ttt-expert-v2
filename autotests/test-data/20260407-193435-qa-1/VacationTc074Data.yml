@@ -1,0 +1,12 @@
+className: VacationTc074Data
+runId: 20260407-193435-qa-1
+savedAt: "2026-04-07T19:45:05.675Z"
+args:
+  employeeLogin: abogdanova
+  employeeName: Aleksandra Bogdanova
+  managerLogin: pvaynmaster
+  altManagerLogin: ann
+  altManagerName: Anna Astakhova
+  startDateIso: "2026-05-25"
+  endDateIso: "2026-05-29"
+  periodPattern: 25.*29.*May

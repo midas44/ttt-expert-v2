@@ -1,0 +1,9 @@
+className: ReportsTc004Data
+runId: 20260407-175312-qa-1
+savedAt: "2026-04-07T17:58:44.989Z"
+args:
+  username: pnikonorov
+  periodStart: "2026-04-01"
+  taskName: Noveo Internal production budgets / Web Nsk / Tech.leading / Manager meeting
+  closedDateLabel: "23.03"
+  closedDateIso: "2026-03-23"

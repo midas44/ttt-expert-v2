@@ -1,0 +1,8 @@
+className: PlannerTc014Data
+runId: 20260407-195922-qa-1
+savedAt: "2026-04-07T20:03:20.068Z"
+args:
+  username: diborisov
+  projectName: Diabolocom-Java-ODC
+  taskName: "Diabolocom-Java-ODC / #DEV-48981 [Permission] Update isolation-library dependency"
+  daysBack: 0

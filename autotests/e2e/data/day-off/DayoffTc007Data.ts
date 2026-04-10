@@ -60,7 +60,6 @@ export class DayoffTc007Data {
     try {
       const row = await findEmployeeByActiveCalendar(db, "Russia");
       const instance = new DayoffTc007Data(row.login, row.expectedCount);
-      if (mode === "saved")
         saveToDisk("DayoffTc007Data", {
           username: row.login,
           expectedHolidayCount: row.expectedCount,

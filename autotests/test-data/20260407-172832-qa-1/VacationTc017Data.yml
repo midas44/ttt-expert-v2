@@ -1,0 +1,9 @@
+className: VacationTc017Data
+runId: 20260407-172832-qa-1
+savedAt: "2026-04-07T17:37:53.859Z"
+args:
+  employeeLogin: abogdanova
+  employeeName: Aleksandra Bogdanova
+  managerLogin: pvaynmaster
+  startDateIso: "2026-07-13"
+  endDateIso: "2026-07-17"

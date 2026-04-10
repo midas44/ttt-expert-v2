@@ -1,0 +1,8 @@
+className: PlannerTc014Data
+runId: 20260407-182029-qa-1
+savedAt: "2026-04-07T18:23:15.879Z"
+args:
+  username: diborisov
+  projectName: Diabolocom-Java-ODC
+  taskName: "Diabolocom-Java-ODC / #DEV-49387 [Permission] RabbitMQ event consuming broken"
+  daysBack: 0

@@ -133,7 +133,7 @@ test("TC-T3404-020: E2E reschedule earlier date + approval @regress @t3404", asy
   const approvedRowCount = await approvedRow.count();
   if (approvedRowCount > 0) {
     const statusText = await dayOffRequestPage.getRowStatus(datePattern);
-    expect(statusText).toMatch(/approved|подтверждено/i);
+    expect(statusText).toMatch(/approved|подтвержден[аоы]?/i);
   }
   // If row not found in My department, that's also acceptable (different filter)
   await verification.captureStep(testInfo, "approval-verified");

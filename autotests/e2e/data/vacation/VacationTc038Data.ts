@@ -59,7 +59,7 @@ export class VacationTc038Data {
         saturdayIso: satIso,
         sundayIso: sunIso,
       };
-      if (mode === "saved") saveToDisk("VacationTc038Data", args);
+      saveToDisk("VacationTc038Data", args);
       return new VacationTc038Data(args);
     } finally {
       await db.close();

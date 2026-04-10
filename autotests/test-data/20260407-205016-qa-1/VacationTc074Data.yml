@@ -1,0 +1,12 @@
+className: VacationTc074Data
+runId: 20260407-205016-qa-1
+savedAt: "2026-04-07T21:01:59.014Z"
+args:
+  employeeLogin: vulyanov
+  employeeName: Vladimir Ulyanov
+  managerLogin: pvaynmaster
+  altManagerLogin: dergachev
+  altManagerName: Dmitry Dergachev
+  startDateIso: "2026-05-25"
+  endDateIso: "2026-05-29"
+  periodPattern: 25.*29.*May

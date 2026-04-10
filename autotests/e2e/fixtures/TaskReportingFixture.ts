@@ -31,8 +31,9 @@ export class TaskReportingFixture {
     searchTerm: string,
     rowMatcher: string | RegExp,
     testInfo: TestInfo,
+    suggestionFilter?: string | RegExp,
   ): Promise<Locator> {
-    await this.tasksPage.addTask(searchTerm);
+    await this.tasksPage.addTask(searchTerm, suggestionFilter);
     await this.page.waitForLoadState("networkidle");
     const row = await this.tasksPage.getTaskRow(rowMatcher);
     await this.verification.verifyLocatorVisible(
@@ -69,12 +70,11 @@ export class TaskReportingFixture {
   ): Promise<void> {
     const cell = await this.tasksPage.dayCell(row, dateLabel);
     const editor = await this.tasksPage.openInlineEditor(cell);
-    await this.globalConfig.delay();
 
-    await editor.click();
-    await editor.fill("");
-    await editor.pressSequentially(value, { delay: 50 });
-    await this.exitInlineEditing(editor, cell);
+    await editor.fill(value);
+    await editor.press("Enter");
+    await this.page.waitForLoadState("networkidle");
+    await this.globalConfig.delay();
 
     if (options?.verify !== false) {
       await this.verification.verifyLocatorText(
@@ -84,8 +84,6 @@ export class TaskReportingFixture {
         `report-value-${dateLabel}-${value}`,
       );
     }
-
-    await this.page.waitForLoadState("networkidle");
   }
 
   /**
@@ -103,10 +101,11 @@ export class TaskReportingFixture {
   ): Promise<void> {
     const cell = await this.tasksPage.dayCell(row, dateLabel);
     const editor = await this.tasksPage.openInlineEditor(cell);
-    await this.globalConfig.delay();
 
     await editor.fill("");
-    await this.exitInlineEditing(editor, cell);
+    await editor.press("Enter");
+    await this.page.waitForLoadState("networkidle");
+    await this.globalConfig.delay();
 
     if (options?.verify !== false) {
       await this.verification.verifyLocatorEmpty(
@@ -115,8 +114,6 @@ export class TaskReportingFixture {
         `report-cleared-${dateLabel}`,
       );
     }
-
-    await this.page.waitForLoadState("networkidle");
   }
 
   /** Verifies a specific cell text matches the expected value. */
@@ -176,22 +173,4 @@ export class TaskReportingFixture {
     await this.tasksPage.clearSearch();
   }
 
-  /**
-   * Exits inline editing mode:
-   * 1. Presses Enter to submit
-   * 2. Clicks outside the cell to deselect
-   */
-  private async exitInlineEditing(
-    editor: Locator,
-    cell: Locator,
-  ): Promise<void> {
-    await editor.press("Enter");
-
-    // Click outside the cell to fully exit editing mode
-    const box = await cell.boundingBox();
-    if (box) {
-      // Click to the right of the cell, outside its bounds
-      await this.page.mouse.click(box.x + box.width + 20, box.y + box.height / 2);
-    }
-  }
 }

@@ -48,7 +48,6 @@ export class DayoffTc014Data {
     try {
       const row = await findFreeHolidayForTransfer(db);
       const instance = new DayoffTc014Data(row.login, row.public_date);
-      if (mode === "saved")
         saveToDisk("DayoffTc014Data", {
           username: row.login,
           holidayDate: row.public_date,

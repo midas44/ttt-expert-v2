@@ -146,6 +146,60 @@ export class AvailabilityChartPage {
       .inputValue();
   }
 
+  /**
+   * Navigates to the specified month by clicking prev/next arrows.
+   * targetMonth format: "MMMM YYYY" (e.g., "June 2026") or "MM.YYYY" (e.g., "06.2026").
+   */
+  async navigateToMonth(targetYear: number, targetMonth: number): Promise<void> {
+    const MONTHS = ["January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"];
+    const targetStr = `${MONTHS[targetMonth - 1]} ${targetYear}`;
+    const maxAttempts = 24;
+
+    for (let i = 0; i < maxAttempts; i++) {
+      const current = await this.getMonthYearText();
+      if (current.includes(targetStr) || current.includes(`${String(targetMonth).padStart(2, "0")}.${targetYear}`)) {
+        return;
+      }
+      // Parse current month to decide direction
+      const match = current.match(/(\w+)\s+(\d{4})/);
+      if (match) {
+        const curMonthIdx = MONTHS.findIndex((m) =>
+          m.toLowerCase().startsWith(match[1].toLowerCase()),
+        );
+        const curYear = parseInt(match[2], 10);
+        const curTotal = curYear * 12 + curMonthIdx;
+        const targetTotal = targetYear * 12 + (targetMonth - 1);
+        if (targetTotal > curTotal) {
+          await this.clickNextMonth();
+        } else {
+          await this.clickPrevMonth();
+        }
+      } else {
+        await this.clickNextMonth();
+      }
+      await this.page.waitForTimeout(5000);
+    }
+  }
+
+  /**
+   * Returns the count of colored (non-empty background) day cells for an employee row.
+   * Vacations show as colored cells (green for approved, etc.).
+   */
+  async getColoredCellCount(nameFragment: string): Promise<number> {
+    return this.page.evaluate((name) => {
+      const rows = Array.from(document.querySelectorAll("table tbody tr"));
+      const row = rows.find((r) => r.textContent?.includes(name));
+      if (!row) return 0;
+      const cells = Array.from(row.querySelectorAll("td")).slice(1); // skip name cell
+      return cells.filter((td) => {
+        const bg = window.getComputedStyle(td).backgroundColor;
+        // Non-white, non-transparent backgrounds indicate colored cells
+        return bg && bg !== "rgba(0, 0, 0, 0)" && bg !== "rgb(255, 255, 255)" && bg !== "transparent";
+      }).length;
+    }, nameFragment);
+  }
+
   /** Returns the count of employee rows via DOM (bypasses CSS-hidden). */
   async getEmployeeRowCount(): Promise<number> {
     return await this.page.evaluate(() =>

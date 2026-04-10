@@ -8,13 +8,17 @@
     "test:headed": "playwright test --headed",
     "test:debug": "playwright test --project=chrome-debug --headed",
     "test:headless": "playwright test --project=chrome-headless",
-    "parse": "python3 scripts/parse_xlsx.py"
+    "parse": "python3 scripts/parse_xlsx.py",
+    "matrix": "npx tsx scripts/generate-matrix.ts",
+    "test:matrix": "playwright test && npx tsx scripts/generate-matrix.ts",
+    "regress-loop": "bash scripts/regression-loop.sh"
   },
   "devDependencies": {
     "@playwright/test": "^1.55.0",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^25.2.3",
-    "@types/pg": "^8.18.0"
+    "@types/pg": "^8.18.0",
+    "tsx": "^4.19.0"
   },
   "dependencies": {
     "js-yaml": "^4.1.0",

@@ -1,0 +1,12 @@
+className: DayoffTc033Data
+runId: 20260406-145319-qa-1
+savedAt: "2026-04-06T14:54:10.193Z"
+args:
+  requestId: "3228"
+  employeeId: "990346"
+  employeeLogin: ashabkhatov
+  employeeName: Шабхатов Асылжан
+  originalDate: "2026-04-10"
+  personalDate: "2026-05-28"
+  calendarId: "6"
+  officeId: "10"

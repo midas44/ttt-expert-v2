@@ -1,0 +1,8 @@
+className: DayoffTc050Data
+runId: 20260406-190116-qa-1
+savedAt: "2026-04-06T19:02:30.294Z"
+args:
+  username: tsemenova
+  holiday2: "2026-06-12"
+  personalDate: "2026-05-18"
+  requestId: "3607"

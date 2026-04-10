@@ -1,0 +1,7 @@
+className: ReportsTc005Data
+runId: 20260407-195922-qa-1
+savedAt: "2026-04-07T20:07:26.147Z"
+args:
+  username: ebrysova
+  taskName: "#EV2-30747 When external transfer is hanged up, call is hanged up on client's side"
+  projectName: Diabolocom-Java-ODC

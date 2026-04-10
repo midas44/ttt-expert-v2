@@ -1,0 +1,7 @@
+className: VacationTc048Data
+runId: 20260407-165905-qa-1
+savedAt: "2026-04-07T17:11:12.904Z"
+args:
+  username: pvaynmaster
+  rejectedVacStartIso: "2026-06-22"
+  rejectedVacEndIso: "2026-06-26"

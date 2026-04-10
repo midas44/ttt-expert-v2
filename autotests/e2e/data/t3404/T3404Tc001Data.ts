@@ -48,7 +48,6 @@ export class T3404Tc001Data {
     try {
       const row = await findPastDayoffInOpenPeriod(db);
       const instance = new T3404Tc001Data(row.login, row.date);
-      if (mode === "saved")
         saveToDisk("T3404Tc001Data", {
           username: row.login,
           editableDate: row.date,

@@ -1,0 +1,11 @@
+className: DayoffTc070Data
+runId: 20260407-193435-qa-1
+savedAt: "2026-04-07T19:36:29.815Z"
+args:
+  managerLogin: perekrest
+  employeeLogin: nermakova
+  employeeName: Ермакова Наталья
+  employeeEmail: Natalia.Ermakova@noveogroup.com
+  requestId: "3620"
+  originalDate: "2026-11-06"
+  personalDate: "2026-11-13"

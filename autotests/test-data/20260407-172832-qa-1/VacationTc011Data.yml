@@ -1,0 +1,12 @@
+className: VacationTc011Data
+runId: 20260407-172832-qa-1
+savedAt: "2026-04-07T17:37:47.620Z"
+args:
+  username: diborisov
+  entries:
+    - year: 2025
+      days: 1
+    - year: 2026
+      days: 24
+    - year: 2027
+      days: 24

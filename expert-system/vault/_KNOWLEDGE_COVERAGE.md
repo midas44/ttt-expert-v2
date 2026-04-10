@@ -1,36 +1,71 @@
 ---
 type: coverage
-updated: 2026-03-27
-phase: C (autotest_generation)
+updated: '2026-04-04'
 ---
+# Knowledge Coverage — Phase C (Autotest Generation)
 
-# Knowledge Coverage — Phase C Autotest Progress
+## Phase C: Autotest Generation Progress
 
-## Current Scope: vacation
+### Completed Scopes
 
-| Metric | Value |
+| Module | XLSX Cases | Specs | Verified | Blocked | Coverage | Status |
+|--------|-----------|-------|----------|---------|----------|--------|
+| t2724 | 38 | 38 | 38 | 0 | 100% | COMPLETE |
+| vacation | 100 | 96 | 85 | 15 | 85% | COMPLETE |
+| day-off | 121 | 33 | 25 | 3 | 89% (of specs) | COMPLETE |
+| t3404 | 24 | 21 | 21 | 0 | 88% | COMPLETE |
+| planner | 82 | 25 | 24 | 1 | 29% (of XLSX) | COMPLETE |
+
+Vacation+day-off scope closed at Session 124: 110/128 verified (86%), 18 blocked by environment.
+
+**Blocked vacation tests (15):** TC-VAC-024,039,064-070,077,084,090,097 + 2 auth/env
+- Email pipeline (4): TC-VAC-039,068,069,070 — RabbitMQ consumer down on QA-1
+- Calendar (1): TC-VAC-084 — API 502 on QA-1
+- Auth/env (10): require timemachine clock, multi-user JWT, or TTT test endpoint auth
+
+**Blocked day-off tests (3):** TC-DO-028,029 + 1 auth/env — approval state is final (no re-approve/re-reject)
+
+### Current Scope (reports, accounting)
+
+| Module | XLSX Cases | Specs | Verified | Failed | Pending | Coverage |
+|--------|-----------|-------|----------|--------|---------|----------|
+| reports | 60 | 19 | 8 | 1 | 41 | 13.3% |
+| accounting | 38 | 0 | 0 | 0 | 38 | 0% |
+
+### Reports Breakdown by Suite
+
+| Suite | Total | Verified | Remaining |
+|-------|-------|----------|-----------|
+| TS-Reports-CRUD | 15 | 7 | 8 |
+| TS-Reports-Confirmation | 12 | 0 | 12 |
+| TS-Reports-Periods | 8 | 0 | 8 |
+| TS-Reports-AutoReject | 5 | 0 | 5 |
+| TS-Reports-Statistics | 8 | 0 | 8 |
+| TS-Reports-Notifications | 4 | 0 | 4 |
+| TS-Reports-Permissions | 8 | 0 | 8 |
+
+### Queued Modules (XLSX exists, no specs)
+
+| Module | XLSX Cases | Priority |
+|--------|-----------|----------|
+| sick-leave | 71 | Next |
+| statistics | 76 | After sick-leave |
+| admin | 84 | Low |
+| security | 81 | Low |
+| cross-service | 70 | Low |
+
+### Overall Totals
+
+| Metric | Count |
 |--------|-------|
-| Total test cases in manifest | 100 |
-| Verified (passing) | 5 |
-| Failed | 0 |
-| Blocked | 0 |
-| Pending | 95 |
-| **Coverage** | **5%** |
+| Total XLSX test cases | 845 |
+| Total automated specs | 232 (27.5%) |
+| Total verified | ~186 |
+| Total blocked | ~19 |
+| Modules complete | 5 of 12 |
 
-### Verified Tests
-| Test ID | Title | Spec File |
-|---------|-------|-----------|
-| TC-VAC-001 | Create REGULAR vacation — happy path | vacation-tc001.spec.ts |
-| TC-VAC-002 | Create ADMINISTRATIVE (unpaid) vacation | vacation-tc002.spec.ts |
-| TC-VAC-005 | Edit vacation dates (NEW status) | vacation-tc005.spec.ts |
-| TC-VAC-007 | Cancel NEW vacation | vacation-tc007.spec.ts |
-| TC-VAC-008 | Cancel APPROVED vacation | vacation-tc008.spec.ts |
-
-## All Modules Summary
-
-| Module | Verified | Blocked | Pending | Total | Coverage |
-|--------|----------|---------|---------|-------|----------|
-| vacation | 5 | 0 | 95 | 100 | 5% |
-| day-off | 25 | 3 | 0 | 28 | 89% |
-| t3404 | 21 | 3 | 0 | 24 | 88% |
-| **Total** | **51** | **6** | **95** | **152** | **34%** |
+### Phase C Goals
+- Generate and verify autotest specs for all 60 reports test cases
+- Generate and verify autotest specs for all 38 accounting test cases
+- Write-back discovered selectors and patterns to vault
+- Target: 80%+ verified rate per module

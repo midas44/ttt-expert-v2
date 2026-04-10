@@ -1,0 +1,10 @@
+className: DayoffTc026Data
+runId: 20260407-205016-qa-1
+savedAt: "2026-04-07T20:51:28.987Z"
+args:
+  managerLogin: perekrest
+  employeeName: Риттер Анна
+  originalDate: "2026-06-12"
+  personalDate: "2026-06-19"
+  requestId: "3658"
+  optionalApproverName: Андрей Жарких

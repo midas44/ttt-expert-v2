@@ -1,3 +1,4 @@
+import { loadSaved, saveToDisk } from "../savedDataStore";
 import { TttConfig } from "../../config/tttConfig";
 import { DbClient } from "../../config/db/dbClient";
 import {
@@ -30,7 +31,12 @@ export class DayoffTc025Data {
     mode: string,
     config: TttConfig,
   ): Promise<DayoffTc025Data> {
-    if (mode === "dynamic") {
+    if (mode === "saved") {
+      const cached = loadSaved<Tc025Data>("DayoffTc025Data");
+      if (cached) return new DayoffTc025Data(cached);
+    }
+
+    if (mode === "dynamic" || mode === "saved") {
       const db = new DbClient(config);
       try {
         // Try reusing an existing NEW request first; create only if none exist
@@ -39,14 +45,16 @@ export class DayoffTc025Data {
           req = await createNewDayoffRequest(db);
         }
         const otherMgr = await findAnotherManager(db, req.managerLogin);
-        return new DayoffTc025Data({
+        const data: Tc025Data = {
           managerLogin: req.managerLogin,
           employeeName: req.employeeName,
           originalDate: req.originalDate,
           personalDate: req.personalDate,
           requestId: req.requestId,
           optionalApproverName: otherMgr.fullName,
-        });
+        };
+        saveToDisk("DayoffTc025Data", data);
+        return new DayoffTc025Data(data);
       } finally {
         await db.close();
       }

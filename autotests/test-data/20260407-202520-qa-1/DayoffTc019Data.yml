@@ -1,0 +1,10 @@
+className: DayoffTc019Data
+runId: 20260407-202520-qa-1
+savedAt: "2026-04-07T20:26:13.313Z"
+args:
+  managerLogin: perekrest
+  employeeLogin: nermakova
+  employeeName: Ермакова Наталья
+  originalDate: "2026-11-06"
+  personalDate: "2026-11-13"
+  requestId: "3625"

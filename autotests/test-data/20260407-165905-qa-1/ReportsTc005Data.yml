@@ -1,0 +1,7 @@
+className: ReportsTc005Data
+runId: 20260407-165905-qa-1
+savedAt: "2026-04-07T17:06:07.667Z"
+args:
+  username: ilisovskaya
+  taskName: "#DEV-40251 [LOAD1] Unable to connect to SFTP server. Access denied"
+  projectName: Diabolocom-Java-ODC

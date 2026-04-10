@@ -1,0 +1,11 @@
+className: VacationTc020Data
+runId: 20260406-182540-qa-1
+savedAt: "2026-04-06T18:27:53.283Z"
+args:
+  employeeLogin: smochalov
+  employeeName: Sergey Mochalov
+  managerLogin: pvaynmaster
+  altManagerLogin: rmirzamagomedov
+  altManagerName: Rustam Mirzamagomedov
+  startDateIso: "2026-07-20"
+  endDateIso: "2026-07-24"

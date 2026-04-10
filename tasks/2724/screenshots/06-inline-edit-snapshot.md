@@ -1,0 +1,183 @@
+- generic [ref=e1]:
+  - generic [ref=e21]:
+    - generic [ref=e23]:
+      - button "Новео ТТТ" [ref=e25] [cursor=pointer]:
+        - img "Новео ТТТ" [ref=e26]
+      - navigation [ref=e30]:
+        - list [ref=e31]:
+          - listitem [ref=e32]:
+            - link "My tasks" [ref=e33] [cursor=pointer]:
+              - /url: /report
+          - listitem [ref=e34]:
+            - button "Calendar of absences (26)" [ref=e1091] [cursor=pointer]:
+              - generic [ref=e36]:
+                - text: Calendar of absences
+                - generic [ref=e37]: (26)
+          - listitem [ref=e39]:
+            - link "Confirmation" [ref=e40] [cursor=pointer]:
+              - /url: /approve
+          - listitem [ref=e41]:
+            - link "Planner" [ref=e42] [cursor=pointer]:
+              - /url: /planner
+          - listitem [ref=e43]:
+            - button "Statistics" [ref=e44] [cursor=pointer]:
+              - generic [ref=e45]: Statistics
+          - listitem [ref=e47]:
+            - button "Admin panel" [ref=e48] [cursor=pointer]:
+              - generic [ref=e49]: Admin panel
+          - listitem [ref=e51]:
+            - button "Accounting" [ref=e52] [cursor=pointer]:
+              - generic [ref=e53]: Accounting
+          - listitem [ref=e55]:
+            - link "Notifications" [ref=e56] [cursor=pointer]:
+              - /url: /notifications
+      - generic [ref=e58]:
+        - generic [ref=e60] [cursor=pointer]:
+          - generic [ref=e61]: EN
+          - img [ref=e63]
+        - generic [ref=e66]:
+          - button "Pavel Weinmeister Pavel Weinmeister" [ref=e67] [cursor=pointer]:
+            - img "Pavel Weinmeister" [ref=e68]
+            - link "Pavel Weinmeister" [ref=e69]:
+              - /url: /admin/account
+              - generic [ref=e70]:
+                - text: Pavel
+                - text: Weinmeister
+          - button [ref=e74] [cursor=pointer]
+    - generic [ref=e1094]:
+      - text: You have overdue
+      - link "vacation requests" [ref=e1095] [cursor=pointer]:
+        - /url: /vacation/request/vacation-request/APPROVER
+      - text: . Please approve or reject them
+    - generic [ref=e76]:
+      - generic [ref=e1096]:
+        - generic [ref=e1097]:
+          - link "Next week" [ref=e1098] [cursor=pointer]:
+            - /url: /report
+          - text: contains non-working days — please remember to report your hours
+        - button [ref=e1100] [cursor=pointer]:
+          - img [ref=e1101]
+      - generic:
+        - generic:
+          - text: This month, you have exceeded the hours norm by
+          - strong
+          - text: "%. Norm as :"
+          - strong
+          - text: ". Reported hours:"
+          - strong
+          - text: Please make sure that overtime is approved by your manager
+      - generic [ref=e1103]: Planner
+      - generic [ref=e1104]:
+        - generic [ref=e1105]:
+          - button "Tasks" [ref=e1106] [cursor=pointer]
+          - button "Projects" [ref=e1107] [cursor=pointer]
+          - img [ref=e1113]
+        - generic [ref=e1372]:
+          - generic [ref=e1373]:
+            - generic [ref=e1375]:
+              - generic [ref=e1377]:
+                - generic [ref=e1378]: Project
+                - generic [ref=e1380]:
+                  - log [ref=e1382]
+                  - generic [ref=e1383]:
+                    - generic [ref=e1384]:
+                      - generic [ref=e1481]: Lazur
+                      - combobox [ref=e1387]
+                    - img [ref=e1390]
+              - generic [ref=e1393]:
+                - generic [ref=e1394]: Show projects where I am a
+                - generic [ref=e1396]:
+                  - log [ref=e1398]
+                  - generic [ref=e1399]:
+                    - generic [ref=e1400]:
+                      - generic [ref=e1401]: PM
+                      - combobox [ref=e1402]
+                    - img [ref=e1406]
+            - generic [ref=e1484]:
+              - button "Actions" [ref=e1487] [cursor=pointer]:
+                - text: Actions
+                - img [ref=e1488]
+              - button "Copy the table" [ref=e1492] [cursor=pointer]:
+                - text: Copy the table
+                - img [ref=e1493]
+          - table [ref=e1410]:
+            - rowgroup [ref=e1411]:
+              - row "№ Info Tracker Task/Ticket Fri 27.03 Remaining work Comment" [ref=e1509]:
+                - columnheader "№" [ref=e1413]:
+                  - generic [ref=e1414]: №
+                - columnheader "Info" [ref=e1415]:
+                  - generic [ref=e1416]: Info
+                - columnheader "Tracker" [ref=e1417]:
+                  - generic [ref=e1419]:
+                    - generic [ref=e1420]: Tracker
+                    - button [ref=e1424] [cursor=pointer]:
+                      - img [ref=e1425]
+                - columnheader "Task/Ticket" [ref=e1428]:
+                  - generic [ref=e1430]:
+                    - generic [ref=e1431]:
+                      - text: Task/
+                      - button "Ticket" [ref=e1432] [cursor=pointer]
+                    - generic [ref=e1433]:
+                      - img [ref=e1435]
+                      - img [ref=e1440]
+                      - img [ref=e1442]
+                - columnheader "Fri 27.03" [ref=e1448]:
+                  - generic [ref=e1451]:
+                    - button [ref=e1452] [cursor=pointer]:
+                      - img [ref=e1453]
+                    - generic [ref=e1455] [cursor=pointer]:
+                      - text: Fri
+                      - text: "27.03"
+                    - button [ref=e1456] [cursor=pointer]:
+                      - img [ref=e1457]
+                - columnheader "Remaining work" [ref=e1459]:
+                  - generic [ref=e1460]: Remaining work
+                - columnheader "Comment" [ref=e1510]:
+                  - generic [ref=e1463]:
+                    - text: Comment
+                    - button [ref=e1499] [cursor=pointer]:
+                      - img [ref=e1500]
+    - contentinfo [ref=e1087]:
+      - generic [ref=e1088]:
+        - text: © 2004 – 2026 Noveo |
+        - link "Report an error to developers" [ref=e1089] [cursor=pointer]:
+          - /url: https://gitlab.noveogroup.com/noveo-internal-tools/ttt-spring/issues/new?issuable_template=Bug
+      - generic [ref=e1090]: "Build #: 2.1.26-SNAPSHOT.LOCAL | Build date: 22.03.2026"
+  - dialog "Changes have been saved Project settings" [ref=e1615]:
+    - generic [ref=e1515]:
+      - generic [ref=e1517]:
+        - generic:
+          - generic: Changes have been saved
+        - heading "Project settings" [level=2] [ref=e1518]
+      - generic [ref=e1521]:
+        - generic [ref=e1522]:
+          - button "Project members" [ref=e1523] [cursor=pointer]
+          - button "Tasks closing" [ref=e1524] [cursor=pointer]
+        - generic [ref=e1579]:
+          - text: Project tickets containing added values in the
+          - strong [ref=e1580]: Info
+          - text: column will be automatically removed from the list on days when there are no more reports for them
+        - generic [ref=e1583]:
+          - generic [ref=e1586]:
+            - generic [ref=e1587]: Tag for closing tasks*
+            - textbox "Add a tag" [ref=e1589]
+          - button [ref=e1591] [cursor=pointer]
+        - table [ref=e1595]:
+          - rowgroup [ref=e1596]:
+            - row "Tags for closing tasks Actions" [ref=e1597]:
+              - columnheader "Tags for closing tasks" [ref=e1598]:
+                - generic [ref=e1601]: Tags for closing tasks
+              - columnheader "Actions" [ref=e1602]:
+                - generic [ref=e1605]: Actions
+          - rowgroup [ref=e1606]:
+            - row "[closed]" [ref=e1616]:
+              - cell "[closed]" [ref=e1617]
+              - cell [ref=e1618]:
+                - button [ref=e1619] [cursor=pointer]:
+                  - img [ref=e1620]
+            - row "Done" [ref=e1622]:
+              - cell "Done" [ref=e1623]
+              - cell [ref=e1624]:
+                - button [ref=e1625] [cursor=pointer]:
+                  - img [ref=e1626]
+        - button "OK" [ref=e1611] [cursor=pointer]

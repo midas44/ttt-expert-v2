@@ -88,7 +88,7 @@ export class VacationTc037Data {
         overlapEndIso: toIso(nextWednesday),
       };
 
-      if (mode === "saved") saveToDisk("VacationTc037Data", args);
+      saveToDisk("VacationTc037Data", args);
       return new VacationTc037Data(args);
     } finally {
       await db.close();

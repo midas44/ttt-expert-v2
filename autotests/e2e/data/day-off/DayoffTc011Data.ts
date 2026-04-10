@@ -58,7 +58,6 @@ export class DayoffTc011Data {
         row.future_date,
         row.past_date,
       );
-      if (mode === "saved")
         saveToDisk("DayoffTc011Data", {
           username: row.login,
           futureDate: row.future_date,

@@ -1,0 +1,10 @@
+className: DayoffTc043Data
+runId: 20260406-151416-qa-1
+savedAt: "2026-04-06T15:15:09.131Z"
+args:
+  managerLogin: perekrest
+  employeeName: Васильев Олег
+  requestId: "3537"
+  originalDate: "2027-02-02"
+  personalDate: "2027-02-09"
+  createdByTest: false

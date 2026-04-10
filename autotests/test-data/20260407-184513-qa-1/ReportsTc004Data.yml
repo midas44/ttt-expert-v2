@@ -1,0 +1,9 @@
+className: ReportsTc004Data
+runId: 20260407-184513-qa-1
+savedAt: "2026-04-07T18:50:43.105Z"
+args:
+  username: araman
+  periodStart: "2026-05-01"
+  taskName: Lazur / Specification / [MVP] Profile
+  closedDateLabel: "20.04"
+  closedDateIso: "2026-04-20"

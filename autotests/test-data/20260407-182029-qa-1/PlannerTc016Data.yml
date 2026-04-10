@@ -1,0 +1,8 @@
+className: PlannerTc016Data
+runId: 20260407-182029-qa-1
+savedAt: "2026-04-07T18:23:19.646Z"
+args:
+  username: kbryazgin
+  projectName: PBT-2026
+  taskName: "PBT-2026 / #588 Нет начислений у менеджера"
+  daysBack: 0

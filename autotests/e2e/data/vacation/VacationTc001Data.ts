@@ -79,7 +79,7 @@ export class VacationTc001Data {
         endDateIso: endDate,
       };
 
-      if (mode === "saved") saveToDisk("VacationTc001Data", args);
+      saveToDisk("VacationTc001Data", args);
       return new VacationTc001Data(
         args.username,
         args.managerLogin,

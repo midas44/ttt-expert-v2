@@ -224,7 +224,7 @@ export class DayOffPage {
 
     // Hover and wait for tooltip element
     await editBtn.hover();
-    await this.page.waitForTimeout(600);
+    await this.page.waitForTimeout(5000);
 
     const tooltipCandidates = [
       this.page.getByRole("tooltip"),

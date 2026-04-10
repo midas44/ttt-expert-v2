@@ -1,0 +1,11 @@
+className: VacationTc020Data
+runId: 20260407-193435-qa-1
+savedAt: "2026-04-07T19:43:25.096Z"
+args:
+  employeeLogin: amustafina
+  employeeName: Alena Mustafina
+  managerLogin: pvaynmaster
+  altManagerLogin: katya
+  altManagerName: Ekaterina Ilnitskaya
+  startDateIso: "2026-07-20"
+  endDateIso: "2026-07-24"

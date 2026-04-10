@@ -1,0 +1,9 @@
+className: ReportsTc004Data
+runId: 20260407-195922-qa-1
+savedAt: "2026-04-07T20:06:32.208Z"
+args:
+  username: tsidorova
+  periodStart: "2026-05-01"
+  taskName: Learning-Analytics-Design / Meet with Sofya
+  closedDateLabel: "20.04"
+  closedDateIso: "2026-04-20"

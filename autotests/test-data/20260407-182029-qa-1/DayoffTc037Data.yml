@@ -1,0 +1,21 @@
+className: DayoffTc037Data
+runId: 20260407-182029-qa-1
+savedAt: "2026-04-07T18:22:02.183Z"
+args:
+  emp1Login: mpotter
+  emp1Id: "85"
+  emp1ManagerId: "33"
+  emp1OfficeId: "20"
+  emp1OfficeName: Персей
+  emp1CalendarId: "2"
+  emp1CalDayId: 502
+  emp1RequestId: "3564"
+  emp2Login: ltran
+  emp2Id: "990282"
+  emp2ManagerId: "65"
+  emp2OfficeId: "22"
+  emp2OfficeName: ГолденСтар
+  emp2CalendarId: "5"
+  emp2CalDayId: 7635
+  emp2RequestId: "3565"
+  sharedDate: "2026-05-01"

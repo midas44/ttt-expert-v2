@@ -45,7 +45,6 @@ export class T3404Tc009Data {
          LIMIT 1`,
       );
       const instance = new T3404Tc009Data(row.login);
-      if (mode === "saved")
         saveToDisk("T3404Tc009Data", { username: row.login });
       return instance;
     } finally {
