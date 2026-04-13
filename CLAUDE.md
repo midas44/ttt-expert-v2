@@ -24,6 +24,7 @@ This project contains an expert knowledge base for the TTT (Time Tracking Tool) 
 | **figma** | Design mockups |
 | **qase** | Existing test suites (project: TIMEREPORT) |
 | **gitlab** | Use curl + PAT (MCP server non-functional on this CE instance) |
+| **roundcube-access** skill (no MCP) | Read/search/save test notification emails TTT sends to the QA mailbox (IMAPS at `dev.noveogroup.com`, user `vulyanov@office.local`). Use whenever a task requires verifying that a TTT email notification was actually dispatched. |
 
 ## How to answer questions
 
@@ -100,6 +101,8 @@ When you discover new information during autotest generation (selectors, UI quir
 **Ticket scope:** When `scope` in config.yaml is a GitLab ticket number (pure digits, e.g., `"3404"`), all artifacts use `t<number>` prefix internally. Test IDs: `TC-T3404-001`. Dirs: `tests/t3404/`, `data/t3404/`. XLSX: `test-docs/t3404/t3404.xlsx`. See CLAUDE+.md §10.1 for full protocol.
 
 **Collection scope:** Use `autotest.scope: "collection:<name>"` (e.g., `"collection:absences"`) — the `collection:` prefix is mandatory. The system runs `process_collection.py`, reads the report JSON for the exact set of TCs, and works only on those. Existing specs get the `@col-<name>` tag; missing specs are generated. Execute the suite: `npx playwright test --grep "@col-<name>"`. See the `collection-generator` skill for the full workflow.
+
+**Email notifications:** TTT dispatches many email notifications (digest of absences, last-day-before-absence reminder, forgot-to-report reminder, vacation approval/rejection, day-off removal, accounting, etc.). The shared QA mailbox at `https://dev.noveogroup.com/mail` (Roundcube Webmail, Dovecot IMAP) is the sink for all test environments (QA1, QA2, TM, PREPROD, STAGE). Use the **`roundcube-access`** skill to verify emails: `list` / `count` / `search` by `--from`/`--subject`/`--since`/etc. / `read` by UID / `save` raw `.eml` files to `artifacts/roundcube/` for test evidence. Config at `config/roundcube/*`. VPN required (same VPN as TTT envs). Subjects are prefixed `[<ENV>]` or `[<ENV>][TTT]` — filter by env tag when verifying per-environment behavior.
 
 **Selector rules (text-first, BEM banned):** The TTT app has minimal ARIA roles. Use text-based selectors first (`getByText`, `getByRole+name`), then role-based, then structural (tag+containment), then partial class match (`[class*='...']`). **Exact BEM class selectors are BANNED** (`.navbar__*`, `.page-body__*`, `.drop-down-menu__*`) — they break across environments. **NEVER put `page.locator()` in spec files** — all selectors must be in page objects.
 

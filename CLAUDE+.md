@@ -701,6 +701,7 @@ WRONG:
 - **Data verification** — checking DB state after a UI action (e.g., "Verify in DB: SELECT status FROM vacation WHERE id = <created_id>")
 - **State setup** — creating precondition state that the test itself doesn't create (see Setup Steps below)
 - **Test data teardown** — cleanup after test (delete created entities)
+- **Email verification** — after a flow that triggers a notification, check the shared QA mailbox (`EMAIL-CHECK:` step) via the `roundcube-access` skill. Example predicate: `search --from timereporting --subject "[QA1]" --subject "<notification-type>" --since <today>` then optionally `read <uid>` or `save` for evidence. TTT sends notifications for vacation approval/rejection, day-off removal, absence digest, last-day-before-absence reminder, forgot-to-report reminder, accounting changes, etc.
 - **Explicitly API-only features** — endpoints exposed to integrated projects, webhooks, service-to-service communication
 
 ### Setup Steps — Creating Precondition State (CRITICAL)
@@ -1095,6 +1096,7 @@ The GitLab MCP server (`@modelcontextprotocol/server-gitlab`) is registered but 
 | **Swagger/API** (21 servers) | API exploration — GET freely, ask for mutations. Naming: `swagger-{env}-{service}-{group}` where env=`qa1`/`tm`/`stage`, service=`ttt`/`vacation`/`calendar`/`email`, group=`api`/`test`/`default`. See MISSION_DIRECTIVE §Testing Environments for full URL list. |
 | **PostgreSQL** (3 servers) | Data investigation — SELECT only. Naming: `postgres-{env}` where env=`qa1`/`tm`/`stage`. Auto-configured by `node .claude/scripts/sync-postgres-mcp.js --apply` from config.yaml + env files. |
 | **GitLab** (curl, NOT MCP) | Tickets, MRs, CI/CD data via curl REST API with PAT. The GitLab MCP server is connected but exposes no tools — always use curl. See `gitlab-access` skill. Code access via local clone. |
+| **Roundcube test mailbox** (skill `roundcube-access`, NOT MCP) | Read/search/save TTT notification emails from the shared QA mailbox `vulyanov@office.local` at `dev.noveogroup.com` over IMAPS. Subcommands: `mailboxes`, `count`, `list`, `search` (FROM/TO/SUBJECT/BODY/SINCE/BEFORE/UNSEEN/FLAGGED/HEADER/LARGER/..., Cyrillic supported), `read <uid>`, `save` (writes `.eml` artifacts to `artifacts/roundcube/`). Use whenever a test scenario requires verifying that TTT actually dispatched the expected notification (subject prefix `[<ENV>]` / `[<ENV>][TTT]` identifies the originating environment). Config at `config/roundcube/*`. VPN required. See `.claude/skills/roundcube-access/SKILL.md`. |
 | **Confluence** | Requirements, documentation |
 | **Figma** | Design specifications |
 | **Qase** | Existing test suites/cases |

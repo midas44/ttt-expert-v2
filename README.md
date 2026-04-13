@@ -28,7 +28,7 @@ Sessions are orchestrated by a shell-based runner (`run-sessions.sh`) that manag
 
 ### MCP Integration Layer
 
-The agent connects to the target application and supporting tools through 39 MCP (Model Context Protocol) servers:
+The agent connects to the target application and supporting tools through 39 MCP (Model Context Protocol) servers and one skill-based IMAP integration (Roundcube/Dovecot — no public MCP exists for Roundcube, and a dedicated skill with Python + `imaplib` over IMAPS is simpler and more reliable than third-party IMAP MCPs for this host):
 
 | MCP Server | Purpose |
 |---|---|
@@ -39,12 +39,13 @@ The agent connects to the target application and supporting tools through 39 MCP
 | **Figma** | Design specifications and mockups |
 | **Qase** | Existing test suites and test cases |
 | **GitLab** | Issues, MRs, pipelines, code via REST API |
+| **Roundcube / Dovecot IMAP** | Test email service for TTT notifications — read/search/save `.eml` artifacts via IMAPS (skill-based, no MCP) |
 | **Obsidian + QMD** | Knowledge base CRUD and semantic/keyword search |
 | **SQLite** | Structured analytics queries |
 
 ### Skills
 
-18 reusable skills encapsulate domain-specific interaction patterns: GitLab access, Confluence access, Figma access, Qase access, Swagger API, PostgreSQL queries, Playwright browser, autotest generator, autotest runner, autotest fixer, XLSX parser, autotest progress, page discoverer, collection generator, test reporting, MCP setup, package install, skill creator.
+19 reusable skills encapsulate domain-specific interaction patterns: GitLab access, Confluence access, Figma access, Qase access, Roundcube access (test email mailbox), Swagger API, PostgreSQL queries, Playwright browser, autotest generator, autotest runner, autotest fixer, XLSX parser, autotest progress, page discoverer, collection generator, test reporting, MCP setup, package install, skill creator.
 
 ## Target Application (TTT)
 
@@ -119,6 +120,10 @@ autotests/                              # Playwright + TypeScript E2E framework
     config/                             # Environment configuration
 config/ttt/
   envs/*.yml                            # Environment credentials (per env)
+config/roundcube/                       # Test email service config (Roundcube/Dovecot IMAP)
+  roundcube.yaml                        # Host/URL + active env
+  envs/*.yaml                           # Per-user mailbox credentials
+artifacts/roundcube/                    # Saved .eml files from test mailbox (test evidence)
 docs/                                   # Setup guides, troubleshooting, epic description
 .claude/
   skills/                               # 18 reusable skills

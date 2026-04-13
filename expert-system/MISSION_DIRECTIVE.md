@@ -128,6 +128,15 @@ Use config/ttt/envs/* to get environment parameters, see skills: playwright-brow
 [envURL]/api/email/swagger-ui.html?urls.primaryName=test-api
 where envURL = https://ttt-[env].noveogroup.com (e.g. https://ttt-qa-1.noveogroup.com, https://ttt-timemachine.noveogroup.com, https://ttt-stage.noveogroup.com)
 
+### Test Email Service
+All TTT environments dispatch notification emails into a single shared test mailbox surfaced through **Roundcube Webmail** at `https://dev.noveogroup.com/mail` (backed by Dovecot IMAP). Use the **`roundcube-access`** skill (no MCP — self-contained Python CLI over IMAPS, same VPN as TTT envs) to verify email behavior:
+- `mailboxes`, `count`, `list` (newest-first pagination), `search` (FROM / TO / SUBJECT / BODY / SINCE / BEFORE / UNSEEN / FLAGGED / HEADER / LARGER / ... — Cyrillic supported)
+- `read <uid>` — full message (headers, text, HTML, attachments metadata)
+- `save` — write raw `.eml` files (RFC 822, lossless) to `artifacts/roundcube/` for test evidence
+- Config: `config/roundcube/roundcube.yaml` + `config/roundcube/envs/<env>.yaml`
+- Subject prefix `[<ENV>]` or `[<ENV>][TTT]` identifies which environment originated the notification — always filter by env tag when verifying per-env behavior
+- Observed notification types in live mailbox: absence digest (Дайджест отсутствий), last-day-before-absence reminder, forgot-to-report reminder, day-off removal, vacation approval/rejection, accounting changes, etc.
+
 ## Output Requirements
 
 ### Phase B — XLSX Test Documentation
