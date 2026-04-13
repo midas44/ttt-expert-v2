@@ -1,0 +1,7 @@
+username: vulyanov
+
+password: [secret]
+
+# Graylog REST API Access Token — stored in envs/secret.yaml (gitignored).
+# When present, the CLI uses it as Basic `<token>:token`, skipping session auth.
+token: [secret]

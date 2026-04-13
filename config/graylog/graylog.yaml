@@ -1,0 +1,8 @@
+#Project properties
+
+appName: "GrayLog"
+
+appUrl: "https://logs.noveogroup.com"
+
+# by login
+env: "vulyanov"

@@ -137,6 +137,16 @@ All TTT environments dispatch notification emails into a single shared test mail
 - Subject prefix `[<ENV>]` or `[<ENV>][TTT]` identifies which environment originated the notification — always filter by env tag when verifying per-env behavior
 - Observed notification types in live mailbox: absence digest (Дайджест отсутствий), last-day-before-absence reminder, forgot-to-report reminder, day-off removal, vacation approval/rejection, accounting changes, etc.
 
+### Backend Logs (Graylog)
+All TTT backends ship application/server logs to **Graylog** at `https://logs.noveogroup.com`, with one stream per environment. Use the **`graylog-access`** skill (no MCP — self-contained Python CLI over the Graylog REST API, same VPN as TTT envs) to inspect backend behavior, confirm cron/job execution, and capture evidence of exceptions or slow requests:
+- Streams: `TTT-QA-1`, `TTT-QA-2`, `TTT-TIMEMACHINE`, `TTT-PREPROD`, `TTT-STAGE`, `TTT-DEV`
+- `streams`, `count`, `search`, `tail` (newest-first), `download` (saves `.json` / `.ndjson` / `.log` / `.csv` to `artifacts/graylog/`)
+- Query language: Lucene-ish — `level:3` (errors), `level:[3 TO 4]`, `message:"NullPointerException"`, `source:"ttt-stage.noveogroup.com"`, `_exists_:http_status`
+- Time range: `--range 5m|1h|1d|<seconds>` (relative) or `--since/--until` with ISO dates (absolute)
+- Auth: Graylog API token (preferred, independent of corporate LDAP) → session token → HTTP Basic. Token stored in gitignored `config/graylog/envs/secret.yaml`
+- Config: `config/graylog/graylog.yaml` + `config/graylog/envs/<env>.yaml`; `secret.yaml` is gitignored
+- Auto-generated filenames encode `{stream}_{range}_q-{query}_{timestamp}_{hash}.{ext}` so multiple downloads for the same investigation don't collide
+
 ## Output Requirements
 
 ### Phase B — XLSX Test Documentation
