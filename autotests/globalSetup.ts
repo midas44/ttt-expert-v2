@@ -12,7 +12,7 @@ import * as path from "path";
  * Only activates for "dynamic" and "saved" modes (static needs no artifacts).
  */
 export default function globalSetup(): void {
-  const globalYml = readYaml(path.resolve(__dirname, "e2e/config/global.yml"));
+  const globalYml = readYaml(path.resolve(__dirname, "e2e/config/common/global.yml"));
   const mode = readTestDataMode(globalYml["testDataMode"]);
 
   if (mode === "static") return;
