@@ -1,6 +1,6 @@
 ---
 type: coverage
-updated: '2026-04-04'
+updated: '2026-04-15'
 ---
 # Knowledge Coverage — Phase C (Autotest Generation)
 
@@ -9,7 +9,20 @@ updated: '2026-04-04'
 | Project | Role | Vault notes | Test specs |
 |---------|------|-------------|------------|
 | TTT | Primary SUT | All modules below | All `tests/<module>/` specs |
-| CS  | Secondary, integrated (UI-only) | `vault/cs/` (empty until first investigation) + `vault/integrations/ttt-cs-sync.md` (existing) | None yet — appears as episodic UI steps in `tests/integration/` cross-project specs |
+| CS  | Secondary, integrated (UI-only) | `vault/cs/` — 6 notes from live UI exploration 2026-04-15 (overview, employee profile, salary offices, transfer workflow, hiring workflow, automation notes) + `vault/integrations/ttt-cs-sync.md` | None yet — appears as episodic UI steps in `tests/integration/` cross-project specs |
+
+### CS investigation status (2026-04-15)
+
+First hands-on CS session delivered end-to-end coverage of the employee-lifecycle surfaces:
+- ✅ Auth (CAS SSO, slebedev + pvaynmaster accounts, cookie-level role switch)
+- ✅ Employee directory + profile edit page (5 cards)
+- ✅ Accountant-card timeline + event-add wizard (maternity-leave verified)
+- ✅ Salary Offices settings (Current/Archive, 3 sub-tabs, year-scoped vacation policy, inline edit, unarchive)
+- ✅ Employee transfer workflow (11-item checklist across 3 tabs, Change/Retrieve, Complete)
+- ✅ New-employee hiring (multi-role card approvals, status progression New → Registration in progress → Ready to publish → Published)
+- ✅ Language switcher on `/preferences`
+- ⬜ Contractors page, News, Mailing groups, Review, Employment termination — not explored
+- ⬜ Permissions matrix across the 5 card-owner roles — partially inferred, not fully mapped
 
 ## Phase C: Autotest Generation Progress
 

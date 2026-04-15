@@ -33,6 +33,26 @@ CS is the secondary integrated SUT. UI is the only available access surface. Key
 
 When the user asks to "log in to CS", use the CS appUrl + the slebedev credentials and check for the username input visibility before filling — the CAS short-circuit means the form may not appear.
 
+### CS-specific gotchas (from live exploration 2026-04-15)
+
+Knowledge deep-dive lives in the vault: `cs/_overview.md`, `cs/ui-automation-notes.md` + peers. TL;DR for automation:
+
+1. **Switch UI language to English first, always.** Most CS accounts default to Russian, which produces Cyrillic snapshots. Go to `/preferences` → click the `English` radio directly (labels are ambiguous — there's an "English" text elsewhere that matches `getByText('English')` wrong) → remove InnovationLab popup (see #3) → click `Сохранить`/`Save`. Saved per-user, persistent. Recipe in `cs/ui-automation-notes.md`.
+
+2. **CAS login button click often no-ops.** Use `HTMLFormElement.prototype.submit.call(form)` via `browser_evaluate` — the CS CAS form has an input named `submit` that shadows the form's native `submit()` method, and the Login `<button>` is not a true submit button. Filling username/password then calling the prototype submit works 100%.
+
+3. **InnovationLab popup blocks action-button clicks.** A dismissable popup in the bottom-right on every page; it overlaps Save, Publish, and timeline controls. Remove it before any button click: `document.querySelectorAll('div').forEach(el => { if (el.textContent?.includes('InnovationLab') && el.textContent.length < 300) el.remove(); });`.
+
+4. **Role switching requires context-level cookie clear.** CAS `/logout` drops the CAS ticket but the Symfony session cookie on CS is HttpOnly and survives — the next CS navigation silently re-auths as the previous user. Use `browser_run_code` with `await page.context().clearCookies()` before navigating back to CS.
+
+5. **Masked phone input (`#phoneInput`) rejects JS-injected values.** Use Playwright `.fill()` with digits only (e.g. `79991234567`); the mask auto-formats to `+7(999)123-xx-xx`.
+
+6. **Vue multiselect labels are frequently 2+ ancestors away from the dropdown.** Walk up 6 parents before giving up. See the `pickFromMultiselect` pattern in `cs/ui-automation-notes.md`.
+
+7. **Pages open in new tabs.** The pencil/edit icon on the employee list opens `/profile/edit/<id>` in a new browser tab — use `browser_tabs action=select index=N` to switch.
+
+8. **Username convention is idiosyncratic.** Logins are first-initial + last-name, but transliteration is bespoke — Pavel Weinmeister is `pvaynmaster`, not `pweinmeister`. To discover a user's login, search the employee list and read failed thumbnail URLs from console errors (`/api/thumbnail/<login>/400`).
+
 ## Three Approaches
 
 | Approach | When to Use | Proxy/VPN Support |

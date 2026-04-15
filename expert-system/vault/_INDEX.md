@@ -1,6 +1,6 @@
 ---
 type: index
-updated: '2026-04-02'
+updated: '2026-04-15'
 ---
 
 # Vault Index
@@ -21,7 +21,12 @@ updated: '2026-04-02'
 - [[ttt-cs-sync]] — CS (Company Staff) → TTT one-way sync (employees, salary offices, maternity-leave, dismissal events). 7 documented bugs.
 
 ## CS — Company Staff (UI-only secondary SUT)
-*Notes about the CS application itself live here — UI inventories, page flows, etc. Empty until the first CS-only investigation runs.*
+- [[cs/_overview]] — CS at a glance: access, accounts (slebedev/pvaynmaster), nav, roles, framework fingerprints
+- [[cs/employee-profile]] — Employee edit page, 5 cards (HR/Admin/Accountant/Manager/Personnel), Accountant-card timeline, event-add wizard
+- [[cs/salary-offices]] — Salary offices page, 32-office inventory, Current/Archive, year selector on vacation policy, inline edit, archive/unarchive
+- [[cs/employee-transfer]] — Transfer workflow: 11 checklist items across 3 tabs, Change/Retrieve, Complete the process
+- [[cs/employee-hiring]] — Add new employee: New → Registration in progress → Ready to publish → Published; 5-role card approvals
+- [[cs/ui-automation-notes]] — CAS SSO quirks, cookie-clear for role switch, InnovationLab popup blocker, multiselect/datepicker/masked-phone patterns, selector library
 
 ## Modules
 - [[vacation-service-deep-dive]]

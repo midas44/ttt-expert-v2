@@ -145,6 +145,32 @@ When you discover new information during autotest generation (selectors, UI quir
 
 **Selector rules (text-first, BEM banned):** The TTT app has minimal ARIA roles. Use text-based selectors first (`getByText`, `getByRole+name`), then role-based, then structural (tag+containment), then partial class match (`[class*='...']`). **Exact BEM class selectors are BANNED** (`.navbar__*`, `.page-body__*`, `.drop-down-menu__*`) — they break across environments. **NEVER put `page.locator()` in spec files** — all selectors must be in page objects.
 
+## Artifacts & temp files
+
+**Never save files to the repo root.** Screenshots, PDFs, logs, downloads, and any other session artifacts belong under a subdirectory of `artifacts/`, organized by source:
+
+| Source | Directory |
+|---|---|
+| Playwright screenshots / page captures (TTT, CS, any UI) | `artifacts/playwright/` |
+| CS-specific exploration captures | `artifacts/cs-screenshots/` |
+| Graylog log downloads | `artifacts/graylog/` |
+| Roundcube email exports | `artifacts/roundcube/` |
+| Confluence page/attachment downloads | `artifacts/confluence/` |
+| Other (one-off investigations) | `artifacts/misc/` |
+
+**Naming:** use a descriptive, dated filename that makes the purpose clear without opening the file (e.g. `vulyanov-vacations-2026-02-27.png`, not `screenshot.png` or `test.png`). The date in the name beats the filesystem mtime when artifacts are copied between hosts.
+
+**Before creating any file, confirm the path is under `artifacts/<source>/`.** The `/*.png`, `/*.jpg`, `/*.pdf`, `/*.mp4` etc. patterns at the repo root are `.gitignore`'d to catch accidental strays, but you should not rely on that — put them in the right place from the start.
+
+**Clean up ephemeral artifacts.** Screenshots and downloads that were only useful *during* a single session (e.g., `browser_take_screenshot` output you used to confirm a UI state and already captured in a vault note or response) should be deleted at the end of that task. Distinguish:
+
+- **Ephemeral** (delete when done): session-only screenshots, intermediate API response dumps, experimental log slices, retry attempts
+- **Durable** (keep in `artifacts/<source>/`): bug-report screenshots posted to a GitLab issue, logs that prove a cron ran at a specific time, reference captures a vault note links to, anything explicitly saved by the user
+
+If unsure, ask. Never delete files the user created manually or git-tracked files without explicit confirmation.
+
+**Never embed screenshots in vault notes** unless the user explicitly asks. Vault notes should describe UI state in text + reference the artifact path; the artifact lives in `artifacts/` where it can be updated independently of the note.
+
 ## Key references
 
 - `CLAUDE+.md` — full autonomous system prompt (for reference, not loaded in interactive mode)
