@@ -1,4 +1,4 @@
-import { readYaml, readTestDataMode } from "./e2e/config/configUtils";
+import { readYaml, readTestDataMode } from "@common/config/configUtils";
 import { initRun } from "./e2e/data/yamlArtifactStore";
 import * as path from "path";
 

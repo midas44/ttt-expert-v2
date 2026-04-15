@@ -1,11 +1,11 @@
 import { test, expect } from "@playwright/test";
-import { TttConfig } from "../../config/tttConfig";
-import { GlobalConfig } from "../../config/globalConfig";
+import { TttConfig } from "@ttt/config/tttConfig";
+import { GlobalConfig } from "@common/config/globalConfig";
 import { DayoffTc043Data } from "../../data/day-off/DayoffTc043Data";
-import { LoginFixture } from "../../fixtures/LoginFixture";
-import { VerificationFixture } from "../../fixtures/VerificationFixture";
-import { LogoutFixture } from "../../fixtures/LogoutFixture";
-import { DayOffRequestPage } from "../../pages/DayOffRequestPage";
+import { LoginFixture } from "@ttt/fixtures/LoginFixture";
+import { VerificationFixture } from "@common/fixtures/VerificationFixture";
+import { LogoutFixture } from "@ttt/fixtures/LogoutFixture";
+import { DayOffRequestPage } from "@ttt/pages/DayOffRequestPage";
 
 /**
  * TC-DO-043: APPROVER search type — requests pending my approval.

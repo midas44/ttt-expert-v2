@@ -8,7 +8,7 @@ import type {
   TestCase,
   TestResult,
 } from "@playwright/test/reporter";
-import { readYaml, readTestDataMode } from "../config/configUtils";
+import { readYaml, readTestDataMode } from "@common/config/configUtils";
 
 // ---------------------------------------------------------------------------
 // Schema

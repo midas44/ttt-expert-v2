@@ -1,8 +1,8 @@
 declare const process: { env: Record<string, string | undefined> };
 
 import { loadSaved, saveToDisk } from "../savedDataStore";
-import type { TestDataMode } from "../../config/configUtils";
-import type { TttConfig } from "../../config/tttConfig";
+import type { TestDataMode } from "@common/config/configUtils";
+import type { TttConfig } from "@ttt/config/tttConfig";
 
 interface Tc080Args {
   vacationsUrl: string;

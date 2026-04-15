@@ -1,12 +1,12 @@
 import { test, expect } from "@playwright/test";
-import { TttConfig } from "../../config/tttConfig";
-import { GlobalConfig } from "../../config/globalConfig";
+import { TttConfig } from "@ttt/config/tttConfig";
+import { GlobalConfig } from "@common/config/globalConfig";
 import { DayoffTc021Data } from "../../data/day-off/DayoffTc021Data";
-import { LoginFixture } from "../../fixtures/LoginFixture";
-import { VerificationFixture } from "../../fixtures/VerificationFixture";
-import { LogoutFixture } from "../../fixtures/LogoutFixture";
-import { DayOffRequestPage } from "../../pages/DayOffRequestPage";
-import { RedirectDialog } from "../../pages/RedirectDialog";
+import { LoginFixture } from "@ttt/fixtures/LoginFixture";
+import { VerificationFixture } from "@common/fixtures/VerificationFixture";
+import { LogoutFixture } from "@ttt/fixtures/LogoutFixture";
+import { DayOffRequestPage } from "@ttt/pages/DayOffRequestPage";
+import { RedirectDialog } from "@ttt/pages/RedirectDialog";
 
 /**
  * TC-DO-021: Manager redirects a day-off transfer request to another manager.

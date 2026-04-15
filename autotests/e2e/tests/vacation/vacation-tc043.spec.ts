@@ -1,8 +1,8 @@
 import { test, expect } from "@playwright/test";
-import { TttConfig } from "../../config/tttConfig";
-import { GlobalConfig } from "../../config/globalConfig";
+import { TttConfig } from "@ttt/config/tttConfig";
+import { GlobalConfig } from "@common/config/globalConfig";
 import { VacationTc043Data } from "../../data/vacation/VacationTc043Data";
-import { DbClient } from "../../config/db/dbClient";
+import { DbClient } from "@ttt/config/db/dbClient";
 
 /**
  * TC-VAC-043: Null paymentMonth → server error (NPE bug).

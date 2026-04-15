@@ -1,12 +1,12 @@
 import { test } from "@playwright/test";
-import { TttConfig } from "../../config/tttConfig";
-import { GlobalConfig } from "../../config/globalConfig";
+import { TttConfig } from "@ttt/config/tttConfig";
+import { GlobalConfig } from "@common/config/globalConfig";
 import { ReportsTc001Data } from "../../data/reports/ReportsTc001Data";
-import { LoginFixture } from "../../fixtures/LoginFixture";
-import { VerificationFixture } from "../../fixtures/VerificationFixture";
-import { LogoutFixture } from "../../fixtures/LogoutFixture";
-import { TaskReportingFixture } from "../../fixtures/TaskReportingFixture";
-import { MainPage, MyTasksPage } from "../../pages/MainPage";
+import { LoginFixture } from "@ttt/fixtures/LoginFixture";
+import { VerificationFixture } from "@common/fixtures/VerificationFixture";
+import { LogoutFixture } from "@ttt/fixtures/LogoutFixture";
+import { TaskReportingFixture } from "@ttt/fixtures/TaskReportingFixture";
+import { MainPage, MyTasksPage } from "@ttt/pages/MainPage";
 
 /**
  * TC-RPT-001: Create a time report — happy path.

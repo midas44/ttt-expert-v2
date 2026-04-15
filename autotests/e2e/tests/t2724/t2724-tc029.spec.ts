@@ -1,18 +1,18 @@
 import { test, expect } from "@playwright/test";
-import { TttConfig } from "../../config/tttConfig";
-import { GlobalConfig } from "../../config/globalConfig";
+import { TttConfig } from "@ttt/config/tttConfig";
+import { GlobalConfig } from "@common/config/globalConfig";
 import { T2724Tc029Data } from "../../data/t2724/T2724Tc029Data";
-import { DbClient } from "../../config/db/dbClient";
+import { DbClient } from "@ttt/config/db/dbClient";
 import {
   insertTag,
   deleteTagByName,
   getAssignmentClosedStatus,
   reopenAssignment,
 } from "../../data/t2724/queries/t2724Queries";
-import { LoginFixture } from "../../fixtures/LoginFixture";
-import { VerificationFixture } from "../../fixtures/VerificationFixture";
-import { LogoutFixture } from "../../fixtures/LogoutFixture";
-import { MainFixture } from "../../fixtures/MainFixture";
+import { LoginFixture } from "@ttt/fixtures/LoginFixture";
+import { VerificationFixture } from "@common/fixtures/VerificationFixture";
+import { LogoutFixture } from "@ttt/fixtures/LogoutFixture";
+import { MainFixture } from "@ttt/fixtures/MainFixture";
 
 /**
  * TC-T2724-029: Apply endpoint — API direct call.

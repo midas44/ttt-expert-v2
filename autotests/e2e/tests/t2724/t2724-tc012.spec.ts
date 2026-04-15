@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
-import { TttConfig } from "../../config/tttConfig";
-import { GlobalConfig } from "../../config/globalConfig";
+import { TttConfig } from "@ttt/config/tttConfig";
+import { GlobalConfig } from "@common/config/globalConfig";
 import { T2724Tc012Data } from "../../data/t2724/T2724Tc012Data";
 
 /**

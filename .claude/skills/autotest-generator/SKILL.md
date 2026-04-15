@@ -12,9 +12,39 @@ description: >
 
 # Autotest Generator
 
+**Scope:**
+- TTT: full (primary project)
+- CS: partial (CS appears only as episodic UI steps inside cross-project specs — no CS-only test suite)
+
 Primary orchestration skill for generating Playwright + TypeScript E2E tests from
 XLSX test case documentation. Follows the 5-layer architecture and enriches tests
 with knowledge from the expert vault.
+
+## Multi-project framework layout
+
+The autotest framework is multi-project. Use these path aliases (declared in `autotests/tsconfig.json`) — never long relative imports:
+
+| Alias | Resolves to | Purpose |
+|-------|-------------|---------|
+| `@ttt/pages/*` | `e2e/pages/ttt/*` | TTT page objects |
+| `@ttt/fixtures/*` | `e2e/fixtures/ttt/*` | TTT-bound fixtures |
+| `@ttt/config/*` | `e2e/config/ttt/*` | `TttConfig`, `db/dbClient` |
+| `@cs/pages/*` | `e2e/pages/cs/*` | CS page objects |
+| `@cs/fixtures/*` | `e2e/fixtures/cs/*` | CS-bound fixtures |
+| `@cs/config/*` | `e2e/config/cs/*` | `CsConfig` |
+| `@common/fixtures/*` | `e2e/fixtures/common/*` | Project-agnostic fixtures (`VerificationFixture`) |
+| `@common/config/*` | `e2e/config/common/*` | `AppConfig`, `GlobalConfig`, utilities |
+| `@integration/fixtures/*` | `e2e/fixtures/integration/*` | Cross-project orchestration fixtures |
+| `@data/*`, `@utils/*` | `e2e/data/*`, `e2e/utils/*` | Test data + utilities (module-organized; no project split) |
+
+When generating a test:
+1. **Identify project(s) the test touches**. If only TTT — generate normally.
+2. **If the test touches CS** (e.g., a step says "On CS, change Salary Office X to value Y"), the spec is a cross-project test:
+   - Place the spec under `tests/integration/` and tag it `@integration` (in addition to module tags).
+   - Generate any missing CS page objects under `pages/cs/` on demand (small, focused — only the methods the cross-project step actually needs).
+   - Use a separate `BrowserContext` for CS (CAS SSO is shared across TTT/CS, but per-context cookies keep state clean).
+   - Login fixture for CS: `@cs/fixtures/LoginFixture` (uses `CsConfig`, defaults to user `slebedev`).
+3. Cross-project orchestration helpers (e.g., `CsToTttSyncFixture`) live in `fixtures/integration/`.
 
 ## When to Use
 

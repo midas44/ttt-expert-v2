@@ -12,6 +12,11 @@ description: >
 
 # Figma Access — Time Tracking Tool (TTT)
 
+**Scope:**
+- TTT: full
+- CS:  N/A (no CS Figma project known)
+
+
 This skill provides instructions for reading designs from the **Noveo-TTT** Figma file.
 
 | Field | Value |

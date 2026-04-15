@@ -13,6 +13,11 @@ description: >
 
 # TTT Swagger API
 
+**Scope:**
+- TTT: full
+- CS:  N/A (CS has no Swagger surface — UI access only)
+
+
 ## MCP Server Naming Convention
 
 All Swagger MCP servers follow the pattern: `swagger-{env}-{service}-{group}`

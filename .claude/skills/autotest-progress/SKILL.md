@@ -12,6 +12,13 @@ description: >
 
 # Autotest Progress
 
+**Scope:**
+- TTT: full
+- CS:  N/A (no CS-only test suite exists today)
+
+TODO(CS): once cross-project specs accumulate, group coverage report by project (TTT vs integration).
+
+
 Track and report automation coverage across all test case documentation. Helps
 prioritize which tests to automate next based on module health, priority, and effort.
 

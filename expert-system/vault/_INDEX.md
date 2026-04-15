@@ -17,6 +17,12 @@ updated: '2026-04-02'
 - [[rabbitmq-messaging]]
 - [[websocket-events]]
 
+## Integrations (cross-system)
+- [[ttt-cs-sync]] — CS (Company Staff) → TTT one-way sync (employees, salary offices, maternity-leave, dismissal events). 7 documented bugs.
+
+## CS — Company Staff (UI-only secondary SUT)
+*Notes about the CS application itself live here — UI inventories, page flows, etc. Empty until the first CS-only investigation runs.*
+
 ## Modules
 - [[vacation-service-deep-dive]]
 - [[frontend-vacation-module]]

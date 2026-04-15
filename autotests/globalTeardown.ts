@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import { readYaml, readTestDataMode } from "./e2e/config/configUtils";
+import { readYaml, readTestDataMode } from "@common/config/configUtils";
 import { finalizeRun, type RunMeta } from "./e2e/data/yamlArtifactStore";
 
 /**

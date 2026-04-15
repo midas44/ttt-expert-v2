@@ -11,6 +11,13 @@ description: >
 
 # Collection Generator
 
+**Scope:**
+- TTT: full
+- CS:  N/A (collections currently group TTT modules only)
+
+TODO(CS): extend collection grouping to include @integration cross-project specs.
+
+
 Create and process Curated Test Collections for cross-module Playwright test suites.
 
 ## Concept

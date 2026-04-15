@@ -1,11 +1,11 @@
 declare const process: { env: Record<string, string | undefined> };
 
 import { loadSaved, saveToDisk } from "../savedDataStore";
-import type { TestDataMode } from "../../config/configUtils";
-import type { TttConfig } from "../../config/tttConfig";
-import { DbClient } from "../../config/db/dbClient";
+import type { TestDataMode } from "@common/config/configUtils";
+import type { TttConfig } from "@ttt/config/tttConfig";
+import { DbClient } from "@ttt/config/db/dbClient";
 import { findAccountantForEmployee } from "./queries/vacationQueries";
-import { ApiVacationSetupFixture } from "../../fixtures/ApiVacationSetupFixture";
+import { ApiVacationSetupFixture } from "@ttt/fixtures/ApiVacationSetupFixture";
 
 interface Tc025Args {
   accountantLogin: string;

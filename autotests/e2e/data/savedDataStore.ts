@@ -5,7 +5,7 @@ import {
   resolveDataSet,
   listRuns,
 } from "./yamlArtifactStore";
-import { readYaml, readTestDataMode, type TestDataMode } from "../config/configUtils";
+import { readYaml, readTestDataMode, type TestDataMode } from "@common/config/configUtils";
 
 /**
  * Mode-aware facade for test data persistence.

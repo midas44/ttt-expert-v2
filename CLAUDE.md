@@ -1,14 +1,27 @@
 # TTT Expert System — Interactive Mode
 
-This project contains an expert knowledge base for the TTT (Time Tracking Tool) application. Use it to answer questions, investigate issues, and generate test documentation.
+This project contains an expert knowledge base for the TTT (Time Tracking Tool) application and the projects it integrates with. Use it to answer questions, investigate issues, and generate test documentation.
+
+## Projects under test
+
+The system currently covers two projects, with more to be added:
+
+| Project | Role | Config | Envs | Access surfaces |
+|---------|------|--------|------|-----------------|
+| **TTT** (primary) | The main application under test (time tracking, vacation, reports, accounting). | `config/ttt/` | `qa-1`, `timemachine`, `stage` | UI, API (Swagger), DB (Postgres), Graylog, Roundcube, Qase, GitLab, Confluence |
+| **CS** (secondary, integrated) | Company Staff — internal corporate tool, source-of-truth for employees + salary offices. Syncs one-way to TTT. | `config/cs/` | `preprod` only | UI only (CAS SSO shared with TTT). Confluence subtree at page `32899211`. |
+
+CS is investigated only as needed for cross-project E2E tests (e.g., change Salary Office on CS → verify sync on TTT side). When answering a question, identify the target project; for CS, skip API/DB/Graylog steps and use UI-only paths. Vault notes for CS-only topics live under `cs/`; cross-system notes under `integrations/`.
+
+The architecture is **multi-project ready** — adding a third project = (a) a `config/<proj>/` directory, (b) `pages/<proj>/` + `fixtures/<proj>/` directories, (c) a `projects:` entry in `expert-system/config.yaml`.
 
 ## Knowledge Base
 
-- **Obsidian vault** (`expert-system/vault/`, 191 notes, ~222K tokens) — search via `mcp__qmd-search__` tools or read directly via `mcp__obsidian__` tools
+- **Obsidian vault** (`expert-system/vault/`) — TTT modules at vault root (`modules/`, `exploration/`, `architecture/`, etc.); CS-only notes under `cs/`; cross-system notes (CS↔TTT sync, etc.) under `integrations/`. Search via `mcp__qmd-search__` tools or read directly via `mcp__obsidian__` tools
 - **SQLite analytics** (`expert-system/analytics.db`) — query via `mcp__sqlite-analytics__execute_sql`
-- **Generated test docs** (`test-docs/` — XLSX workbooks per module, UI-first test cases)
+- **Generated test docs** (`test-docs/` — XLSX workbooks per module, UI-first test cases). No project-level split: cross-project tests are mixed-step entries inside the relevant TTT module workbook.
 - **Curated test collections** (`test-docs/collections/` — XLSX reference workbooks grouping TCs from multiple modules into cross-cutting suites)
-- **Autotests** (`autotests/` — Playwright + TypeScript E2E framework, generated from XLSX test cases)
+- **Autotests** (`autotests/` — Playwright + TypeScript E2E framework, generated from XLSX test cases). Page objects, fixtures, and configs are split per project: `pages/ttt/`, `pages/cs/`, `fixtures/{common,ttt,cs,integration}/`, `config/{common,ttt,cs}/`. Tests stay module-organized; cross-project specs live in `tests/integration/` (tagged `@integration`).
 
 ## Available MCPs
 
@@ -17,23 +30,24 @@ This project contains an expert knowledge base for the TTT (Time Tracking Tool) 
 | **qmd-search** | Semantic/keyword search over vault notes — start here for any question |
 | **obsidian** | Read, write, search vault notes directly |
 | **sqlite-analytics** | Query module_health, exploration_findings, design_issues, test_case_tracking |
-| **playwright-vpn** | UI testing on TTT environments (use this, not the built-in plugin) |
-| **swagger-\*** | REST API calls to qa-1, timemachine, stage environments |
-| **postgres-\*** | Database queries on qa-1, timemachine, stage (read-only) |
-| **confluence** | TTT documentation wiki |
-| **figma** | Design mockups |
-| **qase** | Existing test suites (project: TIMEREPORT) |
-| **gitlab** | Use curl + PAT (MCP server non-functional on this CE instance) |
+| **playwright-vpn** | UI testing on TTT and CS environments (use this, not the built-in plugin) |
+| **swagger-\*** | REST API calls to TTT qa-1, timemachine, stage environments. **TTT only** — CS has no Swagger surface |
+| **postgres-\*** | Database queries on TTT qa-1, timemachine, stage (read-only). **TTT only** — CS has no exposed DB |
+| **confluence** | TTT and CS documentation wikis (CS Confluence subtree at page `32899211`) |
+| **figma** | Design mockups (TTT) |
+| **qase** | Existing TTT test suites (project: TIMEREPORT). **TTT only** — CS has no Qase project |
+| **gitlab** | Use curl + PAT (MCP server non-functional on this CE instance). TTT repo is `ttt-spring` (project 172); CS GitLab repo TBD |
 | **roundcube-access** skill (no MCP) | Read/search/save test notification emails TTT sends to the QA mailbox (IMAPS at `dev.noveogroup.com`, user `vulyanov@office.local`). Use whenever a task requires verifying that a TTT email notification was actually dispatched. |
-| **graylog-access** skill (no MCP) | List streams, search, tail, and download TTT backend logs from Graylog at `logs.noveogroup.com` (REST API, token auth, VPN). Streams: `TTT-QA-1`, `TTT-QA-2`, `TTT-TIMEMACHINE`, `TTT-PREPROD`, `TTT-STAGE`, `TTT-DEV`. Use whenever a task needs server-side log evidence (exceptions, timing, cron jobs, API failures) — download saves `.json` / `.ndjson` / `.log` / `.csv` to `artifacts/graylog/`. |
+| **graylog-access** skill (no MCP) | List streams, search, tail, and download TTT backend logs from Graylog at `logs.noveogroup.com` (REST API, token auth, VPN). Streams: `TTT-QA-1`, `TTT-QA-2`, `TTT-TIMEMACHINE`, `TTT-PREPROD`, `TTT-STAGE`, `TTT-DEV`. Use whenever a task needs server-side log evidence (exceptions, timing, cron jobs, API failures) — download saves `.json` / `.ndjson` / `.log` / `.csv` to `artifacts/graylog/`. **TTT only** — CS has no Graylog presence. |
 
 ## How to answer questions
 
-1. Search the vault first (`mcp__qmd-search__search` or `mcp__qmd-search__vector_search`)
-2. Read relevant notes (`mcp__obsidian__read_note`)
-3. If vault lacks detail, investigate live: code (`expert-system/repos/project/`), API, DB, or UI
-4. Check GitLab tickets (see "GitLab Ticket Mining" below)
-5. Reference vault note names when citing findings
+1. Identify the target project (TTT, CS, or cross-project). For CS, skip API/DB/Graylog steps — use UI-only paths.
+2. Search the vault first (`mcp__qmd-search__search` or `mcp__qmd-search__vector_search`). For CS look under `cs/` and `integrations/`; for TTT under the regular `modules/`, `exploration/`, etc.
+3. Read relevant notes (`mcp__obsidian__read_note`)
+4. If vault lacks detail, investigate live: code (`expert-system/repos/project/`), API, DB, or UI (TTT only); or live UI exploration via `playwright-vpn` (CS or TTT)
+5. Check GitLab tickets (see "GitLab Ticket Mining" below) — TTT repo is `ttt-spring` (project 172); CS repo TBD
+6. Reference vault note names when citing findings
 
 ## GitLab Ticket Mining
 
@@ -87,7 +101,29 @@ Use the autotest skills to generate, run, and fix Playwright E2E tests from the 
 - **page-discoverer** — explore TTT pages to discover selectors for page objects
 - **collection-generator** — create and process curated test collections (cross-module suites via shared tags)
 
-The autotest framework lives in `autotests/` and shares config with the expert system (`config/ttt/`).
+The autotest framework lives in `autotests/` and reads project configs from `config/<project>/`. Layout under `autotests/e2e/`:
+- `pages/ttt/`, `pages/cs/` — page objects per project (move on demand for new projects)
+- `fixtures/common/` — project-agnostic fixtures (e.g., `VerificationFixture`)
+- `fixtures/ttt/`, `fixtures/cs/` — project-bound fixtures
+- `fixtures/integration/` — cross-project orchestration fixtures (e.g., `CsToTttSyncFixture`)
+- `config/common/{appConfig.ts,configUtils.ts,globalConfig.ts}` — shared interface + utilities
+- `config/ttt/tttConfig.ts`, `config/cs/csConfig.ts` — per-project config classes (both implement `AppConfig`)
+- `tests/<module>/` — module-organized specs (TTT modules + `tests/integration/` for cross-project)
+
+TS path aliases: `@ttt/pages/*`, `@ttt/fixtures/*`, `@ttt/config/*`, `@cs/pages/*`, `@cs/fixtures/*`, `@cs/config/*`, `@common/fixtures/*`, `@common/config/*`, `@integration/fixtures/*`, `@data/*`, `@utils/*`.
+
+A cross-project spec opens a second `BrowserContext` for the secondary project (CAS SSO sessions are per-context — keeps cookies clean):
+```ts
+const tttConfig = new TttConfig();
+const csConfig  = new CsConfig();
+const csContext = await browser.newContext();
+const csPage = await csContext.newPage();
+await new cs.LoginFixture(csPage, csConfig).run();
+// ... CS step ...
+await new ttt.LoginFixture(page, tttConfig).run();
+// ... TTT verification ...
+await csContext.close();
+```
 
 **Vault-first rule for autotest generation:** Before generating any test, search the vault for the relevant module's knowledge — selectors, validation rules, API behaviors, known bugs, and timing quirks. The vault contains hard-won knowledge from Phase A/B that makes generated tests more accurate and robust. Key locations:
 - `modules/<module>-*deep-dive*.md` — validation rules, API endpoints, business logic details
@@ -112,7 +148,9 @@ When you discover new information during autotest generation (selectors, UI quir
 ## Key references
 
 - `CLAUDE+.md` — full autonomous system prompt (for reference, not loaded in interactive mode)
-- `expert-system/config.yaml` — environment configuration
-- `expert-system/MISSION_DIRECTIVE.md` — priority areas and information sources
+- `expert-system/config.yaml` — environment configuration (includes `projects:` array)
+- `expert-system/MISSION_DIRECTIVE.md` — priority areas and information sources (TTT + integrated systems)
 - `expert-system/vault/_KNOWLEDGE_COVERAGE.md` — what's been investigated
 - `expert-system/vault/_INDEX.md` — vault note index
+- `config/ttt/ttt.yml`, `config/ttt/envs/<env>.yml` — TTT app + env configs
+- `config/cs/cs.yaml`, `config/cs/envs/preprod.yaml` — CS app + env configs

@@ -1,4 +1,4 @@
-import { DbClient } from "../../../config/db/dbClient";
+import { DbClient } from "@ttt/config/db/dbClient";
 
 /**
  * All queries use calendar_days (the production calendar) as the source of truth

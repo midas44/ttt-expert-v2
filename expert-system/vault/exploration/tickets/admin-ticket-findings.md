@@ -4,7 +4,7 @@ tags: [admin, tickets, bugs, projects, calendars, salary-office, employees, trac
 created: 2026-04-02
 updated: 2026-04-02
 status: active
-related: ["[[admin-panel-deep-dive]]", "[[admin-panel-pages]]", "[[pm-tool-sync-implementation]]", "[[pm-tool-integration-deep-dive]]", "[[calendar-service-deep-dive]]", "[[companystaff-integration]]", "[[cross-service-office-sync-divergence]]"]
+related: ["[[admin-panel-deep-dive]]", "[[admin-panel-pages]]", "[[pm-tool-sync-implementation]]", "[[pm-tool-integration-deep-dive]]", "[[calendar-service-deep-dive]]", "[[ttt-cs-sync]]", "[[cross-service-office-sync-divergence]]"]
 branch: release/2.1
 ---
 

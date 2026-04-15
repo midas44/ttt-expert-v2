@@ -18,6 +18,11 @@ description: >
 
 # Graylog Log Access
 
+**Scope:**
+- TTT: full
+- CS:  N/A (CS has no Graylog stream)
+
+
 The corporate Graylog instance at `https://logs.noveogroup.com/` aggregates
 logs from every TTT backend environment. Each environment has its own
 **stream** (a named server-side filter). This skill talks to Graylog over its

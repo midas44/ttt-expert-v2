@@ -1,8 +1,8 @@
 declare const process: { env: Record<string, string | undefined> };
 
-import type { TestDataMode } from "../../config/configUtils";
-import type { TttConfig } from "../../config/tttConfig";
-import { DbClient } from "../../config/db/dbClient";
+import type { TestDataMode } from "@common/config/configUtils";
+import type { TttConfig } from "@ttt/config/tttConfig";
+import { DbClient } from "@ttt/config/db/dbClient";
 import { loadSaved, saveToDisk } from "../savedDataStore";
 
 interface Tc082Args {

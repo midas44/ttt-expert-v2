@@ -4,7 +4,7 @@ tags: [branches, sprint-15, release-comparison, cross-branch]
 created: 2026-03-14
 updated: 2026-03-14
 status: active
-related: ["[[architecture/system-overview]]", "[[planner-requirements]]", "[[confirmation-over-under-reporting]]", "[[vacation-day-correction-spec]]", "[[companystaff-integration]]", "[[admin-projects-deep-exploration]]"]
+related: ["[[architecture/system-overview]]", "[[planner-requirements]]", "[[confirmation-over-under-reporting]]", "[[vacation-day-correction-spec]]", "[[ttt-cs-sync]]", "[[admin-projects-deep-exploration]]"]
 branch: release/2.1 vs stage
 ---
 

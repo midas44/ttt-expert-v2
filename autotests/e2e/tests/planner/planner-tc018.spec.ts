@@ -1,12 +1,12 @@
 import { test, expect } from "@playwright/test";
-import { TttConfig } from "../../config/tttConfig";
-import { GlobalConfig } from "../../config/globalConfig";
+import { TttConfig } from "@ttt/config/tttConfig";
+import { GlobalConfig } from "@common/config/globalConfig";
 import { PlannerTc018Data } from "../../data/planner/PlannerTc018Data";
-import { LoginFixture } from "../../fixtures/LoginFixture";
-import { VerificationFixture } from "../../fixtures/VerificationFixture";
-import { LogoutFixture } from "../../fixtures/LogoutFixture";
-import { MainFixture } from "../../fixtures/MainFixture";
-import { PlannerPage } from "../../pages/PlannerPage";
+import { LoginFixture } from "@ttt/fixtures/LoginFixture";
+import { VerificationFixture } from "@common/fixtures/VerificationFixture";
+import { LogoutFixture } from "@ttt/fixtures/LogoutFixture";
+import { MainFixture } from "@ttt/fixtures/MainFixture";
+import { PlannerPage } from "@ttt/pages/PlannerPage";
 
 /**
  * TC-PLN-018: Edit hours in Projects tab (manager view).

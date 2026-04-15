@@ -1,21 +1,37 @@
 ---
 name: playwright-browser
 description: >
-  Automate browser interactions on the TTT QA environment (and other web apps) using
+  Automate browser interactions on the TTT and CS environments (and other web apps) using
   Playwright — navigate pages, log in, click elements, fill forms, switch language,
   take screenshots, and more. Use this skill when the user asks to "open a page",
   "take a screenshot", "log in as user X", "test in the browser", "navigate to",
   "check the UI", "use Playwright", "browser test", "screenshot a page", or any task
   that requires controlling a real browser. Also use when the user mentions "playwright",
-  "headless browser", "browser automation", "open TTT", "login to TTT", "screenshot",
+  "headless browser", "browser automation", "open TTT", "login to TTT", "open CS",
+  "login to CS", "Company Staff UI", "screenshot",
   or asks to visually verify a page. Covers both the Playwright MCP plugin (for simple
   public-site interactions) and standalone Node.js scripts (for VPN/proxy-restricted sites).
 ---
 
 # Playwright Browser Automation
 
+**Scope:**
+- TTT: full
+- CS: full (UI access via the same `playwright-vpn` MCP — CS is also behind the corporate VPN)
+
 This skill provides instructions for automating browser interactions using Playwright,
-with special handling for the TTT QA environment behind VPN.
+with special handling for the TTT and CS environments behind VPN.
+
+## Targeting CS (Company Staff)
+
+CS is the secondary integrated SUT. UI is the only available access surface. Key facts:
+
+- Base URL pattern: `https://cs-<env>.noveogroup.com` — currently only `preprod`. Get the resolved URL from `config/cs/cs.yaml` (`appUrl` template) or read it from `e2e/config/cs/csConfig.ts` if running inside the autotest framework.
+- Auth: CAS SSO at `cas-demo.noveogroup.com` — same as TTT. **If the same browser context already has a TTT session via CAS, the CS login form is short-circuited** (the page redirects straight to CS dashboard). For deterministic behavior in cross-project scripts, open a separate `BrowserContext` per app (`browser.newContext()`).
+- Credentials: see `config/cs/envs/preprod.yaml` (default `slebedev` / `slebedev`).
+- Path inventory (from `config/cs/cs.yaml`): `/preferences`, `/employee/active/list`, `/contractors?tab=active`, `/settings/salary-office?tab=list`.
+
+When the user asks to "log in to CS", use the CS appUrl + the slebedev credentials and check for the username input visibility before filling — the CAS short-circuit means the form may not appear.
 
 ## Three Approaches
 

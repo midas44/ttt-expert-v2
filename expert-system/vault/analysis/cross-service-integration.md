@@ -13,7 +13,7 @@ status: active
 related:
   - '[[architecture/rabbitmq-messaging]]'
   - '[[architecture/websocket-events]]'
-  - '[[modules/companystaff-integration]]'
+  - '[[integrations/ttt-cs-sync]]'
   - '[[modules/calendar-service-deep-dive]]'
   - '[[modules/vacation-service-deep-dive]]'
   - '[[modules/accounting-service-deep-dive]]'
@@ -297,7 +297,7 @@ class Event<T> {
 
 - [[architecture/rabbitmq-messaging]] — Exchange/queue overview (Phase A)
 - [[architecture/websocket-events]] — WebSocket topic overview (Phase A)
-- [[modules/companystaff-integration]] — CS sync bugs (Phase A)
+- [[integrations/ttt-cs-sync]] — CS sync bugs (Phase A)
 - [[modules/calendar-service-deep-dive]] — Calendar event publishing detail
 - [[modules/email-notification-deep-dive]] — Email event consumption detail
 - [[modules/vacation-service-deep-dive]] — Vacation state transitions

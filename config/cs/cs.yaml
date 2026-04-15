@@ -1,0 +1,22 @@
+#Project properties
+
+appName: "CS (Company Staff)"
+
+#replace *** with env name
+appUrl: "https://cs-***.noveogroup.com"
+
+# preprod
+env: "preprod"
+
+#en, ru
+#(use lang switcher on profile settings page)
+lang: "en"
+
+profilePath: /preferences
+employeesPath: /employee/active/list
+contractorsPath: /contractors?tab=active
+salaryOfficesPath: /settings/salary-office?tab=list
+
+logoutUrl: https://cas-demo.noveogroup.com/logout
+waitUntil: networkidle
+logoutSuccessText: Logout successful

@@ -16,6 +16,11 @@ description: >
 
 # Roundcube / Dovecot Test Mailbox Access
 
+**Scope:**
+- TTT: full
+- CS:  N/A (no CS-originated email notifications observed in the test mailbox today)
+
+
 The QA environment's test email service is **Dovecot** + **Roundcube Webmail** at
 `https://dev.noveogroup.com/mail`. TTT sends notification emails here during tests.
 This skill reads the mailbox directly over **IMAPS (port 993)** — much faster and

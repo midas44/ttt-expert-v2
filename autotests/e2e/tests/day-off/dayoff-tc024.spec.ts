@@ -1,12 +1,12 @@
 import { test, expect } from "@playwright/test";
-import { TttConfig } from "../../config/tttConfig";
-import { GlobalConfig } from "../../config/globalConfig";
+import { TttConfig } from "@ttt/config/tttConfig";
+import { GlobalConfig } from "@common/config/globalConfig";
 import { DayoffTc024Data } from "../../data/day-off/DayoffTc024Data";
-import { LoginFixture } from "../../fixtures/LoginFixture";
-import { VerificationFixture } from "../../fixtures/VerificationFixture";
-import { LogoutFixture } from "../../fixtures/LogoutFixture";
-import { DayOffRequestPage } from "../../pages/DayOffRequestPage";
-import { WeekendDetailsModal } from "../../pages/WeekendDetailsModal";
+import { LoginFixture } from "@ttt/fixtures/LoginFixture";
+import { VerificationFixture } from "@common/fixtures/VerificationFixture";
+import { LogoutFixture } from "@ttt/fixtures/LogoutFixture";
+import { DayOffRequestPage } from "@ttt/pages/DayOffRequestPage";
+import { WeekendDetailsModal } from "@ttt/pages/WeekendDetailsModal";
 
 /**
  * TC-DO-024: View request details in WeekendDetailsModal.

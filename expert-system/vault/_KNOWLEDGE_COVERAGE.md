@@ -4,6 +4,13 @@ updated: '2026-04-04'
 ---
 # Knowledge Coverage — Phase C (Autotest Generation)
 
+## Project Coverage
+
+| Project | Role | Vault notes | Test specs |
+|---------|------|-------------|------------|
+| TTT | Primary SUT | All modules below | All `tests/<module>/` specs |
+| CS  | Secondary, integrated (UI-only) | `vault/cs/` (empty until first investigation) + `vault/integrations/ttt-cs-sync.md` (existing) | None yet — appears as episodic UI steps in `tests/integration/` cross-project specs |
+
 ## Phase C: Autotest Generation Progress
 
 ### Completed Scopes

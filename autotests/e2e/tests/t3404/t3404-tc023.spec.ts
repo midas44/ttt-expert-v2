@@ -1,12 +1,12 @@
 import { test, expect } from "@playwright/test";
-import { TttConfig } from "../../config/tttConfig";
-import { GlobalConfig } from "../../config/globalConfig";
+import { TttConfig } from "@ttt/config/tttConfig";
+import { GlobalConfig } from "@common/config/globalConfig";
 import { T3404Tc010Data } from "../../data/t3404/T3404Tc010Data";
-import { LoginFixture } from "../../fixtures/LoginFixture";
-import { VerificationFixture } from "../../fixtures/VerificationFixture";
-import { LogoutFixture } from "../../fixtures/LogoutFixture";
-import { DayOffPage } from "../../pages/DayOffPage";
-import { RescheduleDialog } from "../../pages/RescheduleDialog";
+import { LoginFixture } from "@ttt/fixtures/LoginFixture";
+import { VerificationFixture } from "@common/fixtures/VerificationFixture";
+import { LogoutFixture } from "@ttt/fixtures/LogoutFixture";
+import { DayOffPage } from "@ttt/pages/DayOffPage";
+import { RescheduleDialog } from "@ttt/pages/RescheduleDialog";
 
 /**
  * TC-T3404-023: Max date unchanged — Dec 31 of the original date's year.

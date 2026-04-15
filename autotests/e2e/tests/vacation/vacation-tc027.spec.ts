@@ -1,8 +1,8 @@
 import { test, expect } from "@playwright/test";
-import { TttConfig } from "../../config/tttConfig";
-import { GlobalConfig } from "../../config/globalConfig";
+import { TttConfig } from "@ttt/config/tttConfig";
+import { GlobalConfig } from "@common/config/globalConfig";
 import { VacationTc027Data } from "../../data/vacation/VacationTc027Data";
-import { ApiVacationSetupFixture } from "../../fixtures/ApiVacationSetupFixture";
+import { ApiVacationSetupFixture } from "@ttt/fixtures/ApiVacationSetupFixture";
 
 /**
  * TC-VAC-027: Payment validation — wrong day sum rejected.

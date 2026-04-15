@@ -1,21 +1,34 @@
 ---
 name: page-discoverer
 description: >
-  Discover selectors and page structure for TTT pages using live browser exploration.
+  Discover selectors and page structure for TTT and CS pages using live browser exploration.
   Use this skill when the user asks to "discover page", "find selectors", "explore UI",
   "page object for", "inspect page", "what elements are on", "map the page", "selector
-  discovery", "build page object", or any task involving exploring a live TTT page to
+  discovery", "build page object", or any task involving exploring a live TTT or CS page to
   identify interactive elements and their selectors. Also use when the user needs to
   create a new page object class, wants to understand a page's structure before writing
-  tests, or asks to "snapshot the page", "accessibility tree", or "explore TTT UI".
+  tests, or asks to "snapshot the page", "accessibility tree", "explore TTT UI", or "explore CS UI".
 ---
 
 # Page Discoverer
 
-Explore live TTT pages via the playwright-vpn MCP to discover selectors, map page
+**Scope:**
+- TTT: full
+- CS: full (UI exploration via the same playwright-vpn MCP — CS pages are behind the same VPN)
+
+Explore live TTT and CS pages via the playwright-vpn MCP to discover selectors, map page
 structure, and generate page object skeletons. This capability bridges the gap between
 test documentation (which describes what to test) and automation code (which needs
 precise selectors).
+
+## Project targeting
+
+When the user asks to discover a page, identify the project first:
+- TTT: load `e2e/config/ttt/tttConfig.ts` (or read `config/ttt/ttt.yml`) for the resolved appUrl. Generated page objects go to `autotests/e2e/pages/ttt/<PageName>.ts`.
+- CS: load `e2e/config/cs/csConfig.ts` (or read `config/cs/cs.yaml`) for the resolved appUrl. Generated page objects go to `autotests/e2e/pages/cs/<PageName>.ts`.
+- Bare requests with no project hint default to TTT (the primary project).
+
+Imports in generated page objects must use the project-scoped TS path alias: `@ttt/config/tttConfig` or `@cs/config/csConfig`. Never use long relative paths like `../../config/...`.
 
 ## When to Use
 

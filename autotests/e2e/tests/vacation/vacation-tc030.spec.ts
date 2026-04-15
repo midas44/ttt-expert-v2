@@ -1,8 +1,8 @@
 import { test, expect } from "@playwright/test";
-import { TttConfig } from "../../config/tttConfig";
-import { GlobalConfig } from "../../config/globalConfig";
+import { TttConfig } from "@ttt/config/tttConfig";
+import { GlobalConfig } from "@common/config/globalConfig";
 import { VacationTc030Data } from "../../data/vacation/VacationTc030Data";
-import { ApiVacationSetupFixture } from "../../fixtures/ApiVacationSetupFixture";
+import { ApiVacationSetupFixture } from "@ttt/fixtures/ApiVacationSetupFixture";
 
 /**
  * TC-VAC-030: Delete PAID+EXACT blocked.

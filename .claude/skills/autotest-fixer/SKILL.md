@@ -11,6 +11,11 @@ description: >
 
 # Autotest Fixer
 
+**Scope:**
+- TTT: full
+- CS:  partial (framework supports cross-project specs; fixer works on @integration tests when they exist)
+
+
 Diagnose and fix failing Playwright E2E tests using error analysis, live browser
 inspection, and knowledge base lookups.
 

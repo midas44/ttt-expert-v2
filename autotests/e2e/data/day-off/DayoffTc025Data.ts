@@ -1,6 +1,6 @@
 import { loadSaved, saveToDisk } from "../savedDataStore";
-import { TttConfig } from "../../config/tttConfig";
-import { DbClient } from "../../config/db/dbClient";
+import { TttConfig } from "@ttt/config/tttConfig";
+import { DbClient } from "@ttt/config/db/dbClient";
 import {
   findNewDayoffRequestWithManager,
   createNewDayoffRequest,

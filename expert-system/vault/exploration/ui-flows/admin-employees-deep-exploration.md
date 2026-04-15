@@ -4,7 +4,7 @@ tags: [admin, employees, subcontractors, ui-exploration, companystaff]
 created: 2026-03-14
 updated: 2026-03-14
 status: active
-related: ["[[admin-panel-pages]]", "[[companystaff-integration]]", "[[architecture/roles-permissions]]", "[[app-navigation]]"]
+related: ["[[admin-panel-pages]]", "[[ttt-cs-sync]]", "[[architecture/roles-permissions]]", "[[app-navigation]]"]
 branch: release/2.1
 ---
 
@@ -50,7 +50,7 @@ Each row has 3 cells:
 ### Findings
 1. **Data quality**: One dismissed row shows empty employee name cell for login `maxim.raykhrud` — link exists but display name is empty. Manager shows "Ivan Ilnitsky".
 2. **Test accounts visible**: "ponofidin Security" appears in dismissed list — test/security accounts mixed with real employees.
-3. **Entirely read-only**: No create/edit/delete actions. All employee data sourced from [[companystaff-integration|CompanyStaff]] sync.
+3. **Entirely read-only**: No create/edit/delete actions. All employee data sourced from [[ttt-cs-sync|CompanyStaff]] sync.
 4. **External links only**: Employee/manager names link to CS profiles (external domain `cs.noveogroup.com`), not to any TTT detail view.
 
 ## Subcontractor Tab
