@@ -1,6 +1,6 @@
 ---
 type: coverage
-updated: '2026-04-15'
+updated: '2026-04-16'
 ---
 # Knowledge Coverage — Phase C (Autotest Generation)
 
@@ -10,6 +10,7 @@ updated: '2026-04-15'
 |---------|------|-------------|------------|
 | TTT | Primary SUT | All modules below | All `tests/<module>/` specs |
 | CS  | Secondary, integrated (UI-only) | `vault/cs/` — 6 notes from live UI exploration 2026-04-15 (overview, employee profile, salary offices, transfer workflow, hiring workflow, automation notes) + `vault/integrations/ttt-cs-sync.md` | None yet — appears as episodic UI steps in `tests/integration/` cross-project specs |
+| PMT | Secondary, integrated (UI-only) | `vault/pmt/_overview.md` (stub, 2026-04-16) + `vault/integrations/ttt-pmt-sync.md` (stub); TTT-side deep dives already exist: `modules/pm-tool-integration-deep-dive.md`, `modules/pm-tool-sync-implementation.md`, `branches/pm-tool-stage-comparison.md`, plus `modules/admin-panel-deep-dive.md` ("PM Tool sync" section) and `modules/cross-service-integration.md` | None yet — appears as episodic UI steps in `tests/integration/` cross-project specs |
 
 ### CS investigation status (2026-04-15)
 

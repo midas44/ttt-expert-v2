@@ -50,7 +50,7 @@ The agent connects to the target application and supporting tools through 39 MCP
 
 ## Target Applications
 
-The system is multi-project ready. Today it covers two SUTs:
+The system is multi-project ready. Today it covers three SUTs:
 
 **TTT — Time Tracking Tool** *(primary)*
 
@@ -66,7 +66,11 @@ A microservices-based corporate system for time tracking and absence management:
 
 Internal corporate tool — source-of-truth for employees, contractors and salary offices. Syncs one-way to TTT (employee data, salary office parameters, maternity-leave events, dismissal events). **UI-only access** for testing today (no API/DB/Swagger/Graylog presence). One environment (`preprod`). Same CAS SSO and admin credentials as TTT. CS appears as **episodic UI steps** inside cross-project E2E test cases (e.g., change Salary Office on CS → verify sync to TTT).
 
-Adding a third integrated project = (a) drop a `config/<proj>/` directory, (b) create `pages/<proj>/` + `fixtures/<proj>/` directories, (c) add a `projects:` entry to `expert-system/config.yaml`. No framework changes required.
+**PMT — Project Management Tool** *(secondary, integrated)*
+
+Internal corporate tool — source-of-truth for project records (project settings). Syncs one-way to TTT (project parameters, project creation/updates). **UI-only access** for testing today (no API/DB/Swagger/Graylog presence). One environment (`preprod`). Same CAS SSO and admin credentials as TTT and CS. PMT appears as **episodic UI steps** inside cross-project E2E test cases (e.g., change project parameters on PMT → verify sync to TTT; create new project on PMT → verify addition on TTT).
+
+Adding a 4th integrated project = (a) drop a `config/<proj>/` directory, (b) create `pages/<proj>/` + `fixtures/<proj>/` directories, (c) add a `projects:` entry to `expert-system/config.yaml`. No framework changes required.
 
 ## Scope Modes
 
@@ -76,9 +80,9 @@ The system supports flexible scoping via `config.yaml`:
 |-------|---------|----------|
 | **All modules** | `scope: "all"` | Full breadth-first investigation and generation |
 | **Single module** | `scope: "vacation"` | Focused pipeline for one functional area (primary project) |
-| **Project-prefixed module** | `scope: "ttt:vacation"` or `scope: "cs:salary-offices"` | Pin scope to a specific project. Bare module names (no prefix) imply the primary project (`primary_project` in config.yaml). |
+| **Project-prefixed module** | `scope: "ttt:vacation"`, `scope: "cs:salary-offices"`, `scope: "pmt:projects"` | Pin scope to a specific project. Bare module names (no prefix) imply the primary project (`primary_project` in config.yaml). |
 | **GitLab ticket** | `scope: "3404"` | Targeted investigation of a specific issue with regression tests |
-| **Cross-project** | `scope: "integration:cs-ttt-salary-office-sync"` | A cross-project E2E flow (TTT + CS). Generated specs land under `tests/integration/` with `@integration` tag. |
+| **Cross-project** | `scope: "integration:cs-ttt-salary-office-sync"`, `scope: "integration:ttt-pmt-project-sync"` | A cross-project E2E flow (TTT + CS, or TTT + PMT, etc.). Generated specs land under `tests/integration/` with `@integration` tag. |
 | **Mixed** | `scope: "vacation, 3404"` | Modules and tickets together |
 
 Ticket numbers (pure digits) are automatically normalized to `t<number>` internally (e.g., `3404` → `t3404`) for artifact naming.
@@ -127,20 +131,24 @@ autotests/                              # Playwright + TypeScript E2E framework
   manifest/collection-<name>.json       # Collection processing reports
   e2e/
     tests/<module>/                     # Generated test specs (per module subdir)
-    tests/integration/                  # Cross-project specs (CS↔TTT), tagged @integration
+    tests/integration/                  # Cross-project specs (CS↔TTT, PMT↔TTT), tagged @integration
     data/<module>/                      # Test data classes + queries (module-organized; no project split)
-    pages/ttt/, pages/cs/               # Page objects per project
+    pages/ttt/, pages/cs/, pages/pmt/   # Page objects per project
     fixtures/common/                    # Project-agnostic fixtures (VerificationFixture)
-    fixtures/ttt/, fixtures/cs/         # Project-bound fixtures
+    fixtures/ttt/, fixtures/cs/, fixtures/pmt/  # Project-bound fixtures
     fixtures/integration/               # Cross-project orchestration fixtures
     config/common/                      # Shared interface (AppConfig) + utilities + GlobalConfig
     config/ttt/                         # TttConfig (implements AppConfig) + db/dbClient
     config/cs/                          # CsConfig (implements AppConfig)
+    config/pmt/                         # PmtConfig (implements AppConfig)
 config/ttt/
   envs/*.yml                            # TTT environment credentials (per env)
 config/cs/
   cs.yaml                               # CS app config (URL, paths, language)
   envs/preprod.yaml                     # CS env credentials
+config/pmt/
+  pmt.yaml                              # PMT app config (URL, paths, language)
+  envs/preprod.yaml                     # PMT env credentials
 config/roundcube/                       # Test email service config (Roundcube/Dovecot IMAP)
   roundcube.yaml                        # Host/URL + active env
   envs/*.yaml                           # Per-user mailbox credentials

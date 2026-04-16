@@ -15,6 +15,7 @@ description: >
 **Scope:**
 - TTT: full (primary project)
 - CS: partial (CS appears only as episodic UI steps inside cross-project specs — no CS-only test suite)
+- PMT: partial (PMT appears only as episodic UI steps inside cross-project specs — no PMT-only test suite)
 
 Primary orchestration skill for generating Playwright + TypeScript E2E tests from
 XLSX test case documentation. Follows the 5-layer architecture and enriches tests
@@ -32,6 +33,9 @@ The autotest framework is multi-project. Use these path aliases (declared in `au
 | `@cs/pages/*` | `e2e/pages/cs/*` | CS page objects |
 | `@cs/fixtures/*` | `e2e/fixtures/cs/*` | CS-bound fixtures |
 | `@cs/config/*` | `e2e/config/cs/*` | `CsConfig` |
+| `@pmt/pages/*` | `e2e/pages/pmt/*` | PMT page objects |
+| `@pmt/fixtures/*` | `e2e/fixtures/pmt/*` | PMT-bound fixtures |
+| `@pmt/config/*` | `e2e/config/pmt/*` | `PmtConfig` |
 | `@common/fixtures/*` | `e2e/fixtures/common/*` | Project-agnostic fixtures (`VerificationFixture`) |
 | `@common/config/*` | `e2e/config/common/*` | `AppConfig`, `GlobalConfig`, utilities |
 | `@integration/fixtures/*` | `e2e/fixtures/integration/*` | Cross-project orchestration fixtures |
@@ -39,12 +43,12 @@ The autotest framework is multi-project. Use these path aliases (declared in `au
 
 When generating a test:
 1. **Identify project(s) the test touches**. If only TTT — generate normally.
-2. **If the test touches CS** (e.g., a step says "On CS, change Salary Office X to value Y"), the spec is a cross-project test:
+2. **If the test touches CS or PMT** (e.g., a step says "On CS, change Salary Office X to value Y" or "On PMT, change project parameter X to value Y"), the spec is a cross-project test:
    - Place the spec under `tests/integration/` and tag it `@integration` (in addition to module tags).
-   - Generate any missing CS page objects under `pages/cs/` on demand (small, focused — only the methods the cross-project step actually needs).
-   - Use a separate `BrowserContext` for CS (CAS SSO is shared across TTT/CS, but per-context cookies keep state clean).
-   - Login fixture for CS: `@cs/fixtures/LoginFixture` (uses `CsConfig`, defaults to user `slebedev`).
-3. Cross-project orchestration helpers (e.g., `CsToTttSyncFixture`) live in `fixtures/integration/`.
+   - Generate any missing CS page objects under `pages/cs/` or PMT page objects under `pages/pmt/` on demand (small, focused — only the methods the cross-project step actually needs).
+   - Use a separate `BrowserContext` for the secondary project (CAS SSO is shared across TTT/CS/PMT, but per-context cookies keep state clean).
+   - Login fixtures: `@cs/fixtures/LoginFixture` for CS (defaults to user `slebedev`), `@pmt/fixtures/LoginFixture` for PMT (defaults to user `pvaynmaster`).
+3. Cross-project orchestration helpers (e.g., `CsToTttSyncFixture`, `PmtToTttSyncFixture`) live in `fixtures/integration/`.
 
 ## When to Use
 

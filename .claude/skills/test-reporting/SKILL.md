@@ -14,8 +14,10 @@ description: >
 **Scope:**
 - TTT: full
 - CS:  N/A (GitLab project 172 (ttt-spring) is hardcoded; CS GitLab repo is TBD)
+- PMT: N/A (GitLab project 172 (ttt-spring) is hardcoded; PMT GitLab repo is TBD)
 
 TODO(CS): support posting cross-project test results to a CS GitLab project once identified.
+TODO(PMT): support posting cross-project test results to a PMT GitLab project once identified.
 
 
 Post structured QA test result comments on GitLab issues using the REST API.

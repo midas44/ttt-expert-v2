@@ -16,6 +16,7 @@ description: >
 **Scope:**
 - TTT: full
 - CS:  full (host-level package management is project-agnostic)
+- PMT: full (host-level package management is project-agnostic)
 
 
 ## Proxy Requirement

@@ -16,6 +16,7 @@ description: >
 **Scope:**
 - TTT: full
 - CS:  N/A (CS has no Swagger surface — UI access only)
+- PMT: N/A (PMT has no Swagger surface — UI access only)
 
 
 ## MCP Server Naming Convention

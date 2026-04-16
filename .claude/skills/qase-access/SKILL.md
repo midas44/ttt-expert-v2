@@ -15,6 +15,7 @@ description: >
 **Scope:**
 - TTT: full
 - CS:  N/A (TIMEREPORT is the TTT Qase project; no CS counterpart exists)
+- PMT: N/A (TIMEREPORT is the TTT Qase project; no PMT counterpart exists)
 
 
 ## Project

@@ -1,0 +1,24 @@
+#Project properties
+
+appName: "PMT (PM Tool)"
+
+#replace *** with env name
+appUrl: "https://pm-***.noveogroup.com"
+
+# preprod
+env: "preprod"
+
+#en, ru
+#(use lang switcher on profile settings page)
+lang: "en"
+
+projectsPath: /projects
+
+# PMT auth is Keycloak (realm demo-noveo) — NOT CAS Demo.
+# Verified 2026-04-16: login redirects to
+#   https://sso.noveogroup.com/realms/demo-noveo/protocol/openid-connect/auth?client_id=openid-preprod-pmtool&redirect_uri=.../sso/auth
+# Logout endpoint below is the standard Keycloak OIDC logout for this realm;
+# re-verify on first real logout flow automation.
+logoutUrl: https://sso.noveogroup.com/realms/demo-noveo/protocol/openid-connect/logout
+waitUntil: networkidle
+logoutSuccessText: Logout successful

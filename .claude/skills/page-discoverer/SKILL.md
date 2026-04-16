@@ -1,13 +1,14 @@
 ---
 name: page-discoverer
 description: >
-  Discover selectors and page structure for TTT and CS pages using live browser exploration.
+  Discover selectors and page structure for TTT, CS, and PMT pages using live browser exploration.
   Use this skill when the user asks to "discover page", "find selectors", "explore UI",
   "page object for", "inspect page", "what elements are on", "map the page", "selector
-  discovery", "build page object", or any task involving exploring a live TTT or CS page to
+  discovery", "build page object", or any task involving exploring a live TTT, CS, or PMT page to
   identify interactive elements and their selectors. Also use when the user needs to
   create a new page object class, wants to understand a page's structure before writing
-  tests, or asks to "snapshot the page", "accessibility tree", "explore TTT UI", or "explore CS UI".
+  tests, or asks to "snapshot the page", "accessibility tree", "explore TTT UI", "explore CS UI",
+  or "explore PMT UI".
 ---
 
 # Page Discoverer
@@ -15,8 +16,9 @@ description: >
 **Scope:**
 - TTT: full
 - CS: full (UI exploration via the same playwright-vpn MCP — CS pages are behind the same VPN)
+- PMT: full (UI exploration via the same playwright-vpn MCP — PMT pages are behind the same VPN)
 
-Explore live TTT and CS pages via the playwright-vpn MCP to discover selectors, map page
+Explore live TTT, CS, and PMT pages via the playwright-vpn MCP to discover selectors, map page
 structure, and generate page object skeletons. This capability bridges the gap between
 test documentation (which describes what to test) and automation code (which needs
 precise selectors).
@@ -26,9 +28,10 @@ precise selectors).
 When the user asks to discover a page, identify the project first:
 - TTT: load `e2e/config/ttt/tttConfig.ts` (or read `config/ttt/ttt.yml`) for the resolved appUrl. Generated page objects go to `autotests/e2e/pages/ttt/<PageName>.ts`.
 - CS: load `e2e/config/cs/csConfig.ts` (or read `config/cs/cs.yaml`) for the resolved appUrl. Generated page objects go to `autotests/e2e/pages/cs/<PageName>.ts`.
+- PMT: load `e2e/config/pmt/pmtConfig.ts` (or read `config/pmt/pmt.yaml`) for the resolved appUrl. Generated page objects go to `autotests/e2e/pages/pmt/<PageName>.ts`.
 - Bare requests with no project hint default to TTT (the primary project).
 
-Imports in generated page objects must use the project-scoped TS path alias: `@ttt/config/tttConfig` or `@cs/config/csConfig`. Never use long relative paths like `../../config/...`.
+Imports in generated page objects must use the project-scoped TS path alias: `@ttt/config/tttConfig`, `@cs/config/csConfig`, or `@pmt/config/pmtConfig`. Never use long relative paths like `../../config/...`.
 
 ## When to Use
 

@@ -19,6 +19,7 @@ description: >
 **Scope:**
 - TTT: full
 - CS:  N/A (no CS-originated email notifications observed in the test mailbox today)
+- PMT: N/A (no PMT-originated email notifications observed in the test mailbox today)
 
 
 The QA environment's test email service is **Dovecot** + **Roundcube Webmail** at

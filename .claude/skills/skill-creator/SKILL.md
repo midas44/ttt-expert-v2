@@ -8,6 +8,7 @@ description: Create new skills, modify and improve existing skills, and measure 
 **Scope:**
 - TTT: full
 - CS:  full (skill authoring tooling is project-agnostic)
+- PMT: full (skill authoring tooling is project-agnostic)
 
 
 A skill for creating new skills and iteratively improving them.

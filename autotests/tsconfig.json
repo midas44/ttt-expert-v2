@@ -18,6 +18,9 @@
       "@cs/config/*": ["e2e/config/cs/*"],
       "@cs/pages/*": ["e2e/pages/cs/*"],
       "@cs/fixtures/*": ["e2e/fixtures/cs/*"],
+      "@pmt/config/*": ["e2e/config/pmt/*"],
+      "@pmt/pages/*": ["e2e/pages/pmt/*"],
+      "@pmt/fixtures/*": ["e2e/fixtures/pmt/*"],
       "@integration/fixtures/*": ["e2e/fixtures/integration/*"],
       "@data/*": ["e2e/data/*"],
       "@utils/*": ["e2e/utils/*"]

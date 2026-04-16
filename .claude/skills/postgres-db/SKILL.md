@@ -18,6 +18,7 @@ description: >
 **Scope:**
 - TTT: full
 - CS:  N/A (CS has no exposed database from the test framework)
+- PMT: N/A (PMT has no exposed database from the test framework)
 
 
 ## Environments & MCP Servers

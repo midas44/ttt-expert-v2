@@ -21,6 +21,7 @@ description: >
 **Scope:**
 - TTT: full
 - CS:  N/A (CS has no Graylog stream)
+- PMT: N/A (PMT has no Graylog stream)
 
 
 The corporate Graylog instance at `https://logs.noveogroup.com/` aggregates

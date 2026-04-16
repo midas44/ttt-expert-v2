@@ -16,6 +16,7 @@ description: >
 **Scope:**
 - TTT: full
 - CS:  full (MCP server installation is project-agnostic; applies to CS-related MCPs if/when they exist)
+- PMT: full (MCP server installation is project-agnostic; applies to PMT-related MCPs if/when they exist)
 
 
 ## Key Concepts

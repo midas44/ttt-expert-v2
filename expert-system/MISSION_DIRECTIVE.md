@@ -14,15 +14,18 @@ TTT is web application aimed for internal corporate tracking / processing / mana
 
 ## Integrated Systems Under Test
 
-TTT is the **primary** SUT. The expert system is multi-project ready and currently covers one **secondary** integrated SUT, with a third project planned next:
+TTT is the **primary** SUT. The expert system is multi-project ready and currently covers two **secondary** integrated SUTs, with more projects expected to follow:
 
 * **CS — Company Staff** *(secondary, integrated)*: internal corporate tool, source-of-truth for employees, contractors and salary offices. Syncs one-way to TTT (employee data, salary office parameters, maternity leave events, dismissal events). **UI-only access** for testing today (no API/DB/Swagger/Graylog). One env: `preprod`. Uses CAS SSO shared with TTT (`cas-demo.noveogroup.com`). Same admin credentials apply.
   - Confluence entry: https://projects.noveogroup.com/spaces/NOV/pages/32899211/Company+Staff
   - Config: `config/cs/cs.yaml` + `config/cs/envs/preprod.yaml`
   - GitLab repo: TBD (mark `TODO(CS)` when cross-referencing tickets)
-* **3rd project** *(planned)*: same shape as CS — UI-only, episodic role inside cross-project E2E flows.
+* **PMT — Project Management Tool** *(secondary, integrated)*: internal corporate tool, source-of-truth for project records (project settings). Syncs one-way to TTT. **UI-only access** for testing today (no API/DB/Swagger/Graylog). One env: `preprod`. Uses CAS SSO shared with TTT and CS. Same admin credentials apply (`pvaynmaster`).
+  - Confluence entry: https://projects.noveogroup.com/spaces/NOV/pages/18944057/Project+Management+Tool
+  - Config: `config/pmt/pmt.yaml` + `config/pmt/envs/preprod.yaml`
+  - GitLab repo: TBD (mark `TODO(PMT)` when cross-referencing tickets)
 
-CS appears only as **episodic UI steps** inside cross-project E2E test cases. Examples: change Salary Office parameters on CS → validate sync to TTT; change employee settings on CS (salary-office change, maternity leave, dismission) → test related TTT functionality. There is no separate CS-only test suite or test-docs workbook — cross-project test cases are mixed-step entries inside the relevant TTT module workbook. Vault notes for CS-only topics live under `vault/cs/`; cross-system notes under `vault/integrations/` (e.g., `integrations/ttt-cs-sync.md`).
+CS and PMT appear only as **episodic UI steps** inside cross-project E2E test cases. Examples: change Salary Office parameters on CS → validate sync to TTT; change employee settings on CS (salary-office change, maternity leave, dismissal) → test related TTT functionality; change project parameters on PMT → validate sync to TTT; create a new project on PMT → validate project addition and functionality on TTT side. There is no separate CS-only or PMT-only test suite or test-docs workbook — cross-project test cases are mixed-step entries inside the relevant TTT module workbook. Vault notes for CS-only topics live under `vault/cs/`, PMT-only under `vault/pmt/`; cross-system notes under `vault/integrations/` (e.g., `integrations/ttt-cs-sync.md`, `integrations/ttt-pmt-sync.md`).
 
 ### Functionality
 
@@ -130,6 +133,7 @@ Use `config/<project>/envs/*` to get environment parameters, see skills: playwri
   - **Secondary dev**: qa-1
   - **Primary prod**: stage
 - **CS** (secondary SUT — `config/cs/envs/`) — UI-only, single env: preprod. Credentials in `config/cs/envs/preprod.yaml`. Same CAS SSO as TTT.
+- **PMT** (secondary SUT — `config/pmt/envs/`) — UI-only, single env: preprod. Credentials in `config/pmt/envs/preprod.yaml`. Same CAS SSO as TTT and CS.
 - Note: compare dev and prod versions to investigate changes in current Sprint
 - **Playwright:** Use `playwright-vpn` MCP server (tools prefixed `mcp__playwright-vpn__`) for all UI exploration. The built-in Playwright plugin cannot reach VPN hosts. Load tools via `ToolSearch` before first use.
 - List of swaggers available for each test environment (see skill swagger-api):
