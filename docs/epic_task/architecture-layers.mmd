@@ -27,11 +27,11 @@ graph LR
     subgraph AGENT["&ensp; Agent &ensp;"]
         direction TB
         A1["<b>System Prompt</b><br/>CLAUDE+.md"]
-        A2["<b>17 Skills</b><br/>GitLab &bull; Swagger<br/>Playwright &bull; ..."]
+        A2["<b>20 Skills</b><br/>GitLab &bull; Swagger<br/>Playwright &bull; ..."]
         A3["<b>config.yaml</b><br/>Phase &bull; Scope"]
     end
 
-    subgraph MCP["&ensp; MCP Integration Layer — 39 Servers &ensp;"]
+    subgraph MCP["&ensp; Integration Layer — 39 MCP Servers + 2 Skill-Only &ensp;"]
         direction TB
         subgraph MCP_K["&ensp; Knowledge Base &ensp;"]
             K1["Obsidian"]
@@ -41,13 +41,15 @@ graph LR
         subgraph MCP_L["&ensp; Live Environments &ensp;"]
             L1["PostgreSQL x3"]
             L2["Swagger x21"]
-            L3["Playwright"]
+            L3["Playwright<br/>TTT + CS + PMT"]
         end
         subgraph MCP_E["&ensp; External Sources &ensp;"]
             E1["Confluence"]
             E2["Figma"]
             E3["Qase"]
             E4["GitLab"]
+            E5["Roundcube"]
+            E6["Graylog"]
         end
     end
 
@@ -67,7 +69,7 @@ graph LR
     classDef outNode fill:#E0E8E5,stroke:#81A594,color:#263238,stroke-width:2px
 
     class A1,A2,A3 agentNode
-    class K1,K2,K3,L1,L2,L3,E1,E2,E3,E4 mcpNode
+    class K1,K2,K3,L1,L2,L3,E1,E2,E3,E4,E5,E6 mcpNode
     class O1,O2,O3,O4 outNode
 
     linkStyle default stroke:#607D8B,stroke-width:2.5px

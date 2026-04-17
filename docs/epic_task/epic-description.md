@@ -32,7 +32,7 @@ Test cases from XLSX are parsed into a JSON manifest and enriched with vault kno
 ## Architecture
 
 ![System Architecture](architecture-layers.png)
-*Fig. 2 — System layers: Agent → MCP Integration (39 servers) → Generated Artifacts*
+*Fig. 2 — System layers: Agent → Integration Layer (39 MCP servers + 2 skill-only) → Generated Artifacts*
 
 The system is built on Claude Code CLI with full autonomy mode, orchestrated by a bash session runner. It integrates with the target application through 39 MCP (Model Context Protocol) servers providing access to:
 
@@ -43,7 +43,17 @@ The system is built on Claude Code CLI with full autonomy mode, orchestrated by 
 - **Obsidian + QMD semantic search** (knowledge base CRUD and retrieval)
 - **SQLite** (analytics and tracking)
 
-17 reusable skills encapsulate domain-specific interaction patterns for each integration.
+20 reusable skills encapsulate domain-specific interaction patterns for each integration. Two of those skills — **Roundcube** (shared QA mailbox) and **Graylog** (TTT backend log streams, one per environment) — cover REST-only surfaces that do not expose an MCP server, and provide notification-email and backend-log evidence respectively.
+
+## Integrated Systems
+
+The expert system covers three systems:
+
+- **TTT** — the Time Tracking Tool itself (primary SUT). Full investigation surface: UI, REST API, database, logs, email, documentation.
+- **Company Staff (CS)** — internal corporate tool; source-of-truth for employees and salary offices, one-way sync into TTT. Secondary SUT; UI-only access.
+- **PM Tool (PMT)** — internal corporate tool; source-of-truth for project records, one-way sync into TTT. Secondary SUT; UI-only access.
+
+Cross-project E2E scenarios — e.g. "edit a Salary Office on CS → verify the synced state on TTT", "create a new project on PMT → verify it becomes assignable on TTT" — are first-class test cases. The framework is generalized so that a further integrated system needs only a config directory plus per-project page-object and fixture slots; no further framework restructure is required.
 
 ## Key Innovation: Living Knowledge Base
 
