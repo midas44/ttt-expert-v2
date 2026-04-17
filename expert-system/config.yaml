@@ -13,15 +13,15 @@ projects:
     vault_root: pmt/
 primary_project: ttt
 session:
-  delay_minutes: 60
-  delay_minutes_offhours: 30
+  delay_minutes: 70
+  delay_minutes_offhours: 45
   offhours_utc: 15:00-03:00
   max_duration_minutes: 90
 phase:
-  current: autotest_generation
-  generation_allowed: true
+  current: knowledge_acquisition
+  generation_allowed: false
   coverage_override: -1
-  scope: collection:absences
+  scope: "3423"
 thresholds:
   knowledge_coverage_target: 0.8
   note_quality_min_links: 2
@@ -45,7 +45,7 @@ autonomy:
   consecutive_failure_limit: 30
   auto_phase_transition: true
   log_dir: expert-system/logs
-  stop: true
+  stop: false
   model: opus
   effort: max
   effort_phase_a: max
@@ -59,7 +59,7 @@ peak_hours:
   weekdays_only: true
   buffer_minutes: 40
 autotest:
-  enabled: true
+  enabled: false
   target_env: qa-1
   target_env_cs: preprod
   target_env_pmt: preprod

@@ -39,7 +39,7 @@ A secondary, equally intentional goal: cron + integration tests are the hardest 
 - Collection pattern: `test-docs/collections/absences/absences.xlsx`
 - Framework rules: `CLAUDE.md`, `CLAUDE+.md` §10 (collection scope protocol)
 - Skills used: `collection-generator`, `autotest-generator`, `autotest-runner`, `autotest-fixer`, `xlsx-parser`, `roundcube-access`, `graylog-access`, `swagger-api`, `postgres-db`
-- Prior-art vault notes: `expert-system/vault/external/ext-cron-jobs.md`, `expert-system/vault/exploration/api-findings/cron-job-live-verification.md`, `expert-system/vault/patterns/email-notification-triggers.md`
+- Prior-art vault notes: `expert-system/vault/external/EXT-cron-jobs.md`, `expert-system/vault/exploration/api-findings/cron-job-live-verification.md`, `expert-system/vault/patterns/email-notification-triggers.md`
 
 ## 🕐 Scope — 23 cron & startup jobs
 
