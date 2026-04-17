@@ -1,49 +1,55 @@
 # Session Briefing
 
-## Session 129 — Instructions from Human Operator
+## Next Session — Instructions from Human Operator
 
-**Phase:** C (autotest_generation) | **Scope:** collection:absences | **Mode:** full
+**Phase:** A (knowledge_acquisition) | **Scope:** `t3423` (GitLab ticket #3423 — Cron & Startup Jobs Testing Collection) | **Mode:** full
 
-### Collection Progress (absences)
-- **Completed:** 9 vacation (tagged), 6 day-off (TC-DO-033/034/035/037/038 verified, TC-DO-069/070 generated)
-- **Blocked:** TC-DO-036 (no API to change employee office; cascade only via HR sync + date-conditional)
-- **Remaining:** ~15 tests (TC-CS-013..027+054 cross-service)
+The prior stream of work on `collection:absences` (sessions up to 128) is **paused**, not abandoned. Phase C is explicitly gated off in `expert-system/config.yaml` (`autotest.enabled: false`; `autotest.scope` left as dormant `collection:absences`). When this ticket reaches Phase C later, flip `autotest.enabled: true` and `autotest.scope: "collection:cron"` together.
 
-### Key Findings from Session 128
+### Start here every session
 
-#### TC-DO-035 Root Cause & Fix
-The 403 errors were caused by two issues:
-1. **Auth**: The `patchApprovePeriod` endpoint requires `AUTHENTICATED_USER` authority (JWT via CAS login), not `API_SECRET_TOKEN`. The Autotest token provides `ApiPermission` set (e.g., `CALENDAR_EDIT`, `OFFICES_VIEW`) but NOT `AUTHENTICATED_USER`.
-2. **Field name**: The DTO field is `start` (not `startDate`).
-3. **Period constraint**: Approve period can't exceed report period. Both periods must be advanced.
-**Fix**: Login via CAS as `pvaynmaster`, extract JWT from `localStorage['id_token']`, use as `TTT_JWT_TOKEN` header. Advance report period first, then approve period.
+Read the pinned session preamble first — it carries the full scope table, deliverable paths, and non-default conventions for this ticket:
 
-#### TC-DO-036 Permanently Blocked
-- No REST API exists to change an employee's salary office
-- Office changes only happen via `CSEmployeeSynchronizer` (HR sync process)  
-- `EmployeeOfficeChangedProcessor.process()` has date-conditional cascade: `nextYear.equals(year) || isTodayFirstDayOfYear()` — only fires for next year or on Jan 1
-- Would need either: (a) HR sync mock, (b) clock manipulation to Jan 1, (c) test for year 2027 only
+- `expert-system/vault/exploration/tickets/t3423-investigation.md`
 
-#### JWT Auth Pattern (for endpoints needing AUTHENTICATED_USER)
-```typescript
-// Login via CAS
-const login = new LoginFixture(page, tttConfig);
-await login.run();
-const jwt = await page.evaluate(() => localStorage.getItem("id_token"));
-const headers = { TTT_JWT_TOKEN: jwt, "Content-Type": "application/json" };
-// Use standalone `request` fixture with JWT headers
-await request.patch(url, { headers, data: {...} });
-```
-Test must use `{ page, request }` fixtures — `page` for CAS login, `request` for API calls with JWT.
+Then read the ticket body for authoritative detail:
 
-#### Autotest Token Permissions (qa-1, id=62447)
-Token has: ASSIGNMENTS_ALL, ASSIGNMENTS_VIEW, CALENDAR_EDIT, CALENDAR_VIEW, EMPLOYEES_VIEW, OFFICES_VIEW, PROJECTS_ALL, REPORTS_APPROVE, REPORTS_EDIT, REPORTS_VIEW, STATISTICS_VIEW, SUGGESTIONS_VIEW, TASKS_EDIT, VACATIONS_APPROVE, VACATIONS_CREATE, VACATIONS_DELETE, VACATIONS_EDIT, VACATIONS_PAY, VACATIONS_VIEW, VACATION_DAYS_EDIT, VACATION_DAYS_VIEW.
-**Missing**: No `OFFICES_EDIT`, `EMPLOYEES_EDIT` — these don't exist in the `ApiPermission` enum.
+- `docs/tasks/cron/cron-testing-task.md` (mirrors [GitLab #3423](https://gitlab.noveogroup.com/noveo-internal-tools/ttt-spring/-/issues/3423))
 
-#### getVacationBalance Fix
-The query used wrong table. Correct: `ttt_vacation.employee_vacation.available_vacation_days` (not `ttt_vacation.vacation_days`).
+### Non-default convention (critical)
 
-### Priority for Next Session
-1. Start cross-service tests (TC-CS-013, TC-CS-014, etc.)
-2. These involve calendar changes → vacation recalculation cascades
-3. Many will need the JWT auth pattern for period-related endpoints
+This is a **ticket-scoped** investigation that produces **collection-shaped** deliverables. The default ticket-scope output path (`test-docs/t3423/t3423.xlsx`) is **wrong** for this ticket. Emit Phase B output to:
+
+- `test-docs/collections/cron/test-plan.md`
+- `test-docs/collections/cron/cron.xlsx` (sheet `COL-cron`, mirror `test-docs/collections/absences/absences.xlsx`)
+- `test-docs/collections/cron/coverage.md`
+
+Test IDs use the collection form `TC-CRON-###`, not the ticket form `TC-T3423-###`. If a session starts creating `test-docs/t3423/`, stop and reroute.
+
+### Phase A focus
+
+The ticket's canonical backlog is the 23-row scope table (cron + startup jobs across ttt, vacation, calendar, email services). For each row, the minimum Phase A outcome is:
+
+1. Confirm the test-trigger endpoint exists on the target env (qa-1 is the default) and document its contract — request shape, sync/async, return payload.
+2. For email-emitting crons (`E` channel): confirm expected subject format, sender, env prefix in the Roundcube mailbox — use the `roundcube-access` skill to sample live.
+3. For every cron (all have `L` channel): confirm the Graylog marker (log message or lock name) the eventual test will query — use the `graylog-access` skill to sample.
+4. For startup-only jobs (19, 21) and startup-full mode of 23: confirm CI permissions and mechanism for the `restart-<env>` job on `release/2.1` (qa-1, ttt-timemachine) and `stage` pipelines.
+
+Mine these tickets for edge cases and historical bugs: #3083, #3262, #3303, #3345, #3346, #3337, #3417.
+
+Update the three prior-art notes where they have gaps (don't silently re-learn — write back):
+- `[[external/EXT-cron-jobs]]`
+- `[[exploration/api-findings/cron-job-live-verification]]`
+- `[[patterns/email-notification-triggers]]`
+
+Log closed audit items in the `## Audit log` section at the bottom of `t3423-investigation.md` — one dated line per closed item, per session.
+
+### Phase transition
+
+`auto_phase_transition: true` is set. When `knowledge_coverage_target: 0.8` is met, the runner flips `phase.current` to `generation` and begins Phase B. Phase C remains gated until `autotest.enabled` is flipped manually.
+
+### Non-goals for this session series
+
+- **No Phase C artefacts** — do not scaffold `RoundcubeVerificationFixture` / `GraylogVerificationFixture`, do not create `autotests/e2e/tests/integration/cron/` specs, do not run `process_collection.py`.
+- **No production cron or CI changes** — only existing test-trigger endpoints and the existing `restart-<env>` job are invoked.
+- **No raw cron-expression validation** at the code level — the task verifies observable behaviour.
