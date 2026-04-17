@@ -113,9 +113,11 @@ Comments are terser than ticket bodies, so the baseline is **lower** — use ico
 - **QA status line** — the plain `**QA: PASSED**` / `**QA: FAILED**` / `**QA: PARTIALLY PASSED**` / `**QA: BLOCKED**` header stays icon-free. The status word itself carries the signal; a prefix emoji duplicates it.
 - **Body prose and bullets** — no inline emojis, ever.
 
-Exception: when writing an unusually long comment (multi-phase test run, several bugs bundled) with five or more top-level subsections, follow the ticket-body glyph table from the `gitlab-task-creator` skill — one glyph per section, placed at the start of the heading, each glyph used at most once. Same rules, same vocabulary.
+Exception: when writing an unusually long comment (multi-phase test run, several bugs bundled) with five or more top-level subsections, follow the ticket-body glyph table from the `gitlab-task-creator` skill — one glyph per section, placed at the start of the heading, each glyph used at most once. Same rules, same vocabulary (including 🕐 for a subsection whose content is fundamentally about *when*: response-time measurements, SLA verification, cron-tick observations, test-clock manipulation notes).
 
-Anti-patterns: `## 🎉 QA: PASSED`, `### 🐛 Bug 1`, bullets like `- ✅ verified X`, decorative emojis in narrative paragraphs, or sprinkling the same checkmark throughout text that isn't a status column.
+Single allowed exception under the normal (short) comment baseline: if the finding being reported is fundamentally about timing — response-time regression, SLA breach, cron-tick drift, test-clock behaviour — a single 🕐 may prefix the relevant subsection heading (e.g. `### 🕐 Timing`). This is a signal carrier, not a decoration; don't use it when the subsection merely contains dates or timestamps in passing.
+
+Anti-patterns: `## 🎉 QA: PASSED`, `### 🐛 Bug 1`, bullets like `- ✅ verified X`, decorative emojis in narrative paragraphs, or sprinkling the same checkmark throughout text that isn't a status column; `### 🕐 Notes` where the notes aren't timing-specific.
 
 ### External spec / documentation links
 

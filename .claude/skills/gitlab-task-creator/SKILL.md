@@ -2,13 +2,13 @@
 name: gitlab-task-creator
 description: >
   Create new tasks/issues in the GitLab instance at gitlab.noveogroup.com — from a local
-  markdown file or inline body, with labels, assignee, and optional link to a parent/related
-  issue. Use this skill whenever the user asks to "create a ticket", "create issue", "open
-  a GitLab task", "file a bug", "post the task doc as a ticket", "register an issue for
-  X", "turn this markdown into a GitLab issue", "link issue to epic/parent", or mentions
-  creating anything in GitLab. Also use when the user references a file in `docs/tasks/`
-  and asks to publish it as a ticket, or asks to set an issue's assignee, labels, or
-  parent link. Covers title prefix conventions, label-casing verification, the
+  markdown file or inline body, with labels, assignee, and optional link to an epic or
+  related issue. Use this skill whenever the user asks to "create a ticket", "create
+  issue", "open a GitLab task", "file a bug", "post the task doc as a ticket", "register
+  an issue for X", "turn this markdown into a GitLab issue", "link issue to epic", or
+  mentions creating anything in GitLab. Also use when the user references a file in
+  `docs/tasks/` and asks to publish it as a ticket, or asks to set an issue's assignee,
+  labels, or epic link. Covers title prefix conventions, label-casing verification, the
   assignee_ids POST→PUT workaround, and the `relates_to` / `blocks` link types valid on
   this GitLab CE 16.11 instance. Complements the read-only gitlab-access skill.
 ---
@@ -46,9 +46,11 @@ Prefix category in square brackets, matching existing tickets:
 
 **Omit the H1 from the body.** GitLab renders the ticket title in the issue header; a
 leading `# Title` inside the description just duplicates it and pushes the substance down.
-Start the body directly with the metadata line(s) (e.g. `**Parent epic:** #3402`) or the
+Start the body directly with the metadata line(s) (e.g. `**Epic:** #3402`) or the
 first section heading (`## Summary`). The same rule applies when editing an existing
 issue — if you spot a stray H1 that repeats the title, strip it.
+
+**Epic / hierarchy terminology.** This GitLab CE 16.11 instance does not expose native Epics or parent/child hierarchy (Premium features). Relationships between issues are **flat links** only (see "Linking to an epic or related issue" below). Reflect that in the body copy: use the word **epic** for the tracked umbrella ticket (e.g. `**Epic:** #3402`) and the word **link / linked** for the relationship (e.g. "this ticket is linked to epic #3402"). Avoid "parent", "child", "subtask", or "blocked by" — none of those map to anything on this server and they mislead readers who open the ticket looking for a hierarchy that isn't there.
 
 ## Body source
 
@@ -106,6 +108,7 @@ Approved glyphs for ticket-body H2 headings:
 |---|---|
 | References | 📚 |
 | Scope / Inventory | 📋 |
+| Schedule / Timing / Cadence / SLA | 🕐 |
 | Deliverables | 📦 |
 | Acceptance criteria / Done definition | ✅ |
 | Non-goals / Exclusions | 🚫 |
@@ -119,7 +122,14 @@ Rules:
 - Do **not** decorate the title prefix, metadata lines, body paragraphs, or bullet items.
 - Table cells may use `✅ ❌ ⚠️` for status columns (see `test-reporting`); that's a separate convention and doesn't count against the heading budget.
 
-Anti-patterns: titles starting with `🚀` / `⚡` / similar; bullets like `🔹 item`, `👉 item`; per-paragraph emoji garnish; different glyphs for the same category across sibling tickets (users read many tickets in a row and lose their bearings).
+**When to use 🕐 vs 📋.** TTT is a time-tracking product, so time-centric tickets come up often — pick the glyph that matches the section's primary semantic, not the product domain:
+- 🕐 — the section's content is fundamentally about *when* things happen: cron schedules, SLA targets, rollout windows, clock-advance test matrices, retention cadences. Prefer 🕐 over 📋 when every row's defining attribute is a time/schedule.
+- 📋 — a generic inventory where time is not the primary axis: feature list, file inventory, test-case backlog without timing focus.
+- If both apply, pick one — don't double up. The glyph is a scanning aid, not metadata.
+
+Do **not** sprinkle 🕐 on every ticket just because the project is TTT: a bug ticket for a UI validation quirk doesn't become time-related merely because the app happens to track time.
+
+Anti-patterns: titles starting with `🚀` / `⚡` / similar; bullets like `🔹 item`, `👉 item`; per-paragraph emoji garnish; different glyphs for the same category across sibling tickets (users read many tickets in a row and lose their bearings); 🕐 on a heading whose content has no timing/schedule axis.
 
 ### External spec / documentation links
 
@@ -187,14 +197,16 @@ the API docs list it as a valid parameter on create. Two reliable workarounds:
 Always confirm success by reading back the `assignees` field from the API response and
 checking the expected username is present.
 
-## Linking to a parent / related issue
+## Linking to an epic or related issue
 
-GitLab CE 16.11 does **not** expose Epics (Premium-only). Parent/child semantics are
-instead expressed as issue links. Valid `link_type` values on this instance:
+GitLab CE 16.11 does **not** expose Epics (Premium-only) and has no native parent/child
+or subtask concept. All hierarchy is flattened into **issue links**. When the user calls
+something an "epic", it is a regular issue (usually long-lived, `[Epic]`-prefixed)
+that other tickets `relates_to`. Valid `link_type` values on this instance:
 
 | link_type | Meaning |
 |---|---|
-| `relates_to` | generic related-issue link (default) |
+| `relates_to` | generic related-issue link (default; use this for "linked to an epic") |
 | `blocks` | "this blocks that" |
 | `is_blocked_by` | **NOT ACCEPTED** on CE 16.11 — returns 400 |
 
@@ -247,7 +259,7 @@ created. On failure it exits non-zero with the GitLab error body.
    ```
    where `payload.json` is `{"title": "...", "description": "...", "labels": "A,B,C", "assignee_ids": [901]}`.
 5. If `assignees` came back empty, PUT `{"assignee_ids": [901]}` to `/issues/<iid>`.
-6. For each parent/related issue, POST the link as shown above.
+6. For each epic or related issue, POST the link as shown above.
 7. Confirm: `GET /projects/1288/issues/<iid>` and inspect `title`, `labels`, `assignees`, plus `GET .../links`.
 
 ## Do-not-do

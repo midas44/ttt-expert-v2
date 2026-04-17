@@ -1,4 +1,4 @@
-**Parent epic:** #3402
+**Epic:** #3402
 **Collection name:** `cron`
 **Primary reference:** [Confluence: cron](https://projects.noveogroup.com/spaces/NOV/pages/32904541/cron)
 
@@ -33,7 +33,7 @@ A secondary, equally intentional goal: cron + integration tests are the hardest 
 ## 📚 References
 
 - Cron spec (canonical backlog): [Confluence: cron](https://projects.noveogroup.com/spaces/NOV/pages/32904541/cron)
-- Parent epic: #3402 (this ticket will be linked as a child)
+- Epic: #3402 (this ticket is linked to it via `relates_to`)
 - Integrations groundwork: #3417 (Roundcube + Graylog + CS + PM Tool)
 - Feature tickets cited in the spec: #3083 (PM Tool sync), #3262, #3303 (employee-project sync), #3345, #3346, #3337 (statistic-report sync)
 - Collection pattern: `test-docs/collections/absences/absences.xlsx`
@@ -41,11 +41,11 @@ A secondary, equally intentional goal: cron + integration tests are the hardest 
 - Skills used: `collection-generator`, `autotest-generator`, `autotest-runner`, `autotest-fixer`, `xlsx-parser`, `roundcube-access`, `graylog-access`, `swagger-api`, `postgres-db`
 - Prior-art vault notes: `expert-system/vault/external/ext-cron-jobs.md`, `expert-system/vault/exploration/api-findings/cron-job-live-verification.md`, `expert-system/vault/patterns/email-notification-triggers.md`
 
-## 📋 Scope — 23 cron & startup jobs
+## 🕐 Scope — 23 cron & startup jobs
 
-All times are Asia/Novosibirsk (GMT+7). Descriptions of each job live in the Confluence spec; this table names the jobs, schedules, test endpoints, and verification channels. `E` = Roundcube email, `L` = Graylog log, `CS` / `PM` / `DB` = cross-system writes.
+All times are Asia/Novosibirsk (GMT+7). Descriptions of each job live in the Confluence spec; this table names the jobs, schedules, triggers, and verification channels. `E` = Roundcube email, `L` = Graylog log, `CS` / `PM` / `DB` = cross-system writes.
 
-| #  | Service  | Job                                             | Schedule                       | Test endpoint                                                         | Channels         |
+| #  | Service  | Job                                             | Schedule                       | Trigger                                                               | Channels         |
 |----|----------|-------------------------------------------------|--------------------------------|-----------------------------------------------------------------------|------------------|
 | 1  | TTT      | Forgotten-report notification (weekly)          | Mon, Fri 16:00                 | `POST /api/ttt/v1/test/reports/notify-forgotten`                       | E, L             |
 | 2  | TTT      | Forgotten-report delayed notification           | Daily 16:30                    | `POST /api/ttt/v1/test/reports/notify-forgotten-delayed`               | E, L             |
@@ -65,13 +65,13 @@ All times are Asia/Novosibirsk (GMT+7). Descriptions of each job live in the Con
 | 16 | Vacation | Auto-pay expired approved vacations             | Daily 00:00                    | `POST /api/vacation/v1/test/vacations/pay-expired-approved`            | DB, L            |
 | 17 | Vacation | APPROVED → PAID auto-transition after period close | Every 10 min                | *(no dedicated test endpoint — trigger via `ptch-report-period`)*      | DB, L            |
 | 18 | Vacation | Employee-project periodic sync                  | Daily 03:00                    | `POST /api/v1/test/employee-projects`                                  | DB, L            |
-| 19 | Vacation | Employee-project initial sync *(startup-only)*  | Application startup            | `POST /api/v1/test/employee-projects`                                  | DB, L *(manual)* |
+| 19 | Vacation | Employee-project initial sync *(startup-only)*  | Application startup            | CI restart of `vacation` service on target env †                       | DB, L            |
 | 20 | Calendar | CS sync (partial / full)                        | Every 15 min / daily 00:00     | `POST /api/calendar/v1/salary-offices/sync?fullSync={true,false}`      | CS, DB, L        |
-| 21 | Vacation | Statistic-report full sync *(startup-only)*     | Application startup            | `POST /api/v1/test/statistic-reports/full-sync`                        | DB, L *(manual)* |
+| 21 | Vacation | Statistic-report full sync *(startup-only)*     | Application startup            | CI restart of `vacation` service on target env †                       | DB, L            |
 | 22 | TTT      | Statistic-report optimized sync                 | Daily 04:00                    | `POST /api/v1/test/statistic-reports`                                  | DB, L            |
 | 23 | TTT      | PM Tool project sync (partial / startup-full)   | Every 15 min / startup-full    | `POST /api/ttt/v1/test/project/sync`                                   | PM, DB, L        |
 
-Feature toggles and enablement flags (for example, `PM_TOOL_SYNC` in Unleash for job 23, `EMPLOYEE_PROJECT_INITIAL_SYNC` / `STATISTIC_REPORT_INITIAL_SYNC` in `ttt_vacation.java_migration` for jobs 19 and 21) are documented in the Confluence spec and must be handled in the corresponding test preconditions.
+† **Startup-only jobs (19, 21) and the startup-full mode of job 23** are triggered by restarting the target service through the GitLab CI pipeline — the `release/2.1` pipeline covers qa-1 and ttt-timemachine, the `stage` pipeline covers stage. Use the `gitlab-access` skill's restart operations (`restart-<env>` job in the deploy stage of `ttt-spring`). The service's startup sequence runs the initial-sync logic; observability is identical to cron-triggered runs (DB + Graylog). Feature toggles — `EMPLOYEE_PROJECT_INITIAL_SYNC` / `STATISTIC_REPORT_INITIAL_SYNC` in `ttt_vacation.java_migration` (jobs 19, 21) and `PM_TOOL_SYNC` in Unleash (job 23) — must be set in test preconditions for the flows to execute on startup.
 
 ## 📦 Deliverables
 
@@ -92,7 +92,7 @@ Every automated cron test case follows the same shape:
 
 1. **SETUP** — seed minimal state via the TTT / Vacation / Calendar Swagger API (employee, report, vacation request, calendar event, project binding, etc.).
 2. **Clock** — if the cron is time-sensitive, advance the test clock on the target environment (`ptch-using-ptch-11`) or reset it with `reset-using-pst`. The test-clock endpoints are exposed on every test environment (qa-1, ttt-timemachine, stage), not only on ttt-timemachine; pick the env the rest of the spec targets.
-3. **Trigger** — call the cron's matching `*-test__*` endpoint from the scope table.
+3. **Trigger** — for cron jobs, call the matching test endpoint from the scope table. For startup-only jobs (19, 21) and the startup-full mode of job 23, restart the target service through GitLab CI — `release/2.1` pipeline's `restart-<env>` job for qa-1 / ttt-timemachine, `stage` pipeline for stage. The `gitlab-access` skill exposes this as a one-shot restart operation; the service's startup sequence runs the sync logic.
 4. **Wait** — respect async boundaries: the email scheduler dequeues every 20 s (job 8); sync crons may fan out downstream events; expect 1–3 settle loops.
 5. **Verify** — per available channel:
    - DB state via the postgres MCP for the target environment: `mcp__postgres-qa1__execute_sql`, `mcp__postgres-tm__execute_sql`, or `mcp__postgres-stage__execute_sql`.
@@ -109,9 +109,8 @@ Every automated cron test case follows the same shape:
 
 ## 🚫 Non-goals
 
-- Startup-only jobs (job 19 — employee-project initial sync, job 21 — statistic-report full sync) are verified by manual smoke and documented in the test plan, not automated.
 - No validation of raw cron expressions at the code level — scheduling is treated as a given; the task verifies observable job behaviour.
-- No changes to production cron scheduling; only test-trigger endpoints are invoked.
+- No changes to production cron scheduling or CI pipeline definitions; only existing test-trigger endpoints and the existing CI restart job are invoked.
 
 ## Prerequisites
 
@@ -121,11 +120,12 @@ Every automated cron test case follows the same shape:
 - Test-clock permissions on every test environment in use (`reset-using-pst`, `ptch-using-ptch-11` on qa-1, ttt-timemachine, and stage).
 - CS preprod UI access (shared Admin SSO) for assertions on the CS side of sync tests.
 - PM Tool preprod UI access (shared Admin SSO) for assertions on the PM Tool side of sync tests.
+- GitLab CI permission on `ttt-spring` to trigger the `restart-<env>` job in the deploy stage of the `release/2.1` pipeline (qa-1, ttt-timemachine) and the `stage` pipeline (stage), needed for startup-only jobs 19, 21 and the startup-full mode of job 23.
 
 ## ✅ Acceptance criteria
 
-- Every row of the scope table except jobs 19 and 21 has ≥ 1 test case in `cron.xlsx`.
-- `coverage.md` contains no unresolved cells — every cron maps to at least one TC ID and one spec path.
+- Every row of the scope table has ≥ 1 test case in `cron.xlsx`, including startup-only jobs 19 and 21.
+- `coverage.md` contains no unresolved cells — every cron or startup job maps to at least one TC ID and one spec path.
 - `npx playwright test --grep "@cron"` passes on the target test environment (qa-1, ttt-timemachine, or stage); each spec declares which env it runs on.
 - `RoundcubeVerificationFixture` is used by ≥ 5 specs; `GraylogVerificationFixture` is used by ≥ 5 specs.
 - `retrospective.md` lists ≥ 3 concrete pipeline improvements with repro notes and proposed changes to the generator skills.
