@@ -12,6 +12,21 @@ TTT is web application aimed for internal corporate tracking / processing / mana
 * reports of hours spent for particular tasks;
 * absences of different types: vacations, days-off, sick-leaves.
 
+## Integrated Systems Under Test
+
+TTT is the **primary** SUT. The expert system is multi-project ready and currently covers two **secondary** integrated SUTs, with more projects expected to follow:
+
+* **CS — Company Staff** *(secondary, integrated)*: internal corporate tool, source-of-truth for employees, contractors and salary offices. Syncs one-way to TTT (employee data, salary office parameters, maternity leave events, dismissal events). **UI-only access** for testing today (no API/DB/Swagger/Graylog). One env: `preprod`. Uses CAS SSO shared with TTT (`cas-demo.noveogroup.com`). Same admin credentials apply.
+  - Confluence entry: https://projects.noveogroup.com/spaces/NOV/pages/32899211/Company+Staff
+  - Config: `config/cs/cs.yaml` + `config/cs/envs/preprod.yaml`
+  - GitLab repo: TBD (mark `TODO(CS)` when cross-referencing tickets)
+* **PMT — Project Management Tool** *(secondary, integrated)*: internal corporate tool, source-of-truth for project records (project settings). Syncs one-way to TTT. **UI-only access** for testing today (no API/DB/Swagger/Graylog). One env: `preprod`. Uses CAS SSO shared with TTT and CS. Same admin credentials apply (`pvaynmaster`).
+  - Confluence entry: https://projects.noveogroup.com/spaces/NOV/pages/18944057/Project+Management+Tool
+  - Config: `config/pmt/pmt.yaml` + `config/pmt/envs/preprod.yaml`
+  - GitLab repo: TBD (mark `TODO(PMT)` when cross-referencing tickets)
+
+CS and PMT appear only as **episodic UI steps** inside cross-project E2E test cases. Examples: change Salary Office parameters on CS → validate sync to TTT; change employee settings on CS (salary-office change, maternity leave, dismissal) → test related TTT functionality; change project parameters on PMT → validate sync to TTT; create a new project on PMT → validate project addition and functionality on TTT side. There is no separate CS-only or PMT-only test suite or test-docs workbook — cross-project test cases are mixed-step entries inside the relevant TTT module workbook. Vault notes for CS-only topics live under `vault/cs/`, PMT-only under `vault/pmt/`; cross-system notes under `vault/integrations/` (e.g., `integrations/ttt-cs-sync.md`, `integrations/ttt-pmt-sync.md`).
+
 ### Functionality
 
 Different types of time-related data views:
@@ -112,10 +127,13 @@ Use links to figma layers from GitLab tickets and Confluence pages
 - **Google Sheets**: by links from Confluence pages and GitLab tickets (access by link, no mcp required)
 
 ### Testing Environments
-Use config/ttt/envs/* to get environment parameters, see skills: playwright-browser, postgres-db
-- **Primary dev**: timemachine
-- **Secondary dev**: qa-1
-- **Primary prod**: stage
+Use `config/<project>/envs/*` to get environment parameters, see skills: playwright-browser, postgres-db
+- **TTT** (primary SUT — `config/ttt/envs/`)
+  - **Primary dev**: timemachine
+  - **Secondary dev**: qa-1
+  - **Primary prod**: stage
+- **CS** (secondary SUT — `config/cs/envs/`) — UI-only, single env: preprod. Credentials in `config/cs/envs/preprod.yaml`. Same CAS SSO as TTT.
+- **PMT** (secondary SUT — `config/pmt/envs/`) — UI-only, single env: preprod. Credentials in `config/pmt/envs/preprod.yaml`. Same CAS SSO as TTT and CS.
 - Note: compare dev and prod versions to investigate changes in current Sprint
 - **Playwright:** Use `playwright-vpn` MCP server (tools prefixed `mcp__playwright-vpn__`) for all UI exploration. The built-in Playwright plugin cannot reach VPN hosts. Load tools via `ToolSearch` before first use.
 - List of swaggers available for each test environment (see skill swagger-api):
@@ -127,6 +145,25 @@ Use config/ttt/envs/* to get environment parameters, see skills: playwright-brow
 [envURL]/api/email/swagger-ui.html?urls.primaryName=api
 [envURL]/api/email/swagger-ui.html?urls.primaryName=test-api
 where envURL = https://ttt-[env].noveogroup.com (e.g. https://ttt-qa-1.noveogroup.com, https://ttt-timemachine.noveogroup.com, https://ttt-stage.noveogroup.com)
+
+### Test Email Service
+All TTT environments dispatch notification emails into a single shared test mailbox surfaced through **Roundcube Webmail** at `https://dev.noveogroup.com/mail` (backed by Dovecot IMAP). Use the **`roundcube-access`** skill (no MCP — self-contained Python CLI over IMAPS, same VPN as TTT envs) to verify email behavior:
+- `mailboxes`, `count`, `list` (newest-first pagination), `search` (FROM / TO / SUBJECT / BODY / SINCE / BEFORE / UNSEEN / FLAGGED / HEADER / LARGER / ... — Cyrillic supported)
+- `read <uid>` — full message (headers, text, HTML, attachments metadata)
+- `save` — write raw `.eml` files (RFC 822, lossless) to `artifacts/roundcube/` for test evidence
+- Config: `config/roundcube/roundcube.yaml` + `config/roundcube/envs/<env>.yaml`
+- Subject prefix `[<ENV>]` or `[<ENV>][TTT]` identifies which environment originated the notification — always filter by env tag when verifying per-env behavior
+- Observed notification types in live mailbox: absence digest (Дайджест отсутствий), last-day-before-absence reminder, forgot-to-report reminder, day-off removal, vacation approval/rejection, accounting changes, etc.
+
+### Backend Logs (Graylog)
+All TTT backends ship application/server logs to **Graylog** at `https://logs.noveogroup.com`, with one stream per environment. Use the **`graylog-access`** skill (no MCP — self-contained Python CLI over the Graylog REST API, same VPN as TTT envs) to inspect backend behavior, confirm cron/job execution, and capture evidence of exceptions or slow requests:
+- Streams: `TTT-QA-1`, `TTT-QA-2`, `TTT-TIMEMACHINE`, `TTT-PREPROD`, `TTT-STAGE`, `TTT-DEV`
+- `streams`, `count`, `search`, `tail` (newest-first), `download` (saves `.json` / `.ndjson` / `.log` / `.csv` to `artifacts/graylog/`)
+- Query language: Lucene-ish — `level:3` (errors), `level:[3 TO 4]`, `message:"NullPointerException"`, `source:"ttt-stage.noveogroup.com"`, `_exists_:http_status`
+- Time range: `--range 5m|1h|1d|<seconds>` (relative) or `--since/--until` with ISO dates (absolute)
+- Auth: Graylog API token (preferred, independent of corporate LDAP) → session token → HTTP Basic. Token stored in gitignored `config/graylog/envs/secret.yaml`
+- Config: `config/graylog/graylog.yaml` + `config/graylog/envs/<env>.yaml`; `secret.yaml` is gitignored
+- Auto-generated filenames encode `{stream}_{range}_q-{query}_{timestamp}_{hash}.{ext}` so multiple downloads for the same investigation don't collide
 
 ## Output Requirements
 

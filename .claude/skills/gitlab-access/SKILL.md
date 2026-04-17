@@ -22,6 +22,15 @@ description: >
 
 # GitLab Access — Time Tracking Tool (TTT)
 
+**Scope:**
+- TTT: full
+- CS:  N/A (CS GitLab repo not identified yet — TTT repo `ttt-spring` (project 172) is hardcoded throughout)
+- PMT: N/A (PMT GitLab repo not identified yet — TTT repo `ttt-spring` (project 172) is hardcoded throughout)
+
+TODO(CS): identify the CS GitLab repo and parameterize project_id (today only `ttt-spring`/172 is wired up).
+TODO(PMT): identify the PMT GitLab repo and parameterize project_id (today only `ttt-spring`/172 is wired up).
+
+
 > **IMPORTANT:** The GitLab MCP server (`@modelcontextprotocol/server-gitlab`) is registered
 > but **exposes no tools** on this GitLab CE 16.11 instance. All GitLab operations must use
 > **curl with the PAT** as described below. Do NOT attempt to use MCP tools for GitLab.

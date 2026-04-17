@@ -1,3 +1,17 @@
+projects:
+  - id: ttt
+    primary: true
+    config_dir: config/ttt
+    vault_root: ""
+  - id: cs
+    primary: false
+    config_dir: config/cs
+    vault_root: cs/
+  - id: pmt
+    primary: false
+    config_dir: config/pmt
+    vault_root: pmt/
+primary_project: ttt
 session:
   delay_minutes: 60
   delay_minutes_offhours: 30
@@ -47,6 +61,8 @@ peak_hours:
 autotest:
   enabled: true
   target_env: qa-1
+  target_env_cs: preprod
+  target_env_pmt: preprod
   max_tests_per_session: 5
   auto_fix_attempts: 3
   scope: collection:absences
@@ -60,7 +76,7 @@ autotest:
   - admin
   - planner
   - security
-  - cross-service
+  - integration
   type_priority:
   - UI
   - hybrid

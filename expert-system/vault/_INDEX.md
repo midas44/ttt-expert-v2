@@ -1,6 +1,6 @@
 ---
 type: index
-updated: '2026-04-02'
+updated: '2026-04-16'
 ---
 
 # Vault Index
@@ -16,6 +16,24 @@ updated: '2026-04-02'
 - [[deployment-architecture]]
 - [[rabbitmq-messaging]]
 - [[websocket-events]]
+
+## Integrations (cross-system)
+- [[ttt-cs-sync]] — CS (Company Staff) → TTT one-way sync (employees, salary offices, maternity-leave, dismissal events). 7 documented bugs.
+- [[ttt-pmt-sync]] — PMT (Project Management Tool) → TTT one-way sync (project records / project settings). Stub — expand on demand.
+
+## CS — Company Staff (UI-only secondary SUT)
+- [[cs/_overview]] — CS at a glance: access, accounts (slebedev/pvaynmaster), nav, roles, framework fingerprints
+- [[cs/employee-profile]] — Employee edit page, 5 cards (HR/Admin/Accountant/Manager/Personnel), Accountant-card timeline, event-add wizard
+- [[cs/salary-offices]] — Salary offices page, 32-office inventory, Current/Archive, year selector on vacation policy, inline edit, archive/unarchive
+- [[cs/employee-transfer]] — Transfer workflow: 11 checklist items across 3 tabs, Change/Retrieve, Complete the process
+- [[cs/employee-hiring]] — Add new employee: New → Registration in progress → Ready to publish → Published; 5-role card approvals
+- [[cs/ui-automation-notes]] — CAS SSO quirks, cookie-clear for role switch, InnovationLab popup blocker, multiselect/datepicker/masked-phone patterns, selector library
+
+## PMT — Project Management Tool (UI-only secondary SUT)
+- [[pmt/_overview]] — PMT at a glance: access (pvaynmaster admin), role (source-of-truth for project records), scope for expert system (UI-only, on-demand)
+- [[pm-tool-integration-deep-dive]] — TTT-side PM Tool integration deep dive: 2-phase ID mapping, Sprint 15 sync mechanics
+- [[pm-tool-sync-implementation]] — TTT-side PM Tool sync implementation walkthrough (launcher, synchronizer, failed-entity table)
+- [[pm-tool-stage-comparison]] — PM Tool behavior differences between release/2.1 and stage branches
 
 ## Modules
 - [[vacation-service-deep-dive]]

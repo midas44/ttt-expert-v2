@@ -4,7 +4,7 @@ tags: [cross-service, tickets, bugs, sync, rabbitmq, companystaff, websocket, tr
 created: 2026-04-02
 updated: 2026-04-02
 status: active
-related: ["[[cross-service-integration]]", "[[cross-service-office-sync-divergence]]", "[[companystaff-integration]]", "[[pm-tool-sync-implementation]]", "[[pm-tool-integration-deep-dive]]"]
+related: ["[[cross-service-integration]]", "[[cross-service-office-sync-divergence]]", "[[ttt-cs-sync]]", "[[pm-tool-sync-implementation]]", "[[pm-tool-integration-deep-dive]]"]
 branch: release/2.1
 ---
 

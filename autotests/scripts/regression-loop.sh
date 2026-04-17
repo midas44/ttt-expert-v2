@@ -29,7 +29,7 @@ ENV_B=${ENV_B:-"stage"}
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 AUTOTESTS_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 TTT_YML="$AUTOTESTS_DIR/../config/ttt/ttt.yml"
-GLOBAL_YML="$AUTOTESTS_DIR/e2e/config/global.yml"
+GLOBAL_YML="$AUTOTESTS_DIR/e2e/config/common/global.yml"
 RUN_ID_FILE="$AUTOTESTS_DIR/test-data/.current-run-id"
 
 # --- Save original config for restore ---

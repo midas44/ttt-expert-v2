@@ -1,14 +1,14 @@
 import { test, expect } from "@playwright/test";
-import { TttConfig } from "../../config/tttConfig";
-import { GlobalConfig } from "../../config/globalConfig";
+import { TttConfig } from "@ttt/config/tttConfig";
+import { GlobalConfig } from "@common/config/globalConfig";
 import { VacationTc041Data } from "../../data/vacation/VacationTc041Data";
-import { LoginFixture } from "../../fixtures/LoginFixture";
-import { VerificationFixture } from "../../fixtures/VerificationFixture";
-import { LogoutFixture } from "../../fixtures/LogoutFixture";
-import { ApiVacationSetupFixture } from "../../fixtures/ApiVacationSetupFixture";
-import { MainPage, MyVacationsPage } from "../../pages/MainPage";
-import { VacationCreateDialog } from "../../pages/VacationCreateDialog";
-import { DbClient } from "../../config/db/dbClient";
+import { LoginFixture } from "@ttt/fixtures/LoginFixture";
+import { VerificationFixture } from "@common/fixtures/VerificationFixture";
+import { LogoutFixture } from "@ttt/fixtures/LogoutFixture";
+import { ApiVacationSetupFixture } from "@ttt/fixtures/ApiVacationSetupFixture";
+import { MainPage, MyVacationsPage } from "@ttt/pages/MainPage";
+import { VacationCreateDialog } from "@ttt/pages/VacationCreateDialog";
+import { DbClient } from "@ttt/config/db/dbClient";
 import { findVacationId } from "../../data/vacation/queries/vacationQueries";
 
 /**

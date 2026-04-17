@@ -7,7 +7,24 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "useDefineForClassFields": false,
-    "types": ["@playwright/test", "node"]
+    "types": ["@playwright/test", "node"],
+    "baseUrl": ".",
+    "paths": {
+      "@common/config/*": ["e2e/config/common/*"],
+      "@common/fixtures/*": ["e2e/fixtures/common/*"],
+      "@ttt/config/*": ["e2e/config/ttt/*"],
+      "@ttt/pages/*": ["e2e/pages/ttt/*"],
+      "@ttt/fixtures/*": ["e2e/fixtures/ttt/*"],
+      "@cs/config/*": ["e2e/config/cs/*"],
+      "@cs/pages/*": ["e2e/pages/cs/*"],
+      "@cs/fixtures/*": ["e2e/fixtures/cs/*"],
+      "@pmt/config/*": ["e2e/config/pmt/*"],
+      "@pmt/pages/*": ["e2e/pages/pmt/*"],
+      "@pmt/fixtures/*": ["e2e/fixtures/pmt/*"],
+      "@integration/fixtures/*": ["e2e/fixtures/integration/*"],
+      "@data/*": ["e2e/data/*"],
+      "@utils/*": ["e2e/utils/*"]
+    }
   },
   "include": ["playwright.config.ts", "globalSetup.ts", "globalTeardown.ts", "e2e"]
 }

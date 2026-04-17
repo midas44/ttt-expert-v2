@@ -8,7 +8,7 @@ import type {
   TestCase,
   TestResult,
 } from "@playwright/test/reporter";
-import { readYaml, readTestDataMode } from "../config/configUtils";
+import { readYaml, readTestDataMode } from "@common/config/configUtils";
 
 // ---------------------------------------------------------------------------
 // Schema
@@ -83,7 +83,7 @@ function readConfigSafe(): { env: string; appUrl: string; testDataMode: string; 
   let savedDataSet = "";
 
   try {
-    const globalYml = readYaml(path.resolve(__dirname, "../config/global.yml"));
+    const globalYml = readYaml(path.resolve(__dirname, "../config/common/global.yml"));
     testDataMode = readTestDataMode(globalYml["testDataMode"]);
     savedDataSet = String(globalYml["savedDataSet"] ?? "");
   } catch { /* leave defaults */ }

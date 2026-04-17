@@ -5,7 +5,7 @@ import {
   resolveDataSet,
   listRuns,
 } from "./yamlArtifactStore";
-import { readYaml, readTestDataMode, type TestDataMode } from "../config/configUtils";
+import { readYaml, readTestDataMode, type TestDataMode } from "@common/config/configUtils";
 
 /**
  * Mode-aware facade for test data persistence.
@@ -22,7 +22,7 @@ import { readYaml, readTestDataMode, type TestDataMode } from "../config/configU
  *   - "saved"   → saveToDisk writes (on fallback), loadSaved reads from dataset
  */
 
-const GLOBAL_YML = path.resolve(__dirname, "../config/global.yml");
+const GLOBAL_YML = path.resolve(__dirname, "../config/common/global.yml");
 
 // Lazy-cached config values (read once per process from global.yml)
 let _mode: TestDataMode | undefined;

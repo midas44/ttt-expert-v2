@@ -1,4 +1,4 @@
-import { DbClient } from "../../../config/db/dbClient";
+import { DbClient } from "@ttt/config/db/dbClient";
 
 interface ProjectWithManagerRow {
   project_id: number;

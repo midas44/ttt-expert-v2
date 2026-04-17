@@ -1,4 +1,4 @@
-import { DbClient } from "../../../config/db/dbClient";
+import { DbClient } from "@ttt/config/db/dbClient";
 
 export interface EmailRow {
   id: string;

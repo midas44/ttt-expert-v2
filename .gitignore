@@ -20,6 +20,7 @@ __pycache__/
 .claude/settings.local.json
 .claude/context/secrets/
 .claude/context/gitlab-credentials.md
+config/graylog/envs/secret.yaml
 
 # Playwright MCP logs
 .playwright-mcp/
@@ -46,3 +47,13 @@ autotests/history/
 
 # JSON reporter intermediate output
 autotests/test-results-json/
+
+# Stray image/media files at repo root — artifacts belong under artifacts/ not in root
+/*.png
+/*.jpg
+/*.jpeg
+/*.gif
+/*.svg
+/*.pdf
+/*.mp4
+/*.webm

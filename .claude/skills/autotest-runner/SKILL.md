@@ -12,6 +12,12 @@ description: >
 
 # Autotest Runner
 
+**Scope:**
+- TTT: full
+- CS:  partial (@integration tag filters cross-project specs; runner is project-agnostic)
+- PMT: partial (@integration tag filters cross-project specs; runner is project-agnostic)
+
+
 Run Playwright E2E tests and analyze results. Supports filtering, parallel execution,
 and tracking results in SQLite for trend analysis.
 

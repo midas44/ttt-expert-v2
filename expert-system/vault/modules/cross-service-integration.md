@@ -14,7 +14,7 @@ created: '2026-04-02'
 updated: '2026-04-02'
 status: active
 related:
-  - '[[companystaff-integration]]'
+  - '[[ttt-cs-sync]]'
   - '[[cross-service-office-sync-divergence]]'
   - '[[pm-tool-sync-implementation]]'
   - '[[pm-tool-integration-deep-dive]]'
@@ -253,7 +253,7 @@ PmToolSyncScheduler (cron: ${pmTool.sync.cron})
 2. Multiple CS syncs running simultaneously
 3. Calendar change during vacation creation
 
-Links: [[companystaff-integration]], [[cross-service-office-sync-divergence]], [[pm-tool-sync-implementation]], [[pm-tool-integration-deep-dive]], [[exploration/tickets/cross-service-ticket-findings]]
+Links: [[ttt-cs-sync]], [[cross-service-office-sync-divergence]], [[pm-tool-sync-implementation]], [[pm-tool-integration-deep-dive]], [[exploration/tickets/cross-service-ticket-findings]]
 
 
 ## Sprint 15-16 Cross-Service Updates (Session 98)

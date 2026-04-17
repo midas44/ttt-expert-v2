@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as path from "path";
-import { readYaml, readTestDataMode } from "./e2e/config/configUtils";
+import { readYaml, readTestDataMode } from "@common/config/configUtils";
 import { finalizeRun, type RunMeta } from "./e2e/data/yamlArtifactStore";
 
 /**
@@ -10,7 +10,7 @@ import { finalizeRun, type RunMeta } from "./e2e/data/yamlArtifactStore";
  * History archival is handled by the JSON reporter (onEnd) to avoid race conditions.
  */
 export default function globalTeardown(): void {
-  const globalYml = readYaml(path.resolve(__dirname, "e2e/config/global.yml"));
+  const globalYml = readYaml(path.resolve(__dirname, "e2e/config/common/global.yml"));
   const mode = readTestDataMode(globalYml["testDataMode"]);
 
   if (mode === "static") return;

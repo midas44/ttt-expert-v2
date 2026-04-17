@@ -1,12 +1,12 @@
 import { test, expect } from "@playwright/test";
-import { TttConfig } from "../../config/tttConfig";
-import { GlobalConfig } from "../../config/globalConfig";
+import { TttConfig } from "@ttt/config/tttConfig";
+import { GlobalConfig } from "@common/config/globalConfig";
 import { ReportsTc019Data } from "../../data/reports/ReportsTc019Data";
-import { LoginFixture } from "../../fixtures/LoginFixture";
-import { VerificationFixture } from "../../fixtures/VerificationFixture";
-import { LogoutFixture } from "../../fixtures/LogoutFixture";
-import { ApiReportSetupFixture } from "../../fixtures/ApiReportSetupFixture";
-import { MainPage, MyTasksPage } from "../../pages/MainPage";
+import { LoginFixture } from "@ttt/fixtures/LoginFixture";
+import { VerificationFixture } from "@common/fixtures/VerificationFixture";
+import { LogoutFixture } from "@ttt/fixtures/LogoutFixture";
+import { ApiReportSetupFixture } from "@ttt/fixtures/ApiReportSetupFixture";
+import { MainPage, MyTasksPage } from "@ttt/pages/MainPage";
 
 /**
  * TC-RPT-019: Re-report after rejection — clears rejected state.

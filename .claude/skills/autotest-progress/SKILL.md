@@ -12,6 +12,15 @@ description: >
 
 # Autotest Progress
 
+**Scope:**
+- TTT: full
+- CS:  N/A (no CS-only test suite exists today)
+- PMT: N/A (no PMT-only test suite exists today)
+
+TODO(CS): once cross-project specs accumulate, group coverage report by project (TTT vs integration).
+TODO(PMT): include PMT in per-project coverage grouping once PMT cross-project specs accumulate.
+
+
 Track and report automation coverage across all test case documentation. Helps
 prioritize which tests to automate next based on module health, priority, and effort.
 

@@ -1,13 +1,13 @@
 import { test, expect } from "@playwright/test";
-import { TttConfig } from "../../config/tttConfig";
-import { GlobalConfig } from "../../config/globalConfig";
+import { TttConfig } from "@ttt/config/tttConfig";
+import { GlobalConfig } from "@common/config/globalConfig";
 import { VacationTc089Data } from "../../data/vacation/VacationTc089Data";
-import { LoginFixture } from "../../fixtures/LoginFixture";
-import { VerificationFixture } from "../../fixtures/VerificationFixture";
-import { LogoutFixture } from "../../fixtures/LogoutFixture";
-import { MainPage } from "../../pages/MainPage";
-import { VacationPaymentPage } from "../../pages/VacationPaymentPage";
-import { ApiVacationSetupFixture } from "../../fixtures/ApiVacationSetupFixture";
+import { LoginFixture } from "@ttt/fixtures/LoginFixture";
+import { VerificationFixture } from "@common/fixtures/VerificationFixture";
+import { LogoutFixture } from "@ttt/fixtures/LogoutFixture";
+import { MainPage } from "@ttt/pages/MainPage";
+import { VacationPaymentPage } from "@ttt/pages/VacationPaymentPage";
+import { ApiVacationSetupFixture } from "@ttt/fixtures/ApiVacationSetupFixture";
 
 /**
  * TC-VAC-089: Accountant can pay but not approve.

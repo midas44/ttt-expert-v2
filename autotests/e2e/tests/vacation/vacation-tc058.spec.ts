@@ -1,13 +1,13 @@
 import { test, expect } from "@playwright/test";
-import { TttConfig } from "../../config/tttConfig";
-import { GlobalConfig } from "../../config/globalConfig";
+import { TttConfig } from "@ttt/config/tttConfig";
+import { GlobalConfig } from "@common/config/globalConfig";
 import { VacationTc058Data } from "../../data/vacation/VacationTc058Data";
-import { LoginFixture } from "../../fixtures/LoginFixture";
-import { VerificationFixture } from "../../fixtures/VerificationFixture";
-import { LogoutFixture } from "../../fixtures/LogoutFixture";
-import { VacationCreationFixture } from "../../fixtures/VacationCreationFixture";
-import { ApiVacationSetupFixture } from "../../fixtures/ApiVacationSetupFixture";
-import { MainPage, MyVacationsPage } from "../../pages/MainPage";
+import { LoginFixture } from "@ttt/fixtures/LoginFixture";
+import { VerificationFixture } from "@common/fixtures/VerificationFixture";
+import { LogoutFixture } from "@ttt/fixtures/LogoutFixture";
+import { VacationCreationFixture } from "@ttt/fixtures/VacationCreationFixture";
+import { ApiVacationSetupFixture } from "@ttt/fixtures/ApiVacationSetupFixture";
+import { MainPage, MyVacationsPage } from "@ttt/pages/MainPage";
 
 /**
  * TC-VAC-058: AV=true — negative balance allowed for current year.
@@ -103,7 +103,7 @@ test("TC-VAC-058: AV=true — negative balance allowed for current year @regress
     // CLEANUP: Delete all created vacations (setup + UI-created)
     // Find the UI-created vacation by dates
     try {
-      const { DbClient } = await import("../../config/db/dbClient");
+      const { DbClient } = await import("@ttt/config/db/dbClient");
       const db = new DbClient(tttConfig);
       try {
         const vacRow = await db

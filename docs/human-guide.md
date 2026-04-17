@@ -316,6 +316,10 @@ swagger-tm-ttt-api    ...     env: qa1, tm, stage
 
 > **Note:** 21 Swagger MCP servers cover 3 environments × 7 service/group combinations. See `.claude/skills/swagger-api/SKILL.md` for the full list and naming convention.
 
+> **Note:** The test email service (Roundcube Webmail + Dovecot IMAP at `dev.noveogroup.com/mail`) is accessed via the `roundcube-access` **skill**, not an MCP. Config at `config/roundcube/*`, CLI at `.claude/skills/roundcube-access/scripts/roundcube_imap.py` (stdlib + PyYAML, same VPN as TTT envs). Used to verify TTT notification emails in tests.
+
+> **Note:** The Graylog log service at `logs.noveogroup.com` is accessed via the `graylog-access` **skill**, not an MCP. Config at `config/graylog/*` — the `envs/secret.yaml` file (corporate password + Graylog API token) is gitignored. CLI at `.claude/skills/graylog-access/scripts/graylog_api.py` (stdlib + PyYAML, same VPN as TTT envs). One Graylog stream per environment (`TTT-QA-1` … `TTT-STAGE`). Used to pull backend log evidence during investigations and test runs — downloaded artifacts land in `artifacts/graylog/`.
+
 ---
 
 ## 6. VS Code Extensions

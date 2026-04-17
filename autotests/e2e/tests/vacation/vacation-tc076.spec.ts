@@ -1,8 +1,8 @@
 import { test, expect } from "@playwright/test";
-import { TttConfig } from "../../config/tttConfig";
-import { GlobalConfig } from "../../config/globalConfig";
+import { TttConfig } from "@ttt/config/tttConfig";
+import { GlobalConfig } from "@common/config/globalConfig";
 import { VacationTc076Data } from "../../data/vacation/VacationTc076Data";
-import { DbClient } from "../../config/db/dbClient";
+import { DbClient } from "@ttt/config/db/dbClient";
 
 /**
  * TC-VAC-076: Regression — last_date not updated during CS sync (#3374).

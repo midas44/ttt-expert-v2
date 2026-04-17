@@ -5,6 +5,12 @@ description: Create new skills, modify and improve existing skills, and measure 
 
 # Skill Creator
 
+**Scope:**
+- TTT: full
+- CS:  full (skill authoring tooling is project-agnostic)
+- PMT: full (skill authoring tooling is project-agnostic)
+
+
 A skill for creating new skills and iteratively improving them.
 
 At a high level, the process of creating a skill goes like this:

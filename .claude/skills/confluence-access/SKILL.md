@@ -3,22 +3,38 @@ name: confluence-access
 description: >
   Access the Confluence instance at projects.noveogroup.com — read pages, list page trees,
   download attachments (screenshots, images, documents), and search for pages within the
-  Time Tracking Tool (TTT) project documentation. Use this skill whenever the user mentions
+  Time Tracking Tool (TTT), Company Staff (CS), and Project Management Tool (PMT) project
+  documentation. Use this skill whenever the user mentions
   a Confluence page, pastes a projects.noveogroup.com URL, asks to read/fetch/summarize
-  Confluence documentation, asks about TTT documentation structure, or wants to download
+  Confluence documentation, asks about TTT, CS, or PMT documentation structure, or wants to download
   images/screenshots from Confluence pages. Also use it when the user references
-  TTT/Time Tracking Tool/Time Reporting Tool documentation (not GitLab issues — those go
-  to the gitlab-access skill), asks to "list all Confluence pages", "read the vacations page",
+  TTT/Time Tracking Tool/Time Reporting Tool documentation, CS/Company Staff documentation,
+  PMT/Project Management Tool/PM Tool documentation
+  (not GitLab issues — those go to the gitlab-access skill),
+  asks to "list all Confluence pages", "read the vacations page",
   "download screenshots from Confluence", "search Confluence for X", or "build a page tree".
   If the user mentions both Confluence and GitLab, use this skill for the Confluence parts.
 ---
 
-# Confluence Access — Time Tracking Tool (TTT)
+# Confluence Access — TTT + CS + PMT
 
-This skill provides instructions for interacting with the **Time Tracking Tool**
-documentation on the self-hosted Confluence Server instance at `projects.noveogroup.com`.
+**Scope:**
+- TTT: full (primary project — Time Tracking Tool documentation tree)
+- CS: full (secondary project — Company Staff documentation subtree)
+- PMT: full (secondary project — Project Management Tool documentation subtree)
 
-This skill is scoped to a single project section:
+This skill provides instructions for interacting with the **Time Tracking Tool**, **Company Staff**,
+and **Project Management Tool** documentation on the self-hosted Confluence Server instance at `projects.noveogroup.com`. All three project subtrees live under the `NOV` space.
+
+| Project | Root page ID | Root page URL |
+|---------|--------------|---------------|
+| TTT (Time Tracking Tool) | `18940713` | https://projects.noveogroup.com/spaces/NOV/pages/18940713/Time+Tracking+Tool |
+| CS (Company Staff) | `32899211` | https://projects.noveogroup.com/spaces/NOV/pages/32899211/Company+Staff |
+| PMT (Project Management Tool) | `18944057` | https://projects.noveogroup.com/spaces/NOV/pages/18944057/Project+Management+Tool |
+
+When the user does not name a project, default to TTT. When a Confluence URL is pasted, infer the project from the page tree (any descendant of `32899211` is CS; any descendant of `18944057` is PMT; otherwise TTT).
+
+The bulk of this skill below is written for TTT specifically; the same MCP tools (`mcp__confluence__*`) apply to CS and PMT — substitute the respective root page ID and the same access patterns.
 
 | Field | Value |
 |---|---|

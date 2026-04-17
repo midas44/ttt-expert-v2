@@ -13,6 +13,12 @@ description: >
 
 # Package Installation on This Machine
 
+**Scope:**
+- TTT: full
+- CS:  full (host-level package management is project-agnostic)
+- PMT: full (host-level package management is project-agnostic)
+
+
 ## Proxy Requirement
 
 This machine accesses the internet through a local proxy. **All package managers need proxy configuration** or downloads will fail with "network unreachable" / "connection timeout" errors.

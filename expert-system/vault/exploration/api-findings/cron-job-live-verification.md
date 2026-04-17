@@ -14,7 +14,7 @@ related:
   - '[[EXT-cron-jobs]]'
   - '[[email-notification-triggers]]'
   - '[[feature-toggles-unleash]]'
-  - '[[companystaff-integration]]'
+  - '[[ttt-cs-sync]]'
 ---
 
 # Cron Job Live Verification
@@ -106,5 +106,5 @@ Same `locked_by` value per service across all entries (TM: `142311e083f8`, Stage
 - [[EXT-cron-jobs]] — original inventory from Confluence + code
 - [[email-notification-triggers]] — email pipeline architecture
 - [[feature-toggles-unleash]] — PM_TOOL_SYNC and CS_SYNC toggles
-- [[companystaff-integration]] — CS sync across 3 services
+- [[ttt-cs-sync]] — CS sync across 3 services
 - [[rabbitmq-messaging]] — notification queue processing

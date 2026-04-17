@@ -15,6 +15,12 @@ description: >
 
 # TTT PostgreSQL Database — Multi-Environment
 
+**Scope:**
+- TTT: full
+- CS:  N/A (CS has no exposed database from the test framework)
+- PMT: N/A (PMT has no exposed database from the test framework)
+
+
 ## Environments & MCP Servers
 
 Each environment has its own MCP server. The naming convention is `postgres-<short>`:

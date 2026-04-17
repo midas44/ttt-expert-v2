@@ -12,6 +12,12 @@ description: >
 
 # XLSX Parser
 
+**Scope:**
+- TTT: full
+- CS:  full (XLSX parsing is project-agnostic; same parser handles cross-project workbooks (no project split in test-docs))
+- PMT: full (XLSX parsing is project-agnostic; same parser handles cross-project workbooks (no project split in test-docs))
+
+
 Parse XLSX test documentation workbooks into a structured JSON manifest that the
 autotest-generator skill consumes.
 

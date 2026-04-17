@@ -1,13 +1,13 @@
 import { test, expect } from "@playwright/test";
-import { TttConfig } from "../../config/tttConfig";
-import { GlobalConfig } from "../../config/globalConfig";
+import { TttConfig } from "@ttt/config/tttConfig";
+import { GlobalConfig } from "@common/config/globalConfig";
 import { VacationTc016Data } from "../../data/vacation/VacationTc016Data";
-import { LoginFixture } from "../../fixtures/LoginFixture";
-import { VerificationFixture } from "../../fixtures/VerificationFixture";
-import { LogoutFixture } from "../../fixtures/LogoutFixture";
-import { ApiVacationSetupFixture } from "../../fixtures/ApiVacationSetupFixture";
-import { MainPage } from "../../pages/MainPage";
-import { EmployeeRequestsPage } from "../../pages/EmployeeRequestsPage";
+import { LoginFixture } from "@ttt/fixtures/LoginFixture";
+import { VerificationFixture } from "@common/fixtures/VerificationFixture";
+import { LogoutFixture } from "@ttt/fixtures/LogoutFixture";
+import { ApiVacationSetupFixture } from "@ttt/fixtures/ApiVacationSetupFixture";
+import { MainPage } from "@ttt/pages/MainPage";
+import { EmployeeRequestsPage } from "@ttt/pages/EmployeeRequestsPage";
 
 /**
  * TC-VAC-016: Reject NEW vacation.

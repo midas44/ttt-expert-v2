@@ -1,8 +1,8 @@
 import { test, expect } from "@playwright/test";
-import { TttConfig } from "../../config/tttConfig";
-import { GlobalConfig } from "../../config/globalConfig";
+import { TttConfig } from "@ttt/config/tttConfig";
+import { GlobalConfig } from "@common/config/globalConfig";
 import { VacationTc033Data } from "../../data/vacation/VacationTc033Data";
-import { ApiVacationSetupFixture } from "../../fixtures/ApiVacationSetupFixture";
+import { ApiVacationSetupFixture } from "@ttt/fixtures/ApiVacationSetupFixture";
 
 /**
  * TC-VAC-033: Error 500 on AV=true negative balance payment (#3363).

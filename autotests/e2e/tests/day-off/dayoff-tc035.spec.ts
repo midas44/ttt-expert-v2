@@ -1,9 +1,9 @@
 import { test, expect } from "@playwright/test";
-import { TttConfig } from "../../config/tttConfig";
-import { GlobalConfig } from "../../config/globalConfig";
+import { TttConfig } from "@ttt/config/tttConfig";
+import { GlobalConfig } from "@common/config/globalConfig";
 import { DayoffTc035Data } from "../../data/day-off/DayoffTc035Data";
-import { DbClient } from "../../config/db/dbClient";
-import { LoginFixture } from "../../fixtures/LoginFixture";
+import { DbClient } from "@ttt/config/db/dbClient";
+import { LoginFixture } from "@ttt/fixtures/LoginFixture";
 import {
   getRequestStatus,
   deleteTransferRequest,

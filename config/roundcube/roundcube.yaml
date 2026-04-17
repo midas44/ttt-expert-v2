@@ -1,0 +1,8 @@
+#Project properties
+
+appName: "Roundcube Webmail"
+
+appUrl: "https://dev.noveogroup.com/mail/?_task=mail&_mbox=INBOX"
+
+# by login
+env: "vulyanov"

@@ -1,6 +1,6 @@
 import { defineConfig, type PlaywrightTestConfig } from "@playwright/test";
-import { GlobalConfig } from "./e2e/config/globalConfig";
-import type { BrowserName } from "./e2e/config/configUtils";
+import { GlobalConfig } from "@common/config/globalConfig";
+import type { BrowserName } from "@common/config/configUtils";
 
 const globalConfig = new GlobalConfig();
 

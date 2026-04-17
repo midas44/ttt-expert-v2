@@ -28,7 +28,7 @@ Sessions are orchestrated by a shell-based runner (`run-sessions.sh`) that manag
 
 ### MCP Integration Layer
 
-The agent connects to the target application and supporting tools through 39 MCP (Model Context Protocol) servers:
+The agent connects to the target application and supporting tools through 39 MCP (Model Context Protocol) servers and two skill-based HTTP/IMAP integrations (Roundcube/Dovecot IMAP for the shared QA test mailbox, and the Graylog REST API for per-environment backend logs — for both services a self-contained Python CLI over the native protocol proved simpler and more reliable than third-party MCPs, especially given the corporate VPN / IPv4-only / TLS-1.2-cap / proxy-bypass workarounds this host requires):
 
 | MCP Server | Purpose |
 |---|---|
@@ -39,14 +39,20 @@ The agent connects to the target application and supporting tools through 39 MCP
 | **Figma** | Design specifications and mockups |
 | **Qase** | Existing test suites and test cases |
 | **GitLab** | Issues, MRs, pipelines, code via REST API |
+| **Roundcube / Dovecot IMAP** | Test email service for TTT notifications — read/search/save `.eml` artifacts via IMAPS (skill-based, no MCP) |
+| **Graylog REST API** | Backend log access — list streams, search, tail, download logs from per-environment streams (`TTT-QA-1` … `TTT-STAGE`) as `.json` / `.ndjson` / `.log` / `.csv` artifacts (skill-based, no MCP) |
 | **Obsidian + QMD** | Knowledge base CRUD and semantic/keyword search |
 | **SQLite** | Structured analytics queries |
 
 ### Skills
 
-18 reusable skills encapsulate domain-specific interaction patterns: GitLab access, Confluence access, Figma access, Qase access, Swagger API, PostgreSQL queries, Playwright browser, autotest generator, autotest runner, autotest fixer, XLSX parser, autotest progress, page discoverer, collection generator, test reporting, MCP setup, package install, skill creator.
+20 reusable skills encapsulate domain-specific interaction patterns: GitLab access, Confluence access, Figma access, Qase access, Roundcube access (test email mailbox), Graylog access (backend log streams), Swagger API, PostgreSQL queries, Playwright browser, autotest generator, autotest runner, autotest fixer, XLSX parser, autotest progress, page discoverer, collection generator, test reporting, MCP setup, package install, skill creator.
 
-## Target Application (TTT)
+## Target Applications
+
+The system is multi-project ready. Today it covers three SUTs:
+
+**TTT — Time Tracking Tool** *(primary)*
 
 A microservices-based corporate system for time tracking and absence management:
 - 4 backend services (Java 17, Spring Boot): TTT core, Vacation, Calendar, Email
@@ -56,6 +62,16 @@ A microservices-based corporate system for time tracking and absence management:
 - Business-critical domains: vacation workflows (multi-approver, dual calculation modes), sick leaves, days-off, time reporting with approval chains, accounting period management
 - 3 testing environments with full API and database access
 
+**CS — Company Staff** *(secondary, integrated)*
+
+Internal corporate tool — source-of-truth for employees, contractors and salary offices. Syncs one-way to TTT (employee data, salary office parameters, maternity-leave events, dismissal events). **UI-only access** for testing today (no API/DB/Swagger/Graylog presence). One environment (`preprod`). Same CAS SSO and admin credentials as TTT. CS appears as **episodic UI steps** inside cross-project E2E test cases (e.g., change Salary Office on CS → verify sync to TTT).
+
+**PMT — Project Management Tool** *(secondary, integrated)*
+
+Internal corporate tool — source-of-truth for project records (project settings). Syncs one-way to TTT (project parameters, project creation/updates). **UI-only access** for testing today (no API/DB/Swagger/Graylog presence). One environment (`preprod`). Same CAS SSO and admin credentials as TTT and CS. PMT appears as **episodic UI steps** inside cross-project E2E test cases (e.g., change project parameters on PMT → verify sync to TTT; create new project on PMT → verify addition on TTT).
+
+Adding a 4th integrated project = (a) drop a `config/<proj>/` directory, (b) create `pages/<proj>/` + `fixtures/<proj>/` directories, (c) add a `projects:` entry to `expert-system/config.yaml`. No framework changes required.
+
 ## Scope Modes
 
 The system supports flexible scoping via `config.yaml`:
@@ -63,8 +79,10 @@ The system supports flexible scoping via `config.yaml`:
 | Scope | Example | Behavior |
 |-------|---------|----------|
 | **All modules** | `scope: "all"` | Full breadth-first investigation and generation |
-| **Single module** | `scope: "vacation"` | Focused pipeline for one functional area |
+| **Single module** | `scope: "vacation"` | Focused pipeline for one functional area (primary project) |
+| **Project-prefixed module** | `scope: "ttt:vacation"`, `scope: "cs:salary-offices"`, `scope: "pmt:projects"` | Pin scope to a specific project. Bare module names (no prefix) imply the primary project (`primary_project` in config.yaml). |
 | **GitLab ticket** | `scope: "3404"` | Targeted investigation of a specific issue with regression tests |
+| **Cross-project** | `scope: "integration:cs-ttt-salary-office-sync"`, `scope: "integration:ttt-pmt-project-sync"` | A cross-project E2E flow (TTT + CS, or TTT + PMT, etc.). Generated specs land under `tests/integration/` with `@integration` tag. |
 | **Mixed** | `scope: "vacation, 3404"` | Modules and tickets together |
 
 Ticket numbers (pure digits) are automatically normalized to `t<number>` internally (e.g., `3404` → `t3404`) for artifact naming.
@@ -113,15 +131,36 @@ autotests/                              # Playwright + TypeScript E2E framework
   manifest/collection-<name>.json       # Collection processing reports
   e2e/
     tests/<module>/                     # Generated test specs (per module subdir)
-    data/<module>/                      # Test data classes + queries
-    pages/                              # Page object classes
-    fixtures/                           # Reusable workflow fixtures
-    config/                             # Environment configuration
+    tests/integration/                  # Cross-project specs (CS↔TTT, PMT↔TTT), tagged @integration
+    data/<module>/                      # Test data classes + queries (module-organized; no project split)
+    pages/ttt/, pages/cs/, pages/pmt/   # Page objects per project
+    fixtures/common/                    # Project-agnostic fixtures (VerificationFixture)
+    fixtures/ttt/, fixtures/cs/, fixtures/pmt/  # Project-bound fixtures
+    fixtures/integration/               # Cross-project orchestration fixtures
+    config/common/                      # Shared interface (AppConfig) + utilities + GlobalConfig
+    config/ttt/                         # TttConfig (implements AppConfig) + db/dbClient
+    config/cs/                          # CsConfig (implements AppConfig)
+    config/pmt/                         # PmtConfig (implements AppConfig)
 config/ttt/
-  envs/*.yml                            # Environment credentials (per env)
+  envs/*.yml                            # TTT environment credentials (per env)
+config/cs/
+  cs.yaml                               # CS app config (URL, paths, language)
+  envs/preprod.yaml                     # CS env credentials
+config/pmt/
+  pmt.yaml                              # PMT app config (URL, paths, language)
+  envs/preprod.yaml                     # PMT env credentials
+config/roundcube/                       # Test email service config (Roundcube/Dovecot IMAP)
+  roundcube.yaml                        # Host/URL + active env
+  envs/*.yaml                           # Per-user mailbox credentials
+config/graylog/                         # Graylog log-access config
+  graylog.yaml                          # Host/URL + active env
+  envs/<env>.yaml                       # Per-user credentials (password/token placeholders)
+  envs/secret.yaml                      # Corporate password + API token (gitignored)
+artifacts/roundcube/                    # Saved .eml files from test mailbox (test evidence)
+artifacts/graylog/                      # Downloaded log artifacts (.json / .ndjson / .log / .csv)
 docs/                                   # Setup guides, troubleshooting, epic description
 .claude/
-  skills/                               # 18 reusable skills
+  skills/                               # 20 reusable skills
 ```
 
 ## Technology Stack

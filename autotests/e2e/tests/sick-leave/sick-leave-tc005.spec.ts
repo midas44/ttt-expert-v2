@@ -1,13 +1,13 @@
 import { test, expect } from "@playwright/test";
-import { TttConfig } from "../../config/tttConfig";
-import { GlobalConfig } from "../../config/globalConfig";
+import { TttConfig } from "@ttt/config/tttConfig";
+import { GlobalConfig } from "@common/config/globalConfig";
 import { SickLeaveSetupData } from "../../data/sick-leave/SickLeaveSetupData";
-import { LoginFixture } from "../../fixtures/LoginFixture";
-import { VerificationFixture } from "../../fixtures/VerificationFixture";
-import { LogoutFixture } from "../../fixtures/LogoutFixture";
-import { ApiSickLeaveSetupFixture } from "../../fixtures/ApiSickLeaveSetupFixture";
-import { MainPage } from "../../pages/MainPage";
-import { MySickLeavePage } from "../../pages/MySickLeavePage";
+import { LoginFixture } from "@ttt/fixtures/LoginFixture";
+import { VerificationFixture } from "@common/fixtures/VerificationFixture";
+import { LogoutFixture } from "@ttt/fixtures/LogoutFixture";
+import { ApiSickLeaveSetupFixture } from "@ttt/fixtures/ApiSickLeaveSetupFixture";
+import { MainPage } from "@ttt/pages/MainPage";
+import { MySickLeavePage } from "@ttt/pages/MySickLeavePage";
 
 const MONTHS = [
   "", "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -98,7 +98,7 @@ test("TC-SL-005: Create single-day sick leave @regress @sick-leave @col-absences
     const { findSickLeave } = await import(
       "../../data/sick-leave/queries/sickLeaveQueries"
     );
-    const { DbClient } = await import("../../config/db/dbClient");
+    const { DbClient } = await import("@ttt/config/db/dbClient");
     const db = new DbClient(tttConfig);
     try {
       const sl = await findSickLeave(
