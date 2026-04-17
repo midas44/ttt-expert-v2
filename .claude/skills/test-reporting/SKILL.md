@@ -78,6 +78,72 @@ All QA test result comments follow this structure:
 - Include **endpoint responses** or **log excerpts** as evidence when relevant
 - End with a **Notes** section for caveats, untested areas, or environment state after testing
 
+### Collapsible explainers for jargon and deep context
+
+Any term, pattern, or mechanism that a reviewer outside the immediate domain might not know — message-broker semantics (e.g. "RabbitMQ fan-out"), internal acronyms, non-obvious flows — gets a collapsible **explainer block** right after its first mention. The top-level comment stays scannable; depth is one click away.
+
+Use GitLab's native `<details>` / `<summary>` markup:
+
+```markdown
+The cron triggers a RabbitMQ fan-out to three consumers; only two settled within 5s.
+
+<details>
+<summary>What "RabbitMQ fan-out" means here</summary>
+
+One published event reaches many consumers — in TTT, the four backends talk over
+RabbitMQ, so one cron tick often cascades into vacation / calendar / statistics
+downstream work…
+
+</details>
+```
+
+Same formatting rules as for the "Detailed test results" block:
+- Summary line is a question or short noun phrase — "What X means here", "Why we do Y", "Evidence for Z".
+- Blank lines around `<summary>` and around any image/code inside the block.
+- Keep the body tight (≤ 10–15 lines); for more depth, link out to a vault note or Confluence page.
+- One explainer per term — place it after the first occurrence; later mentions rely on the reader having expanded it.
+- Never hide critical information (status, failure count, blockers) — collapsible blocks are for context, not substance.
+
+### Icons usage policy
+
+Comments are terser than ticket bodies, so the baseline is **lower** — use icons only where they already carry meaning.
+
+- **Table status cells** — the established convention: `✅ ❌ ⚠️` in the rightmost "Status" column. Use it consistently.
+- **Subsection headings** (`### Phase 1`, `### Notes`, `### Bug N`) — leave plain. A QA comment rarely has more than 3–4 subsections; adding a glyph to each is clutter.
+- **QA status line** — the plain `**QA: PASSED**` / `**QA: FAILED**` / `**QA: PARTIALLY PASSED**` / `**QA: BLOCKED**` header stays icon-free. The status word itself carries the signal; a prefix emoji duplicates it.
+- **Body prose and bullets** — no inline emojis, ever.
+
+Exception: when writing an unusually long comment (multi-phase test run, several bugs bundled) with five or more top-level subsections, follow the ticket-body glyph table from the `gitlab-task-creator` skill — one glyph per section, placed at the start of the heading, each glyph used at most once. Same rules, same vocabulary.
+
+Anti-patterns: `## 🎉 QA: PASSED`, `### 🐛 Bug 1`, bullets like `- ✅ verified X`, decorative emojis in narrative paragraphs, or sprinkling the same checkmark throughout text that isn't a status column.
+
+### External spec / documentation links
+
+When referencing a specification, design, or documentation page hosted outside GitLab, always use this link format:
+
+```
+[<DocSystem>: <Title>](<URL>)
+```
+
+- `<DocSystem>` — the origin of the document. Pick one of: `Confluence`, `Google Docs`, `Figma`, `Notion`, `SharePoint`. Use title-cased words, exactly as users would name the system.
+- `<Title>` — the document's own title, **not** the page ID or URL path. For a Confluence page like `https://projects.noveogroup.com/spaces/NOV/pages/32904541/cron` the title is `cron`. For `.../pages/130385087/3014+Using+Only+Accrued+Vacation+Days+...` the title is `3014 Using Only Accrued Vacation Days …` (URL-decoded, plus-signs → spaces).
+
+Examples:
+
+```
+[Confluence: cron](https://projects.noveogroup.com/spaces/NOV/pages/32904541/cron)
+[Confluence: Time Tracking Tool](https://projects.noveogroup.com/spaces/NOV/pages/18940713/Time+Tracking+Tool)
+[Figma: Vacation Dashboard v2](https://www.figma.com/design/abc123/...)
+[Google Docs: Release 2.1 plan](https://docs.google.com/document/d/.../edit)
+```
+
+Do **not** use legacy formats:
+- ❌ `Confluence NOV/32904541 — cron` — exposes the page ID as if it were the identifier.
+- ❌ bare URL pasted without a title.
+- ❌ `[link](URL)` with generic anchor text like "link", "here", "doc".
+
+Rationale: reviewers scan comments quickly; `[Confluence: cron]` tells them the origin and the topic in four words. Page IDs are implementation detail.
+
 ---
 
 ## Example: CI/CD Rollback Test Report

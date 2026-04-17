@@ -38,7 +38,7 @@ testing_dev_envs:
 testing_prod_envs:
   primary:
     name: stage
-current_sprint: 15
+current_sprint: 16
 autonomy:
   mode: full
   max_sessions: 250
