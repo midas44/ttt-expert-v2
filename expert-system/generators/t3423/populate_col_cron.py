@@ -103,6 +103,28 @@ ROWS = [
     ("TC-CS-119", "cross-service", "TS-CrossService-CronPMToolSync", "PM Tool sync — cs-id validation failure: unknown cs-id logged and skipped", "Row 23 negative; cs-id FK guard", "High"),
     ("TC-CS-120", "cross-service", "TS-CrossService-CronPMToolSync", "PM Tool sync — Unleash `PM_TOOL_SYNC-qa-1` OFF: scheduler silent", "Row 23 negative; feature-toggle gated silence", "High"),
     ("TC-CS-121", "cross-service", "TS-CrossService-CronPMToolSync", "PM Tool sync — startup full sync via TttStartupApplicationListener", "Row 23 startup-only full sync; #3399 startup listener", "High"),
+    # Row 22 — Statistic Report periodic sync (ttt-service)
+    ("TC-STAT-077", "statistics", "TS-Stat-CronStatReportSync", "StatisticReportScheduler — cron fires at 04:00 NSK, ShedLock acquired/released, start/finish markers emit", "Row 22 happy-path; baseline periodic sync with ShedLock", "Critical"),
+    ("TC-STAT-078", "statistics", "TS-Stat-CronStatReportSync", "Delta #8 regression — statistic-report sync failure logged at INFO (level:6), NOT ERROR (level:3)", "Row 22 design issue; delta #8 log-level regression guard", "High"),
+    ("TC-STAT-079", "statistics", "TS-Stat-CronStatReportSync", "#3345 Bug 1 regression — employment-period filter excludes pre-hire and post-leave months", "Row 22 regression; #3345 MR !5101 fix", "Critical"),
+    ("TC-STAT-080", "statistics", "TS-Stat-CronStatReportSync", "#3345 Bug 2 regression — day-off reschedule triggers month_norm recalc via RabbitMQ event", "Row 22 regression; #3345 event-fan-out fix", "High"),
+    ("TC-STAT-081", "statistics", "TS-Stat-CronStatReportSync", "#3337 regression — sick-leave creation updates month_norm and reported_effort via SICK_LEAVE_CHANGES event", "Row 22 regression; #3337 event-enum broadening", "High"),
+    ("TC-STAT-082", "statistics", "TS-Stat-CronStatReportSync", "#3337 regression — scoped event for employee A does NOT delete statistic_report rows for employee B", "Row 22 regression; #3337 scoped-delete fix", "High"),
+    ("TC-STAT-083", "statistics", "TS-Stat-CronStatReportSync", "#3346 regression (bug #895498) — manual statistic_report row delete is restored on next optimized sync", "Row 22 regression; #3346 scheduler-wiring fix", "Critical"),
+    ("TC-STAT-084", "statistics", "TS-Stat-CronStatReportSync", "Full vs optimized sync contract — full refreshes previous + current year; optimized refreshes previous + current month only", "Row 22 endpoint-contract; #3345 note 894873", "Medium"),
+    # Row 8 — EmailSendScheduler (20s dispatcher)
+    ("TC-EMAIL-001", "email", "TS-Email-CronDispatch", "EmailSendScheduler — cron fires every 20 s, ShedLock acquired/released, start/finish markers emit", "Row 8 happy-path; baseline dispatcher cadence + lock", "Critical"),
+    ("TC-EMAIL-002", "email", "TS-Email-CronDispatch", "Dispatch — NEW email transitions to SENT after SMTP success (happy path)", "Row 8 SMTP-success status transition", "Critical"),
+    ("TC-EMAIL-003", "email", "TS-Email-CronDispatch", "Dispatch — invalid recipient transitions NEW → INVALID (SendFailedException path)", "Row 8 invalid-recipient status transition", "High"),
+    ("TC-EMAIL-004", "email", "TS-Email-CronDispatch", "Dispatch — partial SMTP failure sets FAILED for rejected messages, SENT for accepted", "Row 8 mixed-batch status transitions; DI-EMAIL-DISPATCH-RETRY context", "High"),
+    ("TC-EMAIL-005", "email", "TS-Email-CronDispatch", "DI-EMAIL-DISPATCH-AUTH regression — MailAuthenticationException caught, status NOT updated, infinite retry loop", "Row 8 design-issue regression guard; stuck-as-NEW infinite loop", "High"),
+    ("TC-EMAIL-006", "email", "TS-Email-CronDispatch", "Dispatch — pageSize = 300 caps per-batch dispatch; overflow drains in subsequent ticks", "Row 8 batch-size contract; pagination window", "Medium"),
+    # Row 9 — EmailPruneScheduler (daily retention)
+    ("TC-EMAIL-007", "email", "TS-Email-CronPrune", "EmailPruneScheduler — cron fires daily at 00:00, ShedLock acquired/released, start/finish markers emit", "Row 9 happy-path; baseline retention scheduler", "Critical"),
+    ("TC-EMAIL-008", "email", "TS-Email-CronPrune", "Retention — emails older than 30 days deleted, emails newer than 30 days preserved", "Row 9 retention baseline; PT30D cutoff", "Critical"),
+    ("TC-EMAIL-009", "email", "TS-Email-CronPrune", "Retention boundary — email exactly at 30-day cutoff behavior (strict less-than: <30d preserved, =30d deleted)", "Row 9 off-by-one guard on strict less-than ADD_TIME.lessThan", "High"),
+    ("TC-EMAIL-010", "email", "TS-Email-CronPrune", "Retention — attachments deleted with parent email (no FK orphans)", "Row 9 cascade-delete contract; zero orphans", "High"),
+    ("TC-EMAIL-011", "email", "TS-Email-CronPrune", "Retention no-op — all emails within retention window; finish marker reports 0 deleted", "Row 9 no-op idempotency; zero-delete path", "Medium"),
 ]
 
 
@@ -146,8 +168,8 @@ def populate() -> None:
     # Row 2 title update — flip from scaffold note to populated summary.
     title_cell = ws.cell(row=2, column=1)
     title_cell.value = (
-        f"COL-cron — Curated Test Collection (active; {len(ROWS)} TCs referenced; "
-        "vacation s135 + reports s136 + cross-service s137)"
+        f"COL-cron — Curated Test Collection (complete; {len(ROWS)} TCs referenced; "
+        "vacation s135 + reports s136 + cross-service s137 + statistics + email s138)"
     )
     title_cell.font = Font(bold=True, size=12)
 
