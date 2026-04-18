@@ -18,12 +18,12 @@ session:
   offhours_utc: 15:00-03:00
   max_duration_minutes: 90
 phase:
-  current: knowledge_acquisition
-  generation_allowed: false
+  current: generation
+  generation_allowed: true
   coverage_override: -1
   scope: "3423"
 thresholds:
-  knowledge_coverage_target: 0.8
+  knowledge_coverage_target: 1.0
   note_quality_min_links: 2
 repos:
   local_clone_path: expert-system/repos/

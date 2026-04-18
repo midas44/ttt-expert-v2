@@ -1,6 +1,7 @@
 ---
 type: index
-updated: '2026-04-16'
+updated: '2026-04-17'
+last_session: '136'
 ---
 
 # Vault Index
@@ -84,6 +85,7 @@ updated: '2026-04-16'
 - [[statistics-api-surface]] — 23 statistic endpoints + Employee Reports DTOs
 - [[sick-leave-api-surface]] — 7 sick leave endpoints + DTOs, force param, dual status
 - [[cross-env-reference-data-comparison]] — 9 endpoints identical qa-1 vs stage (Session 100)
+- [[cron-job-live-verification]] — Cron test endpoints (which exist, return payloads, behaviour when fired off-schedule)
 
 ### Data Findings
 - [[ttt-backend-schema-deep-dive]] — 40 tables, employee model, roles, scheduled tasks
@@ -104,6 +106,11 @@ updated: '2026-04-16'
 - [[security-ticket-findings]] — 85 tickets: API bypass pattern, cross-office leakage, JWT lifecycle
 - [[cross-service-ticket-findings]] — 75+ tickets + Sprint 15-16: confirmation-statistics gap, CS sync
 
+### Ticket-scoped investigations
+- [[exploration/tickets/t3423-investigation]] — Ticket #3423 pinned preamble + audit log. Cron & Startup Jobs Testing Collection — 23 jobs across ttt/vacation/calendar/email. Collection-shaped output at `test-docs/collections/cron/`. Phase C gated off.
+- [[exploration/tickets/3083-ticket-findings]] — Tickets #3083 + #3286 — PM Tool sync field contract (11 PMT-owned fields, append-only presales merge, immutable accounting_name, event-history rules). Feeds cron job 23 testing.
+- [[exploration/tickets/3262-ticket-findings]] — Tickets #3178/#3262/#3303/#3337/#3345/#3346 — employee_projects + statistic_report cache pattern for cron jobs 18, 19, 21, 22. 8 bugs, 18 seed TCs.
+
 ## External
 ### Requirements
 - [[confluence-overview]] — Confluence page index
@@ -115,17 +122,22 @@ updated: '2026-04-16'
 ### Existing Tests
 - [[qase-overview]]
 
+### Other externals
+- [[external/EXT-cron-jobs]] — Cron jobs inventory (code-verified): schedulers, lock names, cron expressions, log markers, timing constants, template keys. Session 131: all 21 implemented jobs now code-verified; documented Unleash feature-toggle gates (CS_SYNC, PM_TOOL_SYNC), startup-only full-sync wiring, job 22 INFO-level error-logging bug.
+
 ## Test Documentation (Phase B)
 - `test-docs/sick-leave/sick-leave.xlsx` — 71 cases, 10 suites (Session 101)
 - `test-docs/statistics/statistics.xlsx` — 76 cases, 8 suites (Session 102)
 - `test-docs/admin/admin.xlsx` — 84 cases, 8 suites (Session 103)
-- `test-docs/vacation/vacation.xlsx` — 100 cases, 10 suites
+- `test-docs/vacation/vacation.xlsx` — 127 cases, 18 suites (100 baseline + 27 cron TCs across 8 `TS-Vac-Cron-*` suites, session 135)
 - `test-docs/day-off/day-off.xlsx` — 121 cases
 - `test-docs/planner/planner.xlsx` — 82 cases
-- `test-docs/reports/reports.xlsx` — 60 cases
+- `test-docs/reports/reports.xlsx` — 80 cases (60 baseline + 20 cron TCs across 2 `TS-Reports-Cron*` suites, session 136)
 - `test-docs/accounting/accounting.xlsx` — 38 cases
 - `test-docs/t2724/t2724.xlsx` — 38 cases
 - `test-docs/t3404/t3404.xlsx` — 24 cases
+- `test-docs/collections/absences/absences.xlsx` — curated collection (absences)
+- `test-docs/collections/cron/{cron.xlsx, test-plan.md, coverage.md}` — ticket #3423 collection (Phase B in progress; 16/23 rows covered via 47 TCs; `COL-cron` active; session 136)
 
 ## Investigations
 - 28 investigation notes in `investigations/` (bug analyses, deep dives, verifications)

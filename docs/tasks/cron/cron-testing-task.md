@@ -50,7 +50,7 @@ All times are Asia/Novosibirsk (GMT+7). Descriptions of each job live in the Con
 | 1  | TTT      | Forgotten-report notification (weekly)          | Mon, Fri 16:00                 | `POST /api/ttt/v1/test/reports/notify-forgotten`                       | E, L             |
 | 2  | TTT      | Forgotten-report delayed notification           | Daily 16:30                    | `POST /api/ttt/v1/test/reports/notify-forgotten-delayed`               | E, L             |
 | 3  | TTT      | Report-changed notification                     | Daily 07:50                    | `POST /api/ttt/v1/test/reports/notify-changed`                         | E, L             |
-| 4  | TTT      | Report-reject notification                      | Every 10 min                   | `POST /api/ttt/v1/test/reports/notify-rejected`                        | E, L             |
+| 4  | TTT      | Report-reject notification                      | Every 5 min (code)             | `POST /api/ttt/v1/test/reports/notify-rejected`                        | E, L             |
 | 5  | TTT      | Budget-overrun notification                     | Every 30 min                   | `POST /api/ttt/v1/test/budgets/notify`                                 | E, L             |
 | 6  | TTT      | CS sync (partial / full)                        | Every 15 min / daily 00:00     | `POST /api/ttt/v1/test/employees/sync?fullSync={true,false}`           | CS, DB, L        |
 | 7  | TTT      | Extended report-period cleanup                  | Every 5 min                    | `POST /api/ttt/v1/test/reports/cleanup-extended`                       | DB, L            |
