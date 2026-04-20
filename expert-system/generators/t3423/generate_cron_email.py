@@ -2,7 +2,7 @@
 """
 Ticket #3423 — Email Cluster Cron Test Cases (Phase B, session 138).
 
-Creates a NEW home-module workbook at ``test-docs/email/email.xlsx`` covering
+Generates ``test-docs/collections/cron/Cron_Email.xlsx`` from scratch covering
 rows 8 and 9 of the cron-testing collection:
 
     - TS-Email-CronDispatch (row 8 — 6 TCs: TC-EMAIL-001..006)
@@ -34,8 +34,9 @@ Context / rationale for a dedicated email workbook:
     sheet in test-docs/collections/cron/cron.xlsx carries traceability via
     source_module = "email".
 
-Idempotent: overwrites the workbook on every run. Creates ``test-docs/email/``
-if it does not exist.
+Idempotent: overwrites the workbook on every run. Test endpoints and content
+mirror the pre-migration email workbook that was deleted on 2026-04-20 when
+cron suites were consolidated under ``test-docs/collections/cron/``.
 
 Tab colors:
     - Plan / Matrix / Risk: green 70AD47 (plan convention)
@@ -43,7 +44,7 @@ Tab colors:
       cross-service / statistics cron suites from sessions 137 / 138)
 
 Run from repo root:
-    python3 expert-system/generators/t3423/generate_email.py
+    python3 expert-system/generators/t3423/generate_cron_email.py
 
 Canonical references:
     - expert-system/vault/external/EXT-cron-jobs.md §Row 8, §Job 9 markers
@@ -77,9 +78,9 @@ from openpyxl.utils import get_column_letter
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_DIR = os.path.abspath(
-    os.path.join(_HERE, "..", "..", "..", "test-docs", "email")
+    os.path.join(_HERE, "..", "..", "..", "test-docs", "collections", "cron")
 )
-OUTPUT_FILE = os.path.join(OUTPUT_DIR, "email.xlsx")
+OUTPUT_FILE = os.path.join(OUTPUT_DIR, "Cron_Email.xlsx")
 
 
 # --- Styling (matches reports/statistics/cross-service generators) ----------

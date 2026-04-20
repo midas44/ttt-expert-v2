@@ -2,24 +2,23 @@
 """
 Ticket #3423 — Cross-Service Cluster Cron Test Cases (Phase B, session 137).
 
-Extends ``test-docs/cross-service/cross-service.xlsx`` with 2 new cron-focused
-suites covering jobs 6, 10, 20, 23 of the cron-testing collection:
-    - TS-CrossService-CronCSSync     (rows 6, 10, 20 — 11 TCs: TC-CS-101..111)
-    - TS-CrossService-CronPMToolSync (row 23        — 10 TCs: TC-CS-112..121)
+Generates ``test-docs/collections/cron/Cron_CrossService.xlsx`` from scratch with:
+  * a Plan Overview sheet (authored via ``_common.author_plan_overview``)
+  * 2 cron-focused suites covering jobs 6, 10, 20, 23:
+        - TS-CrossService-CronCSSync     (rows 6, 10, 20 — 11 TCs: TC-CS-101..111)
+        - TS-CrossService-CronPMToolSync (row 23        — 10 TCs: TC-CS-112..121)
 
-Test IDs continue the home-module sequence — the pre-existing cross-service
-workbook ended at TC-CS-070 (TS-CrossService-Regression); cron TCs start at
-TC-CS-101 so they are visually distinct from the 8 existing TS- suites.
+Test IDs TC-CS-101…121 are preserved from the pre-migration state (cron
+suites formerly lived inside ``test-docs/cross-service/cross-service.xlsx``;
+extracted on 2026-04-20 by ``migrate_to_cron_workbooks.py``).
 
-Idempotent: existing ``TS-CrossService-CronCSSync`` / ``TS-CrossService-CronPMToolSync``
-sheets are removed before re-adding. Does NOT touch Plan Overview / Feature
-Matrix / Risk Assessment / the 8 existing TS-CrossService-* suites.
+Idempotent: every run rebuilds a fresh workbook.
 
-Tab color is ``F4B084`` (orange) — distinguishes cron-focused suites from
-pre-existing general cross-service suites (which are blue ``4472C4``).
+Tab color ``F4B084`` (orange) marks every cron suite — matches the
+home-workbook convention established in Phase B.
 
 Run from repo root:
-    python3 expert-system/generators/t3423/extend_crossservice.py
+    python3 expert-system/generators/t3423/generate_cron_crossservice.py
 
 Canonical references:
     - expert-system/vault/exploration/tickets/t3423-investigation.md (scope)
@@ -44,15 +43,18 @@ Canonical references:
 """
 
 import os
-from openpyxl import load_workbook
+import sys
+from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _common import author_plan_overview  # noqa: E402
 
 # ─── Paths ────────────────────────────────────────────────────────────────────
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
-_CS_XLSX = os.path.abspath(
-    os.path.join(_HERE, "..", "..", "..", "test-docs", "cross-service", "cross-service.xlsx")
+_TARGET = os.path.abspath(
+    os.path.join(_HERE, "..", "..", "..", "test-docs", "collections", "cron", "Cron_CrossService.xlsx")
 )
 
 
@@ -854,20 +856,34 @@ def _write_suite(wb, name, rows):
 
 
 def main():
-    if not os.path.isfile(_CS_XLSX):
-        raise SystemExit(f"cross-service.xlsx not found at {_CS_XLSX}")
+    wb = Workbook()
+    wb.remove(wb.active)
 
-    wb = load_workbook(_CS_XLSX)
+    suite_row_labels = {
+        "TS-CrossService-CronCSSync": "6, 10, 20",
+        "TS-CrossService-CronPMToolSync": "23",
+    }
+    suite_row_map = [(name, suite_row_labels[name], len(rows)) for name, rows in SUITES]
+    tc_count = sum(len(rows) for _, rows in SUITES)
+
+    author_plan_overview(
+        wb,
+        domain="CrossService",
+        home_subdir="cross-service",
+        rows_covered="6, 10, 20, 23",
+        tc_count=tc_count,
+        suite_row_map=suite_row_map,
+    )
 
     all_ids = []
     for suite_name, rows in SUITES:
         _write_suite(wb, suite_name, rows)
         all_ids.extend(r[0] for r in rows)
 
-    wb.save(_CS_XLSX)
+    wb.save(_TARGET)
 
-    print(f"Extended: {_CS_XLSX}")
-    print(f"Suites added/updated: {len(SUITES)}")
+    print(f"Generated: {_TARGET}")
+    print(f"Suites written: {len(SUITES)}")
     print(f"TCs written: {len(all_ids)} ({all_ids[0]} ... {all_ids[-1]})")
     for name, rows in SUITES:
         print(f"  {name}: {len(rows)} TCs")

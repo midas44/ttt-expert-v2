@@ -15,6 +15,7 @@ BORDER = Border(left=THIN, right=THIN, top=THIN, bottom=THIN)
 
 # (test_id, source_module, source_suite, title, inclusion_reason, priority_override)
 # Ordered by cron-row number for cross-reference clarity.
+# source_workbook is derived programmatically from source_module below — see MODULE_TO_WORKBOOK.
 ROWS = [
     # Row 11 — AnnualAccruals
     ("TC-VAC-101", "vacation", "TS-Vac-Cron-AnnualAccruals", "Annual accruals — clock at 01 Jan advances balances for all enabled employees", "Row 11 happy-path; baseline accrual run", "Critical"),
@@ -128,6 +129,18 @@ ROWS = [
 ]
 
 
+# Each cron-collection TC now lives in a dedicated per-domain workbook under
+# test-docs/collections/cron/ (post-migration 2026-04-20). source_workbook is
+# the precise file containing the TC's suite sheet.
+MODULE_TO_WORKBOOK = {
+    "vacation": "test-docs/collections/cron/Cron_Vacation.xlsx",
+    "reports": "test-docs/collections/cron/Cron_Reports.xlsx",
+    "cross-service": "test-docs/collections/cron/Cron_CrossService.xlsx",
+    "statistics": "test-docs/collections/cron/Cron_Statistics.xlsx",
+    "email": "test-docs/collections/cron/Cron_Email.xlsx",
+}
+
+
 def _clear_data_rows(ws, header_row: int) -> None:
     """Wipe all rows below header to support idempotent re-runs."""
     last = ws.max_row
@@ -157,11 +170,18 @@ def populate() -> None:
     header_row = 4
     _clear_data_rows(ws, header_row)
 
-    # Refresh header styling.
-    for col, label in enumerate(
-        ["test_id", "source_module", "source_suite", "title", "inclusion_reason", "priority_override"],
-        start=1,
-    ):
+    # Refresh header styling. source_workbook inserted after source_module
+    # (migration 2026-04-20 — per-domain Cron_<Domain>.xlsx files).
+    headers = [
+        "test_id",
+        "source_module",
+        "source_workbook",
+        "source_suite",
+        "title",
+        "inclusion_reason",
+        "priority_override",
+    ]
+    for col, label in enumerate(headers, start=1):
         c = ws.cell(row=header_row, column=col, value=label)
         _style_header(c)
 
@@ -169,23 +189,26 @@ def populate() -> None:
     title_cell = ws.cell(row=2, column=1)
     title_cell.value = (
         f"COL-cron — Curated Test Collection (complete; {len(ROWS)} TCs referenced; "
-        "vacation s135 + reports s136 + cross-service s137 + statistics + email s138)"
+        "per-domain Cron_<Domain>.xlsx workbooks under test-docs/collections/cron/)"
     )
     title_cell.font = Font(bold=True, size=12)
 
-    # Data rows.
-    widths = [14, 16, 28, 70, 48, 14]
+    # Data rows. Column order: test_id · source_module · source_workbook · source_suite · title · inclusion_reason · priority_override
+    widths = [14, 16, 46, 28, 70, 48, 14]
     for idx, col_w in enumerate(widths, start=1):
         ws.column_dimensions[chr(64 + idx)].width = col_w
 
     for i, row in enumerate(ROWS, start=1):
+        test_id, source_module, source_suite, title, inclusion_reason, priority_override = row
+        source_workbook = MODULE_TO_WORKBOOK[source_module]
+        values = [test_id, source_module, source_workbook, source_suite, title, inclusion_reason, priority_override]
         r = header_row + i
-        for col_idx, val in enumerate(row, start=1):
+        for col_idx, val in enumerate(values, start=1):
             c = ws.cell(row=r, column=col_idx, value=val)
             _style_data(c, zebra=(i % 2 == 0))
 
     ws.freeze_panes = ws.cell(row=header_row + 1, column=1)
-    ws.auto_filter.ref = f"A{header_row}:F{header_row + len(ROWS)}"
+    ws.auto_filter.ref = f"A{header_row}:G{header_row + len(ROWS)}"
 
     wb.save(CRON_XLSX)
     print(f"Populated: {CRON_XLSX}")

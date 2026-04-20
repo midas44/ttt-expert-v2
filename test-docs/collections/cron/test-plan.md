@@ -4,7 +4,8 @@
 **Epic:** #3402
 **Collection:** `cron` (XLSX at `test-docs/collections/cron/cron.xlsx`, sheet `COL-cron`)
 **Generated:** 2026-04-17 (session 135 — vacation cluster landed)
-**Status:** **ACTIVE** — vacation cluster populated; reports / cross-service / statistics / email clusters pending.
+**Source-workbook migration:** 2026-04-20 — cron suites extracted from home workbooks into per-domain `Cron_<Domain>.xlsx` files co-located with this test plan.
+**Status:** **COMPLETE** — all 5 cluster workbooks landed (23/23 rows, 87 TCs).
 
 ## 1. Overview
 
@@ -12,7 +13,23 @@ Curated test collection consolidating end-to-end regression tests for every sche
 
 Canonical conventions for this ticket live in `expert-system/vault/exploration/tickets/t3423-investigation.md`. Knowledge base highlights: `expert-system/vault/external/EXT-cron-jobs.md`, `expert-system/vault/exploration/tickets/3262-ticket-findings.md`, `expert-system/vault/exploration/tickets/3083-ticket-findings.md`, `expert-system/vault/patterns/email-notification-triggers.md`.
 
-**Authoring model.** `cron.xlsx` `COL-cron` is a **reference sheet** (columns: `test_id`, `source_module`, `source_suite`, `title`, `inclusion_reason`, `priority_override`). Actual test cases live in home-module workbooks (`vacation.xlsx`, `reports.xlsx`, `cross-service.xlsx`, `statistics.xlsx`, possibly `email.xlsx`) as new `TS-<Area>-Cron*` suites. Home-module IDs are used (e.g., `TC-VAC-101`), not a collection-local scheme.
+**Authoring model.** `cron.xlsx` `COL-cron` is a **reference sheet** (columns: `test_id`, `source_module`, `source_workbook`, `source_suite`, `title`, `inclusion_reason`, `priority_override`). Actual test cases live in dedicated per-domain cron workbooks (`Cron_Vacation.xlsx`, `Cron_Reports.xlsx`, `Cron_CrossService.xlsx`, `Cron_Statistics.xlsx`, `Cron_Email.xlsx`) co-located with this test plan under `test-docs/collections/cron/`. Home-module-style IDs are preserved (e.g., `TC-VAC-101`) so that TCs remain traceable to their originating domain.
+
+### File layout
+
+```
+test-docs/collections/cron/
+├── cron.xlsx               — Plan Overview + COL-cron reference sheet (87 rows)
+├── test-plan.md            — this document
+├── coverage.md             — traceability matrix (cron job → TCs → spec path)
+├── Cron_Vacation.xlsx      — 8 suites · 27 TCs · rows 11, 12, 13, 14, 15, 16, 17, 18, 19, 21
+├── Cron_Reports.xlsx       — 2 suites · 20 TCs · rows 1, 2, 3, 4, 5, 7
+├── Cron_CrossService.xlsx  — 2 suites · 21 TCs · rows 6, 10, 20, 23
+├── Cron_Statistics.xlsx    — 1 suite  ·  8 TCs · row 22
+└── Cron_Email.xlsx         — 2 suites · 11 TCs · rows 8, 9
+```
+
+Naming convention: `Cron_<Domain>.xlsx` — `<Domain>` is the PascalCase form of the logical module (`Vacation`, `Reports`, `CrossService`, `Statistics`, `Email`). Each workbook has a Plan Overview sheet (cron-scoped summary) plus the `TS-*-Cron-*` suite sheets that hold the TCs. `Cron_Email.xlsx` additionally carries Feature Matrix and Risk Assessment sheets lifted from the original email workbook (the email service is 100% cron-driven, so its entire documentation set belongs to this collection).
 
 ## 2. Environment matrix
 

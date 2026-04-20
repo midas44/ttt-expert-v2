@@ -2,19 +2,20 @@
 """
 Ticket #3423 — Vacation Cluster Cron Test Cases (Phase B, session 135+).
 
-Extends ``test-docs/vacation/vacation.xlsx`` with 8 new cron-focused suites
-covering jobs 11, 12, 13, 14, 15, 16, 17, 18, 19, 21 of the cron-testing
-collection. Test IDs continue the home-module sequence — existing vacation
-workbook ends at TC-VAC-100; new cron TCs start at TC-VAC-101 and run through
-TC-VAC-127.
+Generates ``test-docs/collections/cron/Cron_Vacation.xlsx`` from scratch with:
+  * a Plan Overview sheet (authored via ``_common.author_plan_overview``)
+  * 8 cron-focused suites covering jobs 11, 12, 13, 14, 15, 16, 17, 18, 19, 21.
 
-Idempotent: existing ``TS-Vac-Cron-*`` sheets are removed before re-adding.
-This script does NOT touch the Plan Overview / Feature Matrix / Risk
-Assessment tabs — only the cron cluster suites. (Those tabs still accurately
-describe the core module; cron notifications are additive.)
+Test IDs TC-VAC-101…127 are preserved from the pre-migration state (cron
+suites formerly lived inside ``test-docs/vacation/vacation.xlsx``; the
+one-shot migration on 2026-04-20 extracted them into this dedicated cron
+workbook under the collection directory).
+
+Idempotent: every run rebuilds a fresh workbook — two runs back-to-back
+produce the same output.
 
 Run from repo root:
-    python3 expert-system/generators/t3423/extend_vacation.py
+    python3 expert-system/generators/t3423/generate_cron_vacation.py
 
 Exit 0 on success. Prints a summary of the test IDs written.
 
@@ -26,14 +27,18 @@ Canonical references:
 """
 
 import os
-from openpyxl import load_workbook
+import sys
+from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _common import author_plan_overview  # noqa: E402
 
 # ─── Paths ────────────────────────────────────────────────────────────────────
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
-_VAC_XLSX = os.path.abspath(
-    os.path.join(_HERE, "..", "..", "..", "test-docs", "vacation", "vacation.xlsx")
+_TARGET = os.path.abspath(
+    os.path.join(_HERE, "..", "..", "..", "test-docs", "collections", "cron", "Cron_Vacation.xlsx")
 )
 
 
@@ -1013,20 +1018,42 @@ def _write_suite(wb, name, rows):
 
 
 def main():
-    if not os.path.isfile(_VAC_XLSX):
-        raise SystemExit(f"vacation.xlsx not found at {_VAC_XLSX}")
-
-    wb = load_workbook(_VAC_XLSX)
+    wb = Workbook()
+    wb.remove(wb.active)  # drop default blank sheet — Plan Overview goes first
 
     all_ids = []
+    # Compute suite_row_map for Plan Overview from SUITES.
+    # Map suite names to their cron-row label; order matches SUITES.
+    suite_row_labels = {
+        "TS-Vac-Cron-AnnualAccruals": "11",
+        "TS-Vac-Cron-NotImpl": "12, 13 (NOT_IMPLEMENTED — dead config)",
+        "TS-Vac-Cron-Digest": "14",
+        "TS-Vac-Cron-CalendarReminder": "15",
+        "TS-Vac-Cron-AutoPay": "16",
+        "TS-Vac-Cron-ApprovedToPaid": "17",
+        "TS-Vac-Cron-EmpProjectSync": "18, 19",
+        "TS-Vac-Cron-StatReportInit": "21",
+    }
+    suite_row_map = [(name, suite_row_labels[name], len(rows)) for name, rows in SUITES]
+    tc_count = sum(len(rows) for _, rows in SUITES)
+
+    author_plan_overview(
+        wb,
+        domain="Vacation",
+        home_subdir="vacation",
+        rows_covered="11, 12, 13, 14, 15, 16, 17, 18, 19, 21",
+        tc_count=tc_count,
+        suite_row_map=suite_row_map,
+    )
+
     for suite_name, rows in SUITES:
         _write_suite(wb, suite_name, rows)
         all_ids.extend(r[0] for r in rows)
 
-    wb.save(_VAC_XLSX)
+    wb.save(_TARGET)
 
-    print(f"Extended: {_VAC_XLSX}")
-    print(f"Suites added/updated: {len(SUITES)}")
+    print(f"Generated: {_TARGET}")
+    print(f"Suites written: {len(SUITES)}")
     print(f"TCs written: {len(all_ids)} ({all_ids[0]} ... {all_ids[-1]})")
     for name, rows in SUITES:
         print(f"  {name}: {len(rows)} TCs")

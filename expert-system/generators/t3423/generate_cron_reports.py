@@ -2,20 +2,20 @@
 """
 Ticket #3423 — Reports Cluster Cron Test Cases (Phase B, session 136).
 
-Extends ``test-docs/reports/reports.xlsx`` with 2 new cron-focused suites
-covering jobs 1, 2, 3, 4, 5, 7 of the cron-testing collection:
-    - TS-Reports-CronNotifications  (rows 1, 2, 3, 4, 7 — 15 TCs)
-    - TS-Reports-BudgetNotifications (row 5 — 5 TCs)
+Generates ``test-docs/collections/cron/Cron_Reports.xlsx`` from scratch with:
+  * a Plan Overview sheet (authored via ``_common.author_plan_overview``)
+  * 2 cron-focused suites covering jobs 1, 2, 3, 4, 5, 7:
+        - TS-Reports-CronNotifications  (rows 1, 2, 3, 4, 7 — 15 TCs)
+        - TS-Reports-BudgetNotifications (row 5 — 5 TCs)
 
-Test IDs continue the home-module sequence — existing reports workbook ends
-at TC-RPT-060; new cron TCs start at TC-RPT-101 and run through TC-RPT-120.
+Test IDs TC-RPT-101…120 are preserved from the pre-migration state (cron
+suites formerly lived inside ``test-docs/reports/reports.xlsx``; extracted
+on 2026-04-20 by ``migrate_to_cron_workbooks.py``).
 
-Idempotent: existing ``TS-Reports-CronNotifications`` / ``TS-Reports-BudgetNotifications``
-sheets are removed before re-adding. Does NOT touch Plan Overview / Feature
-Matrix / Risk Assessment / existing TS-Reports-* suites.
+Idempotent: every run rebuilds a fresh workbook.
 
 Run from repo root:
-    python3 expert-system/generators/t3423/extend_reports.py
+    python3 expert-system/generators/t3423/generate_cron_reports.py
 
 Canonical references:
     - expert-system/vault/exploration/tickets/t3423-investigation.md (scope)
@@ -38,14 +38,18 @@ Canonical references:
 """
 
 import os
-from openpyxl import load_workbook
+import sys
+from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _common import author_plan_overview  # noqa: E402
 
 # ─── Paths ────────────────────────────────────────────────────────────────────
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
-_RPT_XLSX = os.path.abspath(
-    os.path.join(_HERE, "..", "..", "..", "test-docs", "reports", "reports.xlsx")
+_TARGET = os.path.abspath(
+    os.path.join(_HERE, "..", "..", "..", "test-docs", "collections", "cron", "Cron_Reports.xlsx")
 )
 
 
@@ -775,20 +779,34 @@ def _write_suite(wb, name, rows):
 
 
 def main():
-    if not os.path.isfile(_RPT_XLSX):
-        raise SystemExit(f"reports.xlsx not found at {_RPT_XLSX}")
+    wb = Workbook()
+    wb.remove(wb.active)
 
-    wb = load_workbook(_RPT_XLSX)
+    suite_row_labels = {
+        "TS-Reports-CronNotifications": "1, 2, 3, 4, 7",
+        "TS-Reports-BudgetNotifications": "5",
+    }
+    suite_row_map = [(name, suite_row_labels[name], len(rows)) for name, rows in SUITES]
+    tc_count = sum(len(rows) for _, rows in SUITES)
+
+    author_plan_overview(
+        wb,
+        domain="Reports",
+        home_subdir="reports",
+        rows_covered="1, 2, 3, 4, 5, 7",
+        tc_count=tc_count,
+        suite_row_map=suite_row_map,
+    )
 
     all_ids = []
     for suite_name, rows in SUITES:
         _write_suite(wb, suite_name, rows)
         all_ids.extend(r[0] for r in rows)
 
-    wb.save(_RPT_XLSX)
+    wb.save(_TARGET)
 
-    print(f"Extended: {_RPT_XLSX}")
-    print(f"Suites added/updated: {len(SUITES)}")
+    print(f"Generated: {_TARGET}")
+    print(f"Suites written: {len(SUITES)}")
     print(f"TCs written: {len(all_ids)} ({all_ids[0]} ... {all_ids[-1]})")
     for name, rows in SUITES:
         print(f"  {name}: {len(rows)} TCs")

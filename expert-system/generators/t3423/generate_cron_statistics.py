@@ -2,26 +2,21 @@
 """
 Ticket #3423 — Statistics Cluster Cron Test Cases (Phase B, session 138).
 
-Extends ``test-docs/statistics/statistics.xlsx`` with 1 new cron-focused suite
-covering row 22 of the cron-testing collection:
-    - TS-Stat-CronStatReportSync (row 22 — 8 TCs: TC-STAT-077..084)
+Generates ``test-docs/collections/cron/Cron_Statistics.xlsx`` from scratch with:
+  * a Plan Overview sheet (authored via ``_common.author_plan_overview``)
+  * 1 cron-focused suite covering row 22:
+        - TS-Stat-CronStatReportSync (row 22 — 8 TCs: TC-STAT-077..084)
 
-Test IDs continue the home-module sequence — the pre-existing statistics
-workbook ended at TC-STAT-076 (TS-Stat-Regression). TC-STAT-077 starts a new
-contiguous block for cron coverage. Keeping the numbering tight rather than
-jumping to TC-STAT-100 so the workbook reads naturally in tab order.
+Test IDs TC-STAT-077…084 are preserved from the pre-migration state (cron
+suite formerly lived inside ``test-docs/statistics/statistics.xlsx``;
+extracted on 2026-04-20 by ``migrate_to_cron_workbooks.py``).
 
-Idempotent: existing ``TS-Stat-CronStatReportSync`` sheet is removed before
-re-adding. Does NOT touch Plan Overview / Feature Matrix / Risk Assessment /
-the 8 pre-existing TS-Stat-* suites (including TS-Stat-CacheSync which is
-UI cache consistency, NOT cron-focused — the two suites intentionally coexist).
+Idempotent: every run rebuilds a fresh workbook.
 
-Tab color is ``F4B084`` (orange) — matches the convention established by the
-cross-service cron suites (session 137), distinguishing cron-focused suites
-from general UI/regression suites in the same workbook.
+Tab color ``F4B084`` (orange) marks the cron suite.
 
 Run from repo root:
-    python3 expert-system/generators/t3423/extend_statistics.py
+    python3 expert-system/generators/t3423/generate_cron_statistics.py
 
 Canonical references:
     - expert-system/vault/exploration/tickets/t3423-investigation.md (scope)
@@ -51,15 +46,18 @@ Canonical references:
 """
 
 import os
-from openpyxl import load_workbook
+import sys
+from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _common import author_plan_overview  # noqa: E402
 
 # ─── Paths ────────────────────────────────────────────────────────────────────
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
-_STAT_XLSX = os.path.abspath(
-    os.path.join(_HERE, "..", "..", "..", "test-docs", "statistics", "statistics.xlsx")
+_TARGET = os.path.abspath(
+    os.path.join(_HERE, "..", "..", "..", "test-docs", "collections", "cron", "Cron_Statistics.xlsx")
 )
 
 
@@ -642,20 +640,31 @@ def _write_suite(wb, name, rows):
 
 
 def main():
-    if not os.path.isfile(_STAT_XLSX):
-        raise SystemExit(f"statistics.xlsx not found at {_STAT_XLSX}")
+    wb = Workbook()
+    wb.remove(wb.active)
 
-    wb = load_workbook(_STAT_XLSX)
+    suite_row_labels = {"TS-Stat-CronStatReportSync": "22"}
+    suite_row_map = [(name, suite_row_labels[name], len(rows)) for name, rows in SUITES]
+    tc_count = sum(len(rows) for _, rows in SUITES)
+
+    author_plan_overview(
+        wb,
+        domain="Statistics",
+        home_subdir="statistics",
+        rows_covered="22",
+        tc_count=tc_count,
+        suite_row_map=suite_row_map,
+    )
 
     all_ids = []
     for suite_name, rows in SUITES:
         _write_suite(wb, suite_name, rows)
         all_ids.extend(r[0] for r in rows)
 
-    wb.save(_STAT_XLSX)
+    wb.save(_TARGET)
 
-    print(f"Extended: {_STAT_XLSX}")
-    print(f"Suites added/updated: {len(SUITES)}")
+    print(f"Generated: {_TARGET}")
+    print(f"Suites written: {len(SUITES)}")
     print(f"TCs written: {len(all_ids)} ({all_ids[0]} ... {all_ids[-1]})")
     for name, rows in SUITES:
         print(f"  {name}: {len(rows)} TCs")
