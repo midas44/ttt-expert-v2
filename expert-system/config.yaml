@@ -18,7 +18,7 @@ session:
   offhours_utc: 15:00-03:00
   max_duration_minutes: 90
 phase:
-  current: generation
+  current: autotest_generation
   generation_allowed: true
   coverage_override: -1
   scope: "collection:digest"
@@ -59,7 +59,7 @@ peak_hours:
   weekdays_only: true
   buffer_minutes: 40
 autotest:
-  enabled: false
+  enabled: true
   target_env: qa-1
   target_env_cs: preprod
   target_env_pmt: preprod

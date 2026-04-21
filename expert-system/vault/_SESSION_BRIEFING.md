@@ -1,64 +1,79 @@
-# Session Briefing — Digest collection Phase B landed; awaiting user review
+# Session Briefing — Phase C opens on the `digest` collection
 
-**Last session close:** 138 (2026-04-21) — Phase B complete for `collection:digest`. 14 TC-DIGEST-* TCs authored across 7 variant pairs (A = scheduler, B = test-endpoint bypass) in `test-docs/collections/digest/digest.xlsx` → `TS-Digest-Vacation`. `autonomy.stop: true` set. The run halted cleanly for user review.
+**Last session close:** 138 (2026-04-21) — Phase B landed for `collection:digest`. 14 TC-DIGEST-* TCs authored across 7 variant pairs (A = scheduler, B = test-endpoint bypass) in `test-docs/collections/digest/digest.xlsx` → `TS-Digest-Vacation`. User reviewed; prompts/KB baseline accepted for this iteration.
 
-**Current config (as of stop):** `phase.current: generation` · `phase.scope: "collection:digest"` · `autonomy.mode: full` · `autonomy.stop: true` · `autotest.enabled: false`.
+**Phase switched.** Config now reads:
+- `phase.current: autotest_generation`
+- `autotest.enabled: true`
+- `autotest.scope: "collection:digest"`
+- `autonomy.stop: true` (startup auto-flip in run-sessions.sh will unwind)
 
-## What landed this session
+## What this Phase C run does
 
-**14 TCs in `TS-Digest-Vacation` (suite tab color `F4B084`):**
+Generate Playwright + TypeScript specs for all 14 TC-DIGEST-* cases. Output lands in `autotests/e2e/tests/digest/` — a new directory dedicated to this collection, keeping the stress-test self-contained and reviewable.
 
-| Scenario | Variant A (scheduler) | Variant B (test endpoint) | Priority |
-|---|---|---|---|
-| Happy path — content-complete body | TC-DIGEST-001 | TC-DIGEST-002 | Critical |
-| Empty set — no APPROVED tomorrow vacations | TC-DIGEST-003 | TC-DIGEST-004 | High |
-| Leakage guard — non-APPROVED / non-tomorrow records excluded | TC-DIGEST-005 | TC-DIGEST-006 | Critical |
-| Subject-format regex — Cyrillic `ТТТ`, no brackets | TC-DIGEST-007 | TC-DIGEST-008 | High |
-| Graylog marker audit (scheduler present vs bypass absent) | TC-DIGEST-009 | TC-DIGEST-010 | High |
-| Russian plural forms — 1 день / 2 дня / 5 дней / 21 день | TC-DIGEST-011 | TC-DIGEST-012 | High |
-| Cross-year date boundary — `01.01.<YYYY+1>` | TC-DIGEST-013 | TC-DIGEST-014 | High |
+Prerequisites already in place:
 
-**Deliverables:**
+- **Fixtures**: `autotests/e2e/fixtures/common/RoundcubeVerificationFixture.ts` and `autotests/e2e/fixtures/common/GraylogVerificationFixture.ts` were authored 2026-04-21. Both wrap their respective skill Python CLIs via `child_process.spawnSync`. Use them — do NOT inline IMAP or Graylog REST logic in specs.
+- **Manifest refreshed**: `autotests/manifest/test-cases.json` now includes module `digest` (14 cases). Re-run `python3 autotests/scripts/parse_xlsx.py` at session start if you touch the collection XLSX.
+- **Collection report persisted**: `autotests/manifest/collection-digest.json` has all 14 TCs with `"action": "needs_generation"` and `target_spec_path` populated per case.
+- **Pipeline fixes landed**: `parse_xlsx.py` now scans `test-docs/collections/<name>/`; `process_collection.py` uses header-row-based column lookup (handles 6-col and 7-col COL-* schemas), verifies spec-file TC match by content (not just numeric suffix), and routes collection-scoped specs into `tests/<collection>/`.
 
-- `test-docs/collections/digest/digest.xlsx` — `Plan Overview` preserved; `COL-digest` populated (14 data rows); `TS-Digest-Vacation` rebuilt (14 TC rows, frozen header, auto-filter, wrap-text, col widths 14/48/52/64/52/12/12/24/18/40, tab color `F4B084`).
-- `test-docs/collections/digest/coverage.md` — LANDED; TC map table added; deltas table rewritten env-independent; progress row flipped to ✅ 14.
-- `test-docs/collections/digest/test-plan.md` — LANDED; §2 Environment rewritten as capability table (env-independent); §3 Risk areas expanded to cover 8 concerns (including plural forms, year boundary, wrapper bypass); §4 Verification recipe re-written with `<ENV>` placeholders and A/B clock-advance split; §8 Progress + Session history added.
-- `expert-system/generators/digest/generate.py` — new Python generator. Loads existing workbook (preserves Plan Overview sheet), rebuilds `TS-Digest-Vacation` and `COL-digest` data rows. Pre-save audit greps every cell for banned env literals (`qa-1`, `qa1`, `timemachine`, `stage`, `preprod`) with word-boundary matching and asserts `wrap_text=True` on every prose column. Generator fails loudly if either check trips.
-- SQLite `test_case_tracking` — 14 new rows inserted (module=`vacation`, feature=`cron-digest`, type=`Hybrid`, source_notes cite `exploration/tickets/t3423-investigation.md § digest`, `external/EXT-cron-jobs.md job 14`, `patterns/email-notification-triggers.md § Digest template`).
+## What you (the runner) need to do next
 
-## Exit-criteria check
+Follow `CLAUDE+.md` §12 (Phase C — Autotest Generation) with the §"Collection scope protocol" refinements. Specifically:
 
-- ✅ Row 14 in `coverage.md` has ≥ 1 TC-DIGEST-* per variant A + B (14/14; no TBD cells).
-- ✅ Every TC folds all deltas (dual-trigger, content-complete, env-independent, Cyrillic ТТТ subject, APPROVED ∧ tomorrow rule, scheduler-wrapper bypass asymmetry).
-- ✅ XLSX legibility bar met (wrap-text, multi-line cells, column widths ≥ baseline, `freeze_panes="A3"`, auto-filter on header row).
-- ✅ Generator pre-save audit passed (0 env-literal defects, 0 wrap-text violations).
-- ✅ SQLite 14 rows inserted.
-- ✅ `autonomy.stop: true` set.
+1. Read `autotests/manifest/collection-digest.json` — it's the source of truth for which TCs are in scope. Work only on cases with `"action": "needs_generation"`.
+2. For each TC (up to `autotest.max_tests_per_session = 5` per session):
+   - Read the TC's full Preconditions / Steps / Expected Result from `test-docs/collections/digest/digest.xlsx` → `TS-Digest-Vacation` sheet (manifest has title + classified_type; full cell content is only in the XLSX).
+   - Read vault context: [[exploration/tickets/t3423-investigation]] § digest, [[external/EXT-cron-jobs]] § Row 14, [[patterns/email-notification-triggers]] § Digest template.
+   - Generate spec at `target_spec_path` (path is supplied per-case in the report JSON).
+   - Generate supporting data classes at `autotests/e2e/data/digest/` as needed.
+   - Add tags: `@regress @digest @col-digest`.
+   - Run the spec via `npx playwright test e2e/tests/digest/<file> --project=chrome-headless` and attempt up to `auto_fix_attempts = 3` fixes per failure.
+3. After each spec lands (even failing), re-run `process_collection.py --collection digest` to update tags and the report. This refreshes the `needs_generation` count.
+4. Update `autotest_tracking` in SQLite with automation_status for each TC.
+5. Update `_AUTOTEST_PROGRESS.md` vault note with coverage metrics at session end.
 
-## What the user does next
+## Must-use fixtures — content-complete verification
 
-1. Open `test-docs/collections/digest/digest.xlsx` → `TS-Digest-Vacation` sheet and review the 14 TCs.
-2. Compare against prior art at `test-docs/collections/cron/Cron_Vacation.xlsx` → `TS-Vac-Cron-Digest` (TC-VAC-106..108). The comparison is the whole point of this pipeline-stress-test collection.
-3. Record remaining shortcomings as a new round of prompt / KB fixes.
-4. Either iterate (edit prompts / KB, delete the TS sheet + `COL-digest` data rows, flip `autonomy.stop: false`, re-run) or declare the prompt + KB baseline acceptable and move on to a different scope.
+The 14 digest TCs require every email field to be asserted (see `CLAUDE+.md` §11 "Content-Complete Verification for Notification TCs"). Fixture helpers that matter:
 
-## Critical DO-NOTs (persisted from pre-run briefing)
+- `RoundcubeVerificationFixture.waitForEmail({subject, sinceSearch, match, timeoutMs: 30_000})` — poll until the digest email arrives.
+- `RoundcubeVerificationFixture.read(uid)` — fetch text body for per-field assertions.
+- `RoundcubeVerificationFixture.assertBodyContains(body, ...fragments)` — one call per dynamic field (Full Name, start date, end date, type, duration).
+- `RoundcubeVerificationFixture.assertBodyMissing(body, ...fragments)` — leakage guard (non-APPROVED / non-tomorrow data must not appear).
+- `GraylogVerificationFixture.waitForMarker({query, range: "5m"})` — Variant A scheduler markers.
+- `GraylogVerificationFixture.assertAbsent({query, range: "5m"})` — Variant B wrapper bypass.
+- `GraylogVerificationFixture.countPerRecipient({query}, /Mail has been sent to ([\w.+@-]+) about NOTIFY_VACATION_UPCOMING/)` — multi-recipient digest audits.
 
-- **Do not touch the cron collection.** `test-docs/collections/cron/` is canonical. The only cross-reference is citing `TS-Vac-Cron-Digest` as prior art for comparison.
-- **Do not enable Phase C.** `autotest.enabled` stays `false` until the user explicitly flips it.
-- **Do not modify prompt / instruction files or KB notes solely to make the generator's job easier.** Those sources are the *input* to this stress-test; the user edits them between iterations, not the runner.
+The fixtures read config from `config/roundcube/roundcube.yaml` and `config/graylog/graylog.yaml`. The env used is whatever those YAMLs point at — test specs stay env-independent (no hard-coded env names).
+
+## Critical DO-NOTs
+
+- **Do not touch the cron collection.** `test-docs/collections/cron/` and any `@col-cron` tagging is out of scope here. Only work on `digest`.
+- **Do not target `autotests/e2e/tests/vacation/`** for TC-DIGEST-*. Specs land in `autotests/e2e/tests/digest/`. The collection-digest report's `target_spec_path` is authoritative.
+- **Do not hard-code env names** in specs. Subject regex uses `<ENV>` placeholder; Graylog stream is derived from `GlobalConfig.primary.env` via the fixture constructor. See `CLAUDE+.md` §11 "Environment Independence".
+- **Do not inline IMAP or Graylog REST code** in specs. Use the fixtures — that's why they exist.
+- **Do not edit prompts / KB files solely to ease Phase C.** If a TC has ambiguity that blocks spec generation, flag it in this briefing and wait for user review rather than editing the TC or the KB.
+- **Do not expand scope.** Only the 14 TC-DIGEST-* cases. Do not generate specs for TC-VAC-106..108 (prior art) or any other cron TCs.
+
+## Exit conditions
+
+- All 14 TC-DIGEST-* have specs in `autotests/e2e/tests/digest/`.
+- `collection-digest.json` summary shows `needs_generation: 0`, `tag_already_present + tag_added = 14`.
+- Each spec runs end-to-end (or is marked `failed` with a documented reason after 3 fix attempts).
+- SQLite `autotest_tracking` has an entry per TC.
+- `_AUTOTEST_PROGRESS.md` updated.
+- `autonomy.stop: true` set in config.
+
+## Expected session count
+
+14 TCs ÷ 5 per session ≈ **3 sessions**. Specs with clock manipulation (Variants A) are slower than test-endpoint specs (Variants B) — if a session struggles with a Variant A spec, skip it and come back after the simpler variants are shaken down.
 
 ## Comparison target (prior art)
 
-`test-docs/collections/cron/Cron_Vacation.xlsx` → `TS-Vac-Cron-Digest` (TC-VAC-106, TC-VAC-107, TC-VAC-108). These 3 TCs are the baseline. Regressions vs expected improvements:
-
-| Dimension | TC-VAC-106..108 (prior art) | TC-DIGEST-001..014 (this session) |
-|---|---|---|
-| Env-independence | Mentions `qa-1` / `[QA1][TTT]` | `<ENV>` placeholders throughout; generator audit rejects any env literal |
-| Subject assertion | `[QA1][TTT]` Latin | Cyrillic `[<ENV>]ТТТ Дайджест отсутствий` regex |
-| Dual-trigger | Single-trigger only (implied scheduler) | Every behavioral TC paired A (scheduler) + B (test endpoint) |
-| Content coverage | Subject + recipient | Every dynamic template field (greeting, period date, per-employee Full Name/start/end/type/duration, footer) + negative leakage + plural + year-boundary |
-| Total TCs | 3 | 14 |
+After the run, user will compare the generated digest specs against whatever minimal reference exists (there is no Phase-C output for TC-VAC-106..108 yet — the cron collection stopped at Phase B). Phase C for digest is thus also a first-pass validation of the spec-generation pipeline on the new authoring rules.
 
 ## Last updated
-2026-04-21 — session 138 close. 14 TCs drafted, exit criteria met, `autonomy.stop: true` logged. Awaiting user review.
+2026-04-21 — Phase C prepared. Fixtures built; manifest + collection report refreshed; pipeline scripts fixed; CLAUDE+.md §12 collection protocol updated. User flips `autonomy.stop: false` (or invokes run-sessions.sh, which auto-flips) when ready to start.

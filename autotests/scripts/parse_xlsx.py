@@ -131,9 +131,10 @@ def parse_all(output_dir: Path) -> dict:
     modules = {}
     total_cases = 0
 
-    # Scan test-docs/ for module directories containing .xlsx files
+    # Scan test-docs/<module>/ for per-module workbooks. Skip `collections/` —
+    # it's handled separately below with a different naming convention.
     for entry in sorted(output_dir.iterdir()):
-        if not entry.is_dir():
+        if not entry.is_dir() or entry.name == "collections":
             continue
         xlsx_files = list(entry.glob("*.xlsx"))
         if not xlsx_files:
@@ -148,6 +149,55 @@ def parse_all(output_dir: Path) -> dict:
         total_cases += module_data["total"]
         suite_count = len(module_data["suites"])
         print(f"{module_data['total']} cases in {suite_count} suites")
+
+    # Scan test-docs/collections/<name>/ — each collection directory holds one
+    # or more XLSX workbooks. All TS-* sheets across all workbooks in the
+    # directory are merged into a single pseudo-module keyed by <name>. COL-*
+    # reference sheets are skipped by parse_workbook (only TS-* are parsed).
+    # Per-workbook sheets with duplicate TS- names across different workbooks
+    # are suffixed to keep them distinct (unlikely but possible).
+    collections_dir = output_dir / "collections"
+    if collections_dir.is_dir():
+        for entry in sorted(collections_dir.iterdir()):
+            if not entry.is_dir():
+                continue
+            xlsx_files = sorted(entry.glob("*.xlsx"))
+            if not xlsx_files:
+                continue
+
+            collection_name = entry.name
+            merged_suites: dict = {}
+            merged_total = 0
+            merged_paths: list[str] = []
+
+            for xlsx_path in xlsx_files:
+                data = parse_workbook(xlsx_path, collection_name)
+                if data["total"] == 0:
+                    continue
+                for sheet_name, suite in data["suites"].items():
+                    # Disambiguate if two workbooks in the collection share a suite name.
+                    target = sheet_name
+                    if target in merged_suites:
+                        target = f"{sheet_name} ({xlsx_path.stem})"
+                    merged_suites[target] = suite
+                merged_total += data["total"]
+                merged_paths.append(str(xlsx_path.relative_to(PROJECT_ROOT)))
+
+            if merged_total == 0:
+                continue
+
+            print(
+                f"  Parsing collection {collection_name}: {len(xlsx_files)} workbook(s)...",
+                end=" ",
+            )
+            modules[collection_name] = {
+                "xlsx_path": merged_paths[0] if len(merged_paths) == 1 else merged_paths,
+                "source_type": "collection",
+                "total": merged_total,
+                "suites": merged_suites,
+            }
+            total_cases += merged_total
+            print(f"{merged_total} cases in {len(merged_suites)} suites")
 
     return {
         "generated": datetime.now(timezone.utc).isoformat(),

@@ -1153,14 +1153,20 @@ A **Curated Test Collection** groups test cases from multiple modules into a sin
 
 **Collection scope protocol** (when `autotest.scope` starts with `collection:`):
 1. Extract collection name: `"collection:absences"` → `absences`
-2. Run: `python3 autotests/scripts/process_collection.py --collection <name>`
-3. Read the report JSON at `autotests/manifest/collection-<name>.json`
-4. The report contains the **exact set of test cases** to work on:
-   - `"action": "tag_already_present"` or `"tag_added"` → spec exists, skip (already automated)
-   - `"action": "needs_generation"` → generate this spec using the standard autotest-generator pipeline, adding `@col-<name>` tag alongside `@regress @<module>`
-5. Generate up to `max_tests_per_session` specs from the `needs_generation` list
-6. After generating, re-run `process_collection.py` to inject tags and update the report
-7. Track progress: count `needs_generation` remaining vs total. When 0 remain, scope is complete — set `autonomy.stop: true`
+2. Run: `python3 autotests/scripts/parse_xlsx.py` to refresh the manifest (collection workbooks under `test-docs/collections/<name>/` are registered under a pseudo-module keyed by the collection name).
+3. Run: `python3 autotests/scripts/process_collection.py --collection <name>`
+4. Read the report JSON at `autotests/manifest/collection-<name>.json`
+5. The report's `cases[]` array contains the **exact set of test cases** to work on, with per-case metadata:
+   - `"action": "tag_already_present"` or `"tag_added"` → spec exists at `spec_file`; skip (already automated).
+   - `"action": "needs_generation"` → generate this spec. Each case also carries:
+     - `target_spec_path` — where the generated spec must land (e.g. `autotests/e2e/tests/<collection>/<collection>-tc<NNN>.spec.ts`). **Use this path verbatim**; do not fall back to `tests/<source_module>/`. Collection-scoped specs live in a dedicated `tests/<collection>/` directory to keep the collection self-contained and reviewable.
+     - `source_suite` — the TS-* sheet name inside the collection workbook where the TC is defined (e.g. `TS-Digest-Vacation`).
+     - `source_workbook` — the absolute workbook path when the collection has multiple workbooks (e.g. per-domain `Cron_*.xlsx`); empty for single-workbook collections.
+     - `resolved_module` — the manifest module key where the TC is registered (usually the collection name for collection-native TCs; may be a real module name for cross-collection references like absences → cross-service).
+   - Add `@col-<name>` tag alongside `@regress` and any module tag.
+6. Generate up to `max_tests_per_session` specs from the `needs_generation` list. Fixtures needed by collection-scoped TCs (e.g. `RoundcubeVerificationFixture`, `GraylogVerificationFixture`) must already exist in `autotests/e2e/fixtures/common/` — if one is missing, stop and flag it rather than inline the logic into specs.
+7. After generating, re-run `process_collection.py` to inject tags and update the report.
+8. Track progress: count `needs_generation` remaining vs total. When 0 remain, scope is complete — set `autonomy.stop: true`.
 
 **CRITICAL:** When scope is `collection:*`, work **ONLY** on test cases listed in the collection report. Do NOT expand to the full module or interpret the collection name semantically. The collection XLSX at `test-docs/collections/<name>/<name>.xlsx` is the sole source of truth for which TCs are in scope.
 
