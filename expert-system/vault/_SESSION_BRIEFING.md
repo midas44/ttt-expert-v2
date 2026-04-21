@@ -1,79 +1,115 @@
-# Session Briefing — Phase C opens on the `digest` collection
+# Session Briefing — Phase C, digest collection (session 142+)
 
-**Last session close:** 138 (2026-04-21) — Phase B landed for `collection:digest`. 14 TC-DIGEST-* TCs authored across 7 variant pairs (A = scheduler, B = test-endpoint bypass) in `test-docs/collections/digest/digest.xlsx` → `TS-Digest-Vacation`. User reviewed; prompts/KB baseline accepted for this iteration.
+**Last session close:** 141 (2026-04-21) — major structural correction landed: removed per-recipient Graylog marker assertions from 8 digest specs. Discovery: `DigestServiceImpl` and its formatters emit **zero** log statements; the `"Mail has been sent to … NOTIFY_VACATION_UPCOMING"` pattern the specs were asserting **does not exist** for the digest pipeline (it is emitted by four unrelated notification helpers). All digest log markers come from `DigestScheduler` alone: `started` / `finished` / `failed`.
 
-**Phase switched.** Config now reads:
-- `phase.current: autotest_generation`
-- `autotest.enabled: true`
-- `autotest.scope: "collection:digest"`
-- `autonomy.stop: true` (startup auto-flip in run-sessions.sh will unwind)
+Phase still `autotest_generation`, scope still `collection:digest`, autonomy mode `full`.
 
-## What this Phase C run does
+## What changed in session 141
 
-Generate Playwright + TypeScript specs for all 14 TC-DIGEST-* cases. Output lands in `autotests/e2e/tests/digest/` — a new directory dedicated to this collection, keeping the stress-test self-contained and reviewable.
+### Per-recipient marker removal (8 specs edited)
 
-Prerequisites already in place:
+| TC  | Variant | Edit |
+|-----|---------|------|
+| TC-001 | A scheduler | removed `perRecipientHits` + `vacMarker` blocks. Roundcube `assertBodyContains` is the sole per-recipient evidence |
+| TC-002 | B endpoint  | removed `vacMarker` block. Kept scheduler `assertAbsent` for wrapper-bypass invariant |
+| TC-003 | A scheduler | removed `anyRecipientMarker` block inside `if (precheckCount === 0)` |
+| TC-004 | B endpoint  | removed `anyRecipientMarker` block inside `if (precheckCount === 0)` |
+| TC-005 | A scheduler | removed 4 marker blocks (`targetMarker` + 3 `leakMarker*`). Leakage guard now relies on Roundcube body assertions |
+| TC-006 | B endpoint  | removed same 4 marker blocks as TC-005 |
+| TC-009 | A scheduler | removed `perRecipientHits` search + ordering check. Rewrote doc comment explaining `DigestServiceImpl` logs nothing |
+| TC-010 | B endpoint  | **biggest restructure**: replaced `waitForMarker` (which depended on the non-existent per-recipient marker) with synchronous POST + 10s settle delay. Rewrote doc comment. Removed `perRecipientCount` block |
 
-- **Fixtures**: `autotests/e2e/fixtures/common/RoundcubeVerificationFixture.ts` and `autotests/e2e/fixtures/common/GraylogVerificationFixture.ts` were authored 2026-04-21. Both wrap their respective skill Python CLIs via `child_process.spawnSync`. Use them — do NOT inline IMAP or Graylog REST logic in specs.
-- **Manifest refreshed**: `autotests/manifest/test-cases.json` now includes module `digest` (14 cases). Re-run `python3 autotests/scripts/parse_xlsx.py` at session start if you touch the collection XLSX.
-- **Collection report persisted**: `autotests/manifest/collection-digest.json` has all 14 TCs with `"action": "needs_generation"` and `target_spec_path` populated per case.
-- **Pipeline fixes landed**: `parse_xlsx.py` now scans `test-docs/collections/<name>/`; `process_collection.py` uses header-row-based column lookup (handles 6-col and 7-col COL-* schemas), verifies spec-file TC match by content (not just numeric suffix), and routes collection-scoped specs into `tests/<collection>/`.
+TC-007 and TC-008 were already clean — no per-recipient marker assertions. No edits needed.
 
-## What you (the runner) need to do next
+`npx tsc --noEmit` from `autotests/` passes cleanly — only pre-existing `tsconfig` deprecation warnings, zero errors from the spec changes.
 
-Follow `CLAUDE+.md` §12 (Phase C — Autotest Generation) with the §"Collection scope protocol" refinements. Specifically:
+### Evidence that per-recipient marker doesn't exist for digest
 
-1. Read `autotests/manifest/collection-digest.json` — it's the source of truth for which TCs are in scope. Work only on cases with `"action": "needs_generation"`.
-2. For each TC (up to `autotest.max_tests_per_session = 5` per session):
-   - Read the TC's full Preconditions / Steps / Expected Result from `test-docs/collections/digest/digest.xlsx` → `TS-Digest-Vacation` sheet (manifest has title + classified_type; full cell content is only in the XLSX).
-   - Read vault context: [[exploration/tickets/t3423-investigation]] § digest, [[external/EXT-cron-jobs]] § Row 14, [[patterns/email-notification-triggers]] § Digest template.
-   - Generate spec at `target_spec_path` (path is supplied per-case in the report JSON).
-   - Generate supporting data classes at `autotests/e2e/data/digest/` as needed.
-   - Add tags: `@regress @digest @col-digest`.
-   - Run the spec via `npx playwright test e2e/tests/digest/<file> --project=chrome-headless` and attempt up to `auto_fix_attempts = 3` fixes per failure.
-3. After each spec lands (even failing), re-run `process_collection.py --collection digest` to update tags and the report. This refreshes the `needs_generation` count.
-4. Update `autotest_tracking` in SQLite with automation_status for each TC.
-5. Update `_AUTOTEST_PROGRESS.md` vault note with coverage metrics at session end.
+Read the code — direct quotes:
 
-## Must-use fixtures — content-complete verification
+- `DigestServiceImpl.java` (1 .. 260) — **zero** `log.info` / `log.debug` / `log.error` calls. `sendEmail` method (lines 230-244) calls `emailService.send(email)` and returns, no logging.
+- `DigestScheduler.java:26,30,32` — the only digest logs:
+  ```java
+  log.info("Digests sending job started");
+  log.error("Digests sending job failed, reason: {}", e.getMessage(), e);
+  log.info("Digests sending job finished");
+  ```
+- `"Mail has been sent to"` markers exist only in:
+  - `EmployeeDayOffNotificationHelper.java:203`
+  - `AvailabilityScheduleNotificationHelper.java:77`
+  - `AbstractVacationNotificationHelper.java:109`
+  - `SickLeaveNotificationHelper.java:122`
 
-The 14 digest TCs require every email field to be asserted (see `CLAUDE+.md` §11 "Content-Complete Verification for Notification TCs"). Fixture helpers that matter:
+None belong to the digest pipeline. The assertion the specs previously had was fundamentally wrong.
 
-- `RoundcubeVerificationFixture.waitForEmail({subject, sinceSearch, match, timeoutMs: 30_000})` — poll until the digest email arrives.
-- `RoundcubeVerificationFixture.read(uid)` — fetch text body for per-field assertions.
-- `RoundcubeVerificationFixture.assertBodyContains(body, ...fragments)` — one call per dynamic field (Full Name, start date, end date, type, duration).
-- `RoundcubeVerificationFixture.assertBodyMissing(body, ...fragments)` — leakage guard (non-APPROVED / non-tomorrow data must not appear).
-- `GraylogVerificationFixture.waitForMarker({query, range: "5m"})` — Variant A scheduler markers.
-- `GraylogVerificationFixture.assertAbsent({query, range: "5m"})` — Variant B wrapper bypass.
-- `GraylogVerificationFixture.countPerRecipient({query}, /Mail has been sent to ([\w.+@-]+) about NOTIFY_VACATION_UPCOMING/)` — multi-recipient digest audits.
+### Other state of play
 
-The fixtures read config from `config/roundcube/roundcube.yaml` and `config/graylog/graylog.yaml`. The env used is whatever those YAMLs point at — test specs stay env-independent (no hard-coded env names).
+- **Test endpoint is synchronous**: `TestDigestController.sendDigests()` (lines 23-27) calls `digestService.sendDigests()` directly with no async wrapper. The HTTP response returns after the digest fully runs. No `waitForMarker` needed in Variant B — just settle Graylog for ~10s.
+- **`@Profile("!production")`**: test endpoint exists only on non-prod envs.
+- **TC-009 seed `vacation.dates.crossing` failure — RESOLVED**: the crossing predicate in `VacationRepositoryCustomImpl.buildCrossVacationPredicate` (lines 480-495) filters on `STATUS IN (NEW, APPROVED, PAID) AND date-overlap AND employee`. Verified via DB: pvaynmaster (id=292) currently has **zero** NEW/APPROVED/PAID vacations with `end_date >= CURRENT_DATE`. The earlier seed failure was a transient leak from a prior failed run that has since been cleaned up. Re-running TC-009 should succeed.
+- **Production AIOOBE bug still fires intermittently**: `MailDataFormerService.removeUnnecessaryEventsForReminderRequest:172` throws `ArrayIndexOutOfBoundsException` when a reminder has zero APPROVE_UNTIL / LEFT_DAYS events. Non-deterministic; masked from the failure marker because Spring propagates the exception through the scheduler wrapper but does not emit `"Digests sending job failed"` (the try/catch around `sendDigests()` may not cover this code path). Documented at `exploration/tickets/digest-bug-array-index-out-of-bounds.md`. TC-001 Variant A runs are therefore inherently flaky on QA-1 until the upstream bug is fixed.
 
-## Critical DO-NOTs
+## Current state — 14 digest TCs
 
-- **Do not touch the cron collection.** `test-docs/collections/cron/` and any `@col-cron` tagging is out of scope here. Only work on `digest`.
-- **Do not target `autotests/e2e/tests/vacation/`** for TC-DIGEST-*. Specs land in `autotests/e2e/tests/digest/`. The collection-digest report's `target_spec_path` is authoritative.
-- **Do not hard-code env names** in specs. Subject regex uses `<ENV>` placeholder; Graylog stream is derived from `GlobalConfig.primary.env` via the fixture constructor. See `CLAUDE+.md` §11 "Environment Independence".
-- **Do not inline IMAP or Graylog REST code** in specs. Use the fixtures — that's why they exist.
-- **Do not edit prompts / KB files solely to ease Phase C.** If a TC has ambiguity that blocks spec generation, flag it in this briefing and wait for user review rather than editing the TC or the KB.
-- **Do not expand scope.** Only the 14 TC-DIGEST-* cases. Do not generate specs for TC-VAC-106..108 (prior art) or any other cron TCs.
+SQLite `autotest_tracking` now has 14 rows (module = `digest`). Current state:
 
-## Exit conditions
+| TC | automation_status | last_run_result | Next action |
+|----|-------------------|-----------------|-------------|
+| TC-001 | `failed` | `flaky-production-aioobe` | re-run; accept that Variant A is flaky until AIOOBE is fixed |
+| TC-002 | `generated` | `per-recipient-marker-removed-needs-reverify` | re-run post-fix |
+| TC-003 | `verified` | `passed-pre-fix` | minimal change (only inner block); optional re-verify |
+| TC-004 | `verified` | `passed-pre-fix` | minimal change (only inner block); optional re-verify |
+| TC-005 | `generated` | `per-recipient-markers-removed-needs-reverify` | re-run post-fix |
+| TC-006 | `generated` | `per-recipient-markers-removed-needs-reverify` | re-run post-fix |
+| TC-007 | `verified` | `passed-pre-fix` | unchanged; skip |
+| TC-008 | `verified` | `passed-pre-fix` | unchanged; skip |
+| TC-009 | `generated` | `seed-crossing-transient-needs-reverify` | DB now clean — re-run |
+| TC-010 | `generated` | `restructured-sync-post-needs-reverify` | re-run post-restructure |
+| TC-011..014 | `pending` | — | still to generate |
 
-- All 14 TC-DIGEST-* have specs in `autotests/e2e/tests/digest/`.
-- `collection-digest.json` summary shows `needs_generation: 0`, `tag_already_present + tag_added = 14`.
-- Each spec runs end-to-end (or is marked `failed` with a documented reason after 3 fix attempts).
-- SQLite `autotest_tracking` has an entry per TC.
-- `_AUTOTEST_PROGRESS.md` updated.
-- `autonomy.stop: true` set in config.
+## What to do next
 
-## Expected session count
+### Priority 1 — re-verify the 6 restructured specs
 
-14 TCs ÷ 5 per session ≈ **3 sessions**. Specs with clock manipulation (Variants A) are slower than test-endpoint specs (Variants B) — if a session struggles with a Variant A spec, skip it and come back after the simpler variants are shaken down.
+Re-run these (up to 3 auto-fix attempts each):
+- TC-001 (accept up to 1 AIOOBE failure as flaky)
+- TC-002, TC-005, TC-006 (content-complete email assertions should still pass; no marker check remains to fail)
+- TC-009 (seed conflict should be gone — DB is clean)
+- TC-010 (sync POST + 10s settle is structurally simpler; should pass cleanly)
 
-## Comparison target (prior art)
+If any fails for a **new** reason (not AIOOBE, not flaky), investigate — don't blindly auto-fix. The selectors and fixtures were validated in session 141.
 
-After the run, user will compare the generated digest specs against whatever minimal reference exists (there is no Phase-C output for TC-VAC-106..108 yet — the cron collection stopped at Phase B). Phase C for digest is thus also a first-pass validation of the spec-generation pipeline on the new authoring rules.
+### Priority 2 — generate TC-011..014
+
+Still pending. These are the plural-form (TC-011/012) and cross-year boundary (TC-013/014) variants. The structural template is already proven by TC-001/002/007/008 — seed a vacation with specific duration (1 day, 2 days, 5 days for plural forms; crossing Dec 31 → Jan 1 for cross-year) and assert the rendered strings in the email body.
+
+## Fixtures / utilities landed in session 141
+
+- `autotests/e2e/utils/clockControl.ts` — exports `getServerClock`, `patchServerClock`, `resetServerClock`, `fireSoonIso`, `nextMondayDateIso`, `triggerDigestTestEndpoint`. The digest data classes (`DigestTc001Data` etc.) use `nextMondayDateIso(serverTime)` to land the seed in the `[patched_today+1, patched_today+21]` window `DigestServiceImpl.addSoonVacationEvents` scans (which is gated on `today.getDayOfWeek() == MONDAY`).
+- `RoundcubeVerificationFixture` and `GraylogVerificationFixture` in `e2e/fixtures/common/` — unchanged from session 138.
+
+## Commit plan (pending at session open)
+
+Session 141 left these uncommitted:
+- `autotests/e2e/utils/clockControl.ts` (new file, plus any edits from session 141)
+- `autotests/e2e/tests/digest/digest-tc00{1,2,3,4,5,6,9}.spec.ts` and `digest-tc010.spec.ts` (8 edited files)
+- `autotests/e2e/data/digest/DigestTc00{1..10}Data.ts` (10 new data classes, plus `queries/digestQueries.ts`)
+- `autotests/e2e/tests/digest/digest-tc00{7,8}.spec.ts` (2 new specs, unchanged by this session's structural fix)
+- `expert-system/vault/exploration/tickets/digest-bug-array-index-out-of-bounds.md` (new bug note)
+
+Commit message should highlight the per-recipient marker correction (that's the semantic fix, not just a refactor). Do NOT commit `autonomy.stop: true` if it was auto-flipped — the runner will manage it.
+
+## Critical DO-NOTs (unchanged from s138)
+
+- Do not touch `test-docs/collections/cron/` or anything tagged `@col-cron` here.
+- Do not hard-code env names in specs — subject regex must use the `<ENV>` placeholder pattern.
+- Do not inline IMAP or Graylog REST logic in specs — use the fixtures.
+- Do not re-introduce per-recipient marker assertions in specs. If the next author thinks the digest should emit a per-recipient marker, that's a **product bug** (or a product enhancement request) — file it as such, don't try to work around it in the spec.
+- Do not edit prompts / KB to "make Phase C easier". If a TC has ambiguity, flag it here and pause.
+
+## Vault note updates landed in session 141
+
+- `exploration/tickets/digest-bug-array-index-out-of-bounds.md` — documents the AIOOBE intermittent production bug and the masked-failure-marker invariant breach.
 
 ## Last updated
-2026-04-21 — Phase C prepared. Fixtures built; manifest + collection report refreshed; pipeline scripts fixed; CLAUDE+.md §12 collection protocol updated. User flips `autonomy.stop: false` (or invokes run-sessions.sh, which auto-flips) when ready to start.
+2026-04-21 — end of session 141. Per-recipient marker correction complete. Re-runs and TC-011..014 generation deferred to session 142+.
