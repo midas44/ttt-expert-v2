@@ -13,15 +13,15 @@ projects:
     vault_root: pmt/
 primary_project: ttt
 session:
-  delay_minutes: 70
-  delay_minutes_offhours: 45
+  delay_minutes: 5
+  delay_minutes_offhours: 5
   offhours_utc: 15:00-03:00
   max_duration_minutes: 90
 phase:
   current: generation
   generation_allowed: true
   coverage_override: -1
-  scope: "3423"
+  scope: "collection:digest"
 thresholds:
   knowledge_coverage_target: 1.0
   note_quality_min_links: 2
@@ -65,7 +65,7 @@ autotest:
   target_env_pmt: preprod
   max_tests_per_session: 5
   auto_fix_attempts: 3
-  scope: collection:absences
+  scope: collection:digest
   priority_order:
   - vacation
   - sick-leave

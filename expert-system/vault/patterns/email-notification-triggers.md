@@ -130,3 +130,54 @@ These are event-driven (not cron), so they're out of t3423 scope but useful for 
 - **Row 4 has zero log markers**: `RejectNotificationServiceImpl.sendNotifications()` and `sendAndMarkNotified()` emit NO `log.info` / `log.debug` lines anywhere in the reject flow. Graylog cannot be used as an assertion channel for row 4. DB assertion vector: `UPDATE reject SET executor_notified = true` — tests must poll `reject.executor_notified` or rely on email arrival alone.
 - **Row 5 has success-only marker**: `BudgetServiceImpl.sendNotifications()` emits `Budget notification job is done` on success and `Budget notification send FAILED:` on exception; no per-email marker at the service level. Per-email delivery markers come from `SendEmailListener` / `EmailBatchService` in the `ttt-email` application.
 - **Row 15 scheduler-wrapper bypass**: `AnnualProductionCalendarTask.runFirst()` (scheduled bean) emits `Starting AnnualProductionCalendarTask for 1st october...` BUT the test endpoint `POST /v1/test/production-calendars/send-first-reminder` calls `productionCalendarService.runFirst()` DIRECTLY, bypassing the scheduler wrapper. Tests using the test endpoint will NOT see the "Starting AnnualProductionCalendarTask" marker — they must assert on `Mail has been sent to <email> about NOTIFY_VACATION_CALENDAR_NEXT_YEAR_FIRST` markers (one per recipient, emitted by the vacation-service mail dispatcher). Also note: the log text says "1st october" but the cron actually fires 1st November (see [[EXT-cron-jobs]] row 15 delta).
+
+## Test authoring rules for notification TCs
+
+These are normative for any TC that asserts an email notification, cron or event-driven. Generators must apply them to every TC in their output, not just to a subset. Referenced by `CLAUDE.md` § "Test-doc authoring principles" and `CLAUDE+.md` §11 "Content-Complete Verification for Notification TCs".
+
+### Environment independence
+
+TCs never name specific envs. Use `[<ENV>][TTT]` / `[<ENV>]ТТТ` in subject patterns and `TTT-<ENV>` for Graylog streams. Env names (`QA1`, `TIMEMACHINE`, `STAGE`, `DEV`, `PREPROD`, `QA2`) are evidence in this note, **not** literals to paste into TCs. Where evidence references a specific env, TCs generalize to `<ENV>`. The executor substitutes the active env at run time.
+
+### Dual-trigger for cron-delivered notifications
+
+Every behavioral TC whose notification is emitted by a `@Scheduled` job (rows 1, 2, 3, 4, 5, 14, 15) exists in two variants:
+
+- **Variant A — Scheduler trigger**: advance the server clock via `PATCH /api/ttt/test/v1/clock` (or the service-specific test-clock endpoint) to just before the job's cron fire time; wait 10–60 s for the `@Scheduled` wrapper to run. Asserts the real scheduler pipeline (wrapper markers, ShedLock, feature-toggle gating).
+- **Variant B — Test endpoint bypass**: `POST /api/<service>/v1/test/<endpoint>` that invokes the job method directly. Asserts the job logic in isolation; scheduler-wrapper markers may be absent (see row-15 bypass above). Use per-recipient mail-sent markers instead.
+
+Pair them consecutively (e.g. TC-DIGEST-001 scheduler variant, TC-DIGEST-002 test-endpoint variant) so reviewers see the two paths side-by-side. Expected-result cells must document which markers fire in which variant.
+
+### Content-complete assertion
+
+Subject-only assertions are insufficient. Each notification TC must assert every field the email template renders. For each template family:
+
+- **Envelope** — sender address (always `timereporting@noveogroup.com` for TTT ecosystem; reference by config key rather than literal where possible), recipient, timestamp bounded to the post-trigger window (≤ 30 s including email-service dispatch loop).
+- **Subject pattern** — env-independent regex (see table §87 above).
+- **Body sections** — enumerate every template section and assert presence.
+- **Body data** — every dynamic substitution (names, dates, counts, durations, types). Assert exact values against the seed.
+- **Formatting** — date format per locale (Cyrillic-envelope digest uses `DD.MM.YYYY`), plural forms, list separators.
+- **Negative** — data from unrelated records must NOT appear (privacy regression guard).
+
+### Digest template (Row 14) — content schema
+
+The `DIGEST` template (vacation-service, `DigestScheduler.sendDigests`) delivers a per-recipient aggregated summary of absences among employees relevant to the receiver. Exact body fields (from code + live samples; confirm against `expert-system/repos/project/vacation/src/main/resources/templates/digest.ftl` or the post-render payload before TC authoring):
+
+| Field | Source | Example (en locale) | Example (ru locale) |
+|---|---|---|---|
+| Greeting | recipient `display_name` | `Hello, <Name>` | `Здравствуйте, <Имя>` |
+| Period statement | tomorrow's date | `The following absences are scheduled for 22.04.2026` | `Запланированы следующие отсутствия на 22.04.2026` |
+| Per-employee block | each APPROVED vacation starting tomorrow | `<Full Name>: <start>–<end>, <type>, <days> day(s)` | `<ФИО>: <начало>–<конец>, <тип>, <N> дн.` |
+| Absence type | vacation type constant mapped to locale string | `Regular / Sick leave / Day off` | `Очередной / Больничный / Отгул` |
+| Duration | `(end_date - start_date) + 1` working days | `5 days` (plural-aware) | `5 дней` / `1 день` / `3 дня` |
+| Closing | template footer | `— TTT system` | `— Система ТТТ` |
+
+**Mandatory assertions per digest TC** (both variants):
+- Envelope — sender config key, recipient login, timestamp window.
+- Subject — regex `/^\[<ENV>\]ТТТ Дайджест отсутствий$/` (note Cyrillic ТТТ + no bracket around service tag).
+- Body — greeting with correct display_name; period statement with correct tomorrow's date; one per-employee block per APPROVED vacation in seed (assert each Full Name, start date, end date, absence type, duration); no blocks for non-APPROVED vacations or vacations starting on other days.
+- Negative — no employee whose vacation starts today or day-after-tomorrow appears; no employee with REJECTED / CANCELLED vacations appears; data from employees in a different org-scope (if scoping applies) does not appear.
+
+### Format-only TCs
+
+At least one TC per notification family asserts formatting independently of data: plural-form edge cases (`1 day` vs `2 days` vs `5 days`), date-format edge cases (cross-year boundary, leap-year 29-Feb), long-name rendering (no truncation).

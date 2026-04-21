@@ -400,6 +400,39 @@ Scope: force-trigger + live-sample rows 3, 4, 5, 8, 15. Endpoints fired at 19:21
 
 **Live verification (session 132, 19:27 UTC)**: continuous stream of `sendEmails: started` / `sendEmails: finished, sent N emails` pairs every 20 seconds. During row 15 firing, one pair caught `sent 2 emails` — those are the two prod-calendar reminders dispatched to chief accountants.
 
+### Row 14 — DigestScheduler (`sendDigests`)
+
+**Test endpoint**: `POST /api/vacation/v1/test/digest` (file `TestDigestController.java` in vacation service). **Scope-table delta**: the ticket scope table says `POST /api/vacation/v1/test/vacations/notify` — that path does not exist on `release/2.1`; authoring TCs against it will 404.
+
+**Scheduler bean**: `DigestScheduler.sendDigests()`:
+- Cron: `${digest.cron}` = `"0 0 8 * * ?"` (daily 08:00 Asia/Novosibirsk).
+- Log markers at scheduler level: `"Digests sending job started"` → `"Digests sending job finished"` (both INFO); error path: `"Digests sending job failed, reason: {}"` (ERROR).
+- ShedLock name: `DigestScheduler.sendDigests`.
+
+**Scheduler-wrapper bypass delta**: the test REST endpoint (`TestDigestController.sendDigests`) calls `digestService.sendDigests()` DIRECTLY, bypassing the `@Scheduled` wrapper. Consequences:
+- The scheduler-level `"Digests sending job started/finished"` markers are **NOT** emitted when TCs trigger via the endpoint.
+- TCs using the test endpoint must assert on the per-recipient mail-dispatch markers from the vacation-service mail dispatcher: `"Mail has been sent to {email} about NOTIFY_VACATION_UPCOMING for vacation id = {id}"` (logger under `ttt-vacation` application).
+- Dual-trigger authoring is therefore mandatory: Variant A (clock-advance to just before 08:00, wait for the `@Scheduled` wrapper) produces the scheduler markers; Variant B (test endpoint) produces only the per-recipient markers. See [[patterns/email-notification-triggers]] § "Dual-trigger for cron-delivered notifications".
+
+**Template**: `DIGEST` (vacation-service template key). Subject is anomalous — uses Cyrillic `ТТТ` service tag with **no brackets**, unlike every other notification template: `[<ENV>]ТТТ Дайджест отсутствий`. See [[patterns/email-notification-triggers]] § "Per-template subject predicates" row 14 for the exact regex.
+
+**Query semantics** (`VacationService.findVacationsForDigest`): the job selects `Vacation` rows where `status = APPROVED` and `start_date = CURRENT_DATE + INTERVAL '1 day'` (tomorrow). PENDING, REJECTED, CANCELLED vacations are excluded. Vacations whose start_date is today or day-after-tomorrow are excluded. Grouping: one email per recipient (managers, teammates, and/or HR per the recipient-resolution rule in `DigestRecipientResolver`).
+
+**Template body (per-recipient)** — this is the authoritative content schema for Row 14 TCs (confirm against `expert-system/repos/project/vacation/src/main/resources/templates/digest.ftl` before finalizing TCs):
+
+| Section | Source field | Dynamic substitution |
+|---|---|---|
+| Greeting | `recipient.display_name` | Russian Full Name of recipient |
+| Period statement | tomorrow's date | formatted as `DD.MM.YYYY` (Cyrillic locale) |
+| Per-employee block (one per APPROVED vacation) | `vacation.employee.full_name`, `vacation.start_date`, `vacation.end_date`, `vacation.type`, `(end_date - start_date + 1)` | Full Name, start date, end date, type localized (Очередной / Больничный / Отгул), duration with plural form (день / дня / дней) |
+| Closing | static footer | "— Система ТТТ" or equivalent |
+
+**Dual-trigger TC requirement**: every behavioral Row 14 TC has A and B variants. Expected-Result cells must state which markers fire in each variant and must assert the full content schema above regardless of variant.
+
+**Env independence**: Row 14 TCs never name `qa-1` / `timemachine` / `stage`. Subject pattern is `/^\[<ENV>\]ТТТ Дайджест отсутствий$/`; Graylog stream is `TTT-<ENV>`; the executor substitutes the active env.
+
+**Live verification history**: not live-triggered during sessions 129–138 of the t3423 run (the run authored TCs but did not force-fire row 14 on a seeded dataset). A future run that lands Phase C fixtures should force-trigger once on a seeded dataset and save the resulting `.eml` to `artifacts/roundcube/` for template-change-detection evidence.
+
 ### Row 15 — AnnualProductionCalendarTask first-reminder (`runFirst`)
 
 **Test endpoint**: `POST /api/vacation/v1/test/production-calendars/send-first-reminder` (file `TestProductionCalendarController.java` in vacation service).

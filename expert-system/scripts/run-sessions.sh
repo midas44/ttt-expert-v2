@@ -745,6 +745,16 @@ main() {
     # Persist runner log to file
     exec > >(tee -a "$LOG_DIR/runner.log") 2>&1
 
+    # Auto-flip autonomy.stop on startup (skip in dry-run — no config mutation).
+    # Rationale: invoking this script IS the opt-in to unblock. The Phase-C auto-stop
+    # and the post-exit belt-and-suspenders both set stop:true; this unwinds that so
+    # a subsequent invocation runs without manual config edits.
+    if ! $DRY_RUN && [[ "$STOP" == "True" ]]; then
+        log "autonomy.stop is true — auto-flipping to false (startup opt-in)"
+        sed -i 's/^  stop: true/  stop: false/' "$CONFIG_FILE"
+        parse_config  # re-read so $STOP reflects the flip
+    fi
+
     local session_num
     session_num=$(( $(get_state_field "session_number") + 1 ))
 
@@ -900,6 +910,14 @@ print(sum(1 for x in s['sessions'] if x.get('phase') == 'autotest_generation'))
     fi
 
     notify_completion "$stop_reason"
+
+    # Belt-and-suspenders: always set stop:true on exit (skip in dry-run).
+    # Paired with the startup auto-flip above — next invocation unblocks automatically.
+    # Idempotent: the sed is a no-op if stop is already true.
+    if ! $DRY_RUN; then
+        sed -i 's/^  stop: false/  stop: true/' "$CONFIG_FILE"
+        log "autonomy.stop set to true (post-exit guard)"
+    fi
 }
 
 main

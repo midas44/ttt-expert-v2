@@ -689,10 +689,34 @@ test-docs/
 - Feature Matrix: each feature row hyperlinks to its corresponding TS- tab
 - Each TS- tab row 1: back-link to Plan Overview (`=HYPERLINK("#'Plan Overview'!A1", "← Back to Plan")`)
 
-**Formatting:**
-- Arial font, headers with auto-filters, column widths set, alternating row colors
-- Hyperlinks styled as blue underlined text
-- Tab colors: green for plan tabs, blue for TS- tabs
+**Formatting (MANDATORY — human readability is a hard requirement):**
+
+Test-case cells (Preconditions, Steps, Expected Result, Notes) routinely carry multi-line content. Readers open these workbooks in Google Sheets, Excel, or LibreOffice — the cells must render legibly without manual reformatting. Generators that write single-line, truncated, or unwrapped cells are defective.
+
+- **Wrap-text ON** for every cell that carries prose: Preconditions, Steps, Expected Result, Notes, Inclusion Reason, Title (when >60 chars). Use `cell.alignment = Alignment(wrap_text=True, vertical="top")` in openpyxl.
+- **Multi-line content** — break Steps into one numbered step per line using `\n` inside the cell value (openpyxl preserves these). Do NOT pack "SETUP: … 1. … 2. … 3. …" onto one physical line separated by periods.
+- **Column widths** — set explicitly per column. Baseline for test-case sheets:
+
+  | Column | Min width | Why |
+  |---|---:|---|
+  | Test ID | 14 | Fits `TC-DIGEST-NNN` without truncation |
+  | Title | 48 | Titles commonly run 40–60 chars |
+  | Preconditions | 52 | Multi-line state + queries |
+  | Steps | 64 | Multi-line numbered actions |
+  | Expected Result | 52 | Multi-line assertions |
+  | Priority | 12 | Critical/High/Medium/Low |
+  | Type | 12 | UI/Hybrid/API |
+  | Requirement Ref | 24 | Ticket + vault-note refs |
+  | Notes | 40 | Free-form context |
+
+  Adjust upward for a specific TC family if its content is consistently longer. Do NOT set narrower than baseline.
+- **Row height** — auto-accommodate content. Explicitly set `ws.row_dimensions[r].height = max(18, 15 * line_count)` (≈ 15 px per line) when writing a row, or set `None` so Excel auto-sizes on first open. Never leave header-height rows around multi-line cells — they truncate visually.
+- **Vertical alignment `top`** on all body rows so multi-line cells grow downward, not center-clipped.
+- **Header row** — Arial 11 bold, fill color `#305496`, font color white, horizontal center, frozen (`ws.freeze_panes = "A2"`), auto-filter enabled across the full header range.
+- **Alternating row fill** — optional, light grey (`#F2F2F2`) on even data rows for readability on long suites.
+- **Hyperlinks** — styled as blue underlined text; use `=HYPERLINK("#'<sheet>'!A1", "<label>")` formula cells.
+- **Tab colors** — green (`#92D050`) for plan tabs, blue (`#B4C7E7`) for regular TS- tabs, orange (`#F4B084`) for cron/scheduled-job TS- tabs, any other domain-specific convention documented in the relevant collection's test-plan.
+- **Before saving** — iterate every cell in every TS- sheet and assert `cell.alignment.wrap_text is True` for prose columns; fail the generator run if a row slips through unwrapped. This is cheap insurance against future regressions.
 
 ### Test Step Writing Rules — UI-First (CRITICAL)
 
@@ -784,6 +808,54 @@ WRONG — Cancel APPROVED vacation:
 8. The Notes column can reference API endpoints and DB tables for the automation layer, but main steps must remain UI-focused
 
 **Pure API test suites** — If a module has endpoints with no UI representation (service integration APIs, webhooks), create a separate suite prefixed `TS-<Area>-API` for those cases only. These are the exception, not the default.
+
+### Environment Independence (CRITICAL)
+
+Test documentation must be **independent of any specific test environment**. Any configured env (qa-1, timemachine, stage, or a future 4th env) must be able to run the same TC without edits. This rule applies to every TC, every precondition, every step, every expected-result cell.
+
+- **Do not name specific environments** in prose or command examples. Replace `qa-1`, `timemachine`, `stage`, `preprod`, `dev` with phrasings like "the configured test environment", "any configured test env", or a literal placeholder `<ENV>` where a token is needed.
+- **Graylog streams** — use `TTT-<ENV>` (or `the configured environment's Graylog stream`) instead of `TTT-QA-1`, `TTT-TIMEMACHINE`, etc. The runtime (or executor) substitutes the active env.
+- **Roundcube subject prefixes** — use `[<ENV>][TTT]` instead of `[QA1][TTT]`, `[TIMEMACHINE][TTT]`, etc. When asserting the prefix, assert the pattern `^\[[A-Z]+\]\[TTT\]` rather than a literal string (or use case-insensitive Cyrillic-tolerant regex when evidence shows Cyrillic variants).
+- **URLs, hosts, credentials** — reference by config key, not literal value (e.g., `config/ttt/envs/<env>.yml → api.base_url`, not `https://ttt-qa-1.noveogroup.com`).
+- **Env-specific constraints** — when a TC genuinely can only run on a subset of envs (e.g. startup-only jobs that require a CI restart), state the constraint as a capability (`requires CI restart permission`, `requires a feature toggle flipped`), not as an env name.
+- **Exception** — when a vault note documents an observed per-env difference (e.g., "on Cyrillic-locale envs the subject localizes"), the note may reference envs by name as evidence. But the TC derived from that note must still be env-independent: the TC asserts the pattern, not the literal.
+
+Generator validators should grep the output XLSX for literal `qa-1`, `qa1`, `timemachine`, `stage`, `preprod` tokens (case-insensitive) in any TS- sheet cell; every hit is a defect unless the cell is explicitly documenting an env-specific capability.
+
+### Cron-Job TCs — Dual-Trigger Principle (CRITICAL)
+
+Every behavioral test case for a `@Scheduled` cron job must exist in **two variants** — one for each firing path:
+
+| Variant | Trigger | What it exercises |
+|---|---|---|
+| **A. Scheduler variant** | Server clock advance to just before the job's fire time (e.g. `PATCH /api/ttt/test/v1/clock` to 07:59:55 for a daily 08:00 job); wait 10–60 s for the `@Scheduled` wrapper to run | The real scheduler pipeline: `@Scheduled` annotation, ShedLock acquire/release, scheduler start/finish log markers, feature-toggle gating, any AOP or wrapper around the job method |
+| **B. Test-endpoint variant** | `POST /api/<service>/v1/test/<endpoint>` that directly invokes the job method | The job logic in isolation, bypassing the scheduler wrapper. Catches behavior that exists in the method body but is controlled by the wrapper (marker emission, lock contention, async settlement) |
+
+Pair every behavioral TC: if TC-N covers "happy path" via scheduler, TC-N+1 covers the same scenario via test endpoint. Do not skip either variant; they catch different classes of regressions.
+
+- **Preconditions** — same seed for both variants (same DB fixture, same feature-toggle state).
+- **Expected Result** — the *business outcome* must match (same emails, same DB effects). Scheduler-side markers (start/finish) may differ between variants — document the delta explicitly.
+- **Notes column** — flag the variant: `Variant A (scheduler, clock-advance trigger)` or `Variant B (test endpoint, scheduler bypass)`.
+- **Exception** — for NOT_IMPLEMENTED dead-config jobs (single no-op stub TC confirms endpoint returns success), the dual-variant requirement is waived; one TC is sufficient.
+
+When both variants would produce identical observable behavior *and* the job is trivial (e.g., pure DB cleanup with no external side-effects), a single TC is acceptable if its Notes explicitly state "Variants A and B collapse — job has no scheduler-wrapper divergence". Otherwise, author both.
+
+### Content-Complete Verification for Notification TCs
+
+Every TC that asserts a notification email (digest, forgot-to-report, approval, etc.) must assert **every data field the email carries**, not just subject-line match. Subject-only assertions are insufficient regression coverage — the digest's value is in its content.
+
+For each email-notification TC, Expected Result must enumerate:
+
+- **Envelope** — sender address (exact or config-keyed), recipient address (exact login or match pattern), timestamp bounded to the post-trigger window.
+- **Subject** — env-independent pattern (e.g., `^\[<ENV>\]\[TTT\] Vacation digest for \d{4}-\d{2}-\d{2}$`), plus any dynamic fields (date, count) asserted by pattern.
+- **Body structure** — every section the email template renders (greeting, per-employee block, footer, unsubscribe link if present). State "contains section X" for each.
+- **Body data** — every dynamic value the template substitutes. For a digest email with employee-vacation data, assert each of: employee full name, start date, end date, vacation type (Regular/SickLeave/DayOff), duration in days. For counts/totals, assert the numeric value matches the seed.
+- **Formatting** — locale-formatted dates (e.g., `DD.MM.YYYY` vs `YYYY-MM-DD`), plural forms (1 day vs 2 days), list-separator consistency. If the template supports multiple locales, the TC must cover at least one non-English case or explicitly note the locale is out of scope.
+- **Absence of leaked data** — assert data from *other* employees / *other* APPROVED vacations does not appear. Negative assertion is as valuable as positive.
+
+When full HTML parsing is overkill (small templates), a "contains every X" assertion set is acceptable; but the number of asserted fields should match the number of dynamic values the template actually renders. TCs that assert only 1–2 fields for a 10-field template are under-specified.
+
+The digest collection (`test-docs/collections/digest/`) is the canonical exemplar of this rule.
 
 ### Generation Order
 

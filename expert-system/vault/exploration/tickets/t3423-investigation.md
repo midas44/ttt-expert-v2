@@ -51,6 +51,24 @@ Test IDs and suite naming follow the **collection** pattern (mirror `test-docs/c
 
 If a Phase B session starts creating `test-docs/t3423/`, **stop** — that is the default ticket-scope output path and is wrong for this ticket. Emit to `test-docs/collections/cron/` instead.
 
+### Post-t3423 authoring rules (2026-04-21, for the `digest` sub-scope)
+
+After the cron collection landed, review surfaced four shortcomings in the generated TCs. These rules apply to any **future** session generating cron TCs (including the narrow `digest` stress-test collection at `test-docs/collections/digest/`) — they are captured in full at:
+
+- `CLAUDE.md` § "Test-doc authoring principles"
+- `CLAUDE+.md` §11 — expanded XLSX formatting, "Environment Independence", "Cron-Job TCs — Dual-Trigger Principle", "Content-Complete Verification for Notification TCs"
+- `expert-system/vault/patterns/email-notification-triggers.md` § "Test authoring rules for notification TCs" (includes the digest content schema)
+- `expert-system/vault/external/EXT-cron-jobs.md` § "Row 14 — DigestScheduler" (deep-dive added 2026-04-21)
+
+Summary of the four rules:
+
+1. **UI-first verification** — primary steps are browser actions; API/DB reserved for SETUP / CLEANUP / DB-CHECK / test-clock. Exception: content-assertion-heavy notification flows (digest) may be backend-only if every field is asserted.
+2. **Environment independence** — TCs use `<ENV>` placeholders; no `qa-1` / `timemachine` / `stage` literals.
+3. **Dual-trigger for cron TCs** — each behavioral TC exists in two variants: clock-advance + `@Scheduled` wrapper, and test-endpoint bypass.
+4. **Content-complete verification for notifications** — assert every dynamic field the email template renders, not just subject.
+
+The landed cron TCs (sessions 131–138) predate these rules and are **not** being retrofitted. The `cron` collection stays as-is; the `digest` collection is the re-generation test bed for the updated rules.
+
 ## Scope — 23 cron & startup jobs
 
 All times are Asia/Novosibirsk (GMT+7). `E` = Roundcube email, `L` = Graylog log, `CS` / `PM` / `DB` = cross-system write.
