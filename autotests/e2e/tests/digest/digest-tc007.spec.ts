@@ -62,8 +62,8 @@ test("TC-DIGEST-007: Digest (scheduler) — subject format [<ENV>]ТТТ Дай�
       intervalMs: 10_000,
     });
 
-    const envUpper = tttConfig.env.toUpperCase();
-    const expectedSubject = `[${envUpper}]${CYRILLIC_TE}${CYRILLIC_TE}${CYRILLIC_TE} Дайджест отсутствий`;
+    const envTag = tttConfig.envTag;
+    const expectedSubject = `[${envTag}]${CYRILLIC_TE}${CYRILLIC_TE}${CYRILLIC_TE} Дайджест отсутствий`;
     const subject = msg.subject ?? "";
 
     expect(
@@ -71,10 +71,10 @@ test("TC-DIGEST-007: Digest (scheduler) — subject format [<ENV>]ТТТ Дай�
       `subject must be exactly '${expectedSubject}' (Cyrillic ТТТ, no inner brackets, no trailing data)`,
     ).toBe(expectedSubject);
 
-    const positivePattern = new RegExp(`^\\[${envUpper}\\]${CYRILLIC_TE}{3} Дайджест отсутствий$`);
+    const positivePattern = new RegExp(`^\\[${envTag}\\]${CYRILLIC_TE}{3} Дайджест отсутствий$`);
     roundcube.assertSubject(msg, positivePattern);
 
-    const latinBracketedPattern = new RegExp(`^\\[${envUpper}\\]\\[${LATIN_T}{3}\\] `);
+    const latinBracketedPattern = new RegExp(`^\\[${envTag}\\]\\[${LATIN_T}{3}\\] `);
     expect(
       latinBracketedPattern.test(subject),
       `subject must NOT match Latin bracketed pattern '[<ENV>][TTT] ' — digest is anomalous`,

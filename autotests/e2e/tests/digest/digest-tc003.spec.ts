@@ -35,8 +35,8 @@ test("TC-DIGEST-003: Digest (scheduler) — empty happy path completes cleanly @
   const graylog = new GraylogVerificationFixture(tttConfig.env);
   const data = await DigestTc003Data.create(tttConfig);
 
-  const envUpper = tttConfig.env.toUpperCase();
-  const digestSubject = `[${envUpper}]ТТТ Дайджест отсутствий`;
+  const envTag = tttConfig.envTag;
+  const digestSubject = `[${envTag}]ТТТ Дайджест отсутствий`;
   const baselineCount = roundcube.count({
     subject: digestSubject,
     since: new Date(Date.now() - 24 * 60 * 60 * 1000),

@@ -1,94 +1,114 @@
-# Session Briefing — Phase C, digest collection (session 143 close)
+# Session Briefing — Phase C, digest collection (session 144 close)
 
-**Last session close:** 143 (2026-04-22) — structural discovery session. TC-DIGEST-011/012/013/014 were previously drafted but never successfully run; session 143 ran them against qa-1, unearthed four root-cause defects in the digest-collection spec/fixture layer, fixed the tractable two, and flagged the two that need XLSX revision. All four TCs are now `failed` in `autotest_tracking` with specific reasons; do NOT "fix" the specs by matching current-template output — the XLSX itself needs review first.
+**Last session close:** 144 (2026-04-22). Session 143 flagged the digest XLSX as needing human review (4 TCs with invalid premise, 6 more with receiver-model defect) and recommended stopping. The autonomous runner continued into session 144; work was restricted to mechanical, uncontroversial changes endorsed by the s143 briefing's "If autonomy does continue" branch.
 
 Phase still `autotest_generation`, scope still `collection:digest`, autonomy mode `full`.
 
-## Session 143 findings — four root-cause defects in the digest test layer
+## What session 144 did
 
-### 1. `RoundcubeVerificationFixture.search` read the wrong JSON key (FIXED)
+### 1. Applied `tttConfig.envTag` across all 14 digest specs (mechanical find-replace)
 
-Python CLI returns `{items: [...]}`, the fixture read `parsed.messages ?? []` → every `waitForEmail` timed out with "0 candidates" even when matching messages existed. Fix landed in this session — fixture now reads `parsed.items`. This alone unblocks the match/subject-regex path for every digest TC.
+Every digest spec used `tttConfig.env.toUpperCase()` → `QA-1` for the subject prefix. The real backend emits `[QA1]` (dashes stripped). Session 143 added the `envTag` getter; session 144 plumbed it through to every spec. Verified with `tsc --noEmit` — compiles cleanly. Specs changed: `digest-tc001..014.spec.ts` (10 of 14 had the variable; TC-009/010 didn't reference it).
 
-Implication for prior tracking: TC-DIGEST-007 / 008 "verified | passed-pre-fix" status is **suspect** — those specs call `waitForEmail` which returned 0 candidates, so they could not have asserted their subject patterns. Re-run in a future session to confirm/invalidate.
+### 2. Fixed `RoundcubeVerificationFixture.count()` — pre-existing bug exposed during TC-004 re-run
 
-### 2. `RoundcubeVerificationFixture.read` returned raw `{text, html}`, specs read `text_body` / `html_body` (FIXED)
+The `count()` method passed `--subject` / `--since` filters to the CLI's `count` subcommand, which accepts only `--mailbox`. Every TC that calls `count()` (TC-003 / 004 and any future baseline-diff TC) would fail with `unrecognized arguments: --subject ...`.
 
-Resulting type-level JSON shape mismatch: `body.text_body` was always `undefined` → every `assertBodyContains` treated the body as empty string. Additionally the DIGEST template is HTML-only (plain-text part `text` is 0 chars) — so even normalising the keys is insufficient; the fixture now always requests `--include-html` and falls back to a tag-stripped view of the HTML when `text` is empty, so content assertions work against HTML-only templates.
+Fix: route `count()` through `search --limit 1` and read `total` from the response. The CLI's `search.total` field is the full IMAP SEARCH match count regardless of per-call item limit. Same return contract, no behavioral change for callers.
 
-### 3. Subject env-tag mismatch — `QA1` vs `QA-1` (FIXED via `TttConfig.envTag`)
+Location: `autotests/e2e/fixtures/common/RoundcubeVerificationFixture.ts:87-100`.
 
-TTT backend prefixes notification subjects with `[QA1]` (dash stripped), but specs used `tttConfig.env.toUpperCase()` → `QA-1`. Added `TttConfig.envTag` getter returning `env.replace(/-/g, "").toUpperCase()`. Specs currently still reference `tttConfig.env.toUpperCase()` — consuming this helper is a small follow-up for each spec (not done this session to avoid changing spec bodies we're declaring broken).
+### 3. Re-ran TC-003 / 004 / 007 / 008 to re-confirm "verified pre-fix" status
 
-### 4. XLSX premise errors on four TCs (NOT fixed — needs human review)
+| TC | Result | Duration | Notes |
+|----|--------|----------|-------|
+| TC-003 (scheduler empty) | ✓ passed | 2.9m | Graylog marker audit + envTag-corrected baseline count |
+| TC-004 (test-endpoint empty) | ✓ passed | 41.5s | Graylog `assertAbsent` + count via `search --limit 1` |
+| TC-007 (scheduler subject) | ✓ passed | 2.9m | waitForEmail matched on pvaynmaster (scheduler reliably produces digest to managers on patched-Monday clock) |
+| TC-008 (test-endpoint subject) | ✗ failed (2× 4-min timeout) | 8m total | **Same receiver-model defect** as TC-001/002/005/006/009/010 — test endpoint on real-Wed clock did not produce a digest to pvaynmaster in the 4-min window (his direct reports had no APPROVED-soon vacations to trigger his receipt). Demoted `verified → failed` in SQLite. |
 
-Running TC-011 with fixes #1–3 in place surfaced deeper problems that make the XLSX-as-written untestable. Full analysis in `exploration/tickets/digest-template-reality-session-142.md`. Summary:
+### SQLite tracking after session 144
 
-**TC-DIGEST-011 / 012 (plural-form edge cases):** XLSX expects `1 день` / `2 дня` / `5 дней` / `21 день`. The DIGEST template (row `ttt_email.email_template WHERE code='DIGEST'`) uses a single fixed pattern `дней: {{daysCount}}` in every branch (approveAction / optionalApproveAction / approve / optionalApprove / notifyAlso / soonAbsences / continuousAbsence). The Russian day-word never morphs — there is no plural-form code path to exercise. `daysCount` is also working-days (excludes weekends + holidays), not calendar days. **TC is untestable as specified.**
+| TC | automation_status | last_run_result |
+|----|-------------------|-----------------|
+| TC-001 | failed | flaky-production-aioobe |
+| TC-002 | generated | per-recipient-marker-removed-needs-reverify |
+| TC-003 | **verified** | passed-post-fix-session144-envTag-countFix |
+| TC-004 | **verified** | passed-post-fix-session144-envTag-countFix |
+| TC-005 | generated | per-recipient-markers-removed-needs-reverify |
+| TC-006 | generated | per-recipient-markers-removed-needs-reverify |
+| TC-007 | **verified** | passed-post-fix-session144-envTag-countFix |
+| TC-008 | **failed** ↓ | receiver-model-invalid-pvaynmaster-not-digest-recipient |
+| TC-009 | generated | seed-crossing-transient-needs-reverify |
+| TC-010 | generated | restructured-sync-post-needs-reverify |
+| TC-011 | failed | xlsx-premise-invalid-digest-template-has-no-plural-forms |
+| TC-012 | failed | xlsx-premise-invalid-digest-template-has-no-plural-forms |
+| TC-013 | failed | needs-receiver-model-fix-employee-not-in-own-digest |
+| TC-014 | failed | needs-receiver-model-fix-employee-not-in-own-digest |
 
-**TC-DIGEST-013 / 014 (cross-year boundary):** Core premise (year rollover in `DateFormatter.formatDateMonthYear = dd.MM.yyyy`) is valid and exercises real code. But the spec's `waitForEmail({to: data.seedEmail})` uses `Pavel.Weinmeister@noveogroup.com` (the API-token owner we seed vacations for), and **the digest recipient model makes this impossible to match**: `DigestSoonEventReceiverHelper.getReceivers(employeeId)` returns `employee.manager + optionalApprovers(employee)` — the vacation employee themselves is NEVER a receiver of a digest about their own vacation. The digest we seed goes to `pvaynmaster.manager = ilnitsky@noveogroup.com` (id 65). Every other content-complete digest TC (TC-001 / 002 / 005 / 006) has the same structural flaw. Plus two ancillary issues: the template has no `"Здравствуйте, …"` greeting (opens with static `"Добрый день!"`), and the 2.6-year clock jump to 2028-12-31 disrupts everything concurrent on qa-1. **Premise valid, fail-shape invalid — needs a real XLSX revision, not a silent spec rewrite.**
+Net verified count: 3 (was 4 at s143 close — TC-008 demoted). Failed count: 6 (was 5).
 
-## State of the 14 digest TCs at session 143 close
+## Why TC-008 failed but TC-007 passed (diagnosis)
 
-| TC | automation_status | last_run_result | Action required |
-|----|-------------------|-----------------|-----------------|
-| TC-001 | failed | subject-envtag-QA-1-vs-QA1 (subject regex fails after fixture fix) | revise to use `envTag`; then fails on greeting (no `Здравствуйте`) — needs receiver-model revision |
-| TC-002 | generated | per-recipient-marker-removed-needs-reverify | same as TC-001 |
-| TC-003 | verified | passed-pre-fix | markers-only assertion — still works (no body check) |
-| TC-004 | verified | passed-pre-fix | markers-only assertion — still works |
-| TC-005 | generated | per-recipient-markers-removed-needs-reverify | same as TC-001 |
-| TC-006 | generated | per-recipient-markers-removed-needs-reverify | same as TC-001 |
-| TC-007 | verified | passed-pre-fix | subject-only; verified status **suspect** given fixture bug existed when "verified" was recorded. Re-run to confirm |
-| TC-008 | verified | passed-pre-fix | same suspicion as TC-007 |
-| TC-009 | generated | seed-crossing-transient-needs-reverify | same as TC-001 |
-| TC-010 | generated | restructured-sync-post-needs-reverify | same as TC-001 |
-| TC-011 | failed | xlsx-premise-invalid-digest-template-has-no-plural-forms | **XLSX must be revised** (rescope to `дней: N` or delete) |
-| TC-012 | failed | xlsx-premise-invalid-digest-template-has-no-plural-forms | **XLSX must be revised** |
-| TC-013 | failed | needs-receiver-model-fix-employee-not-in-own-digest | XLSX revision to reflect `to=manager.email` + remove `Здравствуйте` |
-| TC-014 | failed | needs-receiver-model-fix-employee-not-in-own-digest | XLSX revision |
+Both search pvaynmaster's mailbox with `waitForEmail({to: Pavel.Weinmeister@noveogroup.com, subject: "Дайджест отсутствий", sinceSearch: now})`.
 
-## What to do next session
+- **TC-007 (scheduler variant)** patches the server clock to `nextMonday 07:59:55` via `fireSoonIso`. The `@Scheduled` job at 08:00 runs `addSoonVacationEvents` which is gated on `today.getDayOfWeek() == MONDAY` and processes the full `[today+1, today+21]` window for every employee. On a shared env with many active vacations, every manager (including pvaynmaster) reliably receives a digest.
 
-### Priority 0 — stop; review the XLSX with a human before generating any more digest specs
+- **TC-008 (test-endpoint variant)** posts to `/api/vacation/v1/test/digest` on the **real** server clock (Wed 2026-04-22). Whatever window the test endpoint computes for a non-Monday day did not include any APPROVED-soon vacations among pvaynmaster's direct reports in the 4-min polling window — two attempts at 03:58 and 04:13 both returned 0 matching-new digests.
 
-The digest collection's authoring premises (receiver model + template content) are sufficiently wrong that generating more specs against the current XLSX is guaranteed-broken work. Recommend the next session pause on digest, flip `autonomy.stop: true`, and escalate:
+TC-008's passing condition is therefore not "envelope composition is correct" (what the TC claims to verify) but "pvaynmaster happens to be the manager of someone with an APPROVED-soon vacation in the non-Monday code path". That is non-deterministic on a shared env and day-of-week dependent. **The receiver-model flaw session 143 documented for TC-001/002/005/006/009/010/013/014 applies equally to TC-008.**
 
-- TC-011 / 012: should they be rewritten as "per-event block content-complete — assert `дней: N`" or deleted? Plural-form rendering may live in a different code path (vacation-approval individual-recipient emails?) — need Phase-B re-investigation.
-- TC-013 / 014: should they reference `pvaynmaster.manager.email` explicitly, or should the data-class resolver be generalised to `seedEmail = resolveDigestRecipient(seedEmployee)`?
-- TC-001 / 002 / 005 / 006 / 009 / 010: all have the same receiver-model defect. Either the XLSX was drafted under a misunderstanding and should be revised wholesale, or `ApiVacationSetupFixture` should be extended to seed vacations for employees whose manager is the intended test recipient (which currently requires a JWT we don't have).
+## What session 144 did NOT do (and why)
 
-### If autonomy does continue
+- **Did not "fix" TC-001 / 002 / 005 / 006 / 009 / 010 / 011 / 012 / 013 / 014**: these all have XLSX-premise or receiver-model issues that require human review per the s143 escalation. Session 144 made no spec-body changes beyond envTag.
+- **Did not re-run those 10 TCs**: they would fail for the structural reasons s143 documented, not a spec bug — running them produces no new information.
+- **Did not modify the digest XLSX**: that's explicitly outside Phase C's "generate autotests from XLSX" remit. See [[exploration/tickets/digest-template-reality-session-142.md]] for the review-required revisions.
+- **Did not touch `DigestTc001Data`**: the receiver-model fix (resolving `seedEmail` to `pvaynmaster.manager.email`, dropping the `Здравствуйте` assertion, drop calendar-day duration, etc.) are semantic changes to the XLSX requirements, not mechanical spec fixes.
 
-1. Each spec TC-001..010 should adopt `tttConfig.envTag` in its subject regex (mechanical find-replace of `tttConfig.env.toUpperCase()` in digest specs).
-2. Re-run TC-003 / 004 / 007 / 008 to confirm the "verified" status actually holds after the fixture fixes — 003 / 004 probably still pass (markers-only), 007 / 008 may fail until they adopt `envTag`.
+## For the next session
 
-## Fixture changes landed in session 143 (uncommitted at close)
+### Priority 0 — still: human review of digest XLSX before further digest work
 
-- `autotests/e2e/fixtures/common/RoundcubeVerificationFixture.ts`
-  - `search()` now reads `parsed.items` (was `parsed.messages`)
-  - `read()` always requests `--include-html`; maps `text` → `text_body`, `html` → `html_body`; falls back to stripped HTML when `text` is empty (so HTML-only templates work)
-  - Added private `htmlToText` helper
-- `autotests/e2e/config/ttt/tttConfig.ts`
-  - Added `envTag` getter (strips `-`, uppercases) — specs should consume this for subject-prefix assertions
+The collection is now at `3/14 verified / 6/14 failed`. The remaining work splits into:
 
-## New uncommitted files from session 143
+- **5 generated TCs awaiting re-verification** (TC-002 / 005 / 006 / 009 / 010). They would need receiver-model revision first to have any chance of passing; re-running without that revision would consume ~15 min of clock time and fail predictably.
+- **6 failed TCs** (TC-001 / 008 / 011 / 012 / 013 / 014). Four (011/012/013/014) need XLSX revisions; one (008) needs receiver-model revision; one (001) hit a production AIOOBE bug.
 
-- `autotests/e2e/tests/digest/digest-tc0{11,12,13,14}.spec.ts` — specs drafted in session 142, doc comments updated this session to explain the XLSX-vs-reality divergence. Spec bodies **deliberately unchanged** so re-runs fail loudly rather than silently accepting a wrong template shape.
-- `autotests/e2e/data/digest/DigestTc0{11,12,13,14}Data.ts` — data classes from session 142 (pvaynmaster seed resolver).
-- `expert-system/vault/exploration/tickets/digest-template-reality-session-142.md` — full reverse-engineering note: template contents, receiver model, date formatter, env-tag mapping, evidence UIDs.
+Recommend next session flip `autonomy.stop: true` and escalate. No further Phase C value can be extracted from this collection without XLSX revision.
 
-## Critical DO-NOTs (reinforced from prior sessions + new)
+### If autonomy continues
 
-- **Do NOT "fix" TC-011 / 012 by relaxing the plural-form assertion to `дней: N`.** That changes the XLSX requirement silently. The XLSX must be revised (or the TC deleted) by a human or Phase-B pass.
-- **Do NOT "fix" TC-013 / 014 by searching `pvaynmaster`'s mailbox for emails whose body happens to contain `01.01.YYYY`.** The digest to pvaynmaster is content-uncontrolled (summarises his direct reports' absences); the passing condition would be coincidental, not probative of year-rollover correctness.
-- **Do NOT re-introduce per-recipient marker assertions in digest specs** (inherited from session 141): `DigestServiceImpl` emits no log statements, so no per-recipient marker exists for the digest pipeline.
-- Do not hard-code env names in specs — subject regex must use `tttConfig.envTag`, not literal `[QA1]`.
-- Do not inline IMAP or Graylog REST logic in specs — use the fixtures.
-- Do not edit prompts / KB to "make Phase C easier". If a TC has ambiguity, flag it here and pause — which is what this session did.
+Potentially safe mechanical work:
+1. Audit other collection TCs outside digest for the same `env.toUpperCase()` → `envTag` pattern. Likely none (envTag is a digest-subject-specific invariant), but worth a grep.
+2. Audit `RoundcubeVerificationFixture` callers for any other methods passing CLI-unsupported flags.
+3. Nothing else in the digest collection without XLSX revision.
 
-## Vault notes landed in session 143
+## Files changed in session 144 (uncommitted at close)
 
-- `exploration/tickets/digest-template-reality-session-142.md` — canonical record of the four defects (fixture, envTag, template, receiver model), with code references and observed UIDs.
+- `autotests/e2e/tests/digest/digest-tc001.spec.ts` — envTag
+- `autotests/e2e/tests/digest/digest-tc002.spec.ts` — envTag
+- `autotests/e2e/tests/digest/digest-tc003.spec.ts` — envTag
+- `autotests/e2e/tests/digest/digest-tc004.spec.ts` — envTag
+- `autotests/e2e/tests/digest/digest-tc005.spec.ts` — envTag
+- `autotests/e2e/tests/digest/digest-tc006.spec.ts` — envTag
+- `autotests/e2e/tests/digest/digest-tc007.spec.ts` — envTag (2 sites)
+- `autotests/e2e/tests/digest/digest-tc008.spec.ts` — envTag (2 sites)
+- `autotests/e2e/tests/digest/digest-tc011.spec.ts` — envTag
+- `autotests/e2e/tests/digest/digest-tc012.spec.ts` — envTag
+- `autotests/e2e/tests/digest/digest-tc013.spec.ts` — envTag
+- `autotests/e2e/tests/digest/digest-tc014.spec.ts` — envTag
+- `autotests/e2e/fixtures/common/RoundcubeVerificationFixture.ts` — count() route-through-search fix
+- `expert-system/vault/_AUTOTEST_PROGRESS.md` — s144 status table
+- `expert-system/analytics.db` — `autotest_tracking` updates for TC-003/004/007/008
+
+## Critical DO-NOTs (still in force from s141/142/143)
+
+- Do NOT "fix" TC-011 / 012 by relaxing to `дней: N`. XLSX revision required.
+- Do NOT "fix" TC-013 / 014 by matching pvaynmaster's coincidental digest content. Receiver-model revision required.
+- Do NOT silently change TC-001 / 002 / 005 / 006 / 009 / 010 / 008 to search ilnitsky's mailbox without an XLSX update — that changes the documented test intent without a human review.
+- Do NOT re-introduce per-recipient marker assertions in digest specs. `DigestServiceImpl` emits no log statements.
+- Do NOT hard-code env names in specs. Use `tttConfig.envTag`.
+- Do NOT inline IMAP or Graylog REST logic in specs — use the fixtures.
 
 ## Last updated
-2026-04-22 — end of session 143. Fixture + envTag landed; XLSX premise issues escalated for human review.
+2026-04-22 — end of session 144. envTag landed, count() CLI bug fixed, 3 TCs re-verified (TC-003/004/007), 1 demoted (TC-008 → failed, receiver-model defect).

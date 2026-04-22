@@ -97,8 +97,8 @@ test("TC-DIGEST-011: Digest (scheduler) — Russian plural-form edge cases @regr
       intervalMs: 10_000,
     });
 
-    const envUpper = tttConfig.env.toUpperCase();
-    const subjectPattern = new RegExp(`^\\[${envUpper}\\]ТТТ Дайджест отсутствий$`);
+    const envTag = tttConfig.envTag;
+    const subjectPattern = new RegExp(`^\\[${envTag}\\]ТТТ Дайджест отсутствий$`);
     roundcube.assertSubject(msg, subjectPattern);
 
     const body = roundcube.read(msg.uid);

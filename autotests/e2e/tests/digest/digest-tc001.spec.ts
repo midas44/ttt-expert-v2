@@ -71,8 +71,8 @@ test("TC-DIGEST-001: Digest (scheduler) — APPROVED tomorrow vacation content-c
       intervalMs: 10_000,
     });
 
-    const envUpper = tttConfig.env.toUpperCase();
-    const subjectPattern = new RegExp(`^\\[${envUpper}\\]ТТТ Дайджест отсутствий$`);
+    const envTag = tttConfig.envTag;
+    const subjectPattern = new RegExp(`^\\[${envTag}\\]ТТТ Дайджест отсутствий$`);
     roundcube.assertSubject(msg, subjectPattern);
 
     const body = roundcube.read(msg.uid);

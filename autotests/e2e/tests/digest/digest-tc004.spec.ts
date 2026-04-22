@@ -30,8 +30,8 @@ test("TC-DIGEST-004: Digest (test endpoint) — empty happy path completes clean
   const graylog = new GraylogVerificationFixture(tttConfig.env);
   const data = await DigestTc004Data.create(tttConfig);
 
-  const envUpper = tttConfig.env.toUpperCase();
-  const digestSubject = `[${envUpper}]ТТТ Дайджест отсутствий`;
+  const envTag = tttConfig.envTag;
+  const digestSubject = `[${envTag}]ТТТ Дайджест отсутствий`;
   const baselineCount = roundcube.count({
     subject: digestSubject,
     since: new Date(Date.now() - 24 * 60 * 60 * 1000),

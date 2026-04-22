@@ -83,13 +83,18 @@ export class RoundcubeVerificationFixture {
   /**
    * Count messages matching the search criteria. Used for baseline-before-trigger
    * diffing: call before the trigger, then after poll finishes, compare.
+   *
+   * The CLI's `count` subcommand only accepts `--mailbox` — it does not take
+   * filter flags. We therefore issue a `search --limit 1` and read `total` from
+   * the response, which reports the full IMAP SEARCH match count regardless of
+   * the per-call item limit.
    */
   count(opts: SearchOptions = {}): number {
-    const args = ["count"];
-    this.appendSearchArgs(args, opts);
+    const args = ["search"];
+    this.appendSearchArgs(args, { ...opts, limit: 1 });
     const out = this.runCli(args);
     const parsed = JSON.parse(out);
-    return parsed.matching ?? parsed.total ?? 0;
+    return parsed.total ?? 0;
   }
 
   /**
