@@ -73,6 +73,15 @@ export class TttConfig implements AppConfig {
     );
   }
 
+  /**
+   * The uppercase, dashes-removed form of `env`, used by the TTT backend as
+   * the subject prefix on outgoing email notifications (e.g. `[QA1]`, not
+   * `[QA-1]`). Keep in sync with the backend's `app.env-tag` derivation.
+   */
+  get envTag(): string {
+    return this.env.replace(/-/g, "").toUpperCase();
+  }
+
   /** Replaces `***` in the URL template with the env name and validates the result. */
   private resolveAppUrl(template: string): string {
     const resolved = template.replace("***", this.env);

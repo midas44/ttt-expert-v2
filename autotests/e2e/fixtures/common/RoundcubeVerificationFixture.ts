@@ -101,7 +101,7 @@ export class RoundcubeVerificationFixture {
     this.appendSearchArgs(args, opts);
     const out = this.runCli(args);
     const parsed = JSON.parse(out);
-    return (parsed.messages ?? []) as RcMessage[];
+    return (parsed.items ?? []) as RcMessage[];
   }
 
   /**
@@ -140,13 +140,51 @@ export class RoundcubeVerificationFixture {
   /**
    * Fetch full body for an already-identified message. Use after `waitForEmail`
    * or `search` to run content-complete assertions on the body.
+   *
+   * The underlying CLI returns raw `text` and `html` keys. This wrapper
+   * normalises them into `text_body` / `html_body` and — critically for
+   * HTML-only templates like the digest — falls back to a tag-stripped view
+   * of the HTML when `text` is empty, so `assertBodyContains` can still
+   * assert on rendered fragments without callers having to parse HTML.
    */
   read(uid: number, opts: { includeHtml?: boolean; mailbox?: string } = {}): RcFullMessage {
-    const args = ["read", String(uid)];
-    if (opts.includeHtml) args.push("--include-html");
+    const args = ["read", String(uid), "--include-html"];
     if (opts.mailbox) args.push("--mailbox", opts.mailbox);
     const out = this.runCli(args);
-    return JSON.parse(out) as RcFullMessage;
+    const parsed = JSON.parse(out);
+    const html = typeof parsed.html === "string" ? parsed.html : "";
+    let text = typeof parsed.text === "string" ? parsed.text : "";
+    if (!text && html) {
+      text = this.htmlToText(html);
+    }
+    return {
+      ...(parsed as RcMessage),
+      text_body: text,
+      html_body: html || undefined,
+    } as RcFullMessage;
+  }
+
+  /**
+   * Minimal HTML→plain-text reducer: strips tags, decodes a small set of
+   * entities, collapses whitespace. Used when an email has no plain-text part
+   * so body assertions can still operate on rendered content.
+   */
+  private htmlToText(html: string): string {
+    return html
+      .replace(/<br\s*\/?>/gi, "\n")
+      .replace(/<\/p>/gi, "\n")
+      .replace(/<\/tr>/gi, "\n")
+      .replace(/<\/td>/gi, " ")
+      .replace(/<[^>]+>/g, "")
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(parseInt(n, 10)))
+      .replace(/[ \t]+/g, " ")
+      .replace(/\n[ \t]+/g, "\n")
+      .replace(/\n{3,}/g, "\n\n");
   }
 
   /**

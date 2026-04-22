@@ -1,13 +1,13 @@
 {
   "collection_name": "digest",
   "tag": "@col-digest",
-  "generated_at": "2026-04-21T22:03:54.382984+00:00",
+  "generated_at": "2026-04-22T02:21:15.773294+00:00",
   "dry_run": false,
   "total_cases": 14,
   "summary": {
     "tags_added": 0,
-    "tags_already_present": 10,
-    "needs_generation": 4,
+    "tags_already_present": 14,
+    "needs_generation": 0,
     "not_in_manifest": 0
   },
   "cases": [
@@ -85,53 +85,29 @@
       "test_id": "TC-DIGEST-011",
       "module": "vacation",
       "resolved_module": "digest",
-      "spec_file": null,
-      "target_spec_path": "autotests/e2e/tests/digest/digest-tc011.spec.ts",
-      "action": "needs_generation",
-      "manifest_title": "Digest (scheduler) \u2014 Russian plural-form edge cases (1 \u0434\u0435\u043d\u044c / 2 \u0434\u043d\u044f / 5 \u0434\u043d\u0435\u0439 / 21 \u0434\u0435\u043d\u044c)",
-      "manifest_type": "API",
-      "manifest_priority": "High",
-      "source_suite": "TS-Digest-Vacation",
-      "source_workbook": "test-docs/collections/digest/digest.xlsx"
+      "spec_file": "autotests/e2e/tests/digest/digest-tc011.spec.ts",
+      "action": "tag_already_present"
     },
     {
       "test_id": "TC-DIGEST-012",
       "module": "vacation",
       "resolved_module": "digest",
-      "spec_file": null,
-      "target_spec_path": "autotests/e2e/tests/digest/digest-tc012.spec.ts",
-      "action": "needs_generation",
-      "manifest_title": "Digest (test endpoint) \u2014 Russian plural-form edge cases (1 \u0434\u0435\u043d\u044c / 2 \u0434\u043d\u044f / 5 \u0434\u043d\u0435\u0439 / 21 \u0434\u0435\u043d\u044c)",
-      "manifest_type": "API",
-      "manifest_priority": "High",
-      "source_suite": "TS-Digest-Vacation",
-      "source_workbook": "test-docs/collections/digest/digest.xlsx"
+      "spec_file": "autotests/e2e/tests/digest/digest-tc012.spec.ts",
+      "action": "tag_already_present"
     },
     {
       "test_id": "TC-DIGEST-013",
       "module": "vacation",
       "resolved_module": "digest",
-      "spec_file": null,
-      "target_spec_path": "autotests/e2e/tests/digest/digest-tc013.spec.ts",
-      "action": "needs_generation",
-      "manifest_title": "Digest (scheduler) \u2014 cross-year boundary: tomorrow = Jan 1 renders `01.01.<YYYY+1>`",
-      "manifest_type": "API",
-      "manifest_priority": "High",
-      "source_suite": "TS-Digest-Vacation",
-      "source_workbook": "test-docs/collections/digest/digest.xlsx"
+      "spec_file": "autotests/e2e/tests/digest/digest-tc013.spec.ts",
+      "action": "tag_already_present"
     },
     {
       "test_id": "TC-DIGEST-014",
       "module": "vacation",
       "resolved_module": "digest",
-      "spec_file": null,
-      "target_spec_path": "autotests/e2e/tests/digest/digest-tc014.spec.ts",
-      "action": "needs_generation",
-      "manifest_title": "Digest (test endpoint) \u2014 cross-year boundary: tomorrow = Jan 1 renders `01.01.<YYYY+1>`",
-      "manifest_type": "API",
-      "manifest_priority": "High",
-      "source_suite": "TS-Digest-Vacation",
-      "source_workbook": "test-docs/collections/digest/digest.xlsx"
+      "spec_file": "autotests/e2e/tests/digest/digest-tc014.spec.ts",
+      "action": "tag_already_present"
     }
   ]
 }

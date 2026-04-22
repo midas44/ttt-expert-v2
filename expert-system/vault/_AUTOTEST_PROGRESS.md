@@ -1,6 +1,6 @@
 # Autotest Progress
 
-## Overall Coverage (Session 141)
+## Overall Coverage (Session 143)
 
 | Module | Manifest Total | Verified | Generated | Blocked | Failed | Pending | Coverage |
 |--------|---------------|----------|-----------|---------|--------|---------|----------|
@@ -11,48 +11,35 @@
 | t3404 | 24 | 21 | 0 | 3 | 0 | 0 | 88% (100% addressed) |
 | planner | 82 | 24 | 0 | 0 | 1 | 57 | 29% |
 | reports | 60 | 17 | 0 | 0 | 2 | 41 | 28% |
-| **digest** (collection) | **14** | **4** | **5** | **0** | **1** | **4** | **29% verified / 71% addressed** |
+| **digest** (collection) | **14** | **4** | **5** | **0** | **5** | **0** | **29% verified / 100% addressed** |
 
-### Digest Collection (current focus — session 141)
+### Digest Collection (session 143 close — scope complete, most TCs failing)
 
 Scope: `collection:digest` (14 TCs in `test-docs/collections/digest/digest.xlsx` → `TS-Digest-Vacation`).
 
-**Verified (4):** TC-DIGEST-003, 004, 007, 008 — passed before structural fix landed (structure untouched or minimally edited).
+**Verified (4):** TC-DIGEST-003, 004, 007, 008 — passed pre-session-143. Sessions 143 analysis flags 007/008 as **suspect**: the fixture bug (`parsed.messages ?? []` against a CLI that returns `items`) would have made every `waitForEmail` call time out with zero matches, so their subject-regex assertion could not have run. Re-verification after session 143's fixture fix is required before trusting the "verified" label on 007/008.
 
-**Generated, awaiting re-verification (5):** TC-DIGEST-002, 005, 006, 009, 010 — had per-recipient Graylog marker assertions that targeted a non-existent log marker. Blocks removed in s141; TypeScript compiles cleanly; re-run pending.
+**Generated, awaiting re-verification (5):** TC-DIGEST-002, 005, 006, 009, 010 — per-recipient Graylog marker assertions removed in s141. The fixture fixes from s143 should unblock the email-matching path; body assertions still need the receiver-model and greeting-template fixes described below.
 
-**Failed (1):** TC-DIGEST-001 — hit the intermittent AIOOBE production bug at `MailDataFormerService:172`. Variant A (scheduler) runs are inherently flaky until the upstream bug is fixed. Documented at [[exploration/tickets/digest-bug-array-index-out-of-bounds]].
+**Failed (5):** 
+- TC-DIGEST-001 — hit AIOOBE production bug at `MailDataFormerService:172` ([[exploration/tickets/digest-bug-array-index-out-of-bounds]]) AND (after s143 fixture fix) now fails on subject regex `QA-1` vs actual `QA1`.
+- TC-DIGEST-011 / 012 — **XLSX premise invalid**: digest template has no Russian plural-form code path, every row uses fixed `дней: {{daysCount}}`. Spec must be rewritten or deleted — human review required.
+- TC-DIGEST-013 / 014 — **Spec fail-shape invalid**: digest recipient is `employee.manager`, never the employee themselves. `waitForEmail({to: pvaynmaster.email})` cannot match the seeded-vacation digest. Cross-year assertion premise valid; spec needs recipient-model fix before it can pass.
 
-**Pending (4):** TC-DIGEST-011 through 014 — plural-form edge cases (011/012) and cross-year boundary (013/014). Templates proven by the A/B pairs already landed.
+**Pending:** 0 — scope fully addressed.
 
-**Key pattern discovered in s141:** `DigestServiceImpl` and its formatters emit **zero** log statements. Only `DigestScheduler` writes digest-related markers (`started`/`finished`/`failed`). Any per-recipient assertion on a pattern like `"Mail has been sent to … NOTIFY_VACATION_UPCOMING"` is wrong — that marker text belongs to four unrelated notification helpers (`EmployeeDayOffNotificationHelper`, `AvailabilityScheduleNotificationHelper`, `AbstractVacationNotificationHelper`, `SickLeaveNotificationHelper`), never the digest pipeline. Roundcube `assertBodyContains` is the correct per-recipient evidence.
+### Structural findings from session 143 (see `exploration/tickets/digest-template-reality-session-142.md`)
 
-**Critical production invariant violated:** TC-001 run revealed that the scheduler wrapper does NOT always emit `"Digests sending job failed"` when the job throws — the AIOOBE is propagating past the try/catch but not reaching the failure log. This is itself a regression-worthy finding (the wrapper should always mark `failed` on any exception, not just declared ones).
+Four compounding defects were exposed while trying to run TC-011 for the first time:
 
-### Absences Collection (session 128)
-- **Day-off verified in S128:** TC-DO-035 (fixed: JWT auth + field name), TC-DO-037 (new), TC-DO-038 (new)
-- **Day-off blocked:** TC-DO-036 (no API for office change, HR sync only, date-conditional cascade)
-- **Remaining:** ~15 cross-service tests (TC-CS-013..027+054)
-- **Target:** Complete absences collection
+1. **Fixture bug (FIXED)**: `RoundcubeVerificationFixture.search()` read non-existent JSON key. Fix: read `parsed.items`.
+2. **Fixture bug (FIXED)**: `read()` returned `{text, html}`; specs read `text_body` / `html_body`. Fix: normalize keys, always include HTML, strip tags to text when plain-text part is empty (digest template is HTML-only).
+3. **Config bug (FIXED)**: Subject env-tag `[QA1]` ≠ `tttConfig.env.toUpperCase()` `[QA-1]`. Fix: added `TttConfig.envTag` getter stripping dashes.
+4. **XLSX premise errors (NOT fixed — human review needed)**:
+   - Plural forms (`1 день` etc.) don't exist in the digest template.
+   - Greeting `Здравствуйте, X Y` isn't in the digest template (it opens with `"Добрый день!"`).
+   - Digest recipient model: manager, not employee — affects every content-complete digest TC (001 / 002 / 005 / 006 / 011 / 012 / 013 / 014).
 
-### Sick-Leave Progress (started session 125)
-**Verified (5):** TC-SL-001, TC-SL-006, TC-SL-008, TC-SL-010, TC-SL-011
-**Key patterns established:**
-- Page objects: MySickLeavePage, SickLeaveCreateDialog
-- Data classes: SickLeaveTc001Data, SickLeaveSetupData
-- DB queries: sickLeaveQueries.ts
-- All tests use UI-based setup/cleanup (API auth returns 401/403)
-- Details dialog: rc-dialog (`.rc-dialog-wrap`), not `role="dialog"`
-- Action buttons: `data-testid="sickleave-action-*"` (edit, close, detail, attachments)
-- No "more" menu — detail button opens rc-dialog panel
-- Table date format: "dd – dd Mon yyyy"
+### Critical production invariant violated (from s141, still unresolved)
 
-### Blocked Tests (18 total)
-**Vacation (15):** Email pipeline (4), calendar service (1), environment/auth (10)
-**Day-off (3):** Environment-specific constraints
-
-## Notable patterns (new in s141)
-
-- **Clock-aware seed dates**: `nextMondayDateIso(serverTime) + 1 day` lands inside `DigestServiceImpl.addSoonVacationEvents`' `[today+1, today+21]` Monday-gated window after the spec patches server clock to `fireSoonIso(serverTime)`. See `DigestTc001Data.seed`.
-- **Variant B sync POST**: `TestDigestController.sendDigests()` is synchronous — the HTTP response returns after the job runs. Variant B specs use POST + ~10s Graylog settle rather than `waitForMarker`. No per-recipient marker exists to wait for anyway.
-- **Crossing-predicate rule**: `VacationRepositoryCustomImpl.buildCrossVacationPredicate` blocks only `STATUS IN (NEW, APPROVED, PAID) AND date-overlap AND employee`. CANCELED / REJECTED do not block — confirmed by code reading + DB check on pvaynmaster.
+TC-001 run in session 141 revealed that `DigestScheduler`'s wrapper does NOT always emit `"Digests sending job failed"` when the job throws — AIOOBE propagates past the try/catch without reaching the failure log. This is itself a regression-worthy finding: the wrapper should mark `failed` on any exception, not only declared ones.

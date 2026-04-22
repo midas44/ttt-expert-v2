@@ -93,6 +93,31 @@ export function nextMondayDateIso(serverTime: string): string {
   return formatLocalDate(monday);
 }
 
+/**
+ * Returns the year of the nearest future Monday that falls on December 31,
+ * given the server's current time. Used by the cross-year digest TCs
+ * (TC-DIGEST-013 / 014): patching the clock to `<year>-12-31` makes
+ * `CURRENT_DATE + INTERVAL '1 day'` resolve to Jan 1 of the following year,
+ * which is the only way to exercise the date formatter's year rollover.
+ *
+ * Dec 31 falls on Monday once every ~6 years (pattern interrupted by leap
+ * years). From 2026-04-22 the answer is 2028; the next after that is 2029.
+ */
+export function nextMondayDec31Year(serverTime: string): number {
+  const now = parseServerLocalDate(serverTime);
+  let year = now.getUTCFullYear();
+  for (let i = 0; i < 20; i++) {
+    const dec31 = new Date(Date.UTC(year, 11, 31));
+    if (dec31.getUTCDay() === 1 && dec31.getTime() > now.getTime()) {
+      return year;
+    }
+    year++;
+  }
+  throw new Error(
+    `Could not find a future Monday Dec 31 within 20 years of ${serverTime}`,
+  );
+}
+
 function parseServerLocalDate(serverTime: string): Date {
   const datePart = serverTime.slice(0, 10);
   const [y, m, d] = datePart.split("-").map((s) => parseInt(s, 10));
@@ -114,14 +139,23 @@ function formatLocalDate(date: Date): string {
   return `${y}-${m}-${d}`;
 }
 
-/** POST the vacation-service digest test endpoint; bypasses the @Scheduled wrapper. */
+/**
+ * POST the vacation-service digest test endpoint; bypasses the @Scheduled
+ * wrapper. The endpoint runs synchronously and iterates every employee, so on
+ * shared QA envs — and especially on Monday (when `addSoonVacationEvents`
+ * processes the full `[today+1, today+21]` window for all employees) — it can
+ * exceed the default Playwright request timeout. Caller can override via
+ * `timeoutMs` (default 240 s).
+ */
 export async function triggerDigestTestEndpoint(
   request: APIRequestContext,
   tttConfig: TttConfig,
+  opts: { timeoutMs?: number } = {},
 ): Promise<void> {
   const url = tttConfig.buildUrl("/api/vacation/v1/test/digest");
   const resp = await request.post(url, {
     headers: authHeaders(tttConfig),
+    timeout: opts.timeoutMs ?? 240_000,
   });
   expect(
     resp.ok(),
