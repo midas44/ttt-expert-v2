@@ -13,8 +13,8 @@ projects:
     vault_root: pmt/
 primary_project: ttt
 session:
-  delay_minutes: 5
-  delay_minutes_offhours: 5
+  delay_minutes: 60
+  delay_minutes_offhours: 60
   offhours_utc: 15:00-03:00
   max_duration_minutes: 90
 phase:
