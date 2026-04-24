@@ -143,7 +143,7 @@ TCs never name specific envs. Use `[<ENV>][TTT]` / `[<ENV>]ТТТ` in subject pa
 
 Every behavioral TC whose notification is emitted by a `@Scheduled` job (rows 1, 2, 3, 4, 5, 14, 15) exists in two variants:
 
-- **Variant A — Scheduler trigger**: advance the server clock via `PATCH /api/ttt/test/v1/clock` (or the service-specific test-clock endpoint) to just before the job's cron fire time; wait 10–60 s for the `@Scheduled` wrapper to run. Asserts the real scheduler pipeline (wrapper markers, ShedLock, feature-toggle gating).
+- **Variant A — Scheduler trigger**: advance the server clock via `PATCH /api/ttt/v1/test/clock` (see [[patterns/test-clock-control]]) to just before the job's cron fire time; wait 10–60 s for the `@Scheduled` wrapper to run. Asserts the real scheduler pipeline (wrapper markers, ShedLock, feature-toggle gating). Only the ttt service exposes the PATCH endpoint; the vacation/calendar/email services update their own clocks via the `ttt.fanout` RabbitMQ event.
 - **Variant B — Test endpoint bypass**: `POST /api/<service>/v1/test/<endpoint>` that invokes the job method directly. Asserts the job logic in isolation; scheduler-wrapper markers may be absent (see row-15 bypass above). Use per-recipient mail-sent markers instead.
 
 Pair them consecutively (e.g. TC-DIGEST-001 scheduler variant, TC-DIGEST-002 test-endpoint variant) so reviewers see the two paths side-by-side. Expected-result cells must document which markers fire in which variant.

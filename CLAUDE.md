@@ -79,6 +79,29 @@ When investigating any module or answering questions about bugs/behavior, search
 
 **Freshness** — the project is old. When ticket info conflicts with current code, trust the code. Old bug reports are valuable if the bug still exists or if the fix introduced new edge cases — verify against current behavior. Fixed bugs are the best source of regression test scenarios.
 
+## Static code audits — fetch before citing
+
+Before you file a bug, cite a file:line in a ticket or test doc, claim "branch X contains Y", or do any static analysis that informs downstream action, **always refresh the local clone first**:
+
+```bash
+# Start of any code audit that will feed a ticket or a vault claim:
+cd expert-system/repos/project
+git fetch origin <branch>             # e.g. release/2.1, master, stage
+# Then prefer origin/<branch> over the local ref:
+git show origin/<branch>:<path>
+git log origin/<branch> -- <path>
+git merge-base --is-ancestor <sha> origin/<branch>
+```
+
+The local tracking branch (`release/2.1`, `stage`, …) can be hundreds of commits behind origin — it only moves when you explicitly `git pull`. A false claim based on a stale ref has happened in the past (filed a "bug" for a `>` vs `>=` comparison that was already fixed 200 commits ago on origin; the deployed build had the fix, the ticket had to be retracted). Fetch-first is cheap; the recovery cost of a wrong-ticket is much higher.
+
+**When UI behavior doesn't match what the source seems to say**, two hypotheses before blaming the user-visible state:
+
+1. **Local clone is stale** — run `git fetch` and diff `origin/<branch>` against your local ref.
+2. **Deployed code ≠ local source** — builds can lag or come from a different commit. Check the build footer (`Build #: …`) and cross-reference with the GitLab pipeline's `sha`. When in doubt, grep the actual deployed JS bundle / chunk / jar for the minified pattern (`.format("YYYY-MM-DD")`, a unique i18n key near the logic, etc.) to see which operator or branch actually shipped.
+
+Cite `origin/<branch>@<sha>` in ticket bodies, not bare `<branch>`, so the reader can reproduce your exact view.
+
 ## Updating the knowledge base
 
 When you discover new information during a task — a bug, an undocumented behavior, a corrected understanding, or deeper detail about a feature — update the knowledge base:

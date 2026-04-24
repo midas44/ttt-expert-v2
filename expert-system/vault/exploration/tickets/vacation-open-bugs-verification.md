@@ -51,7 +51,7 @@ Verified 11 open vacation bugs on qa-1 environment (2026-03-26). Results categor
 
 **Context:** The original bug required **clock manipulation** (advance server clock to future, then create vacation with dates in the "past" relative to advanced clock). On normal qa-1 environment, the validator correctly compares startDate against today's date and rejects.
 
-**Status:** May be fixed or may only reproduce with clock manipulation on timemachine. The BDD scenarios from snavrockiy (2026-01-13) describe the expected behavior which now appears to work correctly. Needs verification on timemachine with manipulated clock to fully close.
+**Status:** May be fixed or may only reproduce with clock manipulation. The BDD scenarios from snavrockiy (2026-01-13) describe the expected behavior which now appears to work correctly. Needs verification with manipulated clock on any non-production env — [[patterns/test-clock-control]] covers the mechanism (not timemachine-specific).
 
 ## Not Tested — Insufficient Data/Access
 

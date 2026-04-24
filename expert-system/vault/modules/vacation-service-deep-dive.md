@@ -741,7 +741,7 @@ Access vacation ID via `response.vacation.id`, approver via `response.vacation.a
 ### TC-046 (canBeCancelled) Deferred
 - Cannot set up paymentDate < reportPeriod scenario without clock manipulation or period advancement
 - Creating future vacations always sets paymentDate in the future → canBeCancelled returns true
-- Needs timemachine environment with clock set to a date after the vacation's paymentMonth
+- Needs the test clock set to a date after the vacation's paymentMonth on any non-production env (qa-1, stage, timemachine, …). See [[patterns/test-clock-control]] for the endpoint + propagation details.
 
 ### TC-056 (crossing on approve) Deferred
 - Cannot create two overlapping vacations for the same user — crossing check runs on both POST create and PUT update

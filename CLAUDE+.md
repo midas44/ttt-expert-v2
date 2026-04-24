@@ -381,6 +381,28 @@ Clone into `expert-system/repos/`. Static analysis only — no build, no runtime
 
 Track which branch you analyze. Every code-related vault note and SQLite record must include the branch.
 
+### Fetch first, cite `origin/<branch>@<sha>`
+
+At the **start of any analysis run** that reads source code for a ticket, vault note, or design claim:
+
+```bash
+cd expert-system/repos/project
+git fetch origin <branch>                 # release/2.1, master, stage, hotfix/…
+git log -1 origin/<branch> -- <path>      # commit that last touched the file on origin
+git show origin/<branch>:<path>           # the authoritative view
+```
+
+Local tracking refs (`release/2.1`, `stage`, `master`) **only advance when you `git pull`** — they can trail origin by hundreds of commits. Reading with the bare branch name (e.g. `git show release/2.1:…`) silently returns a frozen snapshot. Past incident: a filed bug turned out to be already-fixed on `origin/release/2.1` 200+ commits ahead; the ticket had to be retracted. Avoid this by always prefixing `origin/` when reading, and fetching at the start of the analysis.
+
+Cite commits as `origin/<branch>@<sha>` (not bare `<branch>`) in vault notes, SQLite records, and ticket bodies so readers can reproduce your view.
+
+### When runtime behavior contradicts the source
+
+If the live app does something the code at `origin/<branch>` says it shouldn't:
+
+1. Confirm the deployed commit. Read the app's `Build #: <version>.<pipeline-id>` footer; cross-check the pipeline's `sha` via `GET /projects/1288/pipelines/<pipeline-id>`. If that sha is not your `origin/<branch>` tip, fetch / re-check.
+2. Grep the deployed bundle. For frontend, minified `main.<hash>.js` plus lazy chunks under `static/js/<n>.<hash>.chunk.js`. Anchor on stable tokens (`.format("YYYY-MM-DD")`, an i18n key adjacent to the code, a `data-testid` value) to find the minified operator or string that actually shipped. For backend, anchor on class + method names inside the deployed jar. Treat the shipped artifact as canonical over any local-source reading.
+
 ### Frontend (JS/TS) — source-level, no build needed:
 - **Linting**: `npx eslint --format json <path>` → jq for summary
 - **Dependencies**: `npx madge --json <path>` → circular deps, orphans

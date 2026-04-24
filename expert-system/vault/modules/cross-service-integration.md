@@ -211,10 +211,10 @@ PmToolSyncScheduler (cron: ${pmTool.sync.cron})
 - Root cause: DB connection pool exhaustion (`HikariCP` default pool size too small for concurrent sync + normal operations)
 
 ### Test Clock Corruption (#2629)
-- Time travel (test clock manipulation via `PATCH /api/ttt/test/v1/clock`) corrupts `cs_sync_status` table
-- Moving time backward creates duplicate status records
-- **Vacation service crashed** after the corrupted table was cleared
-- Test data: clock manipulation is required for testing period-dependent features but breaks sync tracking
+- Time travel (test clock manipulation via `PATCH /api/ttt/v1/test/clock`, see [[patterns/test-clock-control]]) can corrupt `cs_sync_status` table
+- Moving time **backward** creates duplicate status records — forward-only shifts avoid this
+- **Vacation service crashed** in the #2629 incident after the corrupted table was cleared
+- Test data: clock manipulation is available on every non-production env but tests must reset the clock after use and prefer forward-only shifts to avoid this sync-tracking hazard
 
 ### Browser Memory (#2865)
 - Project assignments tab causes browser to run out of memory (5-8GB)

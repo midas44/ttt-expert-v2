@@ -294,6 +294,14 @@ If Puppeteer is unavailable, write an inline Node.js script. Critical details:
 
 Use the REST API to list pipelines, compare branches, and see what files changed.
 
+> **Heads-up — keep the local clone in sync.** Whenever you combine REST API results
+> (pipeline sha, ticket body) with the local clone under `expert-system/repos/project/`,
+> run `git fetch origin <branch>` first and read from `origin/<branch>` rather than the
+> local tracking branch. Local tracking refs can lag behind origin by hundreds of commits
+> and will produce wrong answers to questions like "does release/2.1 contain commit X?".
+> If the GitLab pipeline's `sha` is newer than your local `origin/<branch>` tip, fetch
+> again before drawing conclusions.
+
 ### List Pipelines
 
 ```bash

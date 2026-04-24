@@ -262,8 +262,39 @@ created. On failure it exits non-zero with the GitLab error body.
 6. For each epic or related issue, POST the link as shown above.
 7. Confirm: `GET /projects/1288/issues/<iid>` and inspect `title`, `labels`, `assignees`, plus `GET .../links`.
 
+## Pre-flight for code-based bug reports
+
+Before filing a ticket whose premise is "file X on branch Y contains buggy code Z", **refresh
+the local clone and cite origin refs**. A local tracking branch can be hundreds of commits
+behind origin — reading it with `git show release/2.1:…` gives you a frozen, possibly stale,
+view. This has already produced one retracted ticket; do not repeat.
+
+Minimum due diligence:
+
+```bash
+cd expert-system/repos/project
+git fetch origin <branch>                      # e.g. release/2.1
+git log -1 origin/<branch> -- <path>           # confirm the HEAD commit that touches the file
+git show origin/<branch>:<path>                # audit the file AT THAT commit
+git merge-base --is-ancestor <cited-sha> origin/<branch>   # confirm the sha you're citing
+```
+
+Also verify the deployed build matches what the branch HEAD claims: read the app's
+`Build #: <version>.<pipeline-id>` footer, cross-reference with
+`GET /projects/1288/pipelines/<pipeline-id>` → `sha`, and if there's any
+behavior-vs-code mismatch, **grep the deployed JS bundle / chunk** (or jar) for a unique
+token from the logic (e.g. the minified `.format("YYYY-MM-DD")` pattern, an i18n key
+near the code) to see which operator actually shipped. Treat that as canonical over
+whatever `git show release/2.1:…` says from your local clone.
+
+In the ticket body, cite `origin/<branch>@<sha>` rather than a bare branch name, and
+paste the 3–5 relevant lines from the **freshly-fetched** commit so the reader can
+reproduce your view exactly.
+
 ## Do-not-do
 
+- Do **not** file a code-based bug against a stale local branch — fetch origin first
+  (see the Pre-flight section above). Tickets based on stale refs must be retracted.
 - Do **not** wrap real ticket references in backticks in the body — breaks auto-linking.
 - Do **not** POST `assignee_ids` via URL-encoded form bodies — silently dropped.
 - Do **not** use `link_type: is_blocked_by` — returns HTTP 400 on CE 16.11.
